@@ -267,8 +267,8 @@ matx_blas_t matx_blas_make_reference(void) {
   matx_blas_t b;
   b.kind = MATX_BLAS_BACKEND_REFERENCE;
   b.vt.dgemm = &ref_dgemm;
-  b.vt.dgemv = &ref_dgemv;
   b.vt.zgemm = &ref_zgemm;
+  b.vt.dgemv = &ref_dgemv;
   b.vt.zgemv = &ref_zgemv;
   b.vt.daxpy = &ref_daxpy;
   b.vt.zaxpy = &ref_zaxpy;
