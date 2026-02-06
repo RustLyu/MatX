@@ -55,30 +55,30 @@ typedef struct matx_blas_vtable_t {
                           size_t ldc);
 
   matx_status_t(*dgemv)(matx_layout_t layout,
-      int trans_a,
-      size_t m,
-      size_t n,
-      double alpha,
-      const double* A,
-      size_t lda,
-      double* B,
-      size_t ldb,
-      double beta,
-      double* C,
-      size_t ldc);
+                          int trans_a,
+                          size_t m,
+                          size_t n,
+                          double alpha,
+                          const double* A,
+                          size_t lda,
+                          double* B,
+                          size_t ldb,
+                          double beta,
+                          double* C,
+                          size_t ldc);
 
   matx_status_t(*daxpy)(size_t n,
-      double alpha,
-      const double* x,
-      size_t lda,
-      const void* y,
-      size_t ldy);
+                          double alpha,
+                          const double* x,
+                          size_t lda,
+                          const void* y,
+                          size_t ldy);
   matx_status_t(*zaxpy)(size_t n,
-      const void* alpha,
-      const void* x,
-      size_t lda,
-      const void* y,
-      size_t ldy);
+                          const void* alpha,
+                          const void* x,
+                          size_t lda,
+                          const void* y,
+                          size_t ldy);
 } matx_blas_vtable_t;
 
 typedef struct matx_blas_t {
