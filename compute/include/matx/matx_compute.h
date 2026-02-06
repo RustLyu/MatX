@@ -79,6 +79,26 @@ typedef struct matx_blas_vtable_t {
                           size_t lda,
                           const void* y,
                           size_t ldy);
+
+  matx_status_t(*dgeadd)(matx_layout_t layout,
+                          size_t rows,
+                          size_t cols,
+                          double alpha,
+                          const double* A,
+                          size_t lda,
+                          double beta,
+                          double* B,
+	                      size_t ldb);
+
+  matx_status_t(*zgeadd)(matx_layout_t layout,
+                            size_t rows,
+                            size_t cols,
+                            const void* alpha,
+                            const void* A,
+                            size_t lda,
+                            const void* beta,
+	                        void* B,
+                            size_t ldb);
 } matx_blas_vtable_t;
 
 typedef struct matx_blas_t {
@@ -178,6 +198,20 @@ matx_status_t matx_spmm_csc_c64(matx_complex_f64 alpha,
                                 const matx_dense_c64_t* B,
                                 matx_complex_f64 beta,
                                 matx_dense_c64_t* C);
+
+// B := alpha * A + beta * B  (dense complex)
+matx_status_t matx_geadd_c64(const matx_blas_t* blas,
+                                matx_complex_f64 alpha,
+                                const matx_dense_c64_t* A,
+                                matx_complex_f64 beta,
+                                matx_dense_c64_t* B);
+
+// B := alpha * A + beta * B  (dense real)
+matx_status_t matx_geadd_f64(const matx_blas_t* blas,
+                                double alpha,
+                                const matx_dense_f64_t* A,
+                                double beta,
+                                matx_dense_f64_t* B);
 
 #ifdef __cplusplus
 }

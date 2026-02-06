@@ -6,7 +6,7 @@
 #include <string.h>
 
 #if defined(MATX_HAVE_CXSPARSE)
-#include <suitesparse/graphblas.h>
+#include <suitesparse/GraphBLAS.h>
 #endif
 
 matx_status_t matx_spmv_csc_f64(double alpha,

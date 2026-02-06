@@ -201,6 +201,68 @@ static matx_status_t ref_dgemv(matx_layout_t layout,
     return MATX_OK;
 }
 
+static matx_status_t ref_dgeadd(matx_layout_t trans_a,
+    size_t rows,
+    size_t cols,
+    double alpha,
+    const double* A,
+    size_t lda,
+    double beta,
+    double* B,
+    size_t ldb)
+{
+    if (!A || !B || !alpha || !beta)
+        return MATX_ERR_INVALID_ARG;
+
+    if (rows > INT_MAX || cols > INT_MAX ||
+        lda > INT_MAX || ldb > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
+
+    const enum CBLAS_ORDER order =
+        (trans_a == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+
+    cblas_dgeadd(
+        order,
+        (int)rows, (int)cols,
+        alpha,
+        A, lda,
+        beta,
+        B, ldb
+    );
+    return MATX_OK;
+}
+
+static matx_status_t ref_zgeadd(matx_layout_t trans_a,
+    size_t rows,
+    size_t cols,
+    const void* alpha,
+    const void* A,
+    size_t lda,
+    const void* beta,
+    void* B,
+    size_t ldb)
+{
+    if (!A || !B || !alpha || !beta)
+        return MATX_ERR_INVALID_ARG;
+
+    if (rows > INT_MAX || cols > INT_MAX ||
+        lda > INT_MAX || ldb > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
+
+    const enum CBLAS_ORDER order =
+        (trans_a == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+
+    cblas_zgeadd(
+        order,
+        (int)rows, (int)cols,
+        &alpha,
+        A, lda,
+        &beta,
+        B, ldb
+    );
+    return MATX_OK;
+}
+
 matx_blas_t matx_blas_make_reference(void) {
   matx_blas_t b;
   b.kind = MATX_BLAS_BACKEND_REFERENCE;
@@ -210,6 +272,8 @@ matx_blas_t matx_blas_make_reference(void) {
   b.vt.zgemv = &ref_zgemv;
   b.vt.daxpy = &ref_daxpy;
   b.vt.zaxpy = &ref_zaxpy;
+  b.vt.dgeadd = &ref_dgeadd;
+  b.vt.zgeadd = &ref_zgeadd;
   return b;
 }
 

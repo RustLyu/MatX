@@ -5,7 +5,6 @@ add_library(matx_compute
   src/matx_blas_ref.c
   src/vec_f64.c
   src/vec_c64.c
-  src/dense_c64_ops.c
   src/sparse_f64_ops.c
   src/sparse_c64_ops.c
 )
