@@ -15,6 +15,7 @@ matx_status_t matx_spmv_csc_f64(double alpha,
     double beta,
     matx_vec_f64_t* y)
 {
+    GrB_Info info = GrB_init(GrB_NONBLOCKING);
     if (!A || !x || !y) return MATX_ERR_INVALID_ARG;
     if (A->ncols != x->n || A->nrows != y->n)
         return MATX_ERR_INVALID_ARG;
@@ -28,7 +29,7 @@ matx_status_t matx_spmv_csc_f64(double alpha,
     GrB_Vector gx, gy;
     GrB_Matrix gA;
 
-    GrB_Vector_new(&gx, GrB_FP64, x->n);
+    info = GrB_Vector_new(&gx, GrB_FP64, x->n);
     GrB_Vector_new(&gy, GrB_FP64, y->n);
     GrB_Matrix_new(&gA, GrB_FP64, A->nrows, A->ncols);
 

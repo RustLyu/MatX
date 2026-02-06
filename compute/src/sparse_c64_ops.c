@@ -16,13 +16,12 @@ matx_status_t matx_spmv_csc_c64(
     matx_complex_f64 beta,
     matx_vec_c64_t* y)
 {
+    GrB_Info info = GrB_init(GrB_NONBLOCKING);
     if (!A || !x || !y)
         return MATX_ERR_INVALID_ARG;
 
     if (A->ncols != x->n || A->nrows != y->n)
         return MATX_ERR_INVALID_ARG;
-
-    GrB_Info info;
 
     /* ---------------- build GraphBLAS matrix ---------------- */
 
@@ -37,7 +36,7 @@ matx_status_t matx_spmv_csc_c64(
             GxB_FC64_t val =
             { A->values[k].real, A->values[k].imag };
 
-            GrB_Matrix_setElement_FC64(
+            GxB_Matrix_setElement_FC64(
                 gA, val, A->row_ind[k], j);
         }
     }
@@ -55,7 +54,7 @@ matx_status_t matx_spmv_csc_c64(
         { x->data[i * x->stride].real,
          x->data[i * x->stride].imag };
 
-        GrB_Vector_setElement_FC64(gx, v, i);
+        GxB_Vector_setElement_FC64(gx, v, i);
     }
 
     for (size_t i = 0; i < y->n; i++)
@@ -64,7 +63,7 @@ matx_status_t matx_spmv_csc_c64(
         { y->data[i * y->stride].real,
          y->data[i * y->stride].imag };
 
-        GrB_Vector_setElement_FC64(gy, v, i);
+        GxB_Vector_setElement_FC64(gy, v, i);
     }
 
     /* ---------------- gy = alpha*A*x + beta*y ---------------- */
@@ -105,7 +104,7 @@ matx_status_t matx_spmv_csc_c64(
     for (size_t i = 0; i < y->n; i++)
     {
         GxB_FC64_t v;
-        if (GrB_Vector_extractElement_FC64(&v, gy, i) == GrB_SUCCESS)
+        if (GxB_Vector_extractElement_FC64(&v, gy, i) == GrB_SUCCESS)
         {
             y->data[i * y->stride].real = v._Val[0];
             y->data[i * y->stride].imag = v._Val[1];
@@ -126,6 +125,7 @@ matx_status_t matx_spmm_csc_c64(
     matx_complex_f64 beta,
     matx_dense_c64_t* C)
 {
+    GrB_Info info = GrB_init(GrB_NONBLOCKING);
     if (!A || !B || !C)
         return MATX_ERR_INVALID_ARG;
 
@@ -146,7 +146,7 @@ matx_status_t matx_spmm_csc_c64(
             GxB_FC64_t v =
             { A->values[k].real,A->values[k].imag };
 
-            GrB_Matrix_setElement_FC64(
+            GxB_Matrix_setElement_FC64(
                 gA, v, A->row_ind[k], j);
         }
     }
@@ -162,7 +162,7 @@ matx_status_t matx_spmm_csc_c64(
 
             GxB_FC64_t v = { val.real,val.imag };
 
-            GrB_Matrix_setElement_FC64(gB, v, i, j);
+            GxB_Matrix_setElement_FC64(gB, v, i, j);
         }
     }
 
@@ -176,7 +176,7 @@ matx_status_t matx_spmm_csc_c64(
             matx_complex_f64  val = C->data[i + j * C->stride];
             GxB_FC64_t v = { val.real,val.imag };
 
-            GrB_Matrix_setElement_FC64(gC, v, i, j);
+            GxB_Matrix_setElement_FC64(gC, v, i, j);
         }
     }
 
@@ -203,7 +203,7 @@ matx_status_t matx_spmm_csc_c64(
         for (size_t i = 0; i < C->rows; i++)
         {
             GxB_FC64_t v;
-            if (GrB_Matrix_extractElement_FC64(&v, gC, i, j)
+            if (GxB_Matrix_extractElement_FC64(&v, gC, i, j)
                 == GrB_SUCCESS)
             {
                 C->data[i + j * C->stride].real = v._Val[0];
