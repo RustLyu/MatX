@@ -1,0 +1,60 @@
+#include "matx/matx.h"
+
+#include <string.h>
+
+matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
+                                    size_t rows,
+                                    size_t cols,
+                                    matx_layout_t layout,
+                                    const matx_alloc_t* alloc) {
+  if (!out || !alloc || rows == 0 || cols == 0) return MATX_ERR_INVALID_ARG;
+  if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
+
+  memset(out, 0, sizeof(*out));
+  out->rows = rows;
+  out->cols = cols;
+  out->layout = layout;
+  out->stride = (layout == MATX_COL_MAJOR) ? rows : cols;
+  out->flags = 1u;
+
+  const size_t n = rows * cols;
+  out->data = (matx_complex_f64*)matx_malloc(alloc, n * sizeof(matx_complex_f64));
+  if (!out->data) {
+    memset(out, 0, sizeof(*out));
+    return MATX_ERR_OUT_OF_MEMORY;
+  }
+  return MATX_OK;
+}
+
+matx_status_t matx_dense_c64_wrap(matx_dense_c64_t* out,
+                                  size_t rows,
+                                  size_t cols,
+                                  size_t stride,
+                                  matx_layout_t layout,
+                                  matx_complex_f64* data) {
+  if (!out || !data || rows == 0 || cols == 0) return MATX_ERR_INVALID_ARG;
+  if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
+  if (layout == MATX_COL_MAJOR) {
+    if (stride < rows) return MATX_ERR_INVALID_ARG;
+  } else {
+    if (stride < cols) return MATX_ERR_INVALID_ARG;
+  }
+
+  out->rows = rows;
+  out->cols = cols;
+  out->stride = stride;
+  out->layout = layout;
+  out->data = data;
+  out->flags = 0u;
+  return MATX_OK;
+}
+
+void matx_dense_c64_destroy(matx_dense_c64_t* m,
+                            const matx_alloc_t* alloc) {
+  if (!m) return;
+  if ((m->flags & 1u) != 0u && m->data && alloc) {
+    matx_free(alloc, m->data);
+  }
+  memset(m, 0, sizeof(*m));
+}
+
