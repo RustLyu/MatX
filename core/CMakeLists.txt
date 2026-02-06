@@ -1,10 +1,12 @@
-add_library(matx_core
+﻿add_library(matx_core
   src/matx_alloc.c
-  src/matx_dense.c
+  src/matx_dense_f64.c
   src/matx_error.c
   src/matx_version.c
   src/matx_vec.c
   src/matx_dense_c64.c
+  src/matx_sparse_f64.c
+  src/matx_sparse_c64.c
 )
 
 add_library(MatX::core ALIAS matx_core)

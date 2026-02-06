@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
@@ -142,22 +142,56 @@ void matx_dense_c64_destroy(matx_dense_c64_t* m,
 
 // ---- Sparse CSC (real/complex) ----
 typedef struct matx_csc_f64_t {
-  size_t nrows;
-  size_t ncols;
-  size_t nnz;
-  const int* col_ptr;   // size ncols+1, 0-based
-  const int* row_ind;   // size nnz, 0-based
-  const double* values; // size nnz
+    size_t nrows;
+    size_t ncols;
+    size_t nnz;
+    const int* col_ptr;
+    const int* row_ind;
+    const double* values;
+    uint32_t flags;
 } matx_csc_f64_t;
 
+matx_status_t matx_sparse_f64_create(matx_csc_f64_t* out,
+    size_t nrows,
+    size_t ncols,
+    size_t nnz,
+    const matx_alloc_t* alloc);
+
+matx_status_t matx_sparse_f64_wrap(matx_csc_f64_t* out,
+    size_t nrows,
+    size_t ncols,
+    size_t nnz,
+    const int* col_ptr,
+    const int* row_ind,
+    const double* values);
+
+void matx_sparse_f64_destroy(matx_csc_f64_t* m, const matx_alloc_t* alloc);
+
 typedef struct matx_csc_c64_t {
-  size_t nrows;
-  size_t ncols;
-  size_t nnz;
-  const int* col_ptr;
-  const int* row_ind;
-  const matx_complex_f64* values;
+    size_t nrows;
+    size_t ncols;
+    size_t nnz;
+    const int* col_ptr;
+    const int* row_ind;
+    const matx_complex_f64* values;
+    uint32_t flags;
 } matx_csc_c64_t;
+
+matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
+    size_t nrows,
+    size_t ncols,
+    size_t nnz,
+    const matx_alloc_t* alloc);
+
+matx_status_t matx_sparse_c64_wrap(matx_csc_c64_t* out,
+    size_t nrows,
+    size_t ncols,
+    size_t nnz,
+    const int* col_ptr,
+    const int* row_ind,
+    const matx_complex_f64* values);
+
+void matx_sparse_c64_destroy(matx_csc_c64_t* m, const matx_alloc_t* alloc);
 
 #ifdef __cplusplus
 }
