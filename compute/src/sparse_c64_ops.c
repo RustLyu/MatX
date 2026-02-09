@@ -118,22 +118,28 @@ matx_status_t matx_spmm_csc_c64(
 		B->cols != C->cols)
 		return MATX_ERR_INVALID_ARG;
 
-	GrB_Matrix gA, gB, gC;
+	GrB_Matrix gA = GrB_NULL;
+	GrB_Matrix gB, gC;
 
 	/* build A */
-	GrB_Matrix_new(&gA, GxB_FC64, A->nrows, A->ncols);
-
-	for (size_t j = 0; j < A->ncols; j++)
-	{
-		for (int k = A->col_ptr[j]; k < A->col_ptr[j + 1]; k++)
-		{
-			GxB_FC64_t v =
-			{ A->values[k].real,A->values[k].imag };
-
-			GxB_Matrix_setElement_FC64(
-				gA, v, A->row_ind[k], j);
-		}
-	}
+	GrB_Index Ap_size = (A->ncols + 1) * sizeof(GrB_Index);
+	GrB_Index Ai_size = A->nnz * sizeof(GrB_Index);
+	GrB_Index Ax_size = A->nnz * sizeof(GxB_FC64_t);
+	info = GxB_Matrix_import_CSC(
+		&gA,
+		GxB_FC64,
+		A->nrows, 
+		A->ncols,
+		&A->col_ptr,
+		&A->row_ind,
+		&A->values,
+		Ap_size,
+		Ai_size,
+		Ax_size,
+		false,
+		false, 
+		GrB_NULL
+	);
 
 	/* build B */
 	GrB_Matrix_new(&gB, GxB_FC64, B->rows, B->cols);
@@ -195,7 +201,6 @@ matx_status_t matx_spmm_csc_c64(
 		}
 	}
 
-	GrB_free(&gA);
 	GrB_free(&gB);
 	GrB_free(&gC);
 

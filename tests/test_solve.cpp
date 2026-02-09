@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
 extern "C" {
 #include "matx/matx.h"
@@ -7,9 +7,9 @@ extern "C" {
 
 /* 4x4 identity-like sparse system: A = diag(2,2,2,2) in CSC */
 TEST(solve, sparse_real_4x4_factor_solve) {
-  int col_ptr[5] = {0, 1, 2, 3, 4};
-  int row_ind[4] = {0, 1, 2, 3};
-  double values[4] = {2.0, 2.0, 2.0, 2.0};
+matx_uint64_t col_ptr[5] = {0, 1, 2, 3, 4};
+matx_uint64_t row_ind[4] = {0, 1, 2, 3};
+matx_double values[4] = {2.0, 2.0, 2.0, 2.0};
   matx_csc_f64_t A = {4, 4, 4, col_ptr, row_ind, values};
 
   double b[4] = {4.0, 6.0, 8.0, 10.0};
@@ -37,9 +37,9 @@ TEST(solve, sparse_real_4x4_factor_solve) {
 }
 
 TEST(solve, sparse_real_4x4_solve_one_shot) {
-  int col_ptr[5] = {0, 1, 2, 3, 4};
-  int row_ind[4] = {0, 1, 2, 3};
-  double values[4] = {2.0, 2.0, 2.0, 2.0};
+    matx_uint64_t col_ptr[5] = {0, 1, 2, 3, 4};
+    matx_uint64_t row_ind[4] = {0, 1, 2, 3};
+    matx_double values[4] = {2.0, 2.0, 2.0, 2.0};
   matx_csc_f64_t A = {4, 4, 4, col_ptr, row_ind, values};
   double b[4] = {2.0, 4.0, 6.0, 8.0};
   double x[4] = {0.0, 0.0, 0.0, 0.0};

@@ -3,9 +3,9 @@
 #include <stdint.h>
 
 matx_status_t matx_sparse_f64_create(matx_csc_f64_t* out,
-    size_t nrows,
-    size_t ncols,
-    size_t nnz,
+    matx_uint64_t nrows,
+    matx_uint64_t ncols,
+    matx_uint64_t nnz,
     const matx_alloc_t* alloc) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
         return MATX_ERR_INVALID_ARG;
@@ -13,9 +13,9 @@ matx_status_t matx_sparse_f64_create(matx_csc_f64_t* out,
 
     memset(out, 0, sizeof(*out));
 
-    int* col_ptr_buf = (int*)matx_malloc(alloc, (ncols + 1) * sizeof(int));
-    int* row_ind_buf = (int*)matx_malloc(alloc, nnz * sizeof(int));
-    double* values_buf = (double*)matx_malloc(alloc, nnz * sizeof(double));
+    matx_uint64_t* col_ptr_buf = (matx_uint64_t*)matx_malloc(alloc, (ncols + 1) * sizeof(matx_uint64_t));
+    matx_uint64_t* row_ind_buf = (matx_uint64_t*)matx_malloc(alloc, nnz * sizeof(matx_uint64_t));
+    matx_double* values_buf = (matx_double*)matx_malloc(alloc, nnz * sizeof(matx_double));
 
     if (!col_ptr_buf || !row_ind_buf || !values_buf) {
         if (col_ptr_buf) matx_free(alloc, col_ptr_buf);
@@ -37,12 +37,12 @@ matx_status_t matx_sparse_f64_create(matx_csc_f64_t* out,
 }
 
 matx_status_t matx_sparse_f64_wrap(matx_csc_f64_t* out,
-    size_t nrows,
-    size_t ncols,
-    size_t nnz,
-    const int* col_ptr,
-    const int* row_ind,
-    const double* values) {
+    matx_uint64_t nrows,
+    matx_uint64_t ncols,
+    matx_uint64_t nnz,
+    const matx_uint64_t* col_ptr,
+    const matx_uint64_t* row_ind,
+    const matx_double* values) {
     if (!out || !col_ptr || !row_ind || !values) {
         return MATX_ERR_INVALID_ARG;
     }
@@ -69,9 +69,9 @@ void matx_sparse_f64_destroy(matx_csc_f64_t* m, const matx_alloc_t* alloc) {
     }
 
     if ((m->flags & 1u) != 0u) {
-        matx_free(alloc, (int*)m->col_ptr);
-        matx_free(alloc, (int*)m->row_ind);
-        matx_free(alloc, (double*)m->values);
+        matx_free(alloc, (matx_uint64_t*)m->col_ptr);
+        matx_free(alloc, (matx_uint64_t*)m->row_ind);
+        matx_free(alloc, (matx_double*)m->values);
     }
 
     memset(m, 0, sizeof(*m));

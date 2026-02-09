@@ -20,6 +20,9 @@ typedef enum matx_status_t {
   MATX_ERR_INTERNAL = 4
 } matx_status_t;
 
+typedef uint64_t matx_uint64_t;
+typedef double matx_double;
+
 const char* matx_status_string(matx_status_t st);
 const char* matx_version_string(void);
 
@@ -45,16 +48,16 @@ typedef enum matx_layout_t {
 
 // ---- Real/complex scalar ----
 typedef struct matx_complex_f64_t {
-  double real;
-  double imag;
+    matx_double real;
+    matx_double imag;
 } matx_complex_f64;
 
 // ---- Dense vector (double) ----
 typedef struct matx_vec_f64_t {
-  size_t n;
-  size_t stride;
-  double* data;
-  uint32_t flags;
+    matx_uint64_t n;
+    matx_uint64_t stride;
+    matx_double* data;
+    matx_uint64_t flags;
 } matx_vec_f64_t;
 
 matx_status_t matx_vec_f64_create(matx_vec_f64_t* out,
@@ -71,24 +74,24 @@ void matx_vec_f64_destroy(matx_vec_f64_t* v,
 
 // ---- Dense matrix (double) ----
 typedef struct matx_dense_f64_t {
-  size_t rows;
-  size_t cols;
-  size_t stride;     // leading dimension: if col-major => ld = stride (>= rows); if row-major => ld = stride (>= cols)
-  matx_layout_t layout;
-  double* data;
-  uint32_t flags;    // reserved for future (ownership, alignment, etc.)
+    matx_uint64_t  rows;
+    matx_uint64_t  cols;
+    matx_uint64_t  stride;     // leading dimension: if col-major => ld = stride (>= rows); if row-major => ld = stride (>= cols)
+    matx_layout_t layout;
+    matx_double* data;
+    matx_uint64_t flags;    // reserved for future (ownership, alignment, etc.)
 } matx_dense_f64_t;
 
 matx_status_t matx_dense_f64_create(matx_dense_f64_t* out,
-                                   size_t rows,
-                                   size_t cols,
+    matx_uint64_t rows,
+    matx_uint64_t cols,
                                    matx_layout_t layout,
                                    const matx_alloc_t* alloc);
 
 matx_status_t matx_dense_f64_wrap(matx_dense_f64_t* out,
-                                 size_t rows,
-                                 size_t cols,
-                                 size_t stride,
+    matx_uint64_t rows,
+    matx_uint64_t cols,
+    matx_uint64_t stride,
                                  matx_layout_t layout,
                                  double* data);
 
@@ -96,19 +99,19 @@ void matx_dense_f64_destroy(matx_dense_f64_t* m, const matx_alloc_t* alloc);
 
 // ---- Dense vector (complex) ----
 typedef struct matx_vec_c64_t {
-  size_t n;
-  size_t stride;
+    matx_uint64_t n;
+    matx_uint64_t stride;
   matx_complex_f64* data;
-  uint32_t flags;
+  matx_uint64_t flags;
 } matx_vec_c64_t;
 
 matx_status_t matx_vec_c64_create(matx_vec_c64_t* out,
-                                  size_t n,
+    matx_uint64_t n,
                                   const matx_alloc_t* alloc);
 
 matx_status_t matx_vec_c64_wrap(matx_vec_c64_t* out,
-                                size_t n,
-                                size_t stride,
+    matx_uint64_t n,
+    matx_uint64_t stride,
                                 matx_complex_f64* data);
 
 void matx_vec_c64_destroy(matx_vec_c64_t* v,
@@ -116,24 +119,24 @@ void matx_vec_c64_destroy(matx_vec_c64_t* v,
 
 // ---- Dense matrix (complex) ----
 typedef struct matx_dense_c64_t {
-  size_t rows;
-  size_t cols;
-  size_t stride;
+    matx_uint64_t rows;
+    matx_uint64_t cols;
+    matx_uint64_t stride;
   matx_layout_t layout;
   matx_complex_f64* data;
-  uint32_t flags;
+  matx_uint64_t flags;
 } matx_dense_c64_t;
 
 matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
-                                    size_t rows,
-                                    size_t cols,
+    matx_uint64_t rows,
+    matx_uint64_t cols,
                                     matx_layout_t layout,
                                     const matx_alloc_t* alloc);
 
 matx_status_t matx_dense_c64_wrap(matx_dense_c64_t* out,
-                                  size_t rows,
-                                  size_t cols,
-                                  size_t stride,
+    matx_uint64_t rows,
+    matx_uint64_t cols,
+    matx_uint64_t stride,
                                   matx_layout_t layout,
                                   matx_complex_f64* data);
 
@@ -142,53 +145,53 @@ void matx_dense_c64_destroy(matx_dense_c64_t* m,
 
 // ---- Sparse CSC (real/complex) ----
 typedef struct matx_csc_f64_t {
-    size_t nrows;
-    size_t ncols;
-    size_t nnz;
-    const int* col_ptr;
-    const int* row_ind;
-    const double* values;
+    matx_uint64_t nrows;
+    matx_uint64_t ncols;
+    matx_uint64_t nnz;
+    const matx_uint64_t* col_ptr;
+    const matx_uint64_t* row_ind;
+    const matx_double* values;
     uint32_t flags;
 } matx_csc_f64_t;
 
 matx_status_t matx_sparse_f64_create(matx_csc_f64_t* out,
-    size_t nrows,
-    size_t ncols,
-    size_t nnz,
+    matx_uint64_t nrows,
+    matx_uint64_t ncols,
+    matx_uint64_t nnz,
     const matx_alloc_t* alloc);
 
 matx_status_t matx_sparse_f64_wrap(matx_csc_f64_t* out,
-    size_t nrows,
-    size_t ncols,
-    size_t nnz,
-    const int* col_ptr,
-    const int* row_ind,
-    const double* values);
+    matx_uint64_t nrows,
+    matx_uint64_t ncols,
+    matx_uint64_t nnz,
+    const matx_uint64_t* col_ptr,
+    const matx_uint64_t* row_ind,
+    const matx_double* values);
 
 void matx_sparse_f64_destroy(matx_csc_f64_t* m, const matx_alloc_t* alloc);
 
 typedef struct matx_csc_c64_t {
-    size_t nrows;
-    size_t ncols;
-    size_t nnz;
-    const int* col_ptr;
-    const int* row_ind;
+    matx_uint64_t nrows;
+    matx_uint64_t ncols;
+    matx_uint64_t nnz;
+    const matx_uint64_t* col_ptr;
+    const matx_uint64_t* row_ind;
     const matx_complex_f64* values;
-    uint32_t flags;
+    matx_uint64_t flags;
 } matx_csc_c64_t;
 
 matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
-    size_t nrows,
-    size_t ncols,
-    size_t nnz,
+    matx_uint64_t nrows,
+    matx_uint64_t ncols,
+    matx_uint64_t nnz,
     const matx_alloc_t* alloc);
 
 matx_status_t matx_sparse_c64_wrap(matx_csc_c64_t* out,
-    size_t nrows,
-    size_t ncols,
-    size_t nnz,
-    const int* col_ptr,
-    const int* row_ind,
+    matx_uint64_t nrows,
+    matx_uint64_t ncols,
+    matx_uint64_t nnz,
+    const matx_uint64_t* col_ptr,
+    const matx_uint64_t* row_ind,
     const matx_complex_f64* values);
 
 void matx_sparse_c64_destroy(matx_csc_c64_t* m, const matx_alloc_t* alloc);

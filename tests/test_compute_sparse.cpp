@@ -8,10 +8,10 @@ extern "C" {
 /* 4x4 sparse CSC: full matrix for simplicity. col_ptr[0..4], row_ind[0..16], values[16] */
 TEST(compute_sparse, spmv_csc_f64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  int col_ptr[5] = {0, 4, 8, 12, 16};
-  int row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
-  double values[16];
-  for (int i = 0; i < 16; ++i) values[i] = (i % 4 == i / 4) ? 2.0 : 0.5;
+  matx_uint64_t col_ptr[5] = {0, 4, 8, 12, 16};
+  matx_uint64_t row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+  matx_double values[16];
+  for (matx_uint64_t i = 0; i < 16; ++i) values[i] = (i % 4 == i / 4) ? 2.0 : 0.5;
 
   matx_csc_f64_t A = {4, 4, 16, col_ptr, row_ind, values};
 
@@ -39,8 +39,8 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
     matx_alloc_t a = matx_alloc_default();
     const int rows = 4, cols = 4;
     const int nnz = 16;
-    int col_ptr[5] = { 0, 4, 8, 12, 16 };
-    int row_ind[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+    matx_uint64_t col_ptr[5] = { 0, 4, 8, 12, 16 };
+    matx_uint64_t row_ind[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
     matx_complex_f64 values[16];
 
     for (int i = 0; i < 16; ++i) {
@@ -85,9 +85,9 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
 
 TEST(compute_sparse, spmm_csc_f64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  int col_ptr[5] = {0, 4, 8, 12, 16};
-  int row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
-  double values[16];
+  matx_uint64_t col_ptr[5] = {0, 4, 8, 12, 16};
+  matx_uint64_t row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+  matx_double values[16];
   for (int i = 0; i < 16; ++i) values[i] = (i % 4 == i / 4) ? 1.0 : 0.0;
   matx_csc_f64_t A = {4, 4, 16, col_ptr, row_ind, values};
 
@@ -108,8 +108,8 @@ TEST(compute_sparse, spmm_csc_f64_4x4) {
 
 TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  int col_ptr[5] = {0, 4, 8, 12, 16};
-  int row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+  matx_uint64_t col_ptr[5] = {0, 4, 8, 12, 16};
+  matx_uint64_t row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
   matx_complex_f64 values[16];
   for (int i = 0; i < 16; ++i) {
     values[i].real = (i % 4 == i / 4) ? 1.0 : 0.0;

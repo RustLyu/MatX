@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
-    size_t nrows,
-    size_t ncols,
-    size_t nnz,
+    matx_uint64_t nrows,
+    matx_uint64_t ncols,
+    matx_uint64_t nnz,
     const matx_alloc_t* alloc) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
         return MATX_ERR_INVALID_ARG;
@@ -14,8 +14,8 @@ matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
 
     memset(out, 0, sizeof(*out));
 
-    int* col_ptr_buf = (int*)matx_malloc(alloc, (ncols + 1) * sizeof(int));
-    int* row_ind_buf = (int*)matx_malloc(alloc, nnz * sizeof(int));
+    matx_uint64_t* col_ptr_buf = (matx_uint64_t*)matx_malloc(alloc, (ncols + 1) * sizeof(matx_uint64_t));
+    matx_uint64_t* row_ind_buf = (matx_uint64_t*)matx_malloc(alloc, nnz * sizeof(matx_uint64_t));
     matx_complex_f64* values_buf = (matx_complex_f64*)matx_malloc(alloc, nnz * sizeof(matx_complex_f64));
 
     if (!col_ptr_buf || !row_ind_buf || !values_buf) {
@@ -38,11 +38,11 @@ matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
 }
 
 matx_status_t matx_sparse_c64_wrap(matx_csc_c64_t* out,
-    size_t nrows,
-    size_t ncols,
-    size_t nnz,
-    const int* col_ptr,
-    const int* row_ind,
+    matx_uint64_t nrows,
+    matx_uint64_t ncols,
+    matx_uint64_t nnz,
+    const matx_uint64_t* col_ptr,
+    const matx_uint64_t* row_ind,
     const matx_complex_f64* values) {
     if (!out || !col_ptr || !row_ind || !values) {
         return MATX_ERR_INVALID_ARG;
@@ -73,8 +73,8 @@ void matx_sparse_c64_destroy(matx_csc_c64_t* m, const matx_alloc_t* alloc) {
     }
 
     if ((m->flags & 1u) != 0u) {
-        matx_free(alloc, (int*)m->col_ptr);
-        matx_free(alloc, (int*)m->row_ind);
+        matx_free(alloc, (matx_uint64_t*)m->col_ptr);
+        matx_free(alloc, (matx_uint64_t*)m->row_ind);
         matx_free(alloc, (matx_complex_f64*)m->values);
     }
 

@@ -1,4 +1,4 @@
-#include "matx/matx_solve.h"
+﻿#include "matx/matx_solve.h"
 
 // Forward decls
 matx_linsolve_t matx_linsolve_make_suitesparse(void);
@@ -27,8 +27,8 @@ matx_status_t matx_factor_csc_f64(const matx_linsolve_t* ls,
 
 matx_status_t matx_solve_csc_f64_factor(const matx_linsolve_t* ls,
                                         const matx_factor_sparse_f64_t* F,
-                                        const double* b,
-                                        double* x) {
+                                        const matx_double* b,
+    matx_double* x) {
   if (!ls || !F || !b || !x) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.solve_csc_f64) return MATX_ERR_NOT_SUPPORTED;
   return ls->vt.solve_csc_f64(F, b, x);
@@ -44,8 +44,8 @@ void matx_factor_csc_f64_destroy(const matx_linsolve_t* ls,
 
 matx_status_t matx_solve_csc_f64(const matx_linsolve_t* ls,
                                  const matx_csc_f64_t* A,
-                                 const double* b,
-                                 double* x) {
+                                 const matx_double* b,
+    matx_double* x) {
   if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
   matx_factor_sparse_f64_t* F = NULL;
   matx_status_t st = matx_factor_csc_f64(ls, A, &F);
@@ -66,8 +66,8 @@ matx_status_t matx_factor_dense_f64(const matx_linsolve_t* ls,
 
 matx_status_t matx_solve_dense_f64_factor(const matx_linsolve_t* ls,
                                           const matx_factor_dense_f64_t* F,
-                                          const double* b,
-                                          double* x) {
+                                          const matx_double* b,
+    matx_double* x) {
   if (!ls || !F || !b || !x) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.solve_dense_f64) return MATX_ERR_NOT_SUPPORTED;
   return ls->vt.solve_dense_f64(F, b, x);
@@ -83,8 +83,8 @@ void matx_factor_dense_f64_destroy(const matx_linsolve_t* ls,
 
 matx_status_t matx_solve_dense_f64(const matx_linsolve_t* ls,
                                    const matx_dense_f64_t* A,
-                                   const double* b,
-                                   double* x) {
+                                   const matx_double* b,
+    matx_double* x) {
   if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
   matx_factor_dense_f64_t* F = NULL;
   matx_status_t st = matx_factor_dense_f64(ls, A, &F);
