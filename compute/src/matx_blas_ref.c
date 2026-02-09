@@ -35,7 +35,6 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
       (trans_a != 0) ? CblasTrans : CblasNoTrans;
   const enum CBLAS_TRANSPOSE tb =
       (trans_b != 0) ? CblasTrans : CblasNoTrans;
-
   cblas_dgemm(order,
               ta,
               tb,
@@ -177,7 +176,7 @@ static matx_status_t ref_dgemv(matx_layout_t layout,
     double* C,
     size_t ldc)
 {
-    if (!A || !C || !alpha || !beta)
+    if (!A || !C)
         return MATX_ERR_INVALID_ARG;
 
     if (m > INT_MAX || n > INT_MAX ||
@@ -211,7 +210,7 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
     double* B,
     size_t ldb)
 {
-    if (!A || !B || !alpha || !beta)
+    if (!A || !B)
         return MATX_ERR_INVALID_ARG;
 
     if (rows > INT_MAX || cols > INT_MAX ||
@@ -242,7 +241,7 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
     void* B,
     size_t ldb)
 {
-    if (!A || !B || !alpha || !beta)
+    if (!A || !B)
         return MATX_ERR_INVALID_ARG;
 
     if (rows > INT_MAX || cols > INT_MAX ||
@@ -255,9 +254,9 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
     cblas_zgeadd(
         order,
         (int)rows, (int)cols,
-        &alpha,
+        alpha,
         A, lda,
-        &beta,
+        beta,
         B, ldb
     );
     return MATX_OK;

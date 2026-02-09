@@ -1,4 +1,4 @@
-include(CMakeFindDependencyMacro)
+﻿include(CMakeFindDependencyMacro)
 
 # ---- OpenBLAS ----
 set(MATX_OPENBLAS_FOUND OFF)
@@ -33,6 +33,15 @@ if(MATX_ENABLE_CXSPARSE)
   find_package(CXSparse QUIET)
   if(CXSparse_FOUND)
     set(MATX_CXSPARSE_FOUND ON)
+  endif()
+endif()
+
+# ---- GraphBlas (sparse numerical ops; optional) ----
+set(MATX_GRAPHBLAS_FOUND OFF)
+if(MATX_ENABLE_GRAPHBLAS)
+  find_package(GraphBlas QUIET)
+  if(GraphBlas_FOUND)
+    set(MATX_GRAPHBLAS_FOUND ON)
   endif()
 endif()
 

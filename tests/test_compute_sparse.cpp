@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
 extern "C" {
 #include "matx/matx.h"
@@ -35,31 +35,52 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
 }
 
 TEST(compute_sparse, spmv_csc_c64_4x4) {
-  matx_alloc_t a = matx_alloc_default();
-  int col_ptr[5] = {0, 4, 8, 12, 16};
-  int row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
-  matx_complex_f64 values[16];
-  for (int i = 0; i < 16; ++i) {
-    values[i].real = (i % 4 == i / 4) ? 2.0 : 0.5;
-    values[i].imag = 0.0;
-  }
-  matx_csc_c64_t A = {4, 4, 16, col_ptr, row_ind, values};
+    
+    matx_alloc_t a = matx_alloc_default();
+    const int rows = 4, cols = 4;
+    const int nnz = 16;
+    int col_ptr[5] = { 0, 4, 8, 12, 16 };
+    int row_ind[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+    matx_complex_f64 values[16];
 
-  matx_vec_c64_t x, y;
-  ASSERT_EQ(matx_vec_c64_create(&x, 4, &a), MATX_OK);
-  ASSERT_EQ(matx_vec_c64_create(&y, 4, &a), MATX_OK);
-  x.data[0] = x.data[1] = x.data[2] = x.data[3] = {1.0, 0.0};
-  y.data[0] = y.data[1] = y.data[2] = y.data[3] = {0.0, 0.0};
+    for (int i = 0; i < 16; ++i) {
+        int row = i % 4;
+        int col = i / 4;
+        values[i].real = (row == col) ? 2.0 : 0.5;
+        values[i].imag = 0.0;
+    }
+    matx_csc_c64_t A = { rows, cols, nnz, col_ptr, row_ind, values };
 
-  matx_complex_f64 alpha = {1.0, 0.0};
-  matx_complex_f64 beta = {0.0, 0.0};
-  matx_status_t st = matx_spmv_csc_c64(alpha, &A, &x, beta, &y);
-  ASSERT_EQ(st, MATX_OK);
-  EXPECT_NEAR(y.data[0].real, 3.5, 1e-12);
-  EXPECT_NEAR(y.data[0].imag, 0.0, 1e-12);
+    matx_vec_c64_t x, y;
+    ASSERT_EQ(matx_vec_c64_create(&x, cols, &a), MATX_OK);
+    ASSERT_EQ(matx_vec_c64_create(&y, rows, &a), MATX_OK);
 
-  matx_vec_c64_destroy(&x, &a);
-  matx_vec_c64_destroy(&y, &a);
+    for (int i = 0; i < cols; ++i) {
+        x.data[i].real = 1.0;
+        x.data[i].imag = 0.0;
+    }
+    for (int i = 0; i < rows; ++i) {
+        y.data[i].real = 0.0;
+        y.data[i].imag = 0.0;
+    }
+
+    matx_complex_f64 alpha = { 1.0, 0.0 };
+    matx_complex_f64 beta = { 0.0, 0.0 };
+    matx_status_t st = matx_spmv_csc_c64(alpha, &A, &x, beta, &y);
+
+    ASSERT_EQ(st, MATX_OK);
+
+    const double expected_real = 3.5;
+    const double expected_imag = 0.0;
+    const double eps = 1e-12;
+
+    for (int i = 0; i < rows; ++i) {
+        EXPECT_NEAR(y.data[i].real, expected_real, eps) << "y[" << i << "] real part error";
+        EXPECT_NEAR(y.data[i].imag, expected_imag, eps) << "y[" << i << "] imag part error";
+    }
+
+    matx_vec_c64_destroy(&x, &a);
+    matx_vec_c64_destroy(&y, &a);
 }
 
 TEST(compute_sparse, spmm_csc_f64_4x4) {

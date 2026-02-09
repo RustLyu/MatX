@@ -45,6 +45,11 @@ if(MATX_CXSPARSE_FOUND)
   target_link_libraries(matx_compute PRIVATE CXSparse::CXSparse)
 endif()
 
+if(MATX_GRAPHBLAS_FOUND)
+  target_compile_definitions(matx_compute PRIVATE MATX_HAVE_GRAPHBLAS=1)
+  target_link_libraries(matx_compute PRIVATE GraphBlas::GraphBlas)
+endif()
+
 target_sources(matx_compute
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_compute.h

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+﻿cmake_minimum_required(VERSION 3.20)
 
 project(MatX LANGUAGES C CXX)
 
@@ -8,6 +8,7 @@ option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS backend if found/provided" ON)
 option(MATX_ENABLE_BLIS "Enable BLIS backend if found/provided" ON)
 option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse backend if found/provided" ON)
 option(MATX_ENABLE_CXSPARSE "Enable CXSparse for sparse numerical ops if found" ON)
+option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" ON)
 set(MATX_BLAS_BACKEND "AUTO" CACHE STRING "BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
 
 set_property(CACHE MATX_BLAS_BACKEND PROPERTY STRINGS AUTO OPENBLAS BLIS REFERENCE)

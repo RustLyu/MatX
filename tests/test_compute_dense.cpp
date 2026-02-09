@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
 extern "C" {
 #include "matx/matx.h"
@@ -18,11 +18,11 @@ TEST(compute_dense, geadd_f64_4x4) {
   ASSERT_EQ(matx_dense_f64_create(&B, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
   fill_dense_f64_4x4(&A, 1.0);
   fill_dense_f64_4x4(&B, 2.0);
-
-  matx_status_t st = matx_geadd_f64(3.0, &A, 0.0, &B);
+  matx_blas_t blas = matx_blas_make_reference();
+  matx_status_t st = matx_geadd_f64(&blas, 3.0, &A, 0.0, &B);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(B.data[0], 3.0 * 1.0, 1e-12);
-  EXPECT_NEAR(B.data[5], 3.0 * (1.0 + 4.0), 1e-12);
+  EXPECT_NEAR(B.data[5], 3.0 * 6.0, 1e-12);
 
   matx_dense_f64_destroy(&A, &a);
   matx_dense_f64_destroy(&B, &a);
@@ -40,9 +40,10 @@ TEST(compute_dense, geadd_c64_4x4) {
     B.data[i].imag = 0.0;
   }
 
+  matx_blas_t blas = matx_blas_make_reference();
   matx_complex_f64 alpha = {2.0, 0.0};
   matx_complex_f64 beta = {0.0, 0.0};
-  matx_status_t st = matx_geadd_c64(alpha, &A, beta, &B);
+  matx_status_t st = matx_geadd_c64(&blas, alpha, &A, beta, &B);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(B.data[0].real, 0.0, 1e-12);
   EXPECT_NEAR(B.data[1].real, 2.0, 1e-12);

@@ -117,7 +117,7 @@ static matx_status_t ss_factor_csc_c64(
 
     klu_defaults(&F->common);
 
-    F->S = klu_z_analyze(
+    F->S = klu_analyze(
         F->n,
         (int*)A->col_ptr,
         (int*)A->row_ind,
