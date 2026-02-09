@@ -16,15 +16,5 @@ set_target_properties(SuiteSparse::SPQR PROPERTIES
 list(APPEND _cmake_import_check_targets SuiteSparse::SPQR )
 list(APPEND _cmake_import_check_files_for_SuiteSparse::SPQR "${_IMPORT_PREFIX}/lib/spqr.lib" "${_IMPORT_PREFIX}/bin/spqr.dll" )
 
-# Import target "SuiteSparse::SPQR_static" for configuration "Release"
-set_property(TARGET SuiteSparse::SPQR_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(SuiteSparse::SPQR_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/spqr_static.lib"
-  )
-
-list(APPEND _cmake_import_check_targets SuiteSparse::SPQR_static )
-list(APPEND _cmake_import_check_files_for_SuiteSparse::SPQR_static "${_IMPORT_PREFIX}/lib/spqr_static.lib" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

@@ -53,11 +53,11 @@ endmacro()
 
 ####################################################################################
 
-set ( UMFPACK_DATE "Jan 10, 2024" )
+set ( UMFPACK_DATE "July 25, 2025" )
 set ( UMFPACK_VERSION_MAJOR 6 )
 set ( UMFPACK_VERSION_MINOR 3 )
-set ( UMFPACK_VERSION_PATCH 1 )
-set ( UMFPACK_VERSION "6.3.1" )
+set ( UMFPACK_VERSION_PATCH 6 )
+set ( UMFPACK_VERSION "6.3.6" )
 
 # Check for dependent targets
 include ( CMakeFindDependencyMacro )
@@ -66,11 +66,11 @@ include ( CMakeFindDependencyMacro )
 if ( OFF )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
         # First check in a common build tree
-        find_dependency ( SuiteSparse_config 7.5
+        find_dependency ( SuiteSparse_config 7.11
             PATHS ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/build NO_DEFAULT_PATH )
         # Then, check in the currently active CMAKE_MODULE_PATH
         if ( NOT SuiteSparse_config_FOUND )
-            find_dependency ( SuiteSparse_config 7.5 )
+            find_dependency ( SuiteSparse_config 7.11 )
         endif ( )
     endif ( )
 
@@ -87,28 +87,28 @@ if ( OFF )
     if ( ON )
         if ( NOT TARGET SuiteSparse::CHOLMOD )
             # First check in a common build tree
-            find_dependency ( CHOLMOD 5.1
+            find_dependency ( CHOLMOD 5.3
                 PATHS ${CMAKE_SOURCE_DIR}/../CHOLMOD/build NO_DEFAULT_PATH )
             # Then, check in the currently active CMAKE_MODULE_PATH
             if ( NOT CHOLMOD_FOUND )
-                find_dependency ( CHOLMOD 5.1 )
+                find_dependency ( CHOLMOD 5.3 )
             endif ( )
         endif ( )
     endif ( )
 
 else ( )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
-        find_dependency ( SuiteSparse_config 7.5 )
+        find_dependency ( SuiteSparse_config 7.11 )
     endif ( )
     if ( NOT TARGET SuiteSparse::AMD )
         find_dependency ( AMD 3.3 )
     endif ( )
     if ( ON AND NOT TARGET SuiteSparse::CHOLMOD )
-        find_dependency ( CHOLMOD 5.1 )
+        find_dependency ( CHOLMOD 5.3 )
     endif ( )
 endif ( )
 
-# FIXME: Also check for BLAS libraries here?
+# Fixme: Also check for BLAS libraries here?
 
 if ( NOT SuiteSparse_config_FOUND OR NOT AMD_FOUND 
      OR ( ON AND NOT CHOLMOD_FOUND ) )
@@ -118,7 +118,12 @@ endif ( )
 
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/UMFPACKTargets.cmake )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/UMFPACKTargets.cmake )
+endif ( )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/UMFPACKTargets_static.cmake )
+endif ( )
 
 # The following is only for backward compatibility with FindUMFPACK.
 

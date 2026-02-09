@@ -26,6 +26,7 @@
 #ifndef _CXS_H
 #define _CXS_H
 
+#ifndef NCOMPLEX
 #if 0
 #  ifdef __cplusplus
 #    include <complex>
@@ -34,20 +35,21 @@
 #  endif
 #  define cs_complex_t double _Complex
 #endif
+#endif
 
 #define CS_VER 4  /* CXSparse Version */
-#define CS_SUBVER 3
-#define CS_SUBSUB 1
-#define CS_DATE "Jan 10, 2024"        /* CXSparse release date */
+#define CS_SUBVER 4
+#define CS_SUBSUB 2
+#define CS_DATE "July 25, 2025"        /* CXSparse release date */
 #define CS_COPYRIGHT "Copyright (c) Timothy A. Davis, 2006-2024"
 #define CXSPARSE
 
 #include "SuiteSparse_config.h"
 
-#define CXSPARSE__VERSION SUITESPARSE__VERCODE(4,3,1)
+#define CXSPARSE__VERSION SUITESPARSE__VERCODE(4,4,2)
 #if !defined (SUITESPARSE__VERSION) || \
-    (SUITESPARSE__VERSION < SUITESPARSE__VERCODE(7,5,0))
-#error "CXSparse 4.3.1 requires SuiteSparse_config 7.5.0 or later"
+    (SUITESPARSE__VERSION < SUITESPARSE__VERCODE(7,11,0))
+#error "CXSparse 4.4.2 requires SuiteSparse_config 7.11.0 or later"
 #endif
 
 #define cs_long_t       int64_t
@@ -343,6 +345,7 @@ cs_dld *cs_dl_ddone (cs_dld *D, cs_dl *C, void *w, int64_t ok) ;
 /* complex/int32_t version of CXSparse */
 /* -------------------------------------------------------------------------- */
 
+#ifndef NCOMPLEX
 #if 0
 
 /* --- primary CSparse routines and data structures ------------------------- */
@@ -628,6 +631,7 @@ cs_cln *cs_cl_ndone (cs_cln *N, cs_cl *C, void *w, void *x, int64_t ok) ;
 cs_cld *cs_cl_ddone (cs_cld *D, cs_cl *C, void *w, int64_t ok) ;
 
 #endif
+#endif
 
 /* -------------------------------------------------------------------------- */
 /* Macros for constructing each version of CSparse */
@@ -768,11 +772,13 @@ cs_cld *cs_cl_ddone (cs_cld *D, cs_cl *C, void *w, int64_t ok) ;
 /* Conversion routines */
 /* -------------------------------------------------------------------------- */
 
+#ifndef NCOMPLEX
 #if 0
 cs_di *cs_i_real (cs_ci *A, int32_t real) ;
 cs_ci *cs_i_complex (cs_di *A, int32_t real) ;
 cs_dl *cs_l_real (cs_cl *A, int64_t real) ;
 cs_cl *cs_l_complex (cs_dl *A, int64_t real) ;
+#endif
 #endif
 
 #ifdef __cplusplus

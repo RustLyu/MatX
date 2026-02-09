@@ -16,15 +16,5 @@ set_target_properties(SuiteSparse::CAMD PROPERTIES
 list(APPEND _cmake_import_check_targets SuiteSparse::CAMD )
 list(APPEND _cmake_import_check_files_for_SuiteSparse::CAMD "${_IMPORT_PREFIX}/lib/camd.lib" "${_IMPORT_PREFIX}/bin/camd.dll" )
 
-# Import target "SuiteSparse::CAMD_static" for configuration "Release"
-set_property(TARGET SuiteSparse::CAMD_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(SuiteSparse::CAMD_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/camd_static.lib"
-  )
-
-list(APPEND _cmake_import_check_targets SuiteSparse::CAMD_static )
-list(APPEND _cmake_import_check_files_for_SuiteSparse::CAMD_static "${_IMPORT_PREFIX}/lib/camd_static.lib" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

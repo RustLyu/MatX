@@ -16,15 +16,5 @@ set_target_properties(SuiteSparse::Mongoose PROPERTIES
 list(APPEND _cmake_import_check_targets SuiteSparse::Mongoose )
 list(APPEND _cmake_import_check_files_for_SuiteSparse::Mongoose "${_IMPORT_PREFIX}/lib/suitesparse_mongoose.lib" "${_IMPORT_PREFIX}/bin/suitesparse_mongoose.dll" )
 
-# Import target "SuiteSparse::Mongoose_static" for configuration "Release"
-set_property(TARGET SuiteSparse::Mongoose_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(SuiteSparse::Mongoose_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C;CXX"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/suitesparse_mongoose_static.lib"
-  )
-
-list(APPEND _cmake_import_check_targets SuiteSparse::Mongoose_static )
-list(APPEND _cmake_import_check_files_for_SuiteSparse::Mongoose_static "${_IMPORT_PREFIX}/lib/suitesparse_mongoose_static.lib" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

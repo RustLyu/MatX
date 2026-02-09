@@ -16,15 +16,5 @@ set_target_properties(SuiteSparse::KLU PROPERTIES
 list(APPEND _cmake_import_check_targets SuiteSparse::KLU )
 list(APPEND _cmake_import_check_files_for_SuiteSparse::KLU "${_IMPORT_PREFIX}/lib/klu.lib" "${_IMPORT_PREFIX}/bin/klu.dll" )
 
-# Import target "SuiteSparse::KLU_static" for configuration "Release"
-set_property(TARGET SuiteSparse::KLU_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(SuiteSparse::KLU_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/klu_static.lib"
-  )
-
-list(APPEND _cmake_import_check_targets SuiteSparse::KLU_static )
-list(APPEND _cmake_import_check_files_for_SuiteSparse::KLU_static "${_IMPORT_PREFIX}/lib/klu_static.lib" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

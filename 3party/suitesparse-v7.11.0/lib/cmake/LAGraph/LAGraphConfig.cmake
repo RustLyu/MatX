@@ -4,7 +4,7 @@
 
 # The following copyright and license applies to just this file only, not to
 # the library itself:
-# LAGraphConfig.cmake, Copyright (c) 2019-2023, LAGraph Contributors. All
+# LAGraphConfig.cmake, Copyright (c) 2019-2025, LAGraph Contributors. All
 # Rights Reserved.
 # SPDX-License-Identifier: BSD-3-clause
 
@@ -54,11 +54,11 @@ endmacro()
 
 ####################################################################################
 
-set ( LAGRAPH_DATE "Jan 10, 2024" )
+set ( LAGRAPH_DATE "July 25, 2025" )
 set ( LAGRAPH_VERSION_MAJOR 1 )
-set ( LAGRAPH_VERSION_MINOR 1 )
-set ( LAGRAPH_VERSION_PATCH 1 )
-set ( LAGRAPH_VERSION "1.1.1" )
+set ( LAGRAPH_VERSION_MINOR 2 )
+set ( LAGRAPH_VERSION_PATCH 0 )
+set ( LAGRAPH_VERSION "1.2.0" )
 
 # Check for dependent targets
 include ( CMakeFindDependencyMacro )
@@ -67,7 +67,7 @@ set ( _dependencies_found ON )
 if ( NOT TARGET GraphBLAS::GraphBLAS )
     # Look GraphBLAS 
     list ( PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR} )
-    find_dependency ( GraphBLAS 9.0 )
+    find_dependency ( GraphBLAS 10.1 )
 endif ( )
 
 if ( NOT GraphBLAS_FOUND )
@@ -89,7 +89,12 @@ if ( NOT _dependencies_found )
 endif ( )
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/LAGraphTargets.cmake )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/LAGraphTargets.cmake )
+endif ( )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/LAGraphTargets_static.cmake )
+endif ( )
 
 if ( ON )
     if ( TARGET SuiteSparse::LAGraph )

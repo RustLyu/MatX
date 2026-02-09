@@ -74,23 +74,23 @@
  * below.
  */
 
-#define UMFPACK_DATE "Jan 10, 2024"
+#define UMFPACK_DATE "July 25, 2025"
 #define UMFPACK_MAIN_VERSION   6
 #define UMFPACK_SUB_VERSION    3
-#define UMFPACK_SUBSUB_VERSION 1
+#define UMFPACK_SUBSUB_VERSION 6
 
 #define UMFPACK_VER_CODE(main,sub) SUITESPARSE_VER_CODE(main,sub)
 #define UMFPACK_VER UMFPACK_VER_CODE(6,3)
 
-#define UMFPACK__VERSION SUITESPARSE__VERCODE(6,3,1)
+#define UMFPACK__VERSION SUITESPARSE__VERCODE(6,3,6)
 #if !defined (SUITESPARSE__VERSION) || \
-    (SUITESPARSE__VERSION < SUITESPARSE__VERCODE(7,5,0))
-#error "UMFPACK 6.3.1 requires SuiteSparse_config 7.5.0 or later"
+    (SUITESPARSE__VERSION < SUITESPARSE__VERCODE(7,11,0))
+#error "UMFPACK 6.3.6 requires SuiteSparse_config 7.8.0 or later"
 #endif
 
 #if !defined (AMD__VERSION) || \
-    (AMD__VERSION < SUITESPARSE__VERCODE(3,3,1))
-#error "UMFPACK 6.3.1 requires AMD 3.1.1 or later"
+    (AMD__VERSION < SUITESPARSE__VERCODE(3,3,4))
+#error "UMFPACK 6.3.6 requires AMD 3.3.4 or later"
 #endif
 
 // user code should not directly use GB_STR or GB_XSTR
@@ -126,8 +126,8 @@
 #define UMFPACK_SIZE_OF_ENTRY 7         /* sizeof (Entry), real or complex */
 #define UMFPACK_NDENSE_ROW 8            /* number of dense rows */
 #define UMFPACK_NEMPTY_ROW 9            /* number of empty rows */
-#define UMFPACK_NDENSE_COL 10           /* number of dense rows */
-#define UMFPACK_NEMPTY_COL 11           /* number of empty rows */
+#define UMFPACK_NDENSE_COL 10           /* number of dense cols */
+#define UMFPACK_NEMPTY_COL 11           /* number of empty cols */
 #define UMFPACK_SYMBOLIC_DEFRAG 12      /* # of memory compactions */
 #define UMFPACK_SYMBOLIC_PEAK_MEMORY 13 /* memory used by symbolic analysis */
 #define UMFPACK_SYMBOLIC_SIZE 14        /* size of Symbolic object, in Units */
@@ -246,7 +246,7 @@
 /* used in UMFPACK_*solve only: */
 #define UMFPACK_IRSTEP 7                /* max # of iterative refinements */
 
-/* compile-time settings - Control [8..11] cannot be changed at run time: */
+/* compile-time settings - Control [8] cannot be changed at run time: */
 #define UMFPACK_COMPILED_WITH_BLAS 8        /* uses the BLAS */
 
 // strategy control (added for v6.0.0)
@@ -5008,12 +5008,12 @@ complex int32_t Syntax:
 
     #include "umfpack.h"
     void *Numeric ;
-    double *Mx, *Mz, *Ex, Info [UMFPACK_INFO] ;
+    double Mx, Mz, Ex, Info [UMFPACK_INFO] ;
     int status = umfpack_zl_get_determinant (&Mx, &Mz, &Ex, Numeric, Info) ;
 
 packed complex Syntax:
 
-    Same as above, except Mz is NULL.
+    Same as above, except Mz is NULL, and Mx is an array of size 2.
 
 Author: Contributed by David Bateman, Motorola, Paris
 

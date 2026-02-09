@@ -52,11 +52,11 @@ endmacro()
 
 ####################################################################################
 
-set ( CHOLMOD_DATE "Jan 10, 2024" )
+set ( CHOLMOD_DATE "July 25, 2025" )
 set ( CHOLMOD_VERSION_MAJOR 5 )
-set ( CHOLMOD_VERSION_MINOR 1 )
-set ( CHOLMOD_VERSION_PATCH 1 )
-set ( CHOLMOD_VERSION "5.1.1" )
+set ( CHOLMOD_VERSION_MINOR 3 )
+set ( CHOLMOD_VERSION_PATCH 4 )
+set ( CHOLMOD_VERSION "5.3.4" )
 
 # Check for dependent targets
 include ( CMakeFindDependencyMacro )
@@ -92,11 +92,11 @@ endif ( )
 if ( off )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
         # First check in a common build tree
-        find_dependency ( SuiteSparse_config 7.5
+        find_dependency ( SuiteSparse_config 7.11
             PATHS ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/build NO_DEFAULT_PATH )
         # Then, check in the currently active CMAKE_MODULE_PATH
         if ( NOT SuiteSparse_config_FOUND )
-            find_dependency ( SuiteSparse_config 7.5 )
+            find_dependency ( SuiteSparse_config 7.11 )
         endif ( )
     endif ( )
 
@@ -122,7 +122,7 @@ if ( off )
 
 else ( )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
-        find_dependency ( SuiteSparse_config 7.5 )
+        find_dependency ( SuiteSparse_config 7.11 )
     endif ( )
     if ( NOT TARGET SuiteSparse::AMD )
         find_dependency ( AMD 3.3 )
@@ -178,7 +178,12 @@ endif ( )
 
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/CHOLMODTargets.cmake )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/CHOLMODTargets.cmake )
+endif ( )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/CHOLMODTargets_static.cmake OPTIONAL )
+endif ( )
 
 if ( ON )
     if ( TARGET SuiteSparse::CHOLMOD )

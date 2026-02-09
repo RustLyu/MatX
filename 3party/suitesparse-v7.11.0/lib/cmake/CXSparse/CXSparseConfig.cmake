@@ -53,11 +53,11 @@ endmacro()
 
 ####################################################################################
 
-set ( CXSPARSE_DATE "Jan 10, 2024" )
+set ( CXSPARSE_DATE "July 25, 2025" )
 set ( CXSPARSE_VERSION_MAJOR 4 )
-set ( CXSPARSE_VERSION_MINOR 3 )
-set ( CXSPARSE_VERSION_PATCH 1 )
-set ( CXSPARSE_VERSION "4.3.1" )
+set ( CXSPARSE_VERSION_MINOR 4 )
+set ( CXSPARSE_VERSION_PATCH 2 )
+set ( CXSPARSE_VERSION "4.4.2" )
 
 # Check for dependent targets
 include ( CMakeFindDependencyMacro )
@@ -66,16 +66,16 @@ include ( CMakeFindDependencyMacro )
 if ( OFF )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
         # First check in a common build tree
-        find_dependency ( SuiteSparse_config 7.5
+        find_dependency ( SuiteSparse_config 7.11
             PATHS ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/build NO_DEFAULT_PATH )
         # Then, check in the currently active CMAKE_MODULE_PATH
         if ( NOT SuiteSparse_config_FOUND )
-            find_dependency ( SuiteSparse_config 7.5 )
+            find_dependency ( SuiteSparse_config 7.11 )
         endif ( )
     endif ( )
 else ( )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
-        find_dependency ( SuiteSparse_config 7.5 )
+        find_dependency ( SuiteSparse_config 7.11 )
     endif ( )
 endif ( )
 if ( NOT SuiteSparse_config_FOUND )
@@ -85,7 +85,12 @@ endif ( )
 
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/CXSparseTargets.cmake )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/CXSparseTargets.cmake )
+endif ( )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/CXSparseTargets_static.cmake )
+endif ( )
 
 # The following is only for backward compatibility with FindCXSparse.
 

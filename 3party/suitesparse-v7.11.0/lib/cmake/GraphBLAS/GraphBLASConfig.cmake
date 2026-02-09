@@ -4,7 +4,7 @@
 
 # The following copyright and license applies to just this file only, not to
 # the library itself:
-# GraphBLASConfig.cmake, Copyright (c) 2024, Timothy A. Davis.  All Rights
+# GraphBLASConfig.cmake, Copyright (c) 2017-2025, Timothy A. Davis.  All Rights
 # Reserved.
 # SPDX-License-Identifier: BSD-3-clause
 
@@ -54,11 +54,11 @@ endmacro()
 
 ####################################################################################
 
-set ( GRAPHBLAS_DATE "Jan 10, 2024" )
-set ( GRAPHBLAS_VERSION_MAJOR 9 )
-set ( GRAPHBLAS_VERSION_MINOR 0 )
-set ( GRAPHBLAS_VERSION_PATCH 0 )
-set ( GRAPHBLAS_VERSION "9.0.0" )
+set ( GRAPHBLAS_DATE "July 25, 2025" )
+set ( GRAPHBLAS_VERSION_MAJOR 10 )
+set ( GRAPHBLAS_VERSION_MINOR 1 )
+set ( GRAPHBLAS_VERSION_PATCH 1 )
+set ( GRAPHBLAS_VERSION "10.1.1" )
 
 # Check for dependent targets
 include ( CMakeFindDependencyMacro )
@@ -70,14 +70,14 @@ if ( OFF )
     if ( NOT GraphBLAS_CUDA_FOUND )
         if ( OFF )
             # First check in a common build tree
-            find_dependency ( GraphBLAS_CUDA 9.0.0
+            find_dependency ( GraphBLAS_CUDA 10.1.1
                 PATHS ${CMAKE_SOURCE_DIR}/../GraphBLAS/build/CUDA NO_DEFAULT_PATH )
             # Then, check in the currently active CMAKE_MODULE_PATH
             if ( NOT GraphBLAS_CUDA_FOUND )
-                find_dependency ( GraphBLAS_CUDA 9.0.0 )
+                find_dependency ( GraphBLAS_CUDA 10.1.1 )
             endif ( )
         else ( )
-            find_dependency ( GraphBLAS_CUDA 9.0.0 )
+            find_dependency ( GraphBLAS_CUDA 10.1.1 )
         endif ( )
     endif ( )
     if ( NOT GraphBLAS_CUDA_FOUND )
@@ -99,7 +99,12 @@ if ( NOT _dependencies_found )
 endif ( )
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/GraphBLASTargets.cmake )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/GraphBLASTargets.cmake )
+endif ( )
+if ( OFF )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/GraphBLASTargets_static.cmake )
+endif ( )
 
 if ( ON )
     if ( TARGET SuiteSparse::GraphBLAS )

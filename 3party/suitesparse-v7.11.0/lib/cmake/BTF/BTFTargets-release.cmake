@@ -15,15 +15,5 @@ set_target_properties(SuiteSparse::BTF PROPERTIES
 list(APPEND _cmake_import_check_targets SuiteSparse::BTF )
 list(APPEND _cmake_import_check_files_for_SuiteSparse::BTF "${_IMPORT_PREFIX}/lib/btf.lib" "${_IMPORT_PREFIX}/bin/btf.dll" )
 
-# Import target "SuiteSparse::BTF_static" for configuration "Release"
-set_property(TARGET SuiteSparse::BTF_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(SuiteSparse::BTF_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/btf_static.lib"
-  )
-
-list(APPEND _cmake_import_check_targets SuiteSparse::BTF_static )
-list(APPEND _cmake_import_check_files_for_SuiteSparse::BTF_static "${_IMPORT_PREFIX}/lib/btf_static.lib" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

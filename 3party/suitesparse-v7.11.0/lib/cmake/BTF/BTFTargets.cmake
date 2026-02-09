@@ -19,7 +19,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_cmake_targets_defined "")
 set(_cmake_targets_not_defined "")
 set(_cmake_expected_targets "")
-foreach(_cmake_expected_target IN ITEMS SuiteSparse::BTF SuiteSparse::BTF_static)
+foreach(_cmake_expected_target IN ITEMS SuiteSparse::BTF)
   list(APPEND _cmake_expected_targets "${_cmake_expected_target}")
   if(TARGET "${_cmake_expected_target}")
     list(APPEND _cmake_targets_defined "${_cmake_expected_target}")
@@ -60,14 +60,6 @@ add_library(SuiteSparse::BTF SHARED IMPORTED)
 set_property(TARGET SuiteSparse::BTF PROPERTY SYSTEM 0)
 
 set_target_properties(SuiteSparse::BTF PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include/suitesparse;\$<TARGET_PROPERTY:SuiteSparse::SuiteSparseConfig,INTERFACE_INCLUDE_DIRECTORIES>"
-)
-
-# Create imported target SuiteSparse::BTF_static
-add_library(SuiteSparse::BTF_static STATIC IMPORTED)
-set_property(TARGET SuiteSparse::BTF_static PROPERTY SYSTEM 0)
-
-set_target_properties(SuiteSparse::BTF_static PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include/suitesparse;\$<TARGET_PROPERTY:SuiteSparse::SuiteSparseConfig,INTERFACE_INCLUDE_DIRECTORIES>"
 )
 

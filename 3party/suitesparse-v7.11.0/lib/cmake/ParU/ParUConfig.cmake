@@ -4,7 +4,8 @@
 
 # The following copyright and license applies to just this file only, not to
 # the library itself:
-# ParUConfig.cmake, Copyright (c) 2023, Timothy A. Davis.  All Rights Reserved.
+# ParUConfig.cmake, Copyright (c) 2023-2024, Timothy A. Davis.
+# All Rights Reserved.
 # SPDX-License-Identifier: BSD-3-clause
 
 #-------------------------------------------------------------------------------
@@ -16,7 +17,7 @@
 
 # For backward compatibility the following variables are set:
 
-# PARU_INCLUDE_DIR - where to find ParU.hpp and other headers
+# PARU_INCLUDE_DIR - where to find ParU.h
 # PARU_LIBRARY     - dynamic ParU library
 # PARU_STATIC      - static ParU library
 # PARU_LIBRARIES   - libraries when using ParU
@@ -53,11 +54,11 @@ endmacro()
 
 ####################################################################################
 
-set ( PARU_DATE "Jan 10, 2024" )
-set ( PARU_VERSION_MAJOR 0 )
-set ( PARU_VERSION_MINOR 1 )
+set ( PARU_DATE "July 25, 2025" )
+set ( PARU_VERSION_MAJOR 1 )
+set ( PARU_VERSION_MINOR 0 )
 set ( PARU_VERSION_PATCH 1 )
-set ( PARU_VERSION "0.1.1" )
+set ( PARU_VERSION "1.0.1" )
 
 # Check for dependent targets
 include ( CMakeFindDependencyMacro )
@@ -68,21 +69,21 @@ set ( _dependencies_found ON )
 if ( OFF )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
         # First check in a common build tree
-        find_dependency ( SuiteSparse_config 7.5
+        find_dependency ( SuiteSparse_config 7.11
             PATHS ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/build NO_DEFAULT_PATH )
         # Then, check in the currently active CMAKE_MODULE_PATH
         if ( NOT SuiteSparse_config_FOUND )
-            find_dependency ( SuiteSparse_config 7.5 )
+            find_dependency ( SuiteSparse_config 7.11 )
         endif ( )
     endif ( )
 
     if ( NOT TARGET SuiteSparse::CHOLMOD )
         # First check in a common build tree
-        find_dependency ( CHOLMOD 5.1
+        find_dependency ( CHOLMOD 5.3
             PATHS ${CMAKE_SOURCE_DIR}/../CHOLMOD/build NO_DEFAULT_PATH )
         # Then, check in the currently active CMAKE_MODULE_PATH
         if ( NOT CHOLMOD_FOUND )
-            find_dependency ( CHOLMOD 5.1 )
+            find_dependency ( CHOLMOD 5.3 )
         endif ( )
     endif ( )
 
@@ -98,10 +99,10 @@ if ( OFF )
 
 else ( )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
-        find_dependency ( SuiteSparse_config 7.5 )
+        find_dependency ( SuiteSparse_config 7.11 )
     endif ( )
     if ( NOT TARGET SuiteSparse::CHOLMOD )
-        find_dependency ( CHOLMOD 5.1 )
+        find_dependency ( CHOLMOD 5.3 )
     endif ( )
     if ( NOT TARGET SuiteSparse::UMFPACK )
         find_dependency ( UMFPACK 6.3 )
@@ -126,7 +127,12 @@ if ( NOT _dependencies_found )
 endif ( )
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/ParUTargets.cmake )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/ParUTargets.cmake )
+endif ( )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/ParUTargets_static.cmake )
+endif ( )
 
 if ( OFF )
     if ( TARGET SuiteSparse::ParU )

@@ -16,15 +16,5 @@ set_target_properties(SuiteSparse::UMFPACK PROPERTIES
 list(APPEND _cmake_import_check_targets SuiteSparse::UMFPACK )
 list(APPEND _cmake_import_check_files_for_SuiteSparse::UMFPACK "${_IMPORT_PREFIX}/lib/umfpack.lib" "${_IMPORT_PREFIX}/bin/umfpack.dll" )
 
-# Import target "SuiteSparse::UMFPACK_static" for configuration "Release"
-set_property(TARGET SuiteSparse::UMFPACK_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(SuiteSparse::UMFPACK_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/umfpack_static.lib"
-  )
-
-list(APPEND _cmake_import_check_targets SuiteSparse::UMFPACK_static )
-list(APPEND _cmake_import_check_files_for_SuiteSparse::UMFPACK_static "${_IMPORT_PREFIX}/lib/umfpack_static.lib" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

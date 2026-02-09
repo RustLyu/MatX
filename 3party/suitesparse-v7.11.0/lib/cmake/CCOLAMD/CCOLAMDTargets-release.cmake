@@ -16,15 +16,5 @@ set_target_properties(SuiteSparse::CCOLAMD PROPERTIES
 list(APPEND _cmake_import_check_targets SuiteSparse::CCOLAMD )
 list(APPEND _cmake_import_check_files_for_SuiteSparse::CCOLAMD "${_IMPORT_PREFIX}/lib/ccolamd.lib" "${_IMPORT_PREFIX}/bin/ccolamd.dll" )
 
-# Import target "SuiteSparse::CCOLAMD_static" for configuration "Release"
-set_property(TARGET SuiteSparse::CCOLAMD_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(SuiteSparse::CCOLAMD_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/ccolamd_static.lib"
-  )
-
-list(APPEND _cmake_import_check_targets SuiteSparse::CCOLAMD_static )
-list(APPEND _cmake_import_check_files_for_SuiteSparse::CCOLAMD_static "${_IMPORT_PREFIX}/lib/ccolamd_static.lib" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

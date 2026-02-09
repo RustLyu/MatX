@@ -53,11 +53,11 @@ endmacro()
 
 ####################################################################################
 
-set ( SUITESPARSE_DATE "Jan 12, 2024" )
+set ( SUITESPARSE_DATE "July 25, 2025" )
 set ( SUITESPARSE_CONFIG_VERSION_MAJOR 7 )
-set ( SUITESPARSE_CONFIG_VERSION_MINOR 5 )
-set ( SUITESPARSE_CONFIG_VERSION_PATCH 1 )
-set ( SUITESPARSE_CONFIG_VERSION "7.5.1" )
+set ( SUITESPARSE_CONFIG_VERSION_MINOR 11 )
+set ( SUITESPARSE_CONFIG_VERSION_PATCH 0 )
+set ( SUITESPARSE_CONFIG_VERSION "7.11.0" )
 
 # Check for dependent targets
 include ( CMakeFindDependencyMacro )
@@ -78,7 +78,12 @@ endif ( )
 
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/SuiteSparse_configTargets.cmake )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/SuiteSparse_configTargets.cmake )
+endif ( )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/SuiteSparse_configTargets_static.cmake OPTIONAL )
+endif ( )
 
 if ( ON )
     if ( TARGET SuiteSparse::SuiteSparseConfig )

@@ -16,15 +16,5 @@ set_target_properties(SuiteSparse::RBio PROPERTIES
 list(APPEND _cmake_import_check_targets SuiteSparse::RBio )
 list(APPEND _cmake_import_check_files_for_SuiteSparse::RBio "${_IMPORT_PREFIX}/lib/rbio.lib" "${_IMPORT_PREFIX}/bin/rbio.dll" )
 
-# Import target "SuiteSparse::RBio_static" for configuration "Release"
-set_property(TARGET SuiteSparse::RBio_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(SuiteSparse::RBio_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/rbio_static.lib"
-  )
-
-list(APPEND _cmake_import_check_targets SuiteSparse::RBio_static )
-list(APPEND _cmake_import_check_files_for_SuiteSparse::RBio_static "${_IMPORT_PREFIX}/lib/rbio_static.lib" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

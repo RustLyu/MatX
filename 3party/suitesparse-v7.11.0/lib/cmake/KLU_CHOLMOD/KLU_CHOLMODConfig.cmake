@@ -32,7 +32,7 @@
 ####### Any changes to this file will be overwritten by the next CMake run ####
 ####### The input file was KLU_CHOLMODConfig.cmake.in                            ########
 
-get_filename_component(PACKAGE_PREFIX_DIR "${CMAKE_CURRENT_LIST_DIR}/../../suitesparse_7.5.1" ABSOLUTE)
+get_filename_component(PACKAGE_PREFIX_DIR "${CMAKE_CURRENT_LIST_DIR}/../../SUITESPARSE" ABSOLUTE)
 
 macro(set_and_check _var _file)
   set(${_var} "${_file}")
@@ -53,11 +53,11 @@ endmacro()
 
 ####################################################################################
 
-set ( KLU_CHOLMOD_DATE "Jan 10, 2024" )
+set ( KLU_CHOLMOD_DATE "July 25, 2025" )
 set ( KLU_CHOLMOD_VERSION_MAJOR 2 )
 set ( KLU_CHOLMOD_VERSION_MINOR 3 )
-set ( KLU_CHOLMOD_VERSION_PATCH 1 )
-set ( KLU_CHOLMOD_VERSION "2.3.1" )
+set ( KLU_CHOLMOD_VERSION_PATCH 6 )
+set ( KLU_CHOLMOD_VERSION "2.3.6" )
 
 # Check for dependent targets
 include ( CMakeFindDependencyMacro )
@@ -76,11 +76,11 @@ if ( ON )
 
     if ( NOT TARGET SuiteSparse::CHOLMOD )
         # First check in a common build tree
-        find_dependency ( CHOLMOD 5.1
+        find_dependency ( CHOLMOD 5.3
             PATHS ${CMAKE_SOURCE_DIR}/../CHOLMOD/build NO_DEFAULT_PATH )
         # Then, check in the currently active CMAKE_MODULE_PATH
         if ( NOT CHOLMOD_FOUND )
-            find_dependency ( CHOLMOD 5.1 )
+            find_dependency ( CHOLMOD 5.3 )
         endif ( )
     endif ( )
 
@@ -89,7 +89,7 @@ else ( )
         find_dependency ( KLU 2.3 )
     endif ( )
     if ( NOT TARGET SuiteSparse::CHOLMOD )
-        find_dependency ( CHOLMOD 5.1 )
+        find_dependency ( CHOLMOD 5.3 )
     endif ( )
 endif ( )
 
@@ -99,7 +99,12 @@ if ( NOT KLU_FOUND OR NOT CHOLMOD_FOUND )
 endif ( )
 
 
-include ( ${CMAKE_CURRENT_LIST_DIR}/KLU_CHOLMODTargets.cmake )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/KLU_CHOLMODTargets.cmake )
+endif ( )
+if ( ON )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/KLU_CHOLMODTargets_static.cmake )
+endif ( )
 
 # The following is only for backward compatibility with FindKLU_CHOLMOD.
 
