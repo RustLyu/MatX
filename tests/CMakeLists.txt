@@ -1,4 +1,4 @@
-include(FetchContent)
+﻿include(FetchContent)
 
 FetchContent_Declare(
   googletest
@@ -23,7 +23,7 @@ target_link_libraries(matx_tests
   PRIVATE
     GTest::gtest_main
     MatX::core
-    MatX::compute
+    MatX::blas
     MatX::solve
 )
 

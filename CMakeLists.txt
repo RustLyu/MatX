@@ -40,7 +40,7 @@ endif()
 include(GNUInstallDirs)
 
 add_subdirectory(core)
-add_subdirectory(compute)
+add_subdirectory(blas)
 add_subdirectory(solve)
 
 if(MATX_BUILD_TESTS)
