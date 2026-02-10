@@ -102,7 +102,7 @@ matx_status_t matx_spmv_coo_f64(
 
 	GrB_Vector temp;
 	info = GrB_Vector_new(&temp, GrB_FP64, y->n);
-	//// temp = A*x
+	// temp = A*x
 	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Vector*)x->handle_grb.impl, NULL);
 	// temp = alpha*temp
 	info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, &alpha, NULL);
@@ -110,6 +110,7 @@ matx_status_t matx_spmv_coo_f64(
 	info = GrB_apply(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, *(GrB_Vector*)y->handle_grb.impl, &beta, NULL);
 	// gy = temp + gy
 	info = GrB_eWiseAdd(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, *(GrB_Vector*)y->handle_grb.impl, NULL);
+
 	GrB_Vector_free(&temp);
 	grb_2_vec_f64(y);
 	return MATX_OK;

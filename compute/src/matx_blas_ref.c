@@ -262,8 +262,8 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
 	return MATX_OK;
 }
 
-matx_blas_t matx_blas_make_reference(void) {
-	matx_blas_t b;
+matx_dense_backend_t matx_blas_make_reference(void) {
+	matx_dense_backend_t b;
 	b.kind = MATX_BLAS_BACKEND_REFERENCE;
 	b.vt.dgemm = &ref_dgemm;
 	b.vt.zgemm = &ref_zgemm;

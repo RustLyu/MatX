@@ -24,7 +24,7 @@ TEST(compute, dgemm_reference) {
   fill_col_major(&B, 2.0);
   for (size_t i = 0; i < 2 * 4; ++i) C.data[i] = 0.0;
 
-  matx_blas_t blas = matx_blas_make_reference();
+  matx_dense_backend_t blas = matx_blas_make_reference();
   ASSERT_EQ(matx_gemm_f64(&blas, 0, 0, 1.0, &A, &B, 0.0, &C), MATX_OK);
 
   // Spot-check a couple values against manual computation.

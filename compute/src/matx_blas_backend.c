@@ -3,9 +3,9 @@
 #include <string.h>
 
 // Forward decls
-matx_blas_t matx_blas_make_reference(void);
+matx_dense_backend_t matx_blas_make_reference(void);
 
-const char* matx_blas_backend_name(matx_blas_backend_kind_t k) {
+const char* matx_blas_backend_name(matx_dense_backend_kind_t k) {
 	switch (k) {
 	case MATX_BLAS_BACKEND_REFERENCE: return "REFERENCE";
 	case MATX_BLAS_BACKEND_OPENBLAS: return "OPENBLAS";
@@ -14,7 +14,7 @@ const char* matx_blas_backend_name(matx_blas_backend_kind_t k) {
 	}
 }
 
-static matx_blas_t choose_default_backend(void) {
+static matx_dense_backend_t choose_default_backend(void) {
 	// Build-time selection (simple & portable). Can be extended to runtime CPUID switching later.
 	// If user wants strict control: set -DMATX_BLAS_BACKEND=OPENBLAS/BLIS/REFERENCE
 #if defined(MATX_BLAS_BACKEND_REFERENCE_ONLY)
@@ -25,17 +25,17 @@ static matx_blas_t choose_default_backend(void) {
 #endif
 }
 
-matx_blas_t matx_blas_default(void) {
+matx_dense_backend_t matx_blas_default(void) {
 	return choose_default_backend();
 }
 
-matx_status_t matx_gemm_f64(const matx_blas_t* blas,
+matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 	matx_uint64_t trans_a,
 	matx_uint64_t trans_b,
-	double alpha,
+	matx_double alpha,
 	const matx_dense_f64_t* A,
 	const matx_dense_f64_t* B,
-	double beta,
+	matx_double beta,
 	matx_dense_f64_t* C) {
 	if (!blas || !A || !B || !C) return MATX_ERR_INVALID_ARG;
 	if (!blas->vt.dgemm) return MATX_ERR_NOT_SUPPORTED;
@@ -73,7 +73,7 @@ matx_status_t matx_gemm_f64(const matx_blas_t* blas,
 }
 
 
-matx_status_t matx_gemm_c64(const matx_blas_t* blas,
+matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 	matx_uint64_t trans_a,
 	matx_uint64_t trans_b,
 	matx_complex_f64 alpha,
@@ -116,7 +116,7 @@ matx_status_t matx_gemm_c64(const matx_blas_t* blas,
 		C->stride);
 }
 
-matx_status_t matx_gemv_c64(const matx_blas_t* blas,
+matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 	matx_uint64_t trans_a,
 	matx_complex_f64 alpha,
 	const matx_dense_c64_t* A,
@@ -150,7 +150,7 @@ matx_status_t matx_gemv_c64(const matx_blas_t* blas,
 		y->stride);
 }
 
-matx_status_t matx_gemv_f64(const matx_blas_t* blas,
+matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
 	matx_uint64_t trans_a,
 	matx_double alpha,
 	const matx_dense_f64_t* A,
@@ -184,7 +184,7 @@ matx_status_t matx_gemv_f64(const matx_blas_t* blas,
 		y->stride);
 }
 
-matx_status_t matx_geadd_c64(const matx_blas_t* blas,
+matx_status_t matx_geadd_c64(const matx_dense_backend_t* blas,
 	matx_complex_f64 alpha,
 	const matx_dense_c64_t* A,
 	matx_complex_f64 beta,
@@ -214,7 +214,7 @@ matx_status_t matx_geadd_c64(const matx_blas_t* blas,
 	return MATX_OK;
 }
 
-matx_status_t matx_geadd_f64(const matx_blas_t* blas,
+matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
 	matx_double alpha,
 	const matx_dense_f64_t* A,
 	matx_double beta,
@@ -241,7 +241,7 @@ matx_status_t matx_geadd_f64(const matx_blas_t* blas,
 	return MATX_OK;
 }
 
-matx_status_t matx_axpy_c64(const matx_blas_t* blas,
+matx_status_t matx_axpy_c64(const matx_dense_backend_t* blas,
 	matx_complex_f64 alpha,
 	const matx_vec_c64_t* x,
 	matx_vec_c64_t* y) {
@@ -255,8 +255,8 @@ matx_status_t matx_axpy_c64(const matx_blas_t* blas,
 	return MATX_OK;
 }
 
-matx_status_t matx_axpy_f64(const matx_blas_t* blas,
-	double alpha,
+matx_status_t matx_axpy_f64(const matx_dense_backend_t* blas,
+	matx_double alpha,
 	const matx_vec_f64_t* x,
 	matx_vec_f64_t* y) {
 	if (!x || !y || !x->data || !y->data)
