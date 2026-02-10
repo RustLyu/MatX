@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_LIST_DIR}/../cmake/MatXDeps.cmake)
+﻿include(${CMAKE_CURRENT_LIST_DIR}/../cmake/MatXDeps.cmake)
 
 add_library(matx_solve
   src/matx_solve_backend.c
@@ -8,7 +8,7 @@ add_library(matx_solve
 add_library(MatX::solve ALIAS matx_solve)
 
 target_link_libraries(matx_solve
-  PUBLIC matx_options MatX::core
+  PUBLIC MatX::core
 )
 
 target_include_directories(matx_solve
@@ -42,6 +42,13 @@ endif()
 
 target_sources(matx_solve
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_solve.h
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_solve.h>
+    $<INSTALL_INTERFACE:include/matx/matx_solve.h>
 )
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(TARGETS matx_solve
+  EXPORT MatXTargets
+)

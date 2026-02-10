@@ -11,7 +11,7 @@ add_library(matx_blas
 add_library(MatX::blas ALIAS matx_blas)
 
 target_link_libraries(matx_blas
-  PUBLIC matx_options MatX::core
+  PUBLIC MatX::core
 )
 
 target_include_directories(matx_blas
@@ -53,6 +53,13 @@ endif()
 
 target_sources(matx_blas
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_compute.h
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_compute.h>
+    $<INSTALL_INTERFACE:include/matx/matx_compute.h>
 )
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(TARGETS matx_blas
+  EXPORT MatXTargets
+)

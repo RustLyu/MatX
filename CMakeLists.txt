@@ -27,17 +27,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-add_library(matx_options INTERFACE)
-target_compile_definitions(matx_options INTERFACE
-  $<$<CONFIG:Debug>:MATX_DEBUG=1>
-)
-if(MSVC)
-  target_compile_options(matx_options INTERFACE /W4 /permissive-)
-else()
-  target_compile_options(matx_options INTERFACE -Wall -Wextra -Wpedantic)
-endif()
+#add_library(matx_options INTERFACE)
+#target_compile_definitions(matx_options INTERFACE
+#  $<$<CONFIG:Debug>:MATX_DEBUG=1>
+#)
+#if(MSVC)
+#  target_compile_options(matx_options INTERFACE /W4 /permissive-)
+#else()
+#  target_compile_options(matx_options INTERFACE -Wall -Wextra -Wpedantic)
+#endif()
 
-include(GNUInstallDirs)
+#include(GNUInstallDirs)
 
 add_subdirectory(core)
 add_subdirectory(blas)
@@ -48,3 +48,7 @@ if(MATX_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
+install(EXPORT MatXTargets
+  NAMESPACE MatX::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MatX
+)

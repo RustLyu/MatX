@@ -11,7 +11,7 @@
 
 add_library(MatX::core ALIAS matx_core)
 
-target_link_libraries(matx_core PUBLIC matx_options)
+#target_link_libraries(matx_core PUBLIC )
 
 target_include_directories(matx_core
   PUBLIC
@@ -21,7 +21,8 @@ target_include_directories(matx_core
 
 target_sources(matx_core
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx.h
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx.h>
+    $<INSTALL_INTERFACE:include/matx/matx.h>
 )
 
 target_compile_definitions(matx_core PUBLIC MATX_CORE_BUILD=1)
@@ -32,3 +33,9 @@ else()
   target_compile_definitions(matx_core PUBLIC MATX_PLATFORM_POSIX=1)
 endif()
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(TARGETS matx_core
+  EXPORT MatXTargets
+)
