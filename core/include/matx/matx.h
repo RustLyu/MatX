@@ -46,6 +46,17 @@ typedef enum matx_layout_t {
   MATX_ROW_MAJOR = 1
 } matx_layout_t;
 
+typedef enum matx_handle_type_t {
+  MATX_HANDLE_TYPE_GRB_MATRIX = 1,
+  MATX_HANDLE_TYPE_GRB_VECTOR = 2
+} matx_handle_type_t;
+
+typedef struct matx_handle_t {
+	void* impl;
+    matx_handle_type_t type;
+    int8_t valid;
+}matx_handle_t;
+
 // ---- Real/complex scalar ----
 typedef struct matx_complex_f64_t {
     matx_double real;
@@ -99,10 +110,11 @@ void matx_dense_f64_destroy(matx_dense_f64_t* m, const matx_alloc_t* alloc);
 
 // ---- Dense vector (complex) ----
 typedef struct matx_vec_c64_t {
-    matx_uint64_t n;
-    matx_uint64_t stride;
-  matx_complex_f64* data;
-  matx_uint64_t flags;
+        matx_uint64_t n;
+        matx_uint64_t stride;
+        matx_complex_f64* data;
+        matx_uint64_t flags;
+		matx_handle_t handle_grb;
 } matx_vec_c64_t;
 
 matx_status_t matx_vec_c64_create(matx_vec_c64_t* out,
@@ -179,6 +191,17 @@ typedef struct matx_csc_c64_t {
     const matx_complex_f64* values;
     matx_uint64_t flags;
 } matx_csc_c64_t;
+
+typedef struct matx_coo_c64_t {
+    matx_uint64_t nrows;
+    matx_uint64_t ncols;
+    matx_uint64_t nnz;
+    const matx_uint64_t* rows;
+    const matx_uint64_t* columns;
+    const matx_complex_f64* values;
+    matx_uint64_t flags;
+    matx_handle_t handle_grb;
+} matx_coo_c64_t;
 
 matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
     matx_uint64_t nrows,

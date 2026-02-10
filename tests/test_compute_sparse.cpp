@@ -39,18 +39,45 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
     matx_alloc_t a = matx_alloc_default();
     const int rows = 4, cols = 4;
     const int nnz = 16;
-    matx_uint64_t col_ptr[5] = { 0, 4, 8, 12, 16 };
-    matx_uint64_t row_ind[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
-    matx_complex_f64 values[16];
+    //matx_uint64_t col_ptr[5] = { 0, 4, 8, 12, 16 };
+    //matx_uint64_t row_ind[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+    //matx_complex_f64 values[16];
 
-    for (int i = 0; i < 16; ++i) {
-        int row = i % 4;
-        int col = i / 4;
-        values[i].real = (row == col) ? 2.0 : 0.5;
-        values[i].imag = 0.0;
+    //for (int i = 0; i < 16; ++i) {
+    //    int row = i % 4;
+    //    int col = i / 4;
+    //    values[i].real = (row == col) ? 2.0 : 0.5;
+    //    values[i].imag = 0.0;
+    //}
+    //matx_csc_c64_t A = { rows, cols, nnz, col_ptr, row_ind, values };
+    //const matx_uint64_t nrows = 4;
+    //const matx_uint64_t ncols = 4;
+    //const matx_uint64_t nnz = 16;
+
+    matx_uint64_t coo_rows[16];
+    matx_uint64_t coo_cols[16];
+    matx_complex_f64 coo_values[16];
+
+    for (matx_uint64_t i = 0; i < nnz; ++i) {
+        matx_uint64_t row = i % 4;
+        matx_uint64_t col = i / 4;
+
+        coo_rows[i] = row;
+        coo_cols[i] = col;
+
+        coo_values[i].real = (row == col) ? 2.0 : 0.5;
+        coo_values[i].imag = 0.0;
     }
-    matx_csc_c64_t A = { rows, cols, nnz, col_ptr, row_ind, values };
-
+    matx_coo_c64_t A = {
+        .nrows = rows,
+        .ncols = cols,
+        .nnz = nnz,    
+        .rows = coo_rows,
+        .columns = coo_cols,    
+        .values = coo_values,
+        .flags = 0,
+        .handle_grb = {.impl = NULL, .type= MATX_HANDLE_TYPE_GRB_MATRIX, .valid=-1}
+    };
     matx_vec_c64_t x, y;
     ASSERT_EQ(matx_vec_c64_create(&x, cols, &a), MATX_OK);
     ASSERT_EQ(matx_vec_c64_create(&y, rows, &a), MATX_OK);

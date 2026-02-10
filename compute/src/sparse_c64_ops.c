@@ -9,10 +9,39 @@
 
 #include <suitesparse/GraphBLAS.h>
 
+size_t coo_2_grb(matx_coo_c64_t* A)
+{
+	GrB_Matrix_free(A->handle_grb.impl);
+	GrB_Matrix_new(&A->handle_grb.impl, GxB_FC64, A->nrows, A->ncols);
+	GrB_Info info = GxB_Matrix_import_FC64(A->handle_grb.impl, GxB_FC64, A->nrows, A->ncols, A->rows, A->columns, A->values,
+	A->nnz, A->nnz, A->nnz, GrB_COO_FORMAT);
+	A->handle_grb.type = MATX_HANDLE_TYPE_GRB_MATRIX;
+	A->handle_grb.valid = 1;
+	return 0;
+}
+
+size_t vec_2_grb(matx_vec_c64_t* v)
+{
+	GrB_Vector_free(v->handle_grb.impl);
+	GrB_Info info = GrB_Vector_new(&v->handle_grb.impl, GxB_FC64, v->n);
+	info = GxB_Vector_import_Full(v->handle_grb.impl, GxB_FC64, v->n, &v->data, v->n, false, NULL);
+	v->handle_grb.type = MATX_HANDLE_TYPE_GRB_VECTOR;
+	v->handle_grb.valid = 1;
+	return 0;
+}
+
+size_t grb_2_vec(matx_vec_c64_t* v)
+{
+	GrB_Type t = GxB_FC64;
+	bool iso = false;
+	GrB_Info info = GxB_Vector_export_Full(v->handle_grb.impl, &t, &v->n, &v->data, &v->n, false, NULL);
+	return 0;
+}
+
 matx_status_t matx_spmv_csc_c64(
 	matx_complex_f64 alpha,
-	const matx_csc_c64_t* A,
-	const matx_vec_c64_t* x,
+	matx_coo_c64_t* A,
+	matx_vec_c64_t* x,
 	matx_complex_f64 beta,
 	matx_vec_c64_t* y)
 {
@@ -25,79 +54,36 @@ matx_status_t matx_spmv_csc_c64(
 
 	/* ---------------- build GraphBLAS matrix ---------------- */
 
-	GrB_Matrix gA;
-	info = GrB_Matrix_new(&gA, GxB_FC64, A->nrows, A->ncols);
-	if (info != GrB_SUCCESS) return MATX_ERR_INTERNAL;
-
-	for (size_t j = 0; j < A->ncols; j++)
+	if (A->handle_grb.valid <= 0)
 	{
-		for (int k = A->col_ptr[j]; k < A->col_ptr[j + 1]; k++)
-		{
-			GxB_FC64_t val =
-			{ A->values[k].real, A->values[k].imag };
-
-			GxB_Matrix_setElement_FC64(
-				gA, val, A->row_ind[k], j);
-		}
+		coo_2_grb(A);
 	}
-
 	/* ---------------- build vectors ---------------- */
-
-	GrB_Vector gx, gy;
-
-	GrB_Vector_new(&gx, GxB_FC64, x->n);
-	GrB_Vector_new(&gy, GxB_FC64, y->n);
-
-	for (size_t i = 0; i < x->n; i++)
+	if (x->handle_grb.valid <= 0)
 	{
-		GxB_FC64_t v =
-		{ x->data[i * x->stride].real,
-		 x->data[i * x->stride].imag };
-
-		GxB_Vector_setElement_FC64(gx, v, i);
+		vec_2_grb(x);
 	}
 
-	for (size_t i = 0; i < y->n; i++)
+	if (y->handle_grb.valid <= 0)
 	{
-		GxB_FC64_t v =
-		{ y->data[i * y->stride].real,
-		 y->data[i * y->stride].imag };
-
-		GxB_Vector_setElement_FC64(gy, v, i);
+		vec_2_grb(y);
 	}
-
 	/* ---------------- gy = alpha*A*x + beta*y ---------------- */
-
 	GxB_FC64_t a = { alpha.real, alpha.imag };
 	GxB_FC64_t b = { beta.real, beta.imag };
 
 	GrB_Vector temp;
 	GrB_Vector_new(&temp, GxB_FC64, y->n);
-	// temp = A*x
-	GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, gA, gx, NULL);
+	//// temp = A*x
+	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Vector*)x->handle_grb.impl, NULL);
 	// temp = alpha*temp
-	GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, &a, NULL);
+	info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, &a, NULL);
 	// gy = beta*gy
-	GrB_apply(gy, NULL, NULL, GxB_TIMES_FC64, gy, &b, NULL);
+	info = GrB_apply(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, *(GrB_Vector*)y->handle_grb.impl, &b, NULL);
 	// gy = temp + gy
-	GrB_eWiseAdd(gy, NULL, NULL, GxB_PLUS_FC64, temp, gy, NULL);
+	info = GrB_eWiseAdd(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Vector*)y->handle_grb.impl, NULL);
 	GrB_Vector_free(&temp);
-
-	/* ---------------- copy back ---------------- */
-
-	for (size_t i = 0; i < y->n; i++)
-	{
-		GxB_FC64_t v;
-		if (GxB_Vector_extractElement_FC64(&v, gy, i) == GrB_SUCCESS)
-		{
-			y->data[i * y->stride].real = v._Val[0];
-			y->data[i * y->stride].imag = v._Val[1];
-		}
-	}
-
-	GrB_free(&gx);
-	GrB_free(&gy);
-	GrB_free(&gA);
+	grb_2_vec(y);
 
 	return MATX_OK;
 }
