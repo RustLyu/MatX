@@ -51,10 +51,15 @@ typedef enum matx_handle_type_t {
   MATX_HANDLE_TYPE_GRB_VECTOR = 2
 } matx_handle_type_t;
 
+typedef void(*free_ptr_func)(void* ptr);
+//typedef int (*CalcFunc)(int, int);
+
 typedef struct matx_handle_t {
 	void* impl;
     matx_handle_type_t type;
     int8_t valid;
+    free_ptr_func custom_free_func;
+
 }matx_handle_t;
 
 // ---- Real/complex scalar ----
@@ -218,7 +223,7 @@ matx_status_t matx_sparse_c64_wrap(matx_csc_c64_t* out,
     const matx_uint64_t* row_ind,
     const matx_complex_f64* values);
 
-void matx_sparse_c64_destroy(matx_csc_c64_t* m, const matx_alloc_t* alloc);
+void matx_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc);
 
 #ifdef __cplusplus
 }

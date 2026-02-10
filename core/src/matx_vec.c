@@ -73,6 +73,17 @@ void matx_vec_c64_destroy(matx_vec_c64_t* v,
   if ((v->flags & 1u) != 0u && v->data && alloc) {
     matx_free(alloc, v->data);
   }
+
+  if (v->handle_grb.valid > 0)
+  {
+      if (v->handle_grb.custom_free_func && v->handle_grb.impl)
+      {
+          v->handle_grb.custom_free_func(v->handle_grb.impl);
+      }
+      v->handle_grb.impl = NULL;
+      v->handle_grb.valid = -1;
+  }
+
   memset(v, 0, sizeof(*v));
 }
 

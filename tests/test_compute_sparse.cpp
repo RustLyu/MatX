@@ -39,20 +39,6 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
     matx_alloc_t a = matx_alloc_default();
     const int rows = 4, cols = 4;
     const int nnz = 16;
-    //matx_uint64_t col_ptr[5] = { 0, 4, 8, 12, 16 };
-    //matx_uint64_t row_ind[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
-    //matx_complex_f64 values[16];
-
-    //for (int i = 0; i < 16; ++i) {
-    //    int row = i % 4;
-    //    int col = i / 4;
-    //    values[i].real = (row == col) ? 2.0 : 0.5;
-    //    values[i].imag = 0.0;
-    //}
-    //matx_csc_c64_t A = { rows, cols, nnz, col_ptr, row_ind, values };
-    //const matx_uint64_t nrows = 4;
-    //const matx_uint64_t ncols = 4;
-    //const matx_uint64_t nnz = 16;
 
     matx_uint64_t coo_rows[16];
     matx_uint64_t coo_cols[16];
@@ -105,7 +91,7 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
         EXPECT_NEAR(y.data[i].real, expected_real, eps) << "y[" << i << "] real part error";
         EXPECT_NEAR(y.data[i].imag, expected_imag, eps) << "y[" << i << "] imag part error";
     }
-
+    matx_sparse_c64_destroy(&A, &a);
     matx_vec_c64_destroy(&x, &a);
     matx_vec_c64_destroy(&y, &a);
 }
@@ -129,21 +115,13 @@ TEST(compute_sparse, spmm_csc_f64_4x4) {
   EXPECT_NEAR(C.data[0], 1.0, 1e-12);
   EXPECT_NEAR(C.data[5], 1.0, 1e-12);
 
+  matx_sparse_f64_destroy(&A, &a);
   matx_dense_f64_destroy(&B, &a);
   matx_dense_f64_destroy(&C, &a);
 }
 
 TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  //matx_uint64_t col_ptr[5] = {0, 4, 8, 12, 16};
-  //matx_uint64_t row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
-  //matx_complex_f64 values[16];
-  //for (int i = 0; i < 16; ++i) {
-  //  values[i].real = (i % 4 == i / 4) ? 1.0 : 0.0;
-  //  values[i].imag = 0.0;
-  //}
-  //matx_csc_c64_t A = {4, 4, 16, col_ptr, row_ind, values};
-
   matx_uint64_t nnz = 4;
 
   matx_uint64_t rows[16] = { 0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3 };
@@ -182,7 +160,7 @@ TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_status_t st = matx_spmm_csc_c64(alpha, &A, &B, beta, &C);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(C.data[0].real, 1.0, 1e-12);
-
+  matx_sparse_c64_destroy(&A, &a);
   matx_dense_c64_destroy(&B, &a);
   matx_dense_c64_destroy(&C, &a);
 }
