@@ -194,7 +194,7 @@ extern "C" {
 		matx_dense_f64_t* C);
 
 	matx_status_t matx_spmm_csc_c64(matx_complex_f64 alpha,
-		const matx_csc_c64_t* A,
+		const matx_coo_c64_t* A,
 		const matx_dense_c64_t* B,
 		matx_complex_f64 beta,
 		matx_dense_c64_t* C);

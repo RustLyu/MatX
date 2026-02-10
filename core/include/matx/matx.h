@@ -134,9 +134,10 @@ typedef struct matx_dense_c64_t {
     matx_uint64_t rows;
     matx_uint64_t cols;
     matx_uint64_t stride;
-  matx_layout_t layout;
-  matx_complex_f64* data;
-  matx_uint64_t flags;
+    matx_layout_t layout;
+    matx_complex_f64* data;
+    matx_uint64_t flags;
+    matx_handle_t handle_grb;
 } matx_dense_c64_t;
 
 matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
