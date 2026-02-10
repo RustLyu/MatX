@@ -52,7 +52,6 @@ typedef enum matx_handle_type_t {
 } matx_handle_type_t;
 
 typedef void(*free_ptr_func)(void* ptr);
-//typedef int (*CalcFunc)(int, int);
 
 typedef struct matx_handle_t {
 	void* impl;
@@ -209,18 +208,18 @@ typedef struct matx_coo_c64_t {
     matx_handle_t handle_grb;
 } matx_coo_c64_t;
 
-matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
+matx_status_t matx_sparse_c64_create(matx_coo_c64_t* out,
     matx_uint64_t nrows,
     matx_uint64_t ncols,
     matx_uint64_t nnz,
     const matx_alloc_t* alloc);
 
-matx_status_t matx_sparse_c64_wrap(matx_csc_c64_t* out,
+matx_status_t matx_sparse_c64_wrap(matx_coo_c64_t* out,
     matx_uint64_t nrows,
     matx_uint64_t ncols,
     matx_uint64_t nnz,
-    const matx_uint64_t* col_ptr,
-    const matx_uint64_t* row_ind,
+    const matx_uint64_t* rows,
+    const matx_uint64_t* cols,
     const matx_complex_f64* values);
 
 void matx_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc);

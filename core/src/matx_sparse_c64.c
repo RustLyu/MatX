@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 
-matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
+matx_status_t matx_sparse_c64_create(matx_coo_c64_t* out,
     matx_uint64_t nrows,
     matx_uint64_t ncols,
     matx_uint64_t nnz,
@@ -13,14 +13,14 @@ matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
     }
 
     memset(out, 0, sizeof(*out));
-
-    matx_uint64_t* col_ptr_buf = (matx_uint64_t*)matx_malloc(alloc, (ncols + 1) * sizeof(matx_uint64_t));
-    matx_uint64_t* row_ind_buf = (matx_uint64_t*)matx_malloc(alloc, nnz * sizeof(matx_uint64_t));
+    
+    matx_uint64_t* rows = (matx_uint64_t*)matx_malloc(alloc, nnz * sizeof(matx_uint64_t));
+    matx_uint64_t* cols = (matx_uint64_t*)matx_malloc(alloc, (nnz) * sizeof(matx_uint64_t));
     matx_complex_f64* values_buf = (matx_complex_f64*)matx_malloc(alloc, nnz * sizeof(matx_complex_f64));
 
-    if (!col_ptr_buf || !row_ind_buf || !values_buf) {
-        if (col_ptr_buf) matx_free(alloc, col_ptr_buf);
-        if (row_ind_buf) matx_free(alloc, row_ind_buf);
+    if (!rows || !cols || !values_buf) {
+        if (rows) matx_free(alloc, rows);
+        if (cols) matx_free(alloc, cols);
         if (values_buf) matx_free(alloc, values_buf);
         memset(out, 0, sizeof(*out));
         return MATX_ERR_OUT_OF_MEMORY;
@@ -29,22 +29,22 @@ matx_status_t matx_sparse_c64_create(matx_csc_c64_t* out,
     out->nrows = nrows;
     out->ncols = ncols;
     out->nnz = nnz;
-    out->col_ptr = col_ptr_buf;
-    out->row_ind = row_ind_buf;
+    out->rows = rows;
+    out->columns = cols;
     out->values = values_buf;
     out->flags = 1u;
 
     return MATX_OK;
 }
 
-matx_status_t matx_sparse_c64_wrap(matx_csc_c64_t* out,
+matx_status_t matx_sparse_c64_wrap(matx_coo_c64_t* out,
     matx_uint64_t nrows,
     matx_uint64_t ncols,
     matx_uint64_t nnz,
-    const matx_uint64_t* col_ptr,
-    const matx_uint64_t* row_ind,
+    const matx_uint64_t* rows,
+    const matx_uint64_t* cols,
     const matx_complex_f64* values) {
-    if (!out || !col_ptr || !row_ind || !values) {
+    if (!out || !rows || !cols || !values) {
         return MATX_ERR_INVALID_ARG;
     }
     if (nrows == 0 || ncols == 0 || nnz == 0) {
@@ -59,8 +59,8 @@ matx_status_t matx_sparse_c64_wrap(matx_csc_c64_t* out,
     out->nrows = nrows;
     out->ncols = ncols;
     out->nnz = nnz;
-    out->col_ptr = col_ptr;
-    out->row_ind = row_ind;
+    out->columns = rows;
+    out->rows = cols;
     out->values = values;
     out->flags = 0u;
 
