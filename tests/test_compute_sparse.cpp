@@ -35,7 +35,8 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
   x.data[3] = 1.0;
   y.data[0] = y.data[1] = y.data[2] = y.data[3] = 0.0;
 
-  matx_status_t st = matx_spmv_coo_f64(1.0, &A, &x, 0.0, &y);
+  auto backend = matx_sparse_make_reference();
+  matx_status_t st = matx_spmv_coo_f64(&backend, 1.0, &A, &x, 0.0, &y);
   ASSERT_EQ(st, MATX_OK);
   /* y = A*x; A has diagonal 2, off-diag 0.5. So y_i = 2*1 + 0.5*3 = 3.5 */
   EXPECT_NEAR(y.data[0], 3.5, 1e-12);
@@ -90,7 +91,8 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
 
     matx_complex_f64 alpha = { 1.0, 0.0 };
     matx_complex_f64 beta = { 0.0, 0.0 };
-    matx_status_t st = matx_spmv_csc_c64(alpha, &A, &x, beta, &y);
+    auto backend = matx_sparse_make_reference();
+    matx_status_t st = matx_spmv_coo_c64(&backend, alpha, &A, &x, beta, &y);
 
     ASSERT_EQ(st, MATX_OK);
 
@@ -131,8 +133,8 @@ TEST(compute_sparse, spmm_csc_f64_4x4) {
   ASSERT_EQ(matx_dense_f64_create(&C, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
   for (size_t i = 0; i < 16; ++i) B.data[i] = (i % 4 == i / 4) ? 1.0 : 0.0;
   for (size_t i = 0; i < 16; ++i) C.data[i] = 0.0;
-
-  matx_status_t st = matx_spmm_coo_f64(1.0, &A, &B, 0.0, &C);
+  auto backend = matx_sparse_make_reference();
+  matx_status_t st = matx_spmm_coo_f64(&backend, 1.0, &A, &B, 0.0, &C);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(C.data[0], 1.0, 1e-12);
   EXPECT_NEAR(C.data[5], 1.0, 1e-12);
@@ -179,7 +181,8 @@ TEST(compute_sparse, spmm_csc_c64_4x4) {
 
   matx_complex_f64 alpha = {1.0, 0.0};
   matx_complex_f64 beta = {0.0, 0.0};
-  matx_status_t st = matx_spmm_csc_c64(alpha, &A, &B, beta, &C);
+  auto backend = matx_sparse_make_reference();
+  matx_status_t st = matx_spmm_coo_c64(&backend, alpha, &A, &B, beta, &C);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(C.data[0].real, 1.0, 1e-12);
   matx_sparse_c64_destroy(&A, &a);

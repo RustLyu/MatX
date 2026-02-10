@@ -3,8 +3,9 @@
 add_library(matx_compute
   src/matx_blas_backend.c
   src/matx_blas_ref.c
-  src/sparse_f64_ops.c
-  src/sparse_c64_ops.c
+  src/matx_graphblas_backend.c
+  src/matx_graphblas_ref.c
+  src/tools.c
 )
 
 add_library(MatX::compute ALIAS matx_compute)
