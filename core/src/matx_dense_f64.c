@@ -56,6 +56,17 @@ void matx_dense_f64_destroy(matx_dense_f64_t* m, const matx_alloc_t* alloc) {
 	if ((m->flags & 1u) != 0u && m->data) {
 		if (alloc) matx_free(alloc, m->data);
 	}
+
+	if (m->handle_grb.valid > 0)
+	{
+		if (m->handle_grb.custom_free_func && m->handle_grb.impl)
+		{
+			m->handle_grb.custom_free_func(m->handle_grb.impl);
+		}
+		m->handle_grb.impl = NULL;
+		m->handle_grb.valid = -1;
+	}
+
 	memset(m, 0, sizeof(*m));
 }
 

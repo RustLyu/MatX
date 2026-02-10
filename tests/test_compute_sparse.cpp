@@ -8,12 +8,23 @@ extern "C" {
 /* 4x4 sparse CSC: full matrix for simplicity. col_ptr[0..4], row_ind[0..16], values[16] */
 TEST(compute_sparse, spmv_csc_f64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_uint64_t col_ptr[5] = {0, 4, 8, 12, 16};
-  matx_uint64_t row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+  matx_uint64_t I[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };  // 行索引
+  matx_uint64_t J[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };  // 列索引
   matx_double values[16];
-  for (matx_uint64_t i = 0; i < 16; ++i) values[i] = (i % 4 == i / 4) ? 2.0 : 0.5;
+  for (matx_uint64_t i = 0; i < 16; ++i) 
+      values[i] = (i % 4 == i / 4) ? 2.0 : 0.5;
 
-  matx_csc_f64_t A = {4, 4, 16, col_ptr, row_ind, values};
+  // 构造 COO 矩阵
+  matx_coo_f64_t A = {
+      .nrows = 4,
+      .ncols = 4,
+      .nnz = 16,
+      .rows = I,
+      .columns = J,
+	  .values = values,
+      .flags = 0,
+	  .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
+  };
 
   matx_vec_f64_t x, y;
   ASSERT_EQ(matx_vec_f64_create(&x, 4, &a), MATX_OK);
@@ -24,7 +35,7 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
   x.data[3] = 1.0;
   y.data[0] = y.data[1] = y.data[2] = y.data[3] = 0.0;
 
-  matx_status_t st = matx_spmv_csc_f64(1.0, &A, &x, 0.0, &y);
+  matx_status_t st = matx_spmv_coo_f64(1.0, &A, &x, 0.0, &y);
   ASSERT_EQ(st, MATX_OK);
   /* y = A*x; A has diagonal 2, off-diag 0.5. So y_i = 2*1 + 0.5*3 = 3.5 */
   EXPECT_NEAR(y.data[0], 3.5, 1e-12);
@@ -98,11 +109,22 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
 
 TEST(compute_sparse, spmm_csc_f64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_uint64_t col_ptr[5] = {0, 4, 8, 12, 16};
-  matx_uint64_t row_ind[16] = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+  matx_uint64_t I[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+  matx_uint64_t J[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
   matx_double values[16];
-  for (int i = 0; i < 16; ++i) values[i] = (i % 4 == i / 4) ? 1.0 : 0.0;
-  matx_csc_f64_t A = {4, 4, 16, col_ptr, row_ind, values};
+  for (int i = 0; i < 16; ++i) 
+      values[i] = (i % 4 == i / 4) ? 1.0 : 0.0;
+  //matx_csc_f64_t A = {4, 4, 16, col_ptr, row_ind, values};
+  matx_coo_f64_t A = {
+    .nrows = 4,
+    .ncols = 4,
+    .nnz = 16,
+    .rows = I,
+    .columns = J,
+    .values = values,
+    .flags = 0,
+    .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
+  };
 
   matx_dense_f64_t B, C;
   ASSERT_EQ(matx_dense_f64_create(&B, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
@@ -110,7 +132,7 @@ TEST(compute_sparse, spmm_csc_f64_4x4) {
   for (size_t i = 0; i < 16; ++i) B.data[i] = (i % 4 == i / 4) ? 1.0 : 0.0;
   for (size_t i = 0; i < 16; ++i) C.data[i] = 0.0;
 
-  matx_status_t st = matx_spmm_csc_f64(1.0, &A, &B, 0.0, &C);
+  matx_status_t st = matx_spmm_coo_f64(1.0, &A, &B, 0.0, &C);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(C.data[0], 1.0, 1e-12);
   EXPECT_NEAR(C.data[5], 1.0, 1e-12);

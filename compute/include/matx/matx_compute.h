@@ -163,10 +163,10 @@ extern "C" {
 		matx_vec_c64_t* y);
 
 	// y := alpha * A * x + beta * y  (sparse CSC, op(A)=A for now)
-	matx_status_t matx_spmv_csc_f64(double alpha,
-		const matx_csc_f64_t* A,
+	matx_status_t matx_spmv_coo_f64(matx_double alpha,
+		const matx_coo_f64_t* A,
 		const matx_vec_f64_t* x,
-		double beta,
+		matx_double beta,
 		matx_vec_f64_t* y);
 
 	matx_status_t matx_spmv_csc_c64(matx_complex_f64 alpha,
@@ -187,10 +187,10 @@ extern "C" {
 		matx_dense_f64_t* C);
 
 	// C := alpha * A * B + beta * C  (sparse CSC * dense, op() = I for now)
-	matx_status_t matx_spmm_csc_f64(double alpha,
-		const matx_csc_f64_t* A,
-		const matx_dense_f64_t* B,
-		double beta,
+	matx_status_t matx_spmm_coo_f64(matx_double alpha,
+		matx_coo_f64_t* A,
+		matx_dense_f64_t* B,
+		matx_double beta,
 		matx_dense_f64_t* C);
 
 	matx_status_t matx_spmm_csc_c64(matx_complex_f64 alpha,
@@ -212,6 +212,10 @@ extern "C" {
 		const matx_dense_f64_t* A,
 		double beta,
 		matx_dense_f64_t* B);
+
+
+	void free_grb_matrix(void* impl);
+	void free_grb_vector(void* impl);
 
 #ifdef __cplusplus
 }

@@ -9,12 +9,12 @@
 
 #include <suitesparse/GraphBLAS.h>
 
-static void free_grb_matrix(void* impl)
+void free_grb_matrix(void* impl)
 {
 	GrB_Matrix_free(&impl);
 }
 
-static void free_grb_vector(void* impl)
+void free_grb_vector(void* impl)
 {
 	GrB_Vector_free(&impl);
 }

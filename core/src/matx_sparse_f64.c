@@ -63,15 +63,25 @@ matx_status_t matx_sparse_f64_wrap(matx_csc_f64_t* out,
     return MATX_OK;
 }
 
-void matx_sparse_f64_destroy(matx_csc_f64_t* m, const matx_alloc_t* alloc) {
+void matx_sparse_f64_destroy(matx_coo_f64_t* m, const matx_alloc_t* alloc) {
     if (!m || !alloc) {
         return;
     }
 
     if ((m->flags & 1u) != 0u) {
-        matx_free(alloc, (matx_uint64_t*)m->col_ptr);
-        matx_free(alloc, (matx_uint64_t*)m->row_ind);
+        matx_free(alloc, (matx_uint64_t*)m->rows);
+        matx_free(alloc, (matx_uint64_t*)m->columns);
         matx_free(alloc, (matx_double*)m->values);
+    }
+
+    if (m->handle_grb.valid > 0)
+    {
+        if (m->handle_grb.custom_free_func && m->handle_grb.impl)
+        {
+            m->handle_grb.custom_free_func(m->handle_grb.impl);
+        }
+        m->handle_grb.impl = NULL;
+        m->handle_grb.valid = -1;
     }
 
     memset(m, 0, sizeof(*m));
