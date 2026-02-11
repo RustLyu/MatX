@@ -53,3 +53,12 @@ if(MATX_ENABLE_LIBFLAME)
     set(MATX_LIBFLAME_FOUND ON)
   endif()
 endif()
+
+# ---- MKL ----
+set(MATX_MKL_FOUND OFF)
+if(MATX_ENABLE_MKL)
+  find_package(MKL QUIET)
+  if(MKL_FOUND)
+    set(MATX_MKL_FOUND ON)
+  endif()
+endif()

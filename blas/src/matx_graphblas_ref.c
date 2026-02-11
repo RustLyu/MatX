@@ -191,7 +191,7 @@ matx_status_t ref_spmm_f64(
 	return MATX_OK;
 }
 
-matx_sparse_backend_t matx_sparse_make_reference(void) {
+matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 	matx_sparse_backend_t b;
 	b.kind = MATX_SPARSE_BACKEND_GRAPHBLAS;
 	b.vt.spmm_c64 = ref_spmm_c64;

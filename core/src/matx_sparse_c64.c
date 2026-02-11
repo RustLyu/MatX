@@ -88,5 +88,15 @@ void matx_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc) {
         m->handle_grb.valid = -1;
     }
 
+    if (m->handle_mkl.valid > 0)
+    {
+        if (m->handle_mkl.custom_free_func && m->handle_mkl.impl)
+        {
+            m->handle_mkl.custom_free_func(m->handle_mkl.impl);
+        }
+        m->handle_mkl.impl = NULL;
+        m->handle_mkl.valid = -1;
+    }
+
     memset(m, 0, sizeof(*m));
 }

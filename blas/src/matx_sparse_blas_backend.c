@@ -3,7 +3,8 @@
 #include <string.h>
 
 // Forward decls
-matx_sparse_backend_t matx_sparse_make_reference(void);
+matx_sparse_backend_t matx_sparse_make_reference_grb(void);
+matx_sparse_backend_t matx_sparse_make_reference_mkl(void);
 
 const char* matx_sparse_backend_name(matx_sparse_backend_kind_t k) {
 	switch (k) {
@@ -21,7 +22,7 @@ static matx_sparse_backend_t choose_default_backend(void) {
 	return matx_blas_make_reference();
 #else
   // If no external backend is wired in, fall back to reference.
-	return matx_sparse_make_reference();
+	return matx_sparse_make_reference_mkl();
 #endif
 }
 

@@ -3,8 +3,9 @@
 add_library(matx_blas
   src/matx_blas_backend.c
   src/matx_blas_ref.c
-  src/matx_graphblas_backend.c
+  src/matx_sparse_blas_backend.c
   src/matx_graphblas_ref.c
+  src/matx_mkl_ref.c
   src/tools.c
 )
 
@@ -25,6 +26,7 @@ target_compile_definitions(matx_blas
   PRIVATE
     MATX_ENABLE_OPENBLAS=$<BOOL:${MATX_ENABLE_OPENBLAS}>
     MATX_ENABLE_BLIS=$<BOOL:${MATX_ENABLE_BLIS}>
+    MATX_ENABLE_MKL=$<BOOL:${MATX_ENABLE_MKL}>
 )
 
 if(MATX_BLAS_BACKEND STREQUAL "REFERENCE")
@@ -39,6 +41,11 @@ endif()
 if(MATX_ENABLE_BLIS)
   target_compile_definitions(matx_blas PRIVATE MATX_HAVE_BLIS=1)
   target_link_libraries(matx_blas PRIVATE BLIS::BLIS)
+endif()
+
+if(MATX_ENABLE_MKL)
+  target_compile_definitions(matx_blas PRIVATE MATX_HAVE_MKL=1)
+  target_link_libraries(matx_blas PRIVATE MKL::MKL)
 endif()
 
 if(MATX_CXSPARSE_FOUND)

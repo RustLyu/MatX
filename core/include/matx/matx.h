@@ -48,7 +48,8 @@ extern "C" {
 
 	typedef enum matx_handle_type_t {
 		MATX_HANDLE_TYPE_GRB_MATRIX = 1,
-		MATX_HANDLE_TYPE_GRB_VECTOR = 2
+		MATX_HANDLE_TYPE_GRB_VECTOR = 2,
+		MATX_HANDLE_TYPE_MKL_MATRIX = 3
 	} matx_handle_type_t;
 
 	typedef void(*free_ptr_func)(void* ptr);
@@ -183,6 +184,7 @@ extern "C" {
 		const matx_double* values;
 		matx_uint64_t flags;
 		matx_handle_t handle_grb;
+		matx_handle_t handle_mkl;
 	} matx_coo_f64_t;
 
 	matx_status_t matx_sparse_f64_create(matx_csc_f64_t* out,
@@ -220,6 +222,7 @@ extern "C" {
 		const matx_complex_f64* values;
 		matx_uint64_t flags;
 		matx_handle_t handle_grb;
+		matx_handle_t handle_mkl;
 	} matx_coo_c64_t;
 
 	matx_status_t matx_sparse_c64_create(matx_coo_c64_t* out,

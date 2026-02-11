@@ -1,10 +1,20 @@
 ﻿#include "matx/matx_compute.h"
 
 #include <suitesparse/GraphBLAS.h>
+#include <mkl.h>
 
 void free_grb_matrix(void* impl)
 {
 	GrB_Matrix_free(&impl);
+}
+
+void free_mkl_matrix(void* impl)
+{
+	if (!impl) 
+		return;
+
+	sparse_matrix_t A = (sparse_matrix_t)impl;
+	mkl_sparse_destroy(A);
 }
 
 void free_grb_vector(void* impl)
@@ -21,6 +31,61 @@ size_t coo_2_grb_f64(matx_coo_f64_t* A)
 	A->handle_grb.type = MATX_HANDLE_TYPE_GRB_MATRIX;
 	A->handle_grb.valid = 1;
 	A->handle_grb.custom_free_func = &free_grb_matrix;
+	return 0;
+}
+
+size_t coo_2_mkl_f64(matx_coo_f64_t* A)
+{
+	mkl_sparse_d_create_coo(
+		&A->handle_mkl.impl,
+		SPARSE_INDEX_BASE_ZERO,
+		A->nrows,
+		A->ncols,
+		A->nnz,
+		(MKL_INT*)A->rows,
+		(MKL_INT*)A->columns,
+		A->values
+	);
+	A->handle_grb.type = MATX_HANDLE_TYPE_MKL_MATRIX;
+	A->handle_grb.valid = 1;
+	A->handle_grb.custom_free_func = &free_mkl_matrix;
+	return 0;
+}
+
+size_t coo_2_mkl_c64(matx_coo_c64_t* A)
+{
+	sparse_matrix_t coo;
+	sparse_matrix_t csr;
+
+	sparse_status_t st;
+
+	st = mkl_sparse_z_create_coo(
+		&coo,
+		SPARSE_INDEX_BASE_ZERO,
+		A->nrows,
+		A->ncols,
+		A->nnz,
+		(MKL_INT*)A->rows,
+		(MKL_INT*)A->columns,
+		(MKL_Complex16*)A->values
+	);
+
+	if (st != SPARSE_STATUS_SUCCESS)
+		return -1;
+
+	st = mkl_sparse_convert_csr(coo, SPARSE_OPERATION_NON_TRANSPOSE, &csr);
+	mkl_sparse_destroy(coo);
+
+	if (st != SPARSE_STATUS_SUCCESS)
+		return -1;
+
+	mkl_sparse_optimize(csr);
+
+	A->handle_mkl.impl = csr;
+	A->handle_mkl.type = MATX_HANDLE_TYPE_MKL_MATRIX;
+	A->handle_mkl.valid = 1;
+	A->handle_mkl.custom_free_func = &free_mkl_matrix;
+
 	return 0;
 }
 
