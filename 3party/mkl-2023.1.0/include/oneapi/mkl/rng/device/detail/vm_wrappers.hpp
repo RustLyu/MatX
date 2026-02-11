@@ -1,15 +1,20 @@
 /*******************************************************************************
-* Copyright 2023 Intel Corporation.
+* Copyright (C) 2023 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DEVICE_VM_WRAPPERS_HPP_
@@ -27,11 +32,11 @@ namespace oneapi::mkl::rng::device::detail {
 namespace vm_d = oneapi::mkl::vm::device;
 #endif
 
-template<typename DataType>
+template <typename DataType>
 static inline DataType sqrt_wrapper(DataType a) {
 #if MKL_RNG_USE_BINARY_CODE
     DataType t;
-    if constexpr(std::is_same_v<DataType, double>)
+    if constexpr (std::is_same_v<DataType, double>)
         vm_d::sqrt(&a, &t, vm_d::mode::ep);
     else
         vm_d::sqrt(&a, &t, vm_d::mode::la);
@@ -41,11 +46,11 @@ static inline DataType sqrt_wrapper(DataType a) {
 #endif // MKL_RNG_USE_BINARY_CODE
 }
 
-template<typename DataType>
+template <typename DataType>
 static inline DataType sinpi_wrapper(DataType a) {
 #if MKL_RNG_USE_BINARY_CODE
     DataType t;
-    if constexpr(std::is_same_v<DataType, double>)
+    if constexpr (std::is_same_v<DataType, double>)
         vm_d::sinpi(&a, &t, vm_d::mode::ep);
     else
         vm_d::sinpi(&a, &t, vm_d::mode::la);
@@ -55,11 +60,11 @@ static inline DataType sinpi_wrapper(DataType a) {
 #endif // MKL_RNG_USE_BINARY_CODE
 }
 
-template<typename DataType>
+template <typename DataType>
 static inline DataType cospi_wrapper(DataType a) {
 #if MKL_RNG_USE_BINARY_CODE
     DataType t;
-    if constexpr(std::is_same_v<DataType, double>)
+    if constexpr (std::is_same_v<DataType, double>)
         vm_d::cospi(&a, &t, vm_d::mode::ep);
     else
         vm_d::cospi(&a, &t, vm_d::mode::la);
@@ -69,11 +74,11 @@ static inline DataType cospi_wrapper(DataType a) {
 #endif // MKL_RNG_USE_BINARY_CODE
 }
 
-template<typename DataType>
+template <typename DataType>
 static inline DataType sincospi_wrapper(DataType a, DataType& b) {
 #if MKL_RNG_USE_BINARY_CODE
     DataType t;
-    if constexpr(std::is_same_v<DataType, double>) {
+    if constexpr (std::is_same_v<DataType, double>) {
         vm_d::sincospi(&a, &t, &b, vm_d::mode::ep);
     }
     else {
@@ -86,10 +91,10 @@ static inline DataType sincospi_wrapper(DataType a, DataType& b) {
 #endif // MKL_RNG_USE_BINARY_CODE
 }
 
-template<typename DataType>
+template <typename DataType>
 static inline DataType ln_wrapper(DataType a) {
-    if(a == DataType(0)){
-        if constexpr(std::is_same_v<DataType, double>)
+    if (a == DataType(0)) {
+        if constexpr (std::is_same_v<DataType, double>)
             return -0x1.74385446D71C3P+9; // ln(0.494065e-323) = -744.440072
         else
             return -0x1.9D1DA0P+6f; // ln(0.14012984e-44) = -103.278929
@@ -97,13 +102,55 @@ static inline DataType ln_wrapper(DataType a) {
 
 #if MKL_RNG_USE_BINARY_CODE
     DataType t;
-    if constexpr(std::is_same_v<DataType, double>)
+    if constexpr (std::is_same_v<DataType, double>)
         vm_d::ln(&a, &t, vm_d::mode::ep);
     else
         vm_d::ln(&a, &t, vm_d::mode::la);
     return t;
 #else
     return sycl::log(a);
+#endif // MKL_RNG_USE_BINARY_CODE
+}
+
+template <typename DataType>
+static inline DataType pow_wrapper(DataType a, DataType b) {
+#if MKL_RNG_USE_BINARY_CODE
+    DataType t;
+    if constexpr (std::is_same_v<DataType, double>)
+        vm_d::pow(&a, &b, &t, vm_d::mode::ep);
+    else
+        t = sycl::pow(a, b);
+    return t;
+#else
+    return sycl::pow(a, b);
+#endif // MKL_RNG_USE_BINARY_CODE
+}
+
+template <typename DataType>
+static inline DataType powr_wrapper(DataType a, DataType b) {
+#if MKL_RNG_USE_BINARY_CODE
+    DataType t;
+    if constexpr (std::is_same_v<DataType, double>)
+        vm_d::powr(&a, &b, &t, vm_d::mode::ep);
+    else
+        t = sycl::powr(a, b);
+    return t;
+#else
+    return sycl::powr(a, b);
+#endif // MKL_RNG_USE_BINARY_CODE
+}
+
+template <typename DataType>
+static inline DataType exp_wrapper(DataType a) {
+#if MKL_RNG_USE_BINARY_CODE
+    DataType t;
+    if constexpr (std::is_same_v<DataType, double>)
+        vm_d::exp(&a, &t, vm_d::mode::ep);
+    else
+        t = sycl::exp(a);
+    return t;
+#else
+    return sycl::exp(a);
 #endif // MKL_RNG_USE_BINARY_CODE
 }
 
@@ -120,7 +167,7 @@ inline RealType erf_inv_wrapper(RealType x) {
     }
     else {
         RealType res{};
-        if constexpr(std::is_same_v<RealType, double>) {
+        if constexpr (std::is_same_v<RealType, double>) {
             vm_d::erfinv(&x, &res, vm_d::mode::ep);
         }
         else {

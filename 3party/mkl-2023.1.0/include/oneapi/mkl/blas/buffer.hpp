@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018-2022 Intel Corporation.
+* Copyright (C) 2018 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -16,7 +16,7 @@
 #define _MKL_BLAS_SYCL_BUFFER_HPP__
 
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 #include <cstdint>
 #include <complex>
 

@@ -1,5 +1,5 @@
 !===============================================================================
-! Copyright 1999-2022 Intel Corporation.
+! Copyright (C) 1999 Intel Corporation
 !
 ! This software and the related documents are Intel copyrighted  materials,  and
 ! your use of  them is  governed by the  express license  under which  they were
@@ -1518,12 +1518,32 @@
       END INTERFACE
 
       INTERFACE
+      subroutine strmm_oop ( side, uplo, transa, diag, m, n, alpha, a,  &
+     &lda, b, ldb, beta, c, ldc )
+      character*1        side, uplo, transa, diag
+      integer            m, n, lda, ldb, ldc
+      real               alpha, beta
+      real               a( lda, * ), b( ldb, * ), c( ldc, * )
+      END
+      END INTERFACE
+
+      INTERFACE
       subroutine strsm ( side, uplo, transa, diag, m, n, alpha, a, lda, &
      &b, ldb )
       character*1        side, uplo, transa, diag
       integer            m, n, lda, ldb
       real               alpha
       real               a( lda, * ), b( ldb, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      subroutine strsm_oop ( side, uplo, transa, diag, m, n, alpha, a,  &
+     &lda, b, ldb, beta, c, ldc )
+      character*1        side, uplo, transa, diag
+      integer            m, n, lda, ldb, ldc
+      real               alpha, beta
+      real               a( lda, * ), b( ldb, * ), c( ldc, * )
       END
       END INTERFACE
 
@@ -1697,12 +1717,32 @@
       END INTERFACE
 
       INTERFACE
+      subroutine dtrmm_oop ( side, uplo, transa, diag, m, n, alpha, a,  &
+     &lda, b, ldb, beta, c, ldc )
+      character*1        side, uplo, transa, diag
+      integer            m, n, lda, ldb, ldc
+      double precision   alpha, beta
+      double precision   a( lda, * ), b( ldb, * ), c( ldc, * )
+      END
+      END INTERFACE
+
+      INTERFACE
       subroutine dtrsm ( side, uplo, transa, diag, m, n, alpha, a, lda, &
      &b, ldb )
       character*1        side, uplo, transa, diag
       integer            m, n, lda, ldb
       double precision   alpha
       double precision   a( lda, * ), b( ldb, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      subroutine dtrsm_oop ( side, uplo, transa, diag, m, n, alpha, a,  &
+     &lda, b, ldb, beta, c, ldc )
+      character*1        side, uplo, transa, diag
+      integer            m, n, lda, ldb, ldc
+      double precision   alpha, beta
+      double precision   a( lda, * ), b( ldb, * ), c( ldc, * )
       END
       END INTERFACE
 
@@ -1782,6 +1822,18 @@
 
       INTERFACE
       subroutine cgemm_batch_strided ( transa, transb, m, n, k,         &
+     &alpha, a, lda, stridea, b, ldb, strideb, beta, c, ldc,            &
+     &stridec, batch_size )
+      character*1        transa, transb
+      integer            m, n, k, lda, ldb, ldc, batch_size
+      integer            stridea, strideb, stridec
+      complex            alpha, beta
+      complex            a( lda, * ), b( ldb, * ), c( ldc, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      subroutine cgemm3m_batch_strided ( transa, transb, m, n, k,       &
      &alpha, a, lda, stridea, b, ldb, strideb, beta, c, ldc,            &
      &stridec, batch_size )
       character*1        transa, transb
@@ -1942,12 +1994,32 @@
       END INTERFACE
 
       INTERFACE
+      subroutine ctrmm_oop ( side, uplo, transa, diag, m, n, alpha, a,  &
+     &lda, b, ldb, beta, c, ldc )
+      character*1        side, uplo, transa, diag
+      integer            m, n, lda, ldb, ldc
+      complex            alpha, beta
+      complex            a( lda, * ), b( ldb, * ), c( ldc, * )
+      END
+      END INTERFACE
+
+      INTERFACE
       subroutine ctrsm ( side, uplo, transa, diag, m, n, alpha, a, lda, &
      &b, ldb )
       character*1        side, uplo, transa, diag
       integer            m, n, lda, ldb
       complex            alpha
       complex            a( lda, * ), b( ldb, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      subroutine ctrsm_oop ( side, uplo, transa, diag, m, n, alpha, a,  &
+     &lda, b, ldb, beta, c, ldc )
+      character*1        side, uplo, transa, diag
+      integer            m, n, lda, ldb, ldc
+      complex            alpha, beta
+      complex            a( lda, * ), b( ldb, * ), c( ldc, * )
       END
       END INTERFACE
 
@@ -1999,6 +2071,18 @@
 
       INTERFACE
       subroutine zgemm_batch_strided ( transa, transb, m, n, k,         &
+     &alpha, a, lda, stridea, b, ldb, strideb, beta, c, ldc,            &
+     &stridec, batch_size )
+      character*1        transa, transb
+      integer            m, n, k, lda, ldb, ldc, batch_size
+      integer            stridea, strideb, stridec
+      complex*16         alpha, beta
+      complex*16         a( lda, * ), b( ldb, * ), c( ldc, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      subroutine zgemm3m_batch_strided ( transa, transb, m, n, k,       &
      &alpha, a, lda, stridea, b, ldb, strideb, beta, c, ldc,            &
      &stridec, batch_size )
       character*1        transa, transb
@@ -2159,12 +2243,32 @@
       END INTERFACE
 
       INTERFACE
+      subroutine ztrmm_oop ( side, uplo, transa, diag, m, n, alpha, a,  &
+     &lda, b, ldb, beta, c, ldc )
+      character*1        side, uplo, transa, diag
+      integer            m, n, lda, ldb, ldc
+      complex*16         alpha, beta
+      complex*16         a( lda, * ), b( ldb, * ), c( ldc, * )
+      END
+      END INTERFACE
+
+      INTERFACE
       subroutine ztrsm ( side, uplo, transa, diag, m, n, alpha, a, lda, &
      &b, ldb )
       character*1        side, uplo, transa, diag
       integer            m, n, lda, ldb
       complex*16         alpha
       complex*16         a( lda, * ), b( ldb, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      subroutine ztrsm_oop ( side, uplo, transa, diag, m, n, alpha, a,  &
+     &lda, b, ldb, beta, c, ldc )
+      character*1        side, uplo, transa, diag
+      integer            m, n, lda, ldb, ldc
+      complex*16         alpha, beta
+      complex*16         a( lda, * ), b( ldb, * ), c( ldc, * )
       END
       END INTERFACE
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019-2022 Intel Corporation.
+* Copyright (C) 2019 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -15,7 +15,7 @@
 #ifndef _MKL_RNG_FUNCTIONS_HPP_
 #define _MKL_RNG_FUNCTIONS_HPP_
 
-#include "CL/sycl.hpp"
+#include "sycl/sycl.hpp"
 
 namespace oneapi {
 namespace mkl {
@@ -128,6 +128,7 @@ void save_state(Engine& engine, std::uint8_t* mem);
 //    Engine& engine - engine object
 //    const std::string& filename - name of the file to save the state of random number engine
 template <typename Engine>
+[[deprecated("Use save_state with const std::uint8_t* as a second parameter instead")]]
 void save_state(Engine& engine, const std::string& filename);
 
 // Function oneapi::mkl::rng::load_state()
@@ -152,6 +153,7 @@ Engine load_state(const sycl::queue& queue, const std::uint8_t* mem);
 // Output:
 // Engine engine - engine object created based on provided queue and state from the file
 template <typename Engine>
+[[deprecated("Use load_state with const std::uint8_t* as a second parameter instead")]]
 Engine load_state(const sycl::queue& queue, const std::string& filename);
 
 } // namespace rng

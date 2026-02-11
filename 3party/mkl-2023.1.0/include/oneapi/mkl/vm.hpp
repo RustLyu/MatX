@@ -1,6 +1,6 @@
 /* file: oneapi/mkl/vm.hpp */
 /*******************************************************************************
-* Copyright 2019-2022 Intel Corporation.
+* Copyright (C) 2019 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -25,6 +25,7 @@
 #include "oneapi/mkl/vm/buffer.hpp"
 #include "oneapi/mkl/vm/usm.hpp"
 #include "oneapi/mkl/vm/span.hpp"
+#include "oneapi/mkl/vm/spec.hpp"
 
 
 #endif // ifndef _ONEAPI_MKL_VM_HPP_

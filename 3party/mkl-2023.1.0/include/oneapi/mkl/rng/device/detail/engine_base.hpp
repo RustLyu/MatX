@@ -1,70 +1,44 @@
 /*******************************************************************************
-* Copyright 2020-2022 Intel Corporation.
+* Copyright (C) 2020 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DEVICE_ENGINE_BASE_HPP_
 #define _MKL_RNG_DEVICE_ENGINE_BASE_HPP_
 
-#include <CL/sycl.hpp>
+#include <cstdint>
 
-#include "oneapi/mkl/rng/device/detail/types.hpp"
+#include <sycl/sycl.hpp>
 
-namespace oneapi {
-namespace mkl {
-namespace rng {
-namespace device {
+namespace oneapi::mkl::rng::device::detail {
+
+// internal structure to specify state of engine
+template <typename EngineType>
+struct engine_state {};
 
 template <typename EngineType>
-class engine_accessor;
+class engine_base {};
 
-namespace detail {
-
-template <typename EngineType>
-class engine_base {
-protected:
-    template <typename RealType>
-    auto generate(RealType a, RealType b) ->
-        typename std::conditional<EngineType::vec_size == 1, RealType,
-                                  sycl::vec<RealType, EngineType::vec_size>>::type;
-
-    auto generate() ->
-        typename std::conditional<EngineType::vec_size == 1, std::uint32_t,
-                                  sycl::vec<std::uint32_t, EngineType::vec_size>>::type;
-
-    engine_state<EngineType> state_;
-};
-
-template <typename EngineType>
-class engine_accessor_base {};
-
-template <typename EngineType>
-class init_kernel {};
-
-template <typename EngineType>
-class init_kernel_ex {};
-
-template <typename EngineType>
-class engine_descriptor_base {};
-
-} // namespace detail
-} // namespace device
-} // namespace rng
-} // namespace mkl
-} // namespace oneapi
+} // namespace oneapi::mkl::rng::device::detail
 
 #include "oneapi/mkl/rng/device/detail/philox4x32x10_impl.hpp"
 #include "oneapi/mkl/rng/device/detail/mrg32k3a_impl.hpp"
 #include "oneapi/mkl/rng/device/detail/mcg31m1_impl.hpp"
 #include "oneapi/mkl/rng/device/detail/mcg59_impl.hpp"
+#include "oneapi/mkl/rng/device/detail/pcg64_dxsm_impl.hpp"
 
 #endif // _MKL_RNG_DEVICE_ENGINE_BASE_HPP_

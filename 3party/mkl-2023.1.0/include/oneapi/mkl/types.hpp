@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018-2022 Intel Corporation.
+* Copyright (C) 2018 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -278,6 +278,42 @@ struct slice {
     constexpr slice(std::size_t _start, std::size_t _size, std::int64_t _stride): start(_start), size(_size), stride(_stride) { }
 }; /* struct slice */
 #endif
+
+template <typename T>
+class value_or_pointer {
+    T value_;
+    const T *ptr_;
+
+public:
+    // Constructor from value. Accepts not only type T but anything convertible to T.
+    template <typename U, std::enable_if_t<std::is_convertible_v<U, T>, int> = 0>
+    value_or_pointer(U value) : value_(value), ptr_(nullptr) {}
+
+    // Constructor from pointer, assumed to be device-accessible.
+    value_or_pointer(const T *ptr): value_(T(0)), ptr_(ptr) {}
+
+    bool fixed() const {
+        return ptr_ == nullptr;
+    }
+
+    T get_fixed_value() const {
+        return value_;
+    }
+
+    const T* get_pointer() const {
+        return ptr_;
+    }
+
+    T get() const {
+        return ptr_ ? *ptr_ : value_;
+    }
+
+    void make_device_accessible(sycl::queue& queue) {
+        if (!fixed() && sycl::get_pointer_type(ptr_, queue.get_context()) == sycl::usm::alloc::unknown) {
+            *this = *ptr_;
+        }
+    }
+};
 
 } /* namespace mkl */
 } // namespace oneapi

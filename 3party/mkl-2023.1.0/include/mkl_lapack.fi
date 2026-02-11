@@ -1,5 +1,5 @@
 !===============================================================================
-! Copyright 1999-2022 Intel Corporation.
+! Copyright (C) 1999 Intel Corporation
 !
 ! This software and the related documents are Intel copyrighted  materials,  and
 ! your use of  them is  governed by the  express license  under which  they were
@@ -2459,9 +2459,9 @@
       END INTERFACE
 
       INTERFACE
-      SUBROUTINE DGETRSNP_BATCHNP_STRIDED( TRANS, N, NRHS, A, LDA,      &
-     &                                     STRIDE_A, B, LDB,            &
-     &                                     STRIDE_B, BATCH_SIZE, INFO )
+      SUBROUTINE DGETRSNP_BATCH_STRIDED( TRANS, N, NRHS, A, LDA,        &
+     &                                   STRIDE_A, B, LDB,              &
+     &                                   STRIDE_B, BATCH_SIZE, INFO )
       IMPLICIT NONE
       CHARACTER         TRANS
       INTEGER           N, NRHS, LDA, STRIDE_A,                         &
@@ -2733,6 +2733,254 @@
       COMPLEX*16        A, B
       INTEGER           M, N, NRHS, LDA, STRIDE_A, LDB, STRIDE_B,       &
      &                  BATCH_SIZE, INFO
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE DGESVDA_BATCH_STRIDED( IPARM, IRANK, M, N,             &
+     &                                A, LDA, STRIDE_A, S, STRIDE_S,    &
+     &                                U, LDU, STRIDE_U,                 &
+     &                                VT, LDVT, STRIDE_VT,              &
+     &                                TOLERANCE, RESIDUAL,              &
+     &                                WORK, LWORK,                      &
+     &                                BATCH_SIZE, INFO )
+      IMPLICIT NONE
+      INTEGER           IPARM(*), IRANK(*), INFO(*)
+      INTEGER           M, N, LDA, STRIDE_A, STRIDE_S, LDU, STRIDE_U,   &
+     &                  LDVT, STRIDE_VT, LWORK, BATCH_SIZE
+      DOUBLE PRECISION  A(*), U(*), VT(*), WORK(*)
+      DOUBLE PRECISION  S(*), RESIDUAL(*)
+      DOUBLE PRECISION  TOLERANCE
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE SGESVDA_BATCH_STRIDED( IPARM, IRANK, M, N,             &
+     &                                A, LDA, STRIDE_A, S, STRIDE_S,    &
+     &                                U, LDU, STRIDE_U,                 &
+     &                                VT, LDVT, STRIDE_VT,              &
+     &                                TOLERANCE, RESIDUAL,              &
+     &                                WORK, LWORK,                      &
+     &                                BATCH_SIZE, INFO )
+      IMPLICIT NONE
+      INTEGER           IPARM(*), IRANK(*), INFO(*)
+      INTEGER           M, N, LDA, STRIDE_A, STRIDE_S, LDU, STRIDE_U,   &
+     &                  LDVT, STRIDE_VT, LWORK, BATCH_SIZE
+      REAL              A(*), U(*), VT(*), WORK(*)
+      REAL              S(*), RESIDUAL(*)
+      REAL              TOLERANCE
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE CGESVDA_BATCH_STRIDED( IPARM, IRANK, M, N,             &
+     &                                A, LDA, STRIDE_A, S, STRIDE_S,    &
+     &                                U, LDU, STRIDE_U,                 &
+     &                                VT, LDVT, STRIDE_VT,              &
+     &                                TOLERANCE, RESIDUAL,              &
+     &                                WORK, LWORK,                      &
+     &                                BATCH_SIZE, INFO )
+      IMPLICIT NONE
+      INTEGER           IPARM(*), IRANK(*), INFO(*)
+      INTEGER           M, N, LDA, STRIDE_A, STRIDE_S, LDU, STRIDE_U,   &
+     &                  LDVT, STRIDE_VT, LWORK, BATCH_SIZE
+      COMPLEX           A(*), U(*), VT(*), WORK(*)
+      REAL              S(*), RESIDUAL(*)
+      REAL              TOLERANCE
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE ZGESVDA_BATCH_STRIDED( IPARM, IRANK, M, N,             &
+     &                                A, LDA, STRIDE_A, S, STRIDE_S,    &
+     &                                U, LDU, STRIDE_U,                 &
+     &                                VT, LDVT, STRIDE_VT,              &
+     &                                TOLERANCE, RESIDUAL,              &
+     &                                WORK, LWORK,                      &
+     &                                BATCH_SIZE, INFO )
+      IMPLICIT NONE
+      INTEGER           IPARM(*), IRANK(*), INFO(*)
+      INTEGER           M, N, LDA, STRIDE_A, STRIDE_S, LDU, STRIDE_U,   &
+     &                  LDVT, STRIDE_VT, LWORK, BATCH_SIZE
+      COMPLEX*16        A(*), U(*), VT(*), WORK(*)
+      DOUBLE PRECISION  S(*), RESIDUAL(*)
+      DOUBLE PRECISION  TOLERANCE
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE SGETRI_BATCH_STRIDED( N, A, LDA, STRIDE_A, IPIV,       &
+     &                                 IPIV_STRIDE, WORK, LWORK,        &
+     &                                 BATCH_SIZE, INFO )
+      IMPLICIT NONE
+      INTEGER           N, LDA, STRIDE_A, IPIV, IPIV_STRIDE, LWORK,     &
+     &                  BATCH_SIZE, INFO
+      REAL              A, WORK
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE DGETRI_BATCH_STRIDED( N, A, LDA, STRIDE_A, IPIV,       &
+     &                                 IPIV_STRIDE, WORK, LWORK,        &
+     &                                 BATCH_SIZE, INFO )
+      IMPLICIT NONE
+      DOUBLE PRECISION  A, WORK
+      INTEGER           N, LDA, STRIDE_A, IPIV, IPIV_STRIDE, LWORK,     &
+     &                  BATCH_SIZE, INFO
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE CGETRI_BATCH_STRIDED( N, A, LDA, STRIDE_A, IPIV,       &
+     &                                 IPIV_STRIDE, WORK, LWORK,        &
+     &                                 BATCH_SIZE, INFO )
+      IMPLICIT NONE
+      COMPLEX           A, WORK
+      INTEGER           N, LDA, STRIDE_A, IPIV, IPIV_STRIDE, LWORK,     &
+     &                  BATCH_SIZE, INFO
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE ZGETRI_BATCH_STRIDED( N, A, LDA, STRIDE_A, IPIV,       &
+     &                                 IPIV_STRIDE, WORK, LWORK,        &
+     &                                 BATCH_SIZE, INFO )
+      IMPLICIT NONE
+      COMPLEX*16        A, WORK
+      INTEGER           N, LDA, STRIDE_A, IPIV, IPIV_STRIDE, LWORK,     &
+     &                  BATCH_SIZE, INFO
+      END
+      END INTERFACE
+
+! LAPACK 3.11.0 routines
+
+      INTERFACE
+      SUBROUTINE CGELST(TRANS,M,N,NRHS,A,LDA,B,LDB,WORK,LWORK,INFO)
+      CHARACTER          TRANS
+      INTEGER            INFO,LDA,LDB,LWORK,M,N,NRHS
+      COMPLEX            A(LDA,*),B(LDB,*),WORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE DGELST(TRANS,M,N,NRHS,A,LDA,B,LDB,WORK,LWORK,INFO)
+      CHARACTER          TRANS
+      INTEGER            INFO,LDA,LDB,LWORK,M,N,NRHS
+      DOUBLE PRECISION   A(LDA,*),B(LDB,*),WORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE SGELST(TRANS,M,N,NRHS,A,LDA,B,LDB,WORK,LWORK,INFO)
+      CHARACTER          TRANS
+      INTEGER            INFO,LDA,LDB,LWORK,M,N,NRHS
+      REAL               A(LDA,*),B(LDB,*),WORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE ZGELST(TRANS,M,N,NRHS,A,LDA,B,LDB,WORK,LWORK,INFO)
+      CHARACTER          TRANS
+      INTEGER            INFO,LDA,LDB,LWORK,M,N,NRHS
+      COMPLEX*16         A(LDA,*),B(LDB,*),WORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE CLATRS3( UPLO, TRANS, DIAG, NORMIN, N, NRHS, A, LDA,   &
+     &                    X, LDX, SCALE, CNORM, WORK, LWORK, INFO )
+      IMPLICIT NONE
+      CHARACTER          DIAG, TRANS, NORMIN, UPLO
+      INTEGER            INFO, LDA, LWORK, LDX, N, NRHS
+      COMPLEX            A( LDA, * ), X( LDX, * )
+      REAL               CNORM( * ), SCALE( * ), WORK( * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE DLATRS3( UPLO, TRANS, DIAG, NORMIN, N, NRHS, A, LDA,   &
+     &                    X, LDX, SCALE, CNORM, WORK, LWORK, INFO )
+      IMPLICIT NONE
+      CHARACTER          DIAG, TRANS, NORMIN, UPLO
+      INTEGER            INFO, LDA, LWORK, LDX, N, NRHS
+      DOUBLE PRECISION   A( LDA, * ), X( LDX, * )
+      DOUBLE PRECISION   CNORM( * ), SCALE( * ), WORK( * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE SLATRS3( UPLO, TRANS, DIAG, NORMIN, N, NRHS, A, LDA,   &
+     &                    X, LDX, SCALE, CNORM, WORK, LWORK, INFO )
+      IMPLICIT NONE
+      CHARACTER          DIAG, TRANS, NORMIN, UPLO
+      INTEGER            INFO, LDA, LWORK, LDX, N, NRHS
+      REAL               A( LDA, * ), X( LDX, * )
+      REAL               CNORM( * ), SCALE( * ), WORK( * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE ZLATRS3( UPLO, TRANS, DIAG, NORMIN, N, NRHS, A, LDA,   &
+     &                    X, LDX, SCALE, CNORM, WORK, LWORK, INFO )
+      IMPLICIT NONE
+      CHARACTER          DIAG, TRANS, NORMIN, UPLO
+      INTEGER            INFO, LDA, LWORK, LDX, N, NRHS
+      COMPLEX*16         A( LDA, * ), X( LDX, * )
+      DOUBLE PRECISION   CNORM( * ), SCALE( * ), WORK( * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE CTRSYL3( TRANA, TRANB, ISGN, M, N, A, LDA, B, LDB, C,  &
+     &                    LDC, SCALE, SWORK, LDSWORK, INFO )
+      IMPLICIT NONE
+      CHARACTER          TRANA, TRANB
+      INTEGER            INFO, ISGN, LDA, LDB, LDC, LDSWORK, M, N
+      REAL               SCALE
+      COMPLEX            A( LDA, * ), B( LDB, * ), C( LDC, * )
+      REAL               SWORK( LDSWORK, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE DTRSYL3( TRANA, TRANB, ISGN, M, N, A, LDA, B, LDB, C,  &
+     &                    LDC, SCALE, IWORK, LIWORK, SWORK, LDSWORK,    &
+     &                    INFO )
+      IMPLICIT NONE
+      CHARACTER          TRANA, TRANB
+      INTEGER            INFO, ISGN, LDA, LDB, LDC, M, N,               &
+     &                   LIWORK, LDSWORK
+      DOUBLE PRECISION   SCALE
+      INTEGER            IWORK( * )
+      DOUBLE PRECISION   A( LDA, * ), B( LDB, * ), C( LDC, * ),         &
+     &                   SWORK( LDSWORK, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE STRSYL3( TRANA, TRANB, ISGN, M, N, A, LDA, B, LDB, C,  &
+     &                    LDC, SCALE, IWORK, LIWORK, SWORK, LDSWORK,    &
+     &                    INFO )
+      IMPLICIT NONE
+      CHARACTER          TRANA, TRANB
+      INTEGER            INFO, ISGN, LDA, LDB, LDC, M, N,               &
+     &                   LIWORK, LDSWORK
+      REAL               SCALE
+      INTEGER            IWORK( * )
+      REAL               A( LDA, * ), B( LDB, * ), C( LDC, * ),         &
+     &                   SWORK( LDSWORK, * )
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE ZTRSYL3( TRANA, TRANB, ISGN, M, N, A, LDA, B, LDB, C,  &
+     &                    LDC, SCALE, SWORK, LDSWORK, INFO )
+      IMPLICIT NONE
+      CHARACTER          TRANA, TRANB
+      INTEGER            INFO, ISGN, LDA, LDB, LDC, LDSWORK, M, N
+      DOUBLE PRECISION   SCALE
+      COMPLEX*16         A( LDA, * ), B( LDB, * ), C( LDC, * )
+      DOUBLE PRECISION   SWORK( LDSWORK, * )
       END
       END INTERFACE
 
@@ -4813,6 +5061,53 @@
       END INTERFACE
 
       INTERFACE
+      SUBROUTINE CGEDMD( JOBS, JOBZ, JOBR, JOBF,  WHTSVD,               &
+     &                   M, N, X, LDX, Y, LDY, NRNK, TOL,               &
+     &                   K, EIGS, Z, LDZ, RES, B,    LDB,               &
+     &                   W, LDW,  S, LDS, ZWORK,  LZWORK,               &
+     &                   RWORK, LRWORK, IWORK, LIWORK, INFO )
+      CHARACTER          JOBS,   JOBZ,  JOBR,  JOBF
+      INTEGER            WHTSVD, M, N,   LDX,  LDY,                     &
+     &                   NRNK, LDZ, LDB, LDW,  LDS,                     &
+     &                   LIWORK, LRWORK, LZWORK
+      INTEGER            K, INFO
+      REAL               TOL
+      COMPLEX            X(LDX,*), Y(LDY,*)
+      COMPLEX            Z(LDZ,*), B(LDB,*), W(LDW,*), S(LDS,*)
+      COMPLEX            EIGS(*)
+      COMPLEX            ZWORK(*)
+      REAL               RES(*)
+      REAL               RWORK(*)
+      INTEGER            IWORK(*)
+      END
+      END INTERFACE
+
+
+      INTERFACE
+      SUBROUTINE CGEDMDQ( JOBS,  JOBZ, JOBR, JOBQ, JOBT, JOBF,          &
+     &                   WHTSVD,   M, N, F, LDF,  X, LDX,  Y,           &
+     &                   LDY,   NRNK,  TOL,   K,  EIGS,                 &
+     &                   Z, LDZ, RES,  B,     LDB,   V, LDV,            &
+     &                   S, LDS, ZWORK, LZWORK, WORK,  LWORK,           &
+     &                   IWORK, LIWORK, INFO )
+      CHARACTER          JOBS, JOBZ, JOBR, JOBQ, JOBT, JOBF
+      INTEGER            WHTSVD, M, N,   LDF, LDX,                      &
+     &                   LDY, NRNK, LDZ, LDB, LDV,                      &
+     &                   LDS, LZWORK,  LWORK, LIWORK
+      INTEGER            K, INFO
+      REAL               TOL
+      COMPLEX            F(LDF,*)
+      COMPLEX            X(LDX,*), Y(LDY,*),  Z(LDZ,*), B(LDB,*),       &
+     &                   V(LDV,*), S(LDS,*)
+      COMPLEX            EIGS(*)
+      COMPLEX            ZWORK(*)
+      REAL               RES(*)
+      REAL               WORK(*)
+      INTEGER            IWORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
       SUBROUTINE CGEEQUB(M,N,A,LDA,R,C,ROWCND,COLCND,AMAX,INFO)
       INTEGER            INFO,LDA,M,N
       REAL               AMAX,COLCND,ROWCND
@@ -5000,6 +5295,18 @@
       INTEGER            JPVT(*)
       REAL               RWORK(*)
       COMPLEX            A(LDA,*),TAU(*),WORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE CGEQP3RK( M, N, NRHS, KMAX, ABSTOL, RELTOL, A, LDA,    &
+     &                   K, MAXC2NRMK, RELMAXC2NRMK, JPIV, TAU,         &
+     &                   WORK, LWORK, RWORK, IWORK, INFO )
+      INTEGER            INFO, K, KF, KMAX, LDA, LWORK, M, N, NRHS
+      REAL               ABSTOL,  MAXC2NRMK, RELMAXC2NRMK, RELTOL
+      INTEGER            IWORK( * ), JPIV( * )
+      REAL               RWORK( * )
+      COMPLEX            A( LDA, * ), TAU( * ), WORK( * )
       END
       END INTERFACE
 
@@ -6477,7 +6784,7 @@
 
       INTERFACE
       SUBROUTINE CLAQZ0(WANTS,WANTQ,WANTZ,N,ILO,IHI,A,LDA,B,LDB,        &
-     &                  AlPHA,BETA,Q,LDQ,Z,LDZ,WORK,LWORK,RWORK,REC,    &
+     &                  ALPHA,BETA,Q,LDQ,Z,LDZ,WORK,LWORK,RWORK,REC,    &
      &                  INFO)
       CHARACTER          WANTS,WANTQ,WANTZ
       INTEGER            N,ILO,IHI,LDA,LDB,LDQ,LDZ,LWORK,REC,INFO
@@ -8256,6 +8563,50 @@
       END INTERFACE
 
       INTERFACE
+      SUBROUTINE DGEDMD( JOBS, JOBZ, JOBR, JOBF,  WHTSVD,               &
+     &                   M, N, X, LDX, Y, LDY, NRNK, TOL,               &
+     &                   K, REIG,  IMEIG,   Z, LDZ,  RES,               &
+     &                   B, LDB, W,  LDW,   S, LDS,                     &
+     &                   WORK, LWORK, IWORK, LIWORK, INFO )
+      CHARACTER          JOBS,   JOBZ,  JOBR,  JOBF
+      INTEGER            WHTSVD, M, N,   LDX,  LDY,                     &
+     &                   NRNK, LDZ, LDB, LDW,  LDS,                     &
+     &                         LWORK, LIWORK
+      INTEGER            K, INFO
+      DOUBLE PRECISION   TOL
+      DOUBLE PRECISION   X(LDX,*), Y(LDY,*)
+      DOUBLE PRECISION   Z(LDZ,*), B(LDB,*),                            &
+     &                         W(LDW,*), S(LDS,*)
+      DOUBLE PRECISION   REIG(*),  IMEIG(*), RES(*)
+      DOUBLE PRECISION   WORK(*)
+      INTEGER            IWORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE DGEDMDQ( JOBS,  JOBZ, JOBR, JOBQ, JOBT, JOBF,          &
+     &                   WHTSVD,   M, N, F, LDF,  X, LDX,  Y,           &
+     &                   LDY,   NRNK,  TOL,   K,  REIG, IMEIG,          &
+     &                   Z, LDZ, RES,  B,     LDB,   V, LDV,            &
+     &                   S, LDS, WORK, LWORK, IWORK, LIWORK, INFO )
+      CHARACTER          JOBS, JOBZ, JOBR, JOBQ,                        &
+     &                           JOBT, JOBF
+      INTEGER            WHTSVD, M, N,   LDF, LDX,                      &
+     &                   LDY, NRNK, LDZ, LDB, LDV,                      &
+     &                   LDS, LWORK,  LIWORK
+      INTEGER            K, INFO
+      DOUBLE PRECISION   TOL
+      DOUBLE PRECISION   F(LDF,*)
+      DOUBLE PRECISION   X(LDX,*), Y(LDY,*),                            &
+     &                         Z(LDZ,*), B(LDB,*),                      &
+     &                         V(LDV,*), S(LDS,*)
+      DOUBLE PRECISION   REIG(*),  IMEIG(*), RES(*)
+      DOUBLE PRECISION   WORK(*)
+      INTEGER            IWORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
       SUBROUTINE DGEEQUB(M,N,A,LDA,R,C,ROWCND,COLCND,AMAX,INFO)
       INTEGER            INFO,LDA,M,N
       DOUBLE PRECISION   AMAX,COLCND,ROWCND
@@ -8444,6 +8795,17 @@
       INTEGER            INFO,LDA,LWORK,M,N
       INTEGER            JPVT(*)
       DOUBLE PRECISION   A(LDA,*),TAU(*),WORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE DGEQP3RK( M, N, NRHS, KMAX, ABSTOL, RELTOL, A, LDA,    &
+     &                   K, MAXC2NRMK, RELMAXC2NRMK, JPIV, TAU,         &
+     &                   WORK, LWORK, IWORK, INFO )
+      INTEGER            INFO, K, KF, KMAX, LDA, LWORK, M, N, NRHS
+      DOUBLE PRECISION   ABSTOL,  MAXC2NRMK, RELMAXC2NRMK, RELTOL
+      INTEGER            IWORK( * ), JPIV( * )
+      DOUBLE PRECISION   A( LDA, * ), TAU( * ), WORK( * )
       END
       END INTERFACE
 
@@ -12112,6 +12474,50 @@
       END INTERFACE
 
       INTERFACE
+      SUBROUTINE SGEDMD( JOBS, JOBZ, JOBR, JOBF,  WHTSVD,               &
+     &                   M, N, X, LDX, Y, LDY, NRNK, TOL,               &
+     &                   K, REIG,  IMEIG,   Z, LDZ,  RES,               &
+     &                   B, LDB, W,  LDW,   S, LDS,                     &
+     &                   WORK, LWORK, IWORK, LIWORK, INFO )
+      CHARACTER          JOBS,   JOBZ,  JOBR,  JOBF
+      INTEGER            WHTSVD, M, N,   LDX,  LDY,                     &
+     &                   NRNK, LDZ, LDB, LDW,  LDS,                     &
+     &                         LWORK,  LIWORK
+      INTEGER            K, INFO
+      REAL               TOL
+      REAL               X(LDX,*), Y(LDY,*)
+      REAL               Z(LDZ,*), B(LDB,*),                            &
+     &                         W(LDW,*), S(LDS,*)
+      REAL               REIG(*),  IMEIG(*), RES(*)
+      REAL               WORK(*)
+      INTEGER            IWORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE SGEDMDQ( JOBS,  JOBZ, JOBR, JOBQ, JOBT, JOBF,          &
+     &                   WHTSVD,   M, N, F, LDF,  X, LDX,  Y,           &
+     &                   LDY,   NRNK,  TOL,   K,  REIG, IMEIG,          &
+     &                   Z, LDZ, RES,  B,     LDB,   V, LDV,            &
+     &                   S, LDS, WORK, LWORK, IWORK, LIWORK, INFO )
+      CHARACTER          JOBS, JOBZ, JOBR, JOBQ,                        &
+     &                           JOBT, JOBF
+      INTEGER            WHTSVD, M, N,   LDF, LDX,                      &
+     &                   LDY, NRNK, LDZ, LDB, LDV,                      &
+     &                   LDS, LWORK,  LIWORK
+      INTEGER            K, INFO
+      REAL               TOL
+      REAL               F(LDF,*)
+      REAL               X(LDX,*), Y(LDY,*),                            &
+     &                         Z(LDZ,*), B(LDB,*),                      &
+     &                         V(LDV,*), S(LDS,*)
+      REAL               REIG(*),  IMEIG(*), RES(*)
+      REAL               WORK(*)
+      INTEGER            IWORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
       SUBROUTINE SGEEQUB(M,N,A,LDA,R,C,ROWCND,COLCND,AMAX,INFO)
       INTEGER            INFO,LDA,M,N
       REAL               AMAX,COLCND,ROWCND
@@ -12300,6 +12706,17 @@
       INTEGER            INFO,LDA,LWORK,M,N
       INTEGER            JPVT(*)
       REAL               A(LDA,*),TAU(*),WORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE SGEQP3RK( M, N, NRHS, KMAX, ABSTOL, RELTOL, A, LDA,    &
+     &                   K, MAXC2NRMK, RELMAXC2NRMK, JPIV, TAU,         &
+     &                   WORK, LWORK, IWORK, INFO )
+      INTEGER            INFO, K, KF, KMAX, LDA, LWORK, M, N, NRHS
+      REAL               ABSTOL,  MAXC2NRMK, RELMAXC2NRMK, RELTOL
+      INTEGER            IWORK( * ), JPIV( * )
+      REAL               A( LDA, * ), TAU( * ), WORK( * )
       END
       END INTERFACE
 
@@ -15784,6 +16201,52 @@
       END INTERFACE
 
       INTERFACE
+      SUBROUTINE ZGEDMD( JOBS, JOBZ, JOBR, JOBF,  WHTSVD,               &
+     &                   M, N, X, LDX, Y, LDY, NRNK, TOL,               &
+     &                   K, EIGS, Z, LDZ, RES, B,    LDB,               &
+     &                   W, LDW,  S, LDS, ZWORK,  LZWORK,               &
+     &                   RWORK, LRWORK, IWORK, LIWORK, INFO )
+      CHARACTER          JOBS,   JOBZ,  JOBR,  JOBF
+      INTEGER            WHTSVD, M, N,   LDX,  LDY,                     &
+     &                   NRNK, LDZ, LDB, LDW,  LDS,                     &
+     &                   LIWORK, LRWORK, LZWORK
+      INTEGER            K, INFO
+      DOUBLE PRECISION   TOL
+      DOUBLE COMPLEX     X(LDX,*), Y(LDY,*)
+      DOUBLE COMPLEX     Z(LDZ,*), B(LDB,*), W(LDW,*), S(LDS,*)
+      DOUBLE COMPLEX     EIGS(*)
+      DOUBLE COMPLEX     ZWORK(*)
+      DOUBLE PRECISION   RES(*)
+      DOUBLE PRECISION   RWORK(*)
+      INTEGER            IWORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE ZGEDMDQ( JOBS,  JOBZ, JOBR, JOBQ, JOBT, JOBF,          &
+     &                   WHTSVD,   M, N, F, LDF,  X, LDX,  Y,           &
+     &                   LDY,   NRNK,  TOL,   K,  EIGS,                 &
+     &                   Z, LDZ, RES,  B,     LDB,   V, LDV,            &
+     &                   S, LDS, ZWORK, LZWORK, WORK,  LWORK,           &
+     &                   IWORK, LIWORK, INFO )
+      CHARACTER          JOBS, JOBZ, JOBR, JOBQ, JOBT, JOBF
+      INTEGER            WHTSVD, M, N,   LDF, LDX,                      &
+     &                   LDY, NRNK, LDZ, LDB, LDV,                      &
+     &                   LDS, LZWORK,  LWORK, LIWORK
+      INTEGER            K, INFO
+      DOUBLE PRECISION   TOL
+      DOUBLE COMPLEX     F(LDF,*)
+      DOUBLE COMPLEX     X(LDX,*), Y(LDY,*),  Z(LDZ,*), B(LDB,*),       &
+     &                      V(LDV,*), S(LDS,*)
+      DOUBLE COMPLEX     EIGS(*)
+      DOUBLE COMPLEX     ZWORK(*)
+      DOUBLE PRECISION   RES(*)
+      DOUBLE PRECISION   WORK(*)
+      INTEGER            IWORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
       SUBROUTINE ZGEEQUB(M,N,A,LDA,R,C,ROWCND,COLCND,AMAX,INFO)
       INTEGER            INFO,LDA,M,N
       DOUBLE PRECISION   AMAX,COLCND,ROWCND
@@ -15971,6 +16434,18 @@
       INTEGER            JPVT(*)
       DOUBLE PRECISION   RWORK(*)
       COMPLEX*16         A(LDA,*),TAU(*),WORK(*)
+      END
+      END INTERFACE
+
+      INTERFACE
+      SUBROUTINE ZGEQP3RK( M, N, NRHS, KMAX, ABSTOL, RELTOL, A, LDA,    &
+     &                   K, MAXC2NRMK, RELMAXC2NRMK, JPIV, TAU,         &
+     &                   WORK, LWORK, RWORK, IWORK, INFO )
+      INTEGER            INFO, K, KF, KMAX, LDA, LWORK, M, N, NRHS
+      DOUBLE PRECISION   ABSTOL,  MAXC2NRMK, RELMAXC2NRMK, RELTOL
+      INTEGER            IWORK( * ), JPIV( * )
+      DOUBLE PRECISION   RWORK( * )
+      DOUBLE COMPLEX     A( LDA, * ), TAU( * ), WORK( * )
       END
       END INTERFACE
 
@@ -17441,7 +17916,7 @@
 
       INTERFACE
       SUBROUTINE ZLAQZ0(WANTS,WANTQ,WANTZ,N,ILO,IHI,A,LDA,B,LDB,        &
-     &                  AlPHA,BETA,Q,LDQ,Z,LDZ,WORK,LWORK,RWORK,REC,    &
+     &                  ALPHA,BETA,Q,LDQ,Z,LDZ,WORK,LWORK,RWORK,REC,    &
      &                  INFO)
       CHARACTER          WANTS,WANTQ,WANTZ
       INTEGER            N,ILO,IHI,LDA,LDB,LDQ,LDZ,LWORK,REC,INFO

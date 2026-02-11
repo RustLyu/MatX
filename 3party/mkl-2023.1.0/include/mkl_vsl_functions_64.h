@@ -1,6 +1,6 @@
 /* file: mkl_vsl_functions_64.h */
 /*******************************************************************************
-* Copyright 2023 Intel Corporation.
+* Copyright (C) 2023 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -49,15 +49,15 @@ extern "C" {
 */
 
 #if  !defined(_Mkl_Api)
-#define _Mkl_Api(rtype,name,arg)   extern rtype name    arg;
+#define _Mkl_Api(rtype,name,arg)   extern rtype name    arg
 #endif
 
 #if  !defined(_mkl_api)
-#define _mkl_api(rtype,name,arg)   extern rtype name##_ arg;
+#define _mkl_api(rtype,name,arg)   extern rtype name##_ arg
 #endif
 
 #if  !defined(_MKL_API)
-#define _MKL_API(rtype,name,arg)   extern rtype name##_ arg;
+#define _MKL_API(rtype,name,arg)   extern rtype name##_ arg
 #endif
 
 /* VSL routines with MKL_INT64 input parameters */
@@ -70,63 +70,63 @@ extern "C" {
 //--
 */
 /* Cauchy distribution */
-_Mkl_Api(int,vdRngCauchy_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngCauchy_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngCauchy_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngCauchy_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW);
 
 
 /* Uniform distribution */
-_Mkl_Api(int,vdRngUniform_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngUniform_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngUniform_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngUniform_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW);
 
 
 /* Gaussian distribution */
-_Mkl_Api(int,vdRngGaussian_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngGaussian_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngGaussian_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngGaussian_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW);
 
 
 /* GaussianMV distribution */
-_Mkl_Api(int,vdRngGaussianMV_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const MKL_INT64  ,  const MKL_INT64  , const double *, const double *) NOTHROW)
-_Mkl_Api(int,vsRngGaussianMV_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const MKL_INT64  ,  const MKL_INT64  , const float *,  const float * ) NOTHROW)
+_Mkl_Api(int,vdRngGaussianMV_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const MKL_INT64  ,  const MKL_INT64  , const double *, const double *) NOTHROW);
+_Mkl_Api(int,vsRngGaussianMV_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const MKL_INT64  ,  const MKL_INT64  , const float *,  const float * ) NOTHROW);
 
 
 /* Exponential distribution */
-_Mkl_Api(int,vdRngExponential_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  ,  double [], const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngExponential_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  ,  float [],  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngExponential_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  ,  double [], const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngExponential_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  ,  float [],  const float  ,  const float   ) NOTHROW);
 
 
 /* Laplace distribution */
-_Mkl_Api(int,vdRngLaplace_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngLaplace_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngLaplace_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngLaplace_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW);
 
 
 /* Weibull distribution */
-_Mkl_Api(int,vdRngWeibull_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngWeibull_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngWeibull_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngWeibull_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float  ,  const float   ) NOTHROW);
 
 /* Rayleigh distribution */
-_Mkl_Api(int,vdRngRayleigh_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  ,  double [], const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngRayleigh_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  ,  float [],  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngRayleigh_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  ,  double [], const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngRayleigh_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  ,  float [],  const float  ,  const float   ) NOTHROW);
 
 
 /* Lognormal distribution */
-_Mkl_Api(int,vdRngLognormal_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  , const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngLognormal_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float  ,  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngLognormal_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  , const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngLognormal_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float  ,  const float  ,  const float   ) NOTHROW);
 
 /* Gumbel distribution */
-_Mkl_Api(int,vdRngGumbel_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngGumbel_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngGumbel_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngGumbel_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float   ) NOTHROW);
 
 /* Gamma distribution */
-_Mkl_Api(int,vdRngGamma_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngGamma_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngGamma_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngGamma_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float  ,  const float   ) NOTHROW);
 
 /* Beta distribution */
-_Mkl_Api(int,vdRngBeta_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  , const double  , const double  ) NOTHROW)
-_Mkl_Api(int,vsRngBeta_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float  ,  const float  ,  const float   ) NOTHROW)
+_Mkl_Api(int,vdRngBeta_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const double  , const double  , const double  , const double  ) NOTHROW);
+_Mkl_Api(int,vsRngBeta_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const float  ,  const float  ,  const float  ,  const float   ) NOTHROW);
 
 /* Chi-square distribution */
-_Mkl_Api(int,vdRngChiSquare_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const int  ) NOTHROW)
-_Mkl_Api(int,vsRngChiSquare_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const int  ) NOTHROW)
+_Mkl_Api(int,vdRngChiSquare_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , double [], const int  ) NOTHROW);
+_Mkl_Api(int,vsRngChiSquare_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , float [],  const int  ) NOTHROW);
 
 
 /*
@@ -135,41 +135,41 @@ _Mkl_Api(int,vsRngChiSquare_64,(const MKL_INT64  , VSLStreamStatePtr  , const MK
 //--
 */
 /* Bernoulli distribution */
-_Mkl_Api(int,viRngBernoulli_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  ) NOTHROW)
+_Mkl_Api(int,viRngBernoulli_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  ) NOTHROW);
 
 /* Uniform distribution */
-_Mkl_Api(int,viRngUniform_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const int  , const int  ) NOTHROW)
+_Mkl_Api(int,viRngUniform_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const int  , const int  ) NOTHROW);
 
 /* UniformBits distribution */
-_Mkl_Api(int,viRngUniformBits_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , unsigned int []) NOTHROW)
+_Mkl_Api(int,viRngUniformBits_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , unsigned int []) NOTHROW);
 
 /* UniformBits32 distribution */
-_Mkl_Api(int,viRngUniformBits32_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , unsigned int []) NOTHROW)
+_Mkl_Api(int,viRngUniformBits32_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , unsigned int []) NOTHROW);
 
 /* UniformBits64 distribution */
-_Mkl_Api(int,viRngUniformBits64_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , unsigned MKL_INT64 []) NOTHROW)
+_Mkl_Api(int,viRngUniformBits64_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , unsigned MKL_INT64 []) NOTHROW);
 
 /* Geometric distribution */
-_Mkl_Api(int,viRngGeometric_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  ) NOTHROW)
+_Mkl_Api(int,viRngGeometric_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  ) NOTHROW);
 
 /* Binomial distribution */
-_Mkl_Api(int,viRngBinomial_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const int  , const double  ) NOTHROW)
+_Mkl_Api(int,viRngBinomial_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const int  , const double  ) NOTHROW);
 
 /* Multinomial distribution */
-_Mkl_Api(int,viRngMultinomial_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const int  , const int  , const double []) NOTHROW)
+_Mkl_Api(int,viRngMultinomial_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const int  , const int  , const double []) NOTHROW);
 
 /* Hypergeometric distribution */
-_Mkl_Api(int,viRngHypergeometric_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const int  , const int  , const int  ) NOTHROW)
+_Mkl_Api(int,viRngHypergeometric_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const int  , const int  , const int  ) NOTHROW);
 
 /* Negbinomial distribution */
-_Mkl_Api(int,viRngNegbinomial_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  , const double  ) NOTHROW)
-_Mkl_Api(int,viRngNegBinomial_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  , const double  ) NOTHROW)
+_Mkl_Api(int,viRngNegbinomial_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  , const double  ) NOTHROW);
+_Mkl_Api(int,viRngNegBinomial_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  , const double  ) NOTHROW);
 
 /* Poisson distribution */
-_Mkl_Api(int,viRngPoisson_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  ) NOTHROW)
+_Mkl_Api(int,viRngPoisson_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double  ) NOTHROW);
 
 /* PoissonV distribution */
-_Mkl_Api(int,viRngPoissonV_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double []) NOTHROW)
+_Mkl_Api(int,viRngPoissonV_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL_INT64  , int [], const double []) NOTHROW);
 
 
 /*
@@ -178,10 +178,43 @@ _Mkl_Api(int,viRngPoissonV_64,(const MKL_INT64  , VSLStreamStatePtr  , const MKL
 //--
 */
 /* NewStream - stream creation/initialization */
-_Mkl_Api(int,vslNewStream_64,(VSLStreamStatePtr* , const MKL_INT64  , const MKL_UINT64  ) NOTHROW)
+_Mkl_Api(int,vslNewStream_64,(VSLStreamStatePtr*, const MKL_INT64, const MKL_UINT64) NOTHROW);
 
 /* NewStreamEx - advanced stream creation/initialization */
-_Mkl_Api(int,vslNewStreamEx_64,(VSLStreamStatePtr* , const MKL_INT64  , const MKL_INT64  , const unsigned int[]) NOTHROW)
+_Mkl_Api(int,vslNewStreamEx_64,(VSLStreamStatePtr*, const MKL_INT64, const MKL_INT64, const unsigned int[]) NOTHROW);
+
+/* DeleteStream - delete stream */
+_Mkl_Api(int,vslDeleteStream_64,(VSLStreamStatePtr*) NOTHROW);
+
+/* CopyStream - copy all stream information */
+_Mkl_Api(int,vslCopyStream_64,(VSLStreamStatePtr*, const VSLStreamStatePtr) NOTHROW);
+
+/* CopyStreamState - copy stream state only */
+_Mkl_Api(int,vslCopyStreamState_64,(VSLStreamStatePtr, const VSLStreamStatePtr) NOTHROW);
+
+/* LeapfrogStream - leapfrog method */
+_Mkl_Api(int,vslLeapfrogStream_64,(VSLStreamStatePtr, const MKL_INT, const MKL_INT) NOTHROW);
+
+/* SkipAheadStream - skip-ahead method */
+_Mkl_Api(int,vslSkipAheadStream_64,(VSLStreamStatePtr, const long long int) NOTHROW);
+
+/* SkipAheadStreamEx - skip-ahead extended method */
+_Mkl_Api(int,vslSkipAheadStreamEx_64,(VSLStreamStatePtr, const MKL_INT, const MKL_UINT64[]) NOTHROW);
+
+/* SaveStreamF - save random stream descriptive data to file */
+_Mkl_Api(int,vslSaveStreamF_64,(const VSLStreamStatePtr, const char*) NOTHROW);
+
+/* LoadStreamF - load random stream descriptive data from file */
+_Mkl_Api(int,vslLoadStreamF_64,(VSLStreamStatePtr*, const char*) NOTHROW);
+
+/* SaveStreamM - save random stream descriptive data to memory */
+_Mkl_Api(int,vslSaveStreamM_64,(const VSLStreamStatePtr, char*) NOTHROW);
+
+/* LoadStreamM - load random stream descriptive data from memory */
+_Mkl_Api(int,vslLoadStreamM_64,(VSLStreamStatePtr*, const char*) NOTHROW);
+
+/* GetStreamSize - get size of random stream descriptive data */
+_Mkl_Api(int,vslGetStreamSize_64,(const VSLStreamStatePtr) NOTHROW);
 
 /*
 //++
@@ -192,9 +225,9 @@ _Mkl_Api(int,vslNewStreamEx_64,(VSLStreamStatePtr* , const MKL_INT64  , const MK
 /*
 //  Task constructors
 */
-_Mkl_Api(int,vsldSSNewTask_64,(VSLSSTaskPtr* , const MKL_INT64* , const MKL_INT64* , const MKL_INT64* , const double [], const double [], const MKL_INT64 []) NOTHROW)
+_Mkl_Api(int,vsldSSNewTask_64,(VSLSSTaskPtr* , const MKL_INT64* , const MKL_INT64* , const MKL_INT64* , const double [], const double [], const MKL_INT64 []) NOTHROW);
 
-_Mkl_Api(int,vslsSSNewTask_64,(VSLSSTaskPtr* , const MKL_INT64* , const MKL_INT64* , const MKL_INT64* , const float  [], const float  [], const MKL_INT64 []) NOTHROW)
+_Mkl_Api(int,vslsSSNewTask_64,(VSLSSTaskPtr* , const MKL_INT64* , const MKL_INT64* , const MKL_INT64* , const float  [], const float  [], const MKL_INT64 []) NOTHROW);
 
 #endif
 

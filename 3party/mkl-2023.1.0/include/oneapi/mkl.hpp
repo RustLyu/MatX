@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019-2022 Intel Corporation.
+* Copyright (C) 2019 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -23,8 +23,9 @@
 #include "mkl.h"
 #include "oneapi/mkl/export.hpp"
 #include "oneapi/mkl/types.hpp"
+#include "oneapi/mkl/spec.hpp"
 #include "oneapi/mkl/blas.hpp"
-#include "oneapi/mkl/dfti.hpp"
+#include "oneapi/mkl/dft.hpp"
 #include "oneapi/mkl/lapack.hpp"
 #include "oneapi/mkl/vm.hpp"
 #include "oneapi/mkl/rng.hpp"

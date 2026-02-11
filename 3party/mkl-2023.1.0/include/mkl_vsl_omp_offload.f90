@@ -1,5 +1,5 @@
 !===============================================================================
-! Copyright 2020-2022 Intel Corporation.
+! Copyright (C) 2020 Intel Corporation
 !
 ! This software and the related documents are Intel copyrighted  materials,  and
 ! your use of  them is  governed by the  express license  under which  they were
@@ -35,8 +35,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: b
-       !$omp  declare variant( vsrnguniform:mkl_vsl_vsrnguniform_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnguniform:mkl_vsl_vsrnguniform_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnguniform:mkl_vsl_vsrnguniform_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnguniform
   end interface
 
@@ -49,8 +48,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: b
-       !$omp  declare variant( vdrnguniform:mkl_vsl_vdrnguniform_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnguniform:mkl_vsl_vdrnguniform_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnguniform:mkl_vsl_vdrnguniform_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnguniform
   end interface
   
@@ -64,8 +62,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: sigma
-       !$omp  declare variant( vsrnggaussian:mkl_vsl_vsrnggaussian_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnggaussian:mkl_vsl_vsrnggaussian_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnggaussian:mkl_vsl_vsrnggaussian_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnggaussian
   end interface
 
@@ -78,8 +75,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: sigma
-       !$omp  declare variant( vdrnggaussian:mkl_vsl_vdrnggaussian_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnggaussian:mkl_vsl_vdrnggaussian_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnggaussian:mkl_vsl_vdrnggaussian_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnggaussian
   end interface
 
@@ -95,8 +91,7 @@ module onemkl_vsl_omp_offload
        integer, intent(in)      :: mstorage
        real(kind=4),intent(in)  :: a(dimen)
        real(kind=4),intent(in)  :: t(dimen,dimen)
-       !$omp  declare variant( vsrnggaussianmv:mkl_vsl_vsrnggaussianmv_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnggaussianmv:mkl_vsl_vsrnggaussianmv_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnggaussianmv:mkl_vsl_vsrnggaussianmv_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnggaussianmv
   end interface
 
@@ -111,8 +106,7 @@ module onemkl_vsl_omp_offload
        integer, intent(in)      :: mstorage
        real(kind=8),intent(in)  :: a(dimen)
        real(kind=8),intent(in)  :: t(dimen,dimen)
-       !$omp  declare variant( vdrnggaussianmv:mkl_vsl_vdrnggaussianmv_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnggaussianmv:mkl_vsl_vdrnggaussianmv_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnggaussianmv:mkl_vsl_vdrnggaussianmv_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnggaussianmv
   end interface
 
@@ -127,8 +121,7 @@ module onemkl_vsl_omp_offload
        integer, intent(in)          :: ntrial
        integer, intent(in)          :: k
        real(kind=8),intent(in)      :: p(k)
-       !$omp  declare variant( virngmultinomial:mkl_vsl_virngmultinomial_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngmultinomial:mkl_vsl_virngmultinomial_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngmultinomial:mkl_vsl_virngmultinomial_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngmultinomial
   end interface
 
@@ -141,8 +134,7 @@ module onemkl_vsl_omp_offload
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: lambda(n)
-       !$omp  declare variant( virngpoissonv:mkl_vsl_virngpoissonv_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngpoissonv:mkl_vsl_virngpoissonv_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngpoissonv:mkl_vsl_virngpoissonv_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngpoissonv
   end interface
 
@@ -156,8 +148,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngexponential:mkl_vsl_vsrngexponential_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngexponential:mkl_vsl_vsrngexponential_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngexponential:mkl_vsl_vsrngexponential_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngexponential
   end interface
 
@@ -170,8 +161,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngexponential:mkl_vsl_vdrngexponential_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngexponential:mkl_vsl_vdrngexponential_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngexponential:mkl_vsl_vdrngexponential_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngexponential
   end interface
 
@@ -185,8 +175,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrnglaplace:mkl_vsl_vsrnglaplace_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnglaplace:mkl_vsl_vsrnglaplace_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnglaplace:mkl_vsl_vsrnglaplace_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnglaplace
   end interface
 
@@ -199,8 +188,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrnglaplace:mkl_vsl_vdrnglaplace_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnglaplace:mkl_vsl_vdrnglaplace_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnglaplace:mkl_vsl_vdrnglaplace_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnglaplace
   end interface
 
@@ -215,8 +203,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(in)  :: alpha
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngweibull:mkl_vsl_vsrngweibull_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngweibull:mkl_vsl_vsrngweibull_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngweibull:mkl_vsl_vsrngweibull_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngweibull
   end interface
 
@@ -230,8 +217,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(in)  :: alpha
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngweibull:mkl_vsl_vdrngweibull_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngweibull:mkl_vsl_vdrngweibull_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngweibull:mkl_vsl_vdrngweibull_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngweibull
   end interface
 
@@ -245,8 +231,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngcauchy:mkl_vsl_vsrngcauchy_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngcauchy:mkl_vsl_vsrngcauchy_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngcauchy:mkl_vsl_vsrngcauchy_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngcauchy
   end interface
 
@@ -259,8 +244,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngcauchy:mkl_vsl_vdrngcauchy_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngcauchy:mkl_vsl_vdrngcauchy_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngcauchy:mkl_vsl_vdrngcauchy_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngcauchy
   end interface
 
@@ -274,8 +258,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngrayleigh:mkl_vsl_vsrngrayleigh_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngrayleigh:mkl_vsl_vsrngrayleigh_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngrayleigh:mkl_vsl_vsrngrayleigh_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngrayleigh
   end interface
 
@@ -288,8 +271,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngrayleigh:mkl_vsl_vdrngrayleigh_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngrayleigh:mkl_vsl_vdrngrayleigh_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngrayleigh:mkl_vsl_vdrngrayleigh_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngrayleigh
   end interface
 
@@ -305,8 +287,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(in)  :: sigma
        real(kind=4),intent(in)  :: b
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrnglognormal:mkl_vsl_vsrnglognormal_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnglognormal:mkl_vsl_vsrnglognormal_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnglognormal:mkl_vsl_vsrnglognormal_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnglognormal
   end interface
 
@@ -321,8 +302,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(in)  :: sigma
        real(kind=8),intent(in)  :: b
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrnglognormal:mkl_vsl_vdrnglognormal_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnglognormal:mkl_vsl_vdrnglognormal_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnglognormal:mkl_vsl_vdrnglognormal_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnglognormal
   end interface
 
@@ -336,8 +316,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrnggumbel:mkl_vsl_vsrnggumbel_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnggumbel:mkl_vsl_vsrnggumbel_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnggumbel:mkl_vsl_vsrnggumbel_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnggumbel
   end interface
 
@@ -350,8 +329,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrnggumbel:mkl_vsl_vdrnggumbel_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnggumbel:mkl_vsl_vdrnggumbel_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnggumbel:mkl_vsl_vdrnggumbel_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnggumbel
   end interface
 
@@ -367,8 +345,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(in)  :: q
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngbeta:mkl_vsl_vsrngbeta_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngbeta:mkl_vsl_vsrngbeta_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngbeta:mkl_vsl_vsrngbeta_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngbeta
   end interface
 
@@ -383,8 +360,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(in)  :: q
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngbeta:mkl_vsl_vdrngbeta_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngbeta:mkl_vsl_vdrngbeta_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngbeta:mkl_vsl_vdrngbeta_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngbeta
     end interface
 
@@ -399,8 +375,7 @@ module onemkl_vsl_omp_offload
        real(kind=4),intent(in)  :: alpha
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrnggamma:mkl_vsl_vsrnggamma_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnggamma:mkl_vsl_vsrnggamma_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnggamma:mkl_vsl_vsrnggamma_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnggamma
   end interface
 
@@ -414,8 +389,7 @@ module onemkl_vsl_omp_offload
        real(kind=8),intent(in)  :: alpha
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrnggamma:mkl_vsl_vdrnggamma_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnggamma:mkl_vsl_vdrnggamma_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnggamma:mkl_vsl_vdrnggamma_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnggamma
     end interface
 
@@ -428,8 +402,7 @@ module onemkl_vsl_omp_offload
        integer,intent(in)       :: n
        real(kind=4),intent(out) :: r(n)
        integer,intent(in)       :: v
-       !$omp  declare variant( vsrngchisquare:mkl_vsl_vsrngchisquare_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngchisquare:mkl_vsl_vsrngchisquare_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngchisquare:mkl_vsl_vsrngchisquare_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngchisquare
   end interface
 
@@ -441,8 +414,7 @@ module onemkl_vsl_omp_offload
        integer,intent(in)       :: n
        real(kind=8),intent(out) :: r(n)
        integer,intent(in)       :: v
-       !$omp  declare variant( vdrngchisquare:mkl_vsl_vdrngchisquare_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngchisquare:mkl_vsl_vdrngchisquare_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngchisquare:mkl_vsl_vdrngchisquare_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngchisquare
     end interface
 
@@ -459,8 +431,7 @@ module onemkl_vsl_omp_offload
        integer(kind=4),intent(out) :: r(n)
        integer(kind=4),intent(in)  :: a
        integer(kind=4),intent(in)  :: b
-       !$omp  declare variant( virnguniform:mkl_vsl_virnguniform_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnguniform:mkl_vsl_virnguniform_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnguniform:mkl_vsl_virnguniform_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnguniform
   end interface
 
@@ -472,8 +443,7 @@ module onemkl_vsl_omp_offload
        type(VSL_STREAM_STATE)      :: stream
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
-       !$omp  declare variant( virnguniformbits:mkl_vsl_virnguniformbits_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnguniformbits:mkl_vsl_virnguniformbits_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnguniformbits:mkl_vsl_virnguniformbits_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnguniformbits
   end interface
 
@@ -485,8 +455,7 @@ module onemkl_vsl_omp_offload
        type(VSL_STREAM_STATE)      :: stream
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
-       !$omp  declare variant( virnguniformbits32:mkl_vsl_virnguniformbits32_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnguniformbits32:mkl_vsl_virnguniformbits32_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnguniformbits32:mkl_vsl_virnguniformbits32_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnguniformbits32
   end interface
 
@@ -498,8 +467,7 @@ module onemkl_vsl_omp_offload
        type(VSL_STREAM_STATE)      :: stream
        integer,intent(in)          :: n
        integer(kind=8),intent(out) :: r(n)
-       !$omp  declare variant( virnguniformbits64:mkl_vsl_virnguniformbits64_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnguniformbits64:mkl_vsl_virnguniformbits64_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnguniformbits64:mkl_vsl_virnguniformbits64_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnguniformbits64
   end interface
 
@@ -512,8 +480,7 @@ module onemkl_vsl_omp_offload
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: p
-       !$omp  declare variant( virngbernoulli:mkl_vsl_virngbernoulli_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngbernoulli:mkl_vsl_virngbernoulli_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngbernoulli:mkl_vsl_virngbernoulli_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngbernoulli
   end interface
 
@@ -526,8 +493,7 @@ module onemkl_vsl_omp_offload
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: p
-       !$omp  declare variant( virnggeometric:mkl_vsl_virnggeometric_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnggeometric:mkl_vsl_virnggeometric_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnggeometric:mkl_vsl_virnggeometric_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnggeometric
   end interface
 
@@ -542,8 +508,7 @@ module onemkl_vsl_omp_offload
        integer(kind=4),intent(in)  :: l
        integer(kind=4),intent(in)  :: s
        integer(kind=4),intent(in)  :: m
-       !$omp  declare variant( virnghypergeometric:mkl_vsl_virnghypergeometric_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnghypergeometric:mkl_vsl_virnghypergeometric_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnghypergeometric:mkl_vsl_virnghypergeometric_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnghypergeometric
   end interface
 
@@ -557,8 +522,7 @@ module onemkl_vsl_omp_offload
        integer(kind=4),intent(out) :: r(n)
        integer(kind=4),intent(in)  :: ntrial
        real(kind=8),intent(in)     :: p
-       !$omp  declare variant( virngbinomial:mkl_vsl_virngbinomial_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngbinomial:mkl_vsl_virngbinomial_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngbinomial:mkl_vsl_virngbinomial_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngbinomial
   end interface
 
@@ -572,8 +536,7 @@ module onemkl_vsl_omp_offload
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: a
        real(kind=8),intent(in)     :: p
-       !$omp  declare variant( virngnegbinomial:mkl_vsl_virngnegbinomial_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngnegbinomial:mkl_vsl_virngnegbinomial_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngnegbinomial:mkl_vsl_virngnegbinomial_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngnegbinomial
   end interface
 
@@ -586,8 +549,7 @@ module onemkl_vsl_omp_offload
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: lambda
-       !$omp  declare variant( virngpoisson:mkl_vsl_virngpoisson_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngpoisson:mkl_vsl_virngpoisson_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngpoisson:mkl_vsl_virngpoisson_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngpoisson
   end interface
 
@@ -743,7 +705,6 @@ module onemkl_vsl_omp_offload
               type(VSL_SS_TASK)            :: task
               integer(kind=8),intent(in)   :: estimates
               integer,intent(in)           :: method
-              !$omp  declare variant( vsldsscompute:mkl_vsl_dsscompute_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
               !$omp  declare variant( vsldsscompute:mkl_vsl_dsscompute_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync))
      end function
       end interface
@@ -754,7 +715,6 @@ module onemkl_vsl_omp_offload
               type(VSL_SS_TASK)            :: task
               integer(kind=8),intent(in)   :: estimates
               integer,intent(in)           :: method
-              !$omp  declare variant( vslssscompute:mkl_vsl_ssscompute_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
               !$omp  declare variant( vslssscompute:mkl_vsl_ssscompute_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync))
      end function
       end interface
@@ -1222,8 +1182,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: b
-      !$omp  declare variant( vsrnguniform:mkl_vsl_vsrnguniform_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnguniform:mkl_vsl_vsrnguniform_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnguniform:mkl_vsl_vsrnguniform_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnguniform
   end interface
 
@@ -1236,8 +1195,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: b
-       !$omp  declare variant( vdrnguniform:mkl_vsl_vdrnguniform_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnguniform:mkl_vsl_vdrnguniform_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnguniform:mkl_vsl_vdrnguniform_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnguniform
   end interface
   
@@ -1251,8 +1209,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: sigma
-       !$omp  declare variant( vsrnggaussian:mkl_vsl_vsrnggaussian_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnggaussian:mkl_vsl_vsrnggaussian_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnggaussian:mkl_vsl_vsrnggaussian_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnggaussian
   end interface
 
@@ -1265,8 +1222,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: sigma
-       !$omp  declare variant( vdrnggaussian:mkl_vsl_vdrnggaussian_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnggaussian:mkl_vsl_vdrnggaussian_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnggaussian:mkl_vsl_vdrnggaussian_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnggaussian
   end interface
 
@@ -1282,8 +1238,7 @@ module onemkl_vsl_omp_offload_lp64
        integer, intent(in)      :: mstorage
        real(kind=4),intent(in)  :: a(dimen)
        real(kind=4),intent(in)  :: t(dimen,dimen)
-       !$omp  declare variant( vsrnggaussianmv:mkl_vsl_vsrnggaussianmv_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnggaussianmv:mkl_vsl_vsrnggaussianmv_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnggaussianmv:mkl_vsl_vsrnggaussianmv_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnggaussianmv
   end interface
 
@@ -1298,8 +1253,7 @@ module onemkl_vsl_omp_offload_lp64
        integer, intent(in)      :: mstorage
        real(kind=8),intent(in)  :: a(dimen)
        real(kind=8),intent(in)  :: t(dimen,dimen)
-       !$omp  declare variant( vdrnggaussianmv:mkl_vsl_vdrnggaussianmv_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnggaussianmv:mkl_vsl_vdrnggaussianmv_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnggaussianmv:mkl_vsl_vdrnggaussianmv_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnggaussianmv
   end interface
 
@@ -1314,8 +1268,7 @@ module onemkl_vsl_omp_offload_lp64
        integer, intent(in)         :: ntrial
        integer, intent(in)         :: k
        real(kind=8),intent(in)     :: p(k)
-       !$omp  declare variant( virngmultinomial:mkl_vsl_virngmultinomial_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngmultinomial:mkl_vsl_virngmultinomial_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngmultinomial:mkl_vsl_virngmultinomial_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngmultinomial
   end interface
 
@@ -1328,8 +1281,7 @@ module onemkl_vsl_omp_offload_lp64
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: lambda(n)
-       !$omp  declare variant( virngpoissonv:mkl_vsl_virngpoissonv_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngpoissonv:mkl_vsl_virngpoissonv_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngpoissonv:mkl_vsl_virngpoissonv_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngpoissonv
   end interface
 
@@ -1343,8 +1295,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngexponential:mkl_vsl_vsrngexponential_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngexponential:mkl_vsl_vsrngexponential_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngexponential:mkl_vsl_vsrngexponential_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngexponential
   end interface
 
@@ -1357,8 +1308,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngexponential:mkl_vsl_vdrngexponential_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngexponential:mkl_vsl_vdrngexponential_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngexponential:mkl_vsl_vdrngexponential_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngexponential
   end interface
 
@@ -1372,8 +1322,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrnglaplace:mkl_vsl_vsrnglaplace_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnglaplace:mkl_vsl_vsrnglaplace_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnglaplace:mkl_vsl_vsrnglaplace_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnglaplace
   end interface
 
@@ -1386,8 +1335,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrnglaplace:mkl_vsl_vdrnglaplace_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnglaplace:mkl_vsl_vdrnglaplace_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnglaplace:mkl_vsl_vdrnglaplace_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnglaplace
   end interface
 
@@ -1402,8 +1350,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(in)  :: alpha
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngweibull:mkl_vsl_vsrngweibull_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngweibull:mkl_vsl_vsrngweibull_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngweibull:mkl_vsl_vsrngweibull_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngweibull
   end interface
 
@@ -1417,8 +1364,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(in)  :: alpha
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngweibull:mkl_vsl_vdrngweibull_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngweibull:mkl_vsl_vdrngweibull_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngweibull:mkl_vsl_vdrngweibull_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngweibull
   end interface
 
@@ -1432,8 +1378,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngcauchy:mkl_vsl_vsrngcauchy_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngcauchy:mkl_vsl_vsrngcauchy_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngcauchy:mkl_vsl_vsrngcauchy_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngcauchy
   end interface
 
@@ -1446,8 +1391,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngcauchy:mkl_vsl_vdrngcauchy_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngcauchy:mkl_vsl_vdrngcauchy_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngcauchy:mkl_vsl_vdrngcauchy_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngcauchy
   end interface
 
@@ -1461,8 +1405,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngrayleigh:mkl_vsl_vsrngrayleigh_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngrayleigh:mkl_vsl_vsrngrayleigh_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngrayleigh:mkl_vsl_vsrngrayleigh_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngrayleigh
   end interface
 
@@ -1475,8 +1418,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngrayleigh:mkl_vsl_vdrngrayleigh_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngrayleigh:mkl_vsl_vdrngrayleigh_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngrayleigh:mkl_vsl_vdrngrayleigh_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngrayleigh
   end interface
 
@@ -1492,8 +1434,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(in)  :: sigma
        real(kind=4),intent(in)  :: b
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrnglognormal:mkl_vsl_vsrnglognormal_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnglognormal:mkl_vsl_vsrnglognormal_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnglognormal:mkl_vsl_vsrnglognormal_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnglognormal
   end interface
 
@@ -1508,8 +1449,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(in)  :: sigma
        real(kind=8),intent(in)  :: b
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrnglognormal:mkl_vsl_vdrnglognormal_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnglognormal:mkl_vsl_vdrnglognormal_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnglognormal:mkl_vsl_vdrnglognormal_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnglognormal
   end interface
 
@@ -1523,8 +1463,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(out) :: r(n)
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrnggumbel:mkl_vsl_vsrnggumbel_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnggumbel:mkl_vsl_vsrnggumbel_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnggumbel:mkl_vsl_vsrnggumbel_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnggumbel
   end interface
 
@@ -1537,8 +1476,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(out) :: r(n)
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrnggumbel:mkl_vsl_vdrnggumbel_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnggumbel:mkl_vsl_vdrnggumbel_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnggumbel:mkl_vsl_vdrnggumbel_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnggumbel
   end interface
 
@@ -1554,8 +1492,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(in)  :: q
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrngbeta:mkl_vsl_vsrngbeta_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngbeta:mkl_vsl_vsrngbeta_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngbeta:mkl_vsl_vsrngbeta_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngbeta
   end interface
 
@@ -1570,8 +1507,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(in)  :: q
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrngbeta:mkl_vsl_vdrngbeta_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngbeta:mkl_vsl_vdrngbeta_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngbeta:mkl_vsl_vdrngbeta_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngbeta
     end interface
 
@@ -1586,8 +1522,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=4),intent(in)  :: alpha
        real(kind=4),intent(in)  :: a
        real(kind=4),intent(in)  :: beta
-       !$omp  declare variant( vsrnggamma:mkl_vsl_vsrnggamma_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrnggamma:mkl_vsl_vsrnggamma_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrnggamma:mkl_vsl_vsrnggamma_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrnggamma
   end interface
 
@@ -1601,8 +1536,7 @@ module onemkl_vsl_omp_offload_lp64
        real(kind=8),intent(in)  :: alpha
        real(kind=8),intent(in)  :: a
        real(kind=8),intent(in)  :: beta
-       !$omp  declare variant( vdrnggamma:mkl_vsl_vdrnggamma_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrnggamma:mkl_vsl_vdrnggamma_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrnggamma:mkl_vsl_vdrnggamma_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrnggamma
     end interface
 
@@ -1615,8 +1549,7 @@ module onemkl_vsl_omp_offload_lp64
        integer,intent(in)       :: n
        real(kind=4),intent(out) :: r(n)
        integer,intent(in)       :: v
-       !$omp  declare variant( vsrngchisquare:mkl_vsl_vsrngchisquare_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vsrngchisquare:mkl_vsl_vsrngchisquare_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vsrngchisquare:mkl_vsl_vsrngchisquare_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vsrngchisquare
   end interface
 
@@ -1628,8 +1561,7 @@ module onemkl_vsl_omp_offload_lp64
        integer,intent(in)       :: n
        real(kind=8),intent(out) :: r(n)
        integer,intent(in)       :: v
-       !$omp  declare variant( vdrngchisquare:mkl_vsl_vdrngchisquare_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( vdrngchisquare:mkl_vsl_vdrngchisquare_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( vdrngchisquare:mkl_vsl_vdrngchisquare_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function vdrngchisquare
     end interface
 
@@ -1646,8 +1578,7 @@ module onemkl_vsl_omp_offload_lp64
        integer(kind=4),intent(out) :: r(n)
        integer(kind=4),intent(in)  :: a
        integer(kind=4),intent(in)  :: b
-       !$omp  declare variant( virnguniform:mkl_vsl_virnguniform_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnguniform:mkl_vsl_virnguniform_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnguniform:mkl_vsl_virnguniform_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnguniform
   end interface
 
@@ -1659,8 +1590,7 @@ module onemkl_vsl_omp_offload_lp64
        type(VSL_STREAM_STATE)      :: stream
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
-       !$omp  declare variant( virnguniformbits:mkl_vsl_virnguniformbits_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnguniformbits:mkl_vsl_virnguniformbits_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnguniformbits:mkl_vsl_virnguniformbits_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnguniformbits
   end interface
 
@@ -1672,8 +1602,7 @@ module onemkl_vsl_omp_offload_lp64
        type(VSL_STREAM_STATE)      :: stream
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
-       !$omp  declare variant( virnguniformbits32:mkl_vsl_virnguniformbits32_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnguniformbits32:mkl_vsl_virnguniformbits32_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnguniformbits32:mkl_vsl_virnguniformbits32_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnguniformbits32
   end interface
 
@@ -1685,8 +1614,7 @@ module onemkl_vsl_omp_offload_lp64
        type(VSL_STREAM_STATE)      :: stream
        integer,intent(in)          :: n
        integer(kind=8),intent(out) :: r(n)
-       !$omp  declare variant( virnguniformbits64:mkl_vsl_virnguniformbits64_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnguniformbits64:mkl_vsl_virnguniformbits64_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnguniformbits64:mkl_vsl_virnguniformbits64_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnguniformbits64
   end interface
 
@@ -1699,8 +1627,7 @@ module onemkl_vsl_omp_offload_lp64
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: p
-       !$omp  declare variant( virngbernoulli:mkl_vsl_virngbernoulli_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngbernoulli:mkl_vsl_virngbernoulli_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngbernoulli:mkl_vsl_virngbernoulli_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngbernoulli
   end interface
 
@@ -1713,8 +1640,7 @@ module onemkl_vsl_omp_offload_lp64
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: p
-       !$omp  declare variant( virnggeometric:mkl_vsl_virnggeometric_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnggeometric:mkl_vsl_virnggeometric_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnggeometric:mkl_vsl_virnggeometric_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnggeometric
   end interface
 
@@ -1729,8 +1655,7 @@ module onemkl_vsl_omp_offload_lp64
        integer(kind=4),intent(in)  :: l
        integer(kind=4),intent(in)  :: s
        integer(kind=4),intent(in)  :: m
-       !$omp  declare variant( virnghypergeometric:mkl_vsl_virnghypergeometric_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virnghypergeometric:mkl_vsl_virnghypergeometric_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virnghypergeometric:mkl_vsl_virnghypergeometric_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virnghypergeometric
   end interface
 
@@ -1744,8 +1669,7 @@ module onemkl_vsl_omp_offload_lp64
        integer(kind=4),intent(out) :: r(n)
        integer(kind=4),intent(in)  :: ntrial
        real(kind=8),intent(in)     :: p
-       !$omp  declare variant( virngbinomial:mkl_vsl_virngbinomial_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngbinomial:mkl_vsl_virngbinomial_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngbinomial:mkl_vsl_virngbinomial_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngbinomial
   end interface
 
@@ -1759,8 +1683,7 @@ module onemkl_vsl_omp_offload_lp64
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: a
        real(kind=8),intent(in)     :: p
-       !$omp  declare variant( virngnegbinomial:mkl_vsl_virngnegbinomial_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngnegbinomial:mkl_vsl_virngnegbinomial_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngnegbinomial:mkl_vsl_virngnegbinomial_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngnegbinomial
   end interface
 
@@ -1773,8 +1696,7 @@ module onemkl_vsl_omp_offload_lp64
        integer,intent(in)          :: n
        integer(kind=4),intent(out) :: r(n)
        real(kind=8),intent(in)     :: lambda
-       !$omp  declare variant( virngpoisson:mkl_vsl_virngpoisson_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( virngpoisson:mkl_vsl_virngpoisson_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_ptr:r)
+       !$omp  declare variant( virngpoisson:mkl_vsl_virngpoisson_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync)) adjust_args(need_device_addr:r)
      end function virngpoisson
   end interface
 
@@ -1930,7 +1852,6 @@ module onemkl_vsl_omp_offload_lp64
               type(VSL_SS_TASK)            :: task
               integer(kind=8),intent(in)   :: estimates
               integer,intent(in)           :: method
-              !$omp  declare variant( vsldsscompute:mkl_vsl_dsscompute_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
               !$omp  declare variant( vsldsscompute:mkl_vsl_dsscompute_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync))
      end function
       end interface
@@ -1941,7 +1862,6 @@ module onemkl_vsl_omp_offload_lp64
               type(VSL_SS_TASK)            :: task
               integer(kind=8),intent(in)   :: estimates
               integer,intent(in)           :: method
-              !$omp  declare variant( vslssscompute:mkl_vsl_ssscompute_omp_offload_lp64 ) match( construct={target variant dispatch}, device={arch(gen)} )
               !$omp  declare variant( vslssscompute:mkl_vsl_ssscompute_omp_offload_lp64 ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync))
      end function
       end interface

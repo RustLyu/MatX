@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 1999-2022 Intel Corporation.
+* Copyright (C) 1999 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -48,6 +48,7 @@ struct {
     int    MajorVersion;
     int    MinorVersion;
     int    UpdateVersion;
+    int    PatchVersion;
     char * ProductStatus;
     char * Build;
     char * Processor;
@@ -94,17 +95,23 @@ struct {
 #ifndef MKL_INT8
     #define MKL_INT8 char
 #endif
+#ifndef MKL_E5M2
+    #define MKL_E5M2 unsigned char
+#endif
+#ifndef MKL_E4M3
+    #define MKL_E4M3 unsigned char
+#endif
 #ifndef MKL_INT16
     #define MKL_INT16 short
+#endif
+#ifndef MKL_F16
+    #define MKL_F16 unsigned short
 #endif
 #ifndef MKL_BF16
     #define MKL_BF16 unsigned short
 #endif
 #ifndef MKL_INT32
     #define MKL_INT32 int
-#endif
-#ifndef MKL_F16
-    #define MKL_F16 unsigned short
 #endif
 
 /* oneMKL domain names */
@@ -140,6 +147,7 @@ struct {
 #define MKL_CBWR_AVX512        12
 #define MKL_CBWR_AVX512_MIC_E1 13
 #define MKL_CBWR_AVX512_E1     14
+#define MKL_CBWR_AVX10         15
 
 /* error codes */
 #define MKL_CBWR_SUCCESS                   0

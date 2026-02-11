@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2006-2022 Intel Corporation.
+* Copyright (C) 2006 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -176,7 +176,7 @@
 #define sfftw_plan_dft_r2c_2d_omp_offload          SFFTW_PLAN_DFT_R2C_2D_OMP_OFFLOAD_ILP64
 #define sfftw_plan_dft_c2r_3d_omp_offload          SFFTW_PLAN_DFT_C2R_3D_OMP_OFFLOAD_ILP64
 #define sfftw_plan_dft_r2c_3d_omp_offload          SFFTW_PLAN_DFT_R2C_3D_OMP_OFFLOAD_ILP64
-#define sfftw_plan_guru_dft_omp_offload            SFFTW_PLAN_DFT_GURU_DFT_OMP_OFFLOAD_ILP64
+#define sfftw_plan_guru_dft_omp_offload            SFFTW_PLAN_GURU_DFT_OMP_OFFLOAD_ILP64
 #define sfftw_plan_guru_dft_c2r_omp_offload        SFFTW_PLAN_GURU_DFT_C2R_OMP_OFFLOAD_ILP64
 #define sfftw_plan_guru_dft_r2c_omp_offload        SFFTW_PLAN_GURU_DFT_R2C_OMP_OFFLOAD_ILP64
 #define sfftw_plan_many_dft_omp_offload            SFFTW_PLAN_MANY_DFT_OMP_OFFLOAD_ILP64
@@ -277,7 +277,7 @@
 #define sfftw_plan_dft_r2c_2d_omp_offload          SFFTW_PLAN_DFT_R2C_2D_OMP_OFFLOAD_LP64
 #define sfftw_plan_dft_c2r_3d_omp_offload          SFFTW_PLAN_DFT_C2R_3D_OMP_OFFLOAD_LP64
 #define sfftw_plan_dft_r2c_3d_omp_offload          SFFTW_PLAN_DFT_R2C_3D_OMP_OFFLOAD_LP64
-#define sfftw_plan_guru_dft_omp_offload            SFFTW_PLAN_DFT_GURU_DFT_OMP_OFFLOAD_LP64
+#define sfftw_plan_guru_dft_omp_offload            SFFTW_PLAN_GURU_DFT_OMP_OFFLOAD_LP64
 #define sfftw_plan_guru_dft_c2r_omp_offload        SFFTW_PLAN_GURU_DFT_C2R_OMP_OFFLOAD_LP64
 #define sfftw_plan_guru_dft_r2c_omp_offload        SFFTW_PLAN_GURU_DFT_R2C_OMP_OFFLOAD_LP64
 #define sfftw_plan_many_dft_omp_offload            SFFTW_PLAN_MANY_DFT_OMP_OFFLOAD_LP64

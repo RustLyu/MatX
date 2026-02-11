@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2020-2022 Intel Corporation.
+* Copyright (C) 2020 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -18,10 +18,11 @@
 #include <type_traits>
 #include <vector>
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 
 #include "oneapi/mkl/export.hpp"
 #include "oneapi/mkl/exceptions.hpp"
+#include "oneapi/mkl/stats/spec.hpp"
 
 namespace oneapi {
 namespace mkl {
@@ -61,14 +62,14 @@ struct dataset<ObservationsLayout, Type*> {
         if(observations_ == nullptr) {
             throw oneapi::mkl::invalid_argument("stats", "dataset", "observations is nullptr");
         }
-    };
+    }
 
     std::int64_t n_dims;
     std::int64_t n_observations;
     Type* observations;
     Type* weights = nullptr;
     std::int64_t* indices = nullptr;
-    static constexpr layout layout = ObservationsLayout;
+    static constexpr oneapi::mkl::stats::layout layout = ObservationsLayout;
 };
 
 // Specialization for buffer-based API
@@ -92,14 +93,14 @@ struct dataset<ObservationsLayout, sycl::buffer<Type, 1>> {
         if(observations_.size() == 0) {
             throw oneapi::mkl::invalid_argument("stats", "dataset", "observations is empty");
         }
-    };
+    }
 
     std::int64_t n_dims;
     std::int64_t n_observations;
     sycl::buffer<Type, 1> observations;
     sycl::buffer<Type, 1> weights = {0};
     sycl::buffer<std::int64_t, 1> indices = {0};
-    static constexpr layout layout = ObservationsLayout;
+    static constexpr oneapi::mkl::stats::layout layout = ObservationsLayout;
 };
 
 // Helper funtions to make dataset

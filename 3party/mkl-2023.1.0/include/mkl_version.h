@@ -1,6 +1,6 @@
 #if 0
 /*******************************************************************************
-* Copyright 2015-2022 Intel Corporation.
+* Copyright (C) 2015 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -24,16 +24,18 @@
 #ifndef _MKL_VERSION_H_
 #define _MKL_VERSION_H_
 
-#define __INTEL_MKL_BUILD_DATE 20230303
+#define __INTEL_MKL_BUILD_DATE 20251007
 
 
-#define __INTEL_MKL__          2023
+#define __INTEL_MKL__          2025
 
 #define __INTEL_MKL_MINOR__    0
-#define __INTEL_MKL_UPDATE__   1
+#define __INTEL_MKL_UPDATE__   3
+
+#define __INTEL_MKL_PATCH__    0
 
 
-#define INTEL_MKL_VERSION      20230001
+#define INTEL_MKL_VERSION      20250300
 
 
 #endif

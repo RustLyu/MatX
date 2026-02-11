@@ -1,49 +1,37 @@
 /*******************************************************************************
-* Copyright 2020-2022 Intel Corporation.
+* Copyright (C) 2020 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DISTRIBUTION_BASE_HPP_
 #define _MKL_RNG_DISTRIBUTION_BASE_HPP_
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 
 #include "oneapi/mkl/exceptions.hpp"
 #include "oneapi/mkl/rng/device/types.hpp"
-#include "oneapi/mkl/rng/device/detail/types.hpp"
 
-namespace oneapi {
-namespace mkl {
-namespace rng {
-namespace device {
+namespace oneapi::mkl::rng::device {
+
 namespace detail {
 
 template <typename DistrType>
 class distribution_base {};
 
-namespace distr_common {
-
-// sqrt(2)
-template <typename RealType = float>
-inline RealType sqrt2() {
-    return 0x1.6A09E6P+0f; // 1.414213562
-}
-
-template <>
-inline double sqrt2<double>() {
-    return 0x1.6A09E667F3BCDP+0; // 1.414213562
-}
-
-} // namespace distr_common
 } // namespace detail
 
 // declarations of distribution classes
@@ -65,16 +53,22 @@ class bits;
 template <typename RealType = float, typename Method = exponential_method::by_default>
 class exponential;
 
+template <typename RealType = float, typename Method = beta_method::by_default>
+class beta;
+
+template <typename RealType = float, typename Method = gamma_method::by_default>
+class gamma;
+
 template <typename IntType = std::int32_t, typename Method = poisson_method::by_default>
 class poisson;
 
 template <typename IntType = std::uint32_t, typename Method = bernoulli_method::by_default>
 class bernoulli;
 
-} // namespace device
-} // namespace rng
-} // namespace mkl
-} // namespace oneapi
+template <typename IntType = std::uint32_t, typename Method = geometric_method::by_default>
+class geometric;
+
+} // namespace oneapi::mkl::rng::device
 
 #include "oneapi/mkl/rng/device/detail/uniform_impl.hpp"
 #include "oneapi/mkl/rng/device/detail/gaussian_impl.hpp"
@@ -84,5 +78,8 @@ class bernoulli;
 #include "oneapi/mkl/rng/device/detail/exponential_impl.hpp"
 #include "oneapi/mkl/rng/device/detail/poisson_impl.hpp"
 #include "oneapi/mkl/rng/device/detail/bernoulli_impl.hpp"
+#include "oneapi/mkl/rng/device/detail/geometric_impl.hpp"
+#include "oneapi/mkl/rng/device/detail/beta_impl.hpp"
+#include "oneapi/mkl/rng/device/detail/gamma_impl.hpp"
 
 #endif // _MKL_RNG_DISTRIBUTION_BASE_HPP_

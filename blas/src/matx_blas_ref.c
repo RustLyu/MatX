@@ -3,7 +3,7 @@
 #include <limits.h>
 
 #if MATX_ENABLE_OPENBLAS
-	#include <cblas.h>
+	#include "openblas/cblas.h"
 #elif MATX_ENABLE_BLIS
 	#include <amd-blis/include/ILP64/blis.h>
 #endif

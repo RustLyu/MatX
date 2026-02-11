@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2014-2022 Intel Corporation.
+* Copyright (C) 2014 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -286,7 +286,7 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 #define MKL_DC_CBLAS_DGEMM_CONVERT(layout, transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
     \
-    char *ftrans[]   = { "N", "T", "C"};\
+    const char *ftrans[]   = { "N", "T", "C"};\
     \
     MKL_INT index_transa, index_transb;\
     index_transa = (transa) - CblasNoTrans;\
@@ -321,7 +321,7 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 #define MKL_DC_CBLAS_SGEMM_CONVERT(layout, transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
     \
-    char *ftrans[]   = { "N", "T", "C"};\
+    const char *ftrans[]   = { "N", "T", "C"};\
     \
     MKL_INT index_transa, index_transb;\
     index_transa = (transa) - CblasNoTrans;\
@@ -356,7 +356,7 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 #define MKL_DC_CBLAS_CGEMM_CONVERT(layout, transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
     \
-    char *ftrans[]   = { "N", "T", "C"};\
+    const char *ftrans[]   = { "N", "T", "C"};\
     \
     MKL_INT index_transa, index_transb;\
     index_transa = (transa) - CblasNoTrans;\
@@ -366,23 +366,23 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
     if ((layout) == CblasRowMajor) {         \
         if (MKL_DC_CGEMM_CBLAS_CHECKSIZE(m,n,k)) { \
             fname_unrolledc(ftrans[index_transb], ftrans[index_transa],\
-                    &(temp_n), &(temp_m), &(temp_k), (alpha),\
-                    (b), &(temp_ldb), (a), &(temp_lda), (beta), (c), &(temp_ldc));\
+                    &(temp_n), &(temp_m), &(temp_k), (const MKL_Complex8 *)(alpha),\
+                    (const MKL_Complex8 *)(b), &(temp_ldb), (const MKL_Complex8 *)(a), &(temp_lda), (const MKL_Complex8 *)(beta), (MKL_Complex8 *)(c), &(temp_ldc));\
         } else { \
             fname_direct(ftrans[index_transb], ftrans[index_transa],\
-                    &(temp_n), &(temp_m), &(temp_k), (alpha),\
-                    (b), &(temp_ldb), (a), &(temp_lda), (beta), (c), &(temp_ldc), &mkl_direct_call_flag);\
+                    &(temp_n), &(temp_m), &(temp_k), (const MKL_Complex8 *)(alpha),\
+                    (const MKL_Complex8 *)(b), &(temp_ldb), (const MKL_Complex8 *)(a), &(temp_lda), (const MKL_Complex8 *)(beta), (MKL_Complex8 *)(c), &(temp_ldc), &mkl_direct_call_flag);\
         }\
     }\
     else if ((layout) == CblasColMajor) {    \
         if (MKL_DC_CGEMM_CBLAS_CHECKSIZE(m,n,k)) { \
             fname_unrolledc(ftrans[index_transa], ftrans[index_transb],\
-                    &(temp_m), &(temp_n), &(temp_k), (alpha),\
-                    (a), &(temp_lda), (b), &(temp_ldb), (beta), (c), &(temp_ldc));\
+                    &(temp_m), &(temp_n), &(temp_k), (const MKL_Complex8 *)(alpha),\
+                    (const MKL_Complex8 *)(a), &(temp_lda), (const MKL_Complex8 *)(b), &(temp_ldb), (const MKL_Complex8 *)(beta), (MKL_Complex8 *)(c), &(temp_ldc));\
         } else { \
             fname_direct(ftrans[index_transa], ftrans[index_transb],\
-                    &(temp_m), &(temp_n), &(temp_k), (alpha),\
-                    (a), &(temp_lda), (b), &(temp_ldb), (beta), (c), &(temp_ldc), &mkl_direct_call_flag);\
+                    &(temp_m), &(temp_n), &(temp_k), (const MKL_Complex8 *)(alpha),\
+                    (const MKL_Complex8 *)(a), &(temp_lda), (const MKL_Complex8 *)(b), &(temp_ldb), (const MKL_Complex8 *)(beta), (MKL_Complex8 *)(c), &(temp_ldc), &mkl_direct_call_flag);\
         }\
     }\
 } while (0)
@@ -390,7 +390,7 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 #define MKL_DC_CBLAS_ZGEMM_CONVERT(layout, transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
     \
-    char *ftrans[]   = { "N", "T", "C"};\
+    const char *ftrans[]   = { "N", "T", "C"};\
     \
     MKL_INT index_transa, index_transb;\
     index_transa = (transa) - CblasNoTrans;\
@@ -400,23 +400,23 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
     if ((layout) == CblasRowMajor) {         \
         if (MKL_DC_ZGEMM_CBLAS_CHECKSIZE(m,n,k)) { \
             fname_unrolledc(ftrans[index_transb], ftrans[index_transa],\
-                    &(temp_n), &(temp_m), &(temp_k), (alpha),\
-                    (b), &(temp_ldb), (a), &(temp_lda), (beta), (c), &(temp_ldc));\
+                    &(temp_n), &(temp_m), &(temp_k), (const MKL_Complex16 *)(alpha),\
+                    (const MKL_Complex16 *)(b), &(temp_ldb), (const MKL_Complex16 *)(a), &(temp_lda), (const MKL_Complex16 *)(beta), (MKL_Complex16 *)(c), &(temp_ldc));\
         } else { \
             fname_direct(ftrans[index_transb], ftrans[index_transa],\
-                    &(temp_n), &(temp_m), &(temp_k), (alpha),\
-                    (b), &(temp_ldb), (a), &(temp_lda), (beta), (c), &(temp_ldc), &mkl_direct_call_flag);\
+                    &(temp_n), &(temp_m), &(temp_k), (const MKL_Complex16 *)(alpha),\
+                    (const MKL_Complex16 *)(b), &(temp_ldb), (const MKL_Complex16 *)(a), &(temp_lda), (const MKL_Complex16 *)(beta), (MKL_Complex16 *)(c), &(temp_ldc), &mkl_direct_call_flag);\
         }\
     }\
     else if ((layout) == CblasColMajor) {    \
         if (MKL_DC_ZGEMM_CBLAS_CHECKSIZE(m,n,k)) { \
             fname_unrolledc(ftrans[index_transa], ftrans[index_transb],\
-                    &(temp_m), &(temp_n), &(temp_k), (alpha),\
-                    (a), &(temp_lda), (b), &(temp_ldb), (beta), (c), &(temp_ldc));\
+                    &(temp_m), &(temp_n), &(temp_k), (const MKL_Complex16 *)(alpha),\
+                    (const MKL_Complex16 *)(a), &(temp_lda), (const MKL_Complex16 *)(b), &(temp_ldb), (const MKL_Complex16 *)(beta), (MKL_Complex16 *)(c), &(temp_ldc));\
         } else { \
             fname_direct(ftrans[index_transa], ftrans[index_transb],\
-                    &(temp_m), &(temp_n), &(temp_k), (alpha),\
-                    (a), &(temp_lda), (b), &(temp_ldb), (beta), (c), &(temp_ldc), &mkl_direct_call_flag);\
+                    &(temp_m), &(temp_n), &(temp_k), (const MKL_Complex16 *)(alpha),\
+                    (const MKL_Complex16 *)(a), &(temp_lda), (const MKL_Complex16 *)(b), &(temp_ldb), (const MKL_Complex16 *)(beta), (MKL_Complex16 *)(c), &(temp_ldc), &mkl_direct_call_flag);\
         }\
     }\
 } while (0)
@@ -439,10 +439,10 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 /* CBLAS TRSM */
 #define MKL_DC_CBLAS_DTRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
-    char *fside[]    = {"L", "R"};\
-    char *fuplo[]    = {"U", "L"};\
-    char *ftrans[]   = {"N", "T", "C"};\
-    char *fdiag[]    = {"N", "U"};\
+    const char *fside[]    = {"L", "R"};\
+    const char *fuplo[]    = {"U", "L"};\
+    const char *ftrans[]   = {"N", "T", "C"};\
+    const char *fdiag[]    = {"N", "U"};\
     MKL_INT index_uplo, index_trans, index_diag, index_side; \
     index_side = (side) - CblasLeft;                         \
     index_uplo = (uplo) - CblasUpper;                        \
@@ -467,10 +467,10 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 
 #define MKL_DC_CBLAS_STRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
-    char *fside[]    = {"L", "R"};\
-    char *fuplo[]    = {"U", "L"};\
-    char *ftrans[]   = {"N", "T", "C"};\
-    char *fdiag[]    = {"N", "U"};\
+    const char *fside[]    = {"L", "R"};\
+    const char *fuplo[]    = {"U", "L"};\
+    const char *ftrans[]   = {"N", "T", "C"};\
+    const char *fdiag[]    = {"N", "U"};\
     MKL_INT index_uplo, index_trans, index_diag, index_side; \
     index_side = (side) - CblasLeft;                         \
     index_uplo = (uplo) - CblasUpper;                        \
@@ -493,12 +493,12 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
     } \
 } while (0)
 
-#define MKL_DC_CBLAS_COMPLEX_TRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
+#define MKL_DC_CBLAS_CTRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
-    char *fside[]    = {"L", "R"};\
-    char *fuplo[]    = {"U", "L"};\
-    char *ftrans[]   = {"N", "T", "C"};\
-    char *fdiag[]    = {"N", "U"};\
+    const char *fside[]    = {"L", "R"};\
+    const char *fuplo[]    = {"U", "L"};\
+    const char *ftrans[]   = {"N", "T", "C"};\
+    const char *fdiag[]    = {"N", "U"};\
     MKL_INT index_uplo, index_trans, index_diag, index_side; \
     index_side = (side) - CblasLeft;                         \
     index_uplo = (uplo) - CblasUpper;                        \
@@ -507,29 +507,56 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
     MKL_INT temp_n = (n), temp_m = (m), temp_lda = (lda), temp_ldb = (ldb); \
     if ((layout) == CblasRowMajor) {                                    \
         if ( MKL_DC_CBLAS_TRSM_CHECKSIZE(m, n) ) { \
-            fname_unrolledc(fside[1-index_side], fuplo[1-index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_n), &(temp_m), (alpha), (a), &(temp_lda), (b), &(temp_ldb)); \
+            fname_unrolledc(fside[1-index_side], fuplo[1-index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_n), &(temp_m), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), &(temp_lda), (MKL_Complex8 *)(b), &(temp_ldb)); \
         } else { \
-            fname_direct(fside[1-index_side], fuplo[1-index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_n), &(temp_m), (alpha), (a), &(temp_lda), (b), &(temp_ldb), &mkl_direct_call_flag); \
+            fname_direct(fside[1-index_side], fuplo[1-index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_n), &(temp_m), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), &(temp_lda), (MKL_Complex8 *)(b), &(temp_ldb), &mkl_direct_call_flag); \
         } \
     } else if ((layout) == CblasColMajor) {        \
         if ( MKL_DC_CBLAS_TRSM_CHECKSIZE(m, n) ) { \
-            fname_unrolledc(fside[index_side], fuplo[index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_m), &(temp_n), (alpha), (a), &(temp_lda), (b), &(temp_ldb)); \
+            fname_unrolledc(fside[index_side], fuplo[index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_m), &(temp_n), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), &(temp_lda), (MKL_Complex8 *)(b), &(temp_ldb)); \
         } else { \
-            fname_direct(fside[index_side], fuplo[index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_m), &(temp_n), (alpha), (a), &(temp_lda), (b), &(temp_ldb), &mkl_direct_call_flag); \
+            fname_direct(fside[index_side], fuplo[index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_m), &(temp_n), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), &(temp_lda), (MKL_Complex8 *)(b), &(temp_ldb), &mkl_direct_call_flag); \
+        } \
+    } \
+} while (0)
+
+#define MKL_DC_CBLAS_ZTRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
+    MKL_DIRECT_CALL_INIT_FLAG; \
+    const char *fside[]    = {"L", "R"};\
+    const char *fuplo[]    = {"U", "L"};\
+    const char *ftrans[]   = {"N", "T", "C"};\
+    const char *fdiag[]    = {"N", "U"};\
+    MKL_INT index_uplo, index_trans, index_diag, index_side; \
+    index_side = (side) - CblasLeft;                         \
+    index_uplo = (uplo) - CblasUpper;                        \
+    index_trans = (trans) - CblasNoTrans;                    \
+    index_diag = (diag) - CblasNonUnit;                                 \
+    MKL_INT temp_n = (n), temp_m = (m), temp_lda = (lda), temp_ldb = (ldb); \
+    if ((layout) == CblasRowMajor) {                                    \
+        if ( MKL_DC_CBLAS_TRSM_CHECKSIZE(m, n) ) { \
+            fname_unrolledc(fside[1-index_side], fuplo[1-index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_n), &(temp_m), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), &(temp_lda), (MKL_Complex16 *)(b), &(temp_ldb)); \
+        } else { \
+            fname_direct(fside[1-index_side], fuplo[1-index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_n), &(temp_m), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), &(temp_lda), (MKL_Complex16 *)(b), &(temp_ldb), &mkl_direct_call_flag); \
+        } \
+    } else if ((layout) == CblasColMajor) {        \
+        if ( MKL_DC_CBLAS_TRSM_CHECKSIZE(m, n) ) { \
+            fname_unrolledc(fside[index_side], fuplo[index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_m), &(temp_n), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), &(temp_lda), (MKL_Complex16 *)(b), &(temp_ldb)); \
+        } else { \
+            fname_direct(fside[index_side], fuplo[index_uplo], ftrans[index_trans], fdiag[index_diag], &(temp_m), &(temp_n), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), &(temp_lda), (MKL_Complex16 *)(b), &(temp_ldb), &mkl_direct_call_flag); \
         } \
     } \
 } while (0)
 
 #define cblas_dtrsm(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_CBLAS_DTRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_dtrsm, dtrsm_direct)
 #define cblas_strsm(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_CBLAS_STRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_strsm, strsm_direct)
-#define cblas_ctrsm(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_CBLAS_COMPLEX_TRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ctrsm, ctrsm_direct)
-#define cblas_ztrsm(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_CBLAS_COMPLEX_TRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ztrsm, ztrsm_direct)
+#define cblas_ctrsm(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_CBLAS_CTRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ctrsm, ctrsm_direct)
+#define cblas_ztrsm(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_CBLAS_ZTRSM_CONVERT(layout, side, uplo, trans, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ztrsm, ztrsm_direct)
 
 /* CBLAS SYRK */
 #define MKL_DC_CBLAS_DSYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
-    char *fuplo[]    = {"U", "L"};\
-    char *ftrans[]   = {"N", "T"};\
+    const char *fuplo[]    = {"U", "L"};\
+    const char *ftrans[]   = {"N", "T"};\
     MKL_INT index_uplo, index_trans; \
     index_uplo = (uplo) - CblasUpper;   \
     index_trans = (trans) - CblasNoTrans;                               \
@@ -552,8 +579,8 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 
 #define MKL_DC_CBLAS_SSYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
-    char *fuplo[]    = {"U", "L"};\
-    char *ftrans[]   = {"N", "T"};\
+    const char *fuplo[]    = {"U", "L"};\
+    const char *ftrans[]   = {"N", "T"};\
     MKL_INT index_uplo, index_trans; \
     index_uplo = (uplo) - CblasUpper;   \
     index_trans = (trans) - CblasNoTrans;                               \
@@ -574,33 +601,56 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
     } \
 } while (0)
 
-#define MKL_DC_CBLAS_COMPLEX_SYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
+#define MKL_DC_CBLAS_CSYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
     MKL_DIRECT_CALL_INIT_FLAG; \
-    char *fuplo[]    = {"U", "L"};\
-    char *ftrans[]   = {"N", "T"};\
+    const char *fuplo[]    = {"U", "L"};\
+    const char *ftrans[]   = {"N", "T"};\
     MKL_INT index_uplo, index_trans; \
     index_uplo = (uplo) - CblasUpper;   \
     index_trans = (trans) - CblasNoTrans;                               \
     MKL_INT temp_n = (n), temp_k = (k), temp_lda = (lda), temp_ldc = (ldc); \
     if ((layout) == CblasRowMajor) {                                    \
         if ( MKL_DC_CBLAS_SYRK_CHECKSIZE(n, k) ) { \
-            fname_unrolledc(fuplo[1-index_uplo], ftrans[1-index_trans], &(temp_n), &(temp_k), (alpha), (a), &(temp_lda), (beta), (c), &(temp_ldc)); \
+            fname_unrolledc(fuplo[1-index_uplo], ftrans[1-index_trans], &(temp_n), &(temp_k), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), &(temp_lda), (const MKL_Complex8 *)(beta), (MKL_Complex8 *)(c), &(temp_ldc)); \
         } else { \
-            fname_direct(fuplo[1-index_uplo], ftrans[1-index_trans], &(temp_n), &(temp_k), (alpha), (a), &(temp_lda), (beta), (c), &(temp_ldc), &mkl_direct_call_flag); \
+            fname_direct(fuplo[1-index_uplo], ftrans[1-index_trans], &(temp_n), &(temp_k), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), &(temp_lda), (const MKL_Complex8 *)(beta), (MKL_Complex8 *)(c), &(temp_ldc), &mkl_direct_call_flag); \
         } \
     } else if ((layout) == CblasColMajor) {        \
         if ( MKL_DC_CBLAS_SYRK_CHECKSIZE(n, k) ) { \
-            fname_unrolledc(fuplo[index_uplo], ftrans[index_trans], &(temp_n), &(temp_k), (alpha), (a), &(temp_lda), (beta), (c), &(temp_ldc)); \
+            fname_unrolledc(fuplo[index_uplo], ftrans[index_trans], &(temp_n), &(temp_k), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), &(temp_lda), (const MKL_Complex8 *)(beta), (MKL_Complex8 *)(c), &(temp_ldc)); \
         } else { \
-            fname_direct(fuplo[index_uplo], ftrans[index_trans], &(temp_n), &(temp_k), (alpha), (a), &(temp_lda), (beta), (c), &(temp_ldc), &mkl_direct_call_flag); \
+            fname_direct(fuplo[index_uplo], ftrans[index_trans], &(temp_n), &(temp_k), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), &(temp_lda), (const MKL_Complex8 *)(beta), (MKL_Complex8 *)(c), &(temp_ldc), &mkl_direct_call_flag); \
+        } \
+    } \
+} while (0)
+
+#define MKL_DC_CBLAS_ZSYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, fname_unrolledc, fname_direct)  do { \
+    MKL_DIRECT_CALL_INIT_FLAG; \
+    const char *fuplo[]    = {"U", "L"};\
+    const char *ftrans[]   = {"N", "T"};\
+    MKL_INT index_uplo, index_trans; \
+    index_uplo = (uplo) - CblasUpper;   \
+    index_trans = (trans) - CblasNoTrans;                               \
+    MKL_INT temp_n = (n), temp_k = (k), temp_lda = (lda), temp_ldc = (ldc); \
+    if ((layout) == CblasRowMajor) {                                    \
+        if ( MKL_DC_CBLAS_SYRK_CHECKSIZE(n, k) ) { \
+            fname_unrolledc(fuplo[1-index_uplo], ftrans[1-index_trans], &(temp_n), &(temp_k), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), &(temp_lda), (const MKL_Complex16 *)(beta), (MKL_Complex16 *)(c), &(temp_ldc)); \
+        } else { \
+            fname_direct(fuplo[1-index_uplo], ftrans[1-index_trans], &(temp_n), &(temp_k), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), &(temp_lda), (const MKL_Complex16 *)(beta), (MKL_Complex16 *)(c), &(temp_ldc), &mkl_direct_call_flag); \
+        } \
+    } else if ((layout) == CblasColMajor) {        \
+        if ( MKL_DC_CBLAS_SYRK_CHECKSIZE(n, k) ) { \
+            fname_unrolledc(fuplo[index_uplo], ftrans[index_trans], &(temp_n), &(temp_k), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), &(temp_lda), (const MKL_Complex16 *)(beta), (MKL_Complex16 *)(c), &(temp_ldc)); \
+        } else { \
+            fname_direct(fuplo[index_uplo], ftrans[index_trans], &(temp_n), &(temp_k), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), &(temp_lda), (const MKL_Complex16 *)(beta), (MKL_Complex16 *)(c), &(temp_ldc), &mkl_direct_call_flag); \
         } \
     } \
 } while (0)
 
 #define cblas_dsyrk(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc) MKL_DC_CBLAS_DSYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, mkl_dc_dsyrk, dsyrk_direct)
 #define cblas_ssyrk(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc) MKL_DC_CBLAS_SSYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, mkl_dc_ssyrk, ssyrk_direct)
-#define cblas_csyrk(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc) MKL_DC_CBLAS_COMPLEX_SYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, mkl_dc_csyrk, csyrk_direct)
-#define cblas_zsyrk(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc) MKL_DC_CBLAS_COMPLEX_SYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, mkl_dc_zsyrk, zsyrk_direct)
+#define cblas_csyrk(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc) MKL_DC_CBLAS_CSYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, mkl_dc_csyrk, csyrk_direct)
+#define cblas_zsyrk(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc) MKL_DC_CBLAS_ZSYRK_CONVERT(layout, uplo, trans, n, k, alpha, a, lda, beta, c, ldc, mkl_dc_zsyrk, zsyrk_direct)
 
 /* CBLAS AXPY */
 
@@ -626,20 +676,30 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
     } \
 } while (0)
 
-#define MKL_DC_COMPLEX_AXPY_CBLAS_CONVERT(n, alpha, x, incx, y, incy, CHECK, fname_unrolledc, fname_direct)  do { \
+#define MKL_DC_CAXPY_CBLAS_CONVERT(n, alpha, x, incx, y, incy, CHECK, fname_unrolledc, fname_direct)  do { \
     MKL_INT temp_n = (n), temp_incx = (incx), temp_incy = (incy);\
     if (CHECK(n)) { \
-        fname_unrolledc(&(temp_n), (alpha), (x), &(temp_incx), (y), &(temp_incy));\
+        fname_unrolledc(&(temp_n), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(x), &(temp_incx), (MKL_Complex8 *)(y), &(temp_incy));\
     } else { \
         MKL_DIRECT_CALL_INIT_FLAG; \
-        fname_direct(&(temp_n), (alpha), (x), &(temp_incx), (y), &(temp_incy), &mkl_direct_call_flag); \
+        fname_direct(&(temp_n), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(x), &(temp_incx), (MKL_Complex8 *)(y), &(temp_incy), &mkl_direct_call_flag); \
+    } \
+} while (0)
+
+#define MKL_DC_ZAXPY_CBLAS_CONVERT(n, alpha, x, incx, y, incy, CHECK, fname_unrolledc, fname_direct)  do { \
+    MKL_INT temp_n = (n), temp_incx = (incx), temp_incy = (incy);\
+    if (CHECK(n)) { \
+        fname_unrolledc(&(temp_n), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(x), &(temp_incx), (MKL_Complex16 *)(y), &(temp_incy));\
+    } else { \
+        MKL_DIRECT_CALL_INIT_FLAG; \
+        fname_direct(&(temp_n), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(x), &(temp_incx), (MKL_Complex16 *)(y), &(temp_incy), &mkl_direct_call_flag); \
     } \
 } while (0)
 
 #define cblas_daxpy(n,a,x,incx,y,incy)  MKL_DC_DAXPY_CBLAS_CONVERT(n, a, x, incx, y, incy, MKL_DC_CBLAS_DAXPY_CHECKSIZE, mkl_dc_daxpy, daxpy_direct)
 #define cblas_saxpy(n,a,x,incx,y,incy)  MKL_DC_SAXPY_CBLAS_CONVERT(n, a, x, incx, y, incy, MKL_DC_CBLAS_SAXPY_CHECKSIZE, mkl_dc_saxpy, saxpy_direct)
-#define cblas_caxpy(n,a,x,incx,y,incy)  MKL_DC_COMPLEX_AXPY_CBLAS_CONVERT(n, a, x, incx, y, incy, MKL_DC_CBLAS_CAXPY_CHECKSIZE, mkl_dc_caxpy, caxpy_direct)
-#define cblas_zaxpy(n,a,x,incx,y,incy)  MKL_DC_COMPLEX_AXPY_CBLAS_CONVERT(n, a, x, incx, y, incy,MKL_DC_CBLAS_ZAXPY_CHECKSIZE,mkl_dc_zaxpy,zaxpy_direct)
+#define cblas_caxpy(n,a,x,incx,y,incy)  MKL_DC_CAXPY_CBLAS_CONVERT(n, a, x, incx, y, incy, MKL_DC_CBLAS_CAXPY_CHECKSIZE, mkl_dc_caxpy, caxpy_direct)
+#define cblas_zaxpy(n,a,x,incx,y,incy)  MKL_DC_ZAXPY_CBLAS_CONVERT(n, a, x, incx, y, incy, MKL_DC_CBLAS_ZAXPY_CHECKSIZE, mkl_dc_zaxpy,zaxpy_direct)
 
 /* CBLAS DOT */
 
@@ -735,7 +795,7 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 #define ZGEMM3M(transa,transb,m,n,k,alpha,a,lda,b,ldb,beta,c,ldc)  MKL_DC_ZGEMM3M_CONVERT(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
 
 /* ?TRSM_DIRECT */
-#define MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
+#define MKL_DC_DTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
     if (MKL_DC_TRSM_CHECKSIZE(m,n)) { \
         fname_unrolledc((side), (uplo), (transa), (diag), (m), (n), (alpha), (a), (lda), (b), (ldb)); \
     } else { \
@@ -744,25 +804,52 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
     } \
 } while (0)
 
+#define MKL_DC_STRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
+    if (MKL_DC_TRSM_CHECKSIZE(m,n)) { \
+        fname_unrolledc((side), (uplo), (transa), (diag), (m), (n), (alpha), (a), (lda), (b), (ldb)); \
+    } else { \
+        MKL_DIRECT_CALL_INIT_FLAG; \
+        fname_direct((side), (uplo), (transa), (diag), (m), (n), (alpha), (a), (lda), (b), (ldb), &mkl_direct_call_flag); \
+    } \
+} while (0)
+
+#define MKL_DC_CTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
+    if (MKL_DC_TRSM_CHECKSIZE(m,n)) { \
+        fname_unrolledc((side), (uplo), (transa), (diag), (m), (n), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), (lda), (MKL_Complex8 *)(b), (ldb)); \
+    } else { \
+        MKL_DIRECT_CALL_INIT_FLAG; \
+        fname_direct((side), (uplo), (transa), (diag), (m), (n), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(a), (lda), (MKL_Complex8 *)(b), (ldb), &mkl_direct_call_flag); \
+    } \
+} while (0)
+
+#define MKL_DC_ZTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, fname_unrolledc, fname_direct)  do { \
+    if (MKL_DC_TRSM_CHECKSIZE(m,n)) { \
+        fname_unrolledc((side), (uplo), (transa), (diag), (m), (n), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), (lda), (MKL_Complex16 *)(b), (ldb)); \
+    } else { \
+        MKL_DIRECT_CALL_INIT_FLAG; \
+        fname_direct((side), (uplo), (transa), (diag), (m), (n), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(a), (lda), (MKL_Complex16 *)(b), (ldb), &mkl_direct_call_flag); \
+    } \
+} while (0)
+
 /* DTRSM_DIRECT */
-#define dtrsm(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_dtrsm, dtrsm_direct)
-#define dtrsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_dtrsm, dtrsm_direct)
-#define DTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_dtrsm, dtrsm_direct)
+#define dtrsm(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_DTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_dtrsm, dtrsm_direct)
+#define dtrsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_DTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_dtrsm, dtrsm_direct)
+#define DTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_DTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_dtrsm, dtrsm_direct)
 
 /* STRSM_DIRECT */
-#define strsm(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_strsm, strsm_direct)
-#define strsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_strsm, strsm_direct)
-#define STRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_strsm, strsm_direct)
+#define strsm(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_STRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_strsm, strsm_direct)
+#define strsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_STRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_strsm, strsm_direct)
+#define STRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_STRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_strsm, strsm_direct)
 
 /* CTRSM_DIRECT */
-#define ctrsm(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ctrsm, ctrsm_direct)
-#define ctrsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ctrsm, ctrsm_direct)
-#define CTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ctrsm, ctrsm_direct)
+#define ctrsm(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_CTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ctrsm, ctrsm_direct)
+#define ctrsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_CTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ctrsm, ctrsm_direct)
+#define CTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_CTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ctrsm, ctrsm_direct)
 
 /* ZTRSM_DIRECT */
-#define ztrsm(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ztrsm, ztrsm_direct)
-#define ztrsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ztrsm, ztrsm_direct)
-#define ZTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_TRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ztrsm, ztrsm_direct)
+#define ztrsm(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_ZTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ztrsm, ztrsm_direct)
+#define ztrsm_(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb) MKL_DC_ZTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ztrsm, ztrsm_direct)
+#define ZTRSM(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb)  MKL_DC_ZTRSM_CONVERT(side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb, mkl_dc_ztrsm, ztrsm_direct)
 
 /* ?SYRK_DIRECT */
 /* DSYRK_DIRECT */
@@ -822,7 +909,7 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
 #define CSYRK(uplo, trans, n, k, alpha, a, lda, beta, c, ldc)  MKL_DC_CSYRK_CONVERT(uplo, trans, n, k, alpha, a, lda, beta, c, ldc)
 
 /* ?AXPY_DIRECT */
-#define MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, CHECK, fname_unrolledc, fname_direct)  do { \
+#define MKL_DC_DAXPY_CONVERT(n, alpha, x, incx, y, incy, CHECK, fname_unrolledc, fname_direct)  do { \
     if (CHECK(n)) { \
         fname_unrolledc((n), (alpha), (x), (incx), (y), (incy));\
     } else { \
@@ -831,21 +918,48 @@ float  sdot_direct(const MKL_INT *n, const float *x, const MKL_INT *incx, const 
     } \
 } while (0)
 
-#define daxpy(n,alpha,x,incx,y,incy)  MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_DAXPY_CHECKSIZE, mkl_dc_daxpy, daxpy_direct)
-#define daxpy_(n,alpha,x,incx,y,incy) MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_DAXPY_CHECKSIZE, mkl_dc_daxpy, daxpy_direct)
-#define DAXPY(n,alpha,x,incx,y,incy)  MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_DAXPY_CHECKSIZE, mkl_dc_daxpy, daxpy_direct)
+#define MKL_DC_SAXPY_CONVERT(n, alpha, x, incx, y, incy, CHECK, fname_unrolledc, fname_direct)  do { \
+    if (CHECK(n)) { \
+        fname_unrolledc((n), (alpha), (x), (incx), (y), (incy));\
+    } else { \
+        MKL_DIRECT_CALL_INIT_FLAG; \
+        fname_direct((n), (alpha), (x), (incx), (y), (incy), &mkl_direct_call_flag); \
+    } \
+} while (0)
 
-#define saxpy(n,alpha,x,incx,y,incy)  MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_SAXPY_CHECKSIZE, mkl_dc_saxpy, saxpy_direct)
-#define saxpy_(n,alpha,x,incx,y,incy) MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_SAXPY_CHECKSIZE, mkl_dc_saxpy, saxpy_direct)
-#define SAXPY(n,alpha,x,incx,y,incy)  MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_SAXPY_CHECKSIZE, mkl_dc_saxpy, saxpy_direct)
+#define MKL_DC_CAXPY_CONVERT(n, alpha, x, incx, y, incy, CHECK, fname_unrolledc, fname_direct)  do { \
+    if (CHECK(n)) { \
+        fname_unrolledc((n), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(x), (incx), (MKL_Complex8 *)(y), (incy));\
+    } else { \
+        MKL_DIRECT_CALL_INIT_FLAG; \
+        fname_direct((n), (const MKL_Complex8 *)(alpha), (const MKL_Complex8 *)(x), (incx), (MKL_Complex8 *)(y), (incy), &mkl_direct_call_flag); \
+    } \
+} while (0)
 
-#define caxpy(n,alpha,x,incx,y,incy)  MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_CAXPY_CHECKSIZE, mkl_dc_caxpy, caxpy_direct)
-#define caxpy_(n,alpha,x,incx,y,incy) MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_CAXPY_CHECKSIZE, mkl_dc_caxpy, caxpy_direct)
-#define CAXPY(n,alpha,x,incx,y,incy)  MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_CAXPY_CHECKSIZE, mkl_dc_caxpy, caxpy_direct)
+#define MKL_DC_ZAXPY_CONVERT(n, alpha, x, incx, y, incy, CHECK, fname_unrolledc, fname_direct)  do { \
+    if (CHECK(n)) { \
+        fname_unrolledc((n), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(x), (incx), (MKL_Complex16 *)(y), (incy));\
+    } else { \
+        MKL_DIRECT_CALL_INIT_FLAG; \
+        fname_direct((n), (const MKL_Complex16 *)(alpha), (const MKL_Complex16 *)(x), (incx), (MKL_Complex16 *)(y), (incy), &mkl_direct_call_flag); \
+    } \
+} while (0)
 
-#define zaxpy(n,alpha,x,incx,y,incy)  MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_ZAXPY_CHECKSIZE, mkl_dc_zaxpy, zaxpy_direct)
-#define zaxpy_(n,alpha,x,incx,y,incy) MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_ZAXPY_CHECKSIZE, mkl_dc_zaxpy, zaxpy_direct)
-#define ZAXPY(n,alpha,x,incx,y,incy)  MKL_DC_AXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_ZAXPY_CHECKSIZE, mkl_dc_zaxpy, zaxpy_direct)
+#define daxpy(n,alpha,x,incx,y,incy)  MKL_DC_DAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_DAXPY_CHECKSIZE, mkl_dc_daxpy, daxpy_direct)
+#define daxpy_(n,alpha,x,incx,y,incy) MKL_DC_DAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_DAXPY_CHECKSIZE, mkl_dc_daxpy, daxpy_direct)
+#define DAXPY(n,alpha,x,incx,y,incy)  MKL_DC_DAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_DAXPY_CHECKSIZE, mkl_dc_daxpy, daxpy_direct)
+
+#define saxpy(n,alpha,x,incx,y,incy)  MKL_DC_SAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_SAXPY_CHECKSIZE, mkl_dc_saxpy, saxpy_direct)
+#define saxpy_(n,alpha,x,incx,y,incy) MKL_DC_SAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_SAXPY_CHECKSIZE, mkl_dc_saxpy, saxpy_direct)
+#define SAXPY(n,alpha,x,incx,y,incy)  MKL_DC_SAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_SAXPY_CHECKSIZE, mkl_dc_saxpy, saxpy_direct)
+
+#define caxpy(n,alpha,x,incx,y,incy)  MKL_DC_CAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_CAXPY_CHECKSIZE, mkl_dc_caxpy, caxpy_direct)
+#define caxpy_(n,alpha,x,incx,y,incy) MKL_DC_CAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_CAXPY_CHECKSIZE, mkl_dc_caxpy, caxpy_direct)
+#define CAXPY(n,alpha,x,incx,y,incy)  MKL_DC_CAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_CAXPY_CHECKSIZE, mkl_dc_caxpy, caxpy_direct)
+
+#define zaxpy(n,alpha,x,incx,y,incy)  MKL_DC_ZAXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_ZAXPY_CHECKSIZE, mkl_dc_zaxpy, zaxpy_direct)
+#define zaxpy_(n,alpha,x,incx,y,incy) MKL_DC_ZXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_ZAXPY_CHECKSIZE, mkl_dc_zaxpy, zaxpy_direct)
+#define ZAXPY(n,alpha,x,incx,y,incy)  MKL_DC_ZXPY_CONVERT(n, alpha, x, incx, y, incy, MKL_DC_ZAXPY_CHECKSIZE, mkl_dc_zaxpy, zaxpy_direct)
 
 /* {S,D}DOT_DIRECT */
 static __inline double mkl_dc_ddot_convert(const MKL_INT *n, const double* x, const MKL_INT *incx, const double *y, const MKL_INT *incy) {

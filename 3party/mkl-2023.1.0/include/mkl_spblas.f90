@@ -1,5 +1,5 @@
 !===============================================================================
-! Copyright 2014-2022 Intel Corporation.
+! Copyright (C) 2014 Intel Corporation
 !
 ! This software and the related documents are Intel copyrighted  materials,  and
 ! your use of  them is  governed by the  express license  under which  they were
@@ -436,7 +436,7 @@ MODULE MKL_SPBLAS
             USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT
             IMPORT SPARSE_MATRIX_T
             TYPE(SPARSE_MATRIX_T), INTENT(IN)    :: source
-            INTEGER(C_INT)       , INTENT(IN)    :: operation     ! as is, transposed or conjugate transposed
+            INTEGER(C_INT)       , INTENT(IN)    :: operation     ! as is non-transposed, transposed or conjugate transposed
             TYPE(SPARSE_MATRIX_T), INTENT(INOUT) :: dest
             INTEGER(C_INT) MKL_SPARSE_CONVERT_CSR
         END FUNCTION
@@ -449,10 +449,344 @@ MODULE MKL_SPBLAS
             TYPE(SPARSE_MATRIX_T), INTENT(IN)    :: source
             INTEGER              , INTENT(IN)    :: block_size
             INTEGER(C_INT)       , INTENT(IN)    :: block_layout    ! block storage: row-major or column-major
-            INTEGER(C_INT)       , INTENT(IN)    :: operation     ! as is, transposed or conjugate transposed
+            INTEGER(C_INT)       , INTENT(IN)    :: operation     ! as is non-transposed, transposed or conjugate transposed
             TYPE(SPARSE_MATRIX_T), INTENT(INOUT) :: dest
             INTEGER(C_INT) MKL_SPARSE_CONVERT_BSR
         END FUNCTION
+
+        ! convert original matrix to CSC representation
+        FUNCTION MKL_SPARSE_CONVERT_CSC(source,operation,dest) &
+                 BIND(C, name='MKL_SPARSE_CONVERT_CSC')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT
+            IMPORT SPARSE_MATRIX_T
+            TYPE(SPARSE_MATRIX_T), INTENT(IN)    :: source
+            INTEGER(C_INT)       , INTENT(IN)    :: operation     ! as is non-transposed, transposed or conjugate transposed
+            TYPE(SPARSE_MATRIX_T), INTENT(INOUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_CONVERT_CSC
+        END FUNCTION
+
+        ! convert original matrix to COO representation
+        FUNCTION MKL_SPARSE_CONVERT_COO(source,operation,dest) &
+                 BIND(C, name='MKL_SPARSE_CONVERT_COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT
+            IMPORT SPARSE_MATRIX_T
+            TYPE(SPARSE_MATRIX_T), INTENT(IN)    :: source
+            INTEGER(C_INT)       , INTENT(IN)    :: operation     ! as is non-transposed, transposed or conjugate transposed
+            TYPE(SPARSE_MATRIX_T), INTENT(INOUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_CONVERT_COO
+        END FUNCTION
+
+        ! convert original matrix to dense representation
+        FUNCTION MKL_SPARSE_S_CONVERT_DENSE(source,descr,dense_layout,lda,adns) &
+                 BIND(C, name='MKL_SPARSE_S_CONVERT_DENSE')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            TYPE(SPARSE_MATRIX_T), INTENT(IN)  :: source
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_FLOAT)        , INTENT(OUT), DIMENSION(*) :: adns
+            INTEGER(C_INT) MKL_SPARSE_S_CONVERT_DENSE
+        END FUNCTION
+        FUNCTION MKL_SPARSE_D_CONVERT_DENSE(source,descr,dense_layout,lda,adns) &
+                 BIND(C, name='MKL_SPARSE_D_CONVERT_DENSE')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            TYPE(SPARSE_MATRIX_T), INTENT(IN)  :: source
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_DOUBLE)       , INTENT(OUT), DIMENSION(*) :: adns
+            INTEGER(C_INT) MKL_SPARSE_D_CONVERT_DENSE
+        END FUNCTION
+                FUNCTION MKL_SPARSE_C_CONVERT_DENSE(source,descr,dense_layout,lda,adns) &
+                 BIND(C, name='MKL_SPARSE_C_CONVERT_DENSE')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            TYPE(SPARSE_MATRIX_T)   , INTENT(IN)  :: source
+            TYPE(MATRIX_DESCR)      , INTENT(IN)  :: descr
+            INTEGER(C_INT)          , INTENT(IN)  :: dense_layout
+            INTEGER                 , INTENT(IN)  :: lda
+            COMPLEX(C_FLOAT_COMPLEX), INTENT(OUT), DIMENSION(*) :: adns
+            INTEGER(C_INT) MKL_SPARSE_C_CONVERT_DENSE
+        END FUNCTION
+        FUNCTION MKL_SPARSE_Z_CONVERT_DENSE(source,descr,dense_layout,lda,adns) &
+                 BIND(C, name='MKL_SPARSE_Z_CONVERT_DENSE')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            TYPE(SPARSE_MATRIX_T)    , INTENT(IN)  :: source
+            TYPE(MATRIX_DESCR)       , INTENT(IN)  :: descr
+            INTEGER(C_INT)           , INTENT(IN)  :: dense_layout
+            INTEGER                  , INTENT(IN)  :: lda
+            COMPLEX(C_DOUBLE_COMPLEX), INTENT(OUT), DIMENSION(*) :: adns
+            INTEGER(C_INT) MKL_SPARSE_Z_CONVERT_DENSE
+        END FUNCTION
+
+        ! convert dense matrix to CSR representation
+        FUNCTION MKL_SPARSE_S_DENSE2CSR(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_S_DENSE2CSR')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER              , INTENT(IN)  :: rows
+            INTEGER              , INTENT(IN)  :: cols
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_FLOAT)        , INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)       , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T), INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_S_DENSE2CSR
+        END FUNCTION
+        FUNCTION MKL_SPARSE_D_DENSE2CSR(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_D_DENSE2CSR')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER              , INTENT(IN)  :: rows
+            INTEGER              , INTENT(IN)  :: cols
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_DOUBLE)       , INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)       , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T), INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_D_DENSE2CSR
+        END FUNCTION
+        FUNCTION MKL_SPARSE_C_DENSE2CSR(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_C_DENSE2CSR')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER                 , INTENT(IN)  :: rows
+            INTEGER                 , INTENT(IN)  :: cols
+            INTEGER(C_INT)          , INTENT(IN)  :: dense_layout
+            INTEGER                 , INTENT(IN)  :: lda
+            COMPLEX(C_FLOAT_COMPLEX), INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)          , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)      , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T)   , INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_C_DENSE2CSR
+        END FUNCTION
+        FUNCTION MKL_SPARSE_Z_DENSE2CSR(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_Z_DENSE2CSR')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER                  , INTENT(IN)  :: rows
+            INTEGER                  , INTENT(IN)  :: cols
+            INTEGER(C_INT)           , INTENT(IN)  :: dense_layout
+            INTEGER                  , INTENT(IN)  :: lda
+            COMPLEX(C_DOUBLE_COMPLEX), INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)           , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)       , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T)    , INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_Z_DENSE2CSR
+        END FUNCTION
+
+        ! convert dense matrix to CSC representation
+        FUNCTION MKL_SPARSE_S_DENSE2CSC(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_S_DENSE2CSC')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER              , INTENT(IN)  :: rows
+            INTEGER              , INTENT(IN)  :: cols
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_FLOAT)        , INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)       , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T), INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_S_DENSE2CSC
+        END FUNCTION
+        FUNCTION MKL_SPARSE_D_DENSE2CSC(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_D_DENSE2CSC')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER              , INTENT(IN)  :: rows
+            INTEGER              , INTENT(IN)  :: cols
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_DOUBLE)       , INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)       , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T), INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_D_DENSE2CSC
+        END FUNCTION
+        FUNCTION MKL_SPARSE_C_DENSE2CSC(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_C_DENSE2CSC')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER                 , INTENT(IN)  :: rows
+            INTEGER                 , INTENT(IN)  :: cols
+            INTEGER(C_INT)          , INTENT(IN)  :: dense_layout
+            INTEGER                 , INTENT(IN)  :: lda
+            COMPLEX(C_FLOAT_COMPLEX), INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)          , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)      , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T)   , INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_C_DENSE2CSC
+        END FUNCTION
+        FUNCTION MKL_SPARSE_Z_DENSE2CSC(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_Z_DENSE2CSC')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER                  , INTENT(IN)  :: rows
+            INTEGER                  , INTENT(IN)  :: cols
+            INTEGER(C_INT)           , INTENT(IN)  :: dense_layout
+            INTEGER                  , INTENT(IN)  :: lda
+            COMPLEX(C_DOUBLE_COMPLEX), INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)           , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)       , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T)    , INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_Z_DENSE2CSC
+        END FUNCTION
+
+        ! convert dense matrix to COO representation
+        FUNCTION MKL_SPARSE_S_DENSE2COO(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_S_DENSE2COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER              , INTENT(IN)  :: rows
+            INTEGER              , INTENT(IN)  :: cols
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_FLOAT)        , INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)       , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T), INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_S_DENSE2COO
+        END FUNCTION
+        FUNCTION MKL_SPARSE_D_DENSE2COO(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_D_DENSE2COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER              , INTENT(IN)  :: rows
+            INTEGER              , INTENT(IN)  :: cols
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_DOUBLE)       , INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)       , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T), INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_D_DENSE2COO
+        END FUNCTION
+        FUNCTION MKL_SPARSE_C_DENSE2COO(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_C_DENSE2COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER                 , INTENT(IN)  :: rows
+            INTEGER                 , INTENT(IN)  :: cols
+            INTEGER(C_INT)          , INTENT(IN)  :: dense_layout
+            INTEGER                 , INTENT(IN)  :: lda
+            COMPLEX(C_FLOAT_COMPLEX), INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)          , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)      , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T)   , INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_C_DENSE2COO
+        END FUNCTION
+        FUNCTION MKL_SPARSE_Z_DENSE2COO(rows,cols,dense_layout,lda,adns,indexing,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_Z_DENSE2COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER                  , INTENT(IN)  :: rows
+            INTEGER                  , INTENT(IN)  :: cols
+            INTEGER(C_INT)           , INTENT(IN)  :: dense_layout
+            INTEGER                  , INTENT(IN)  :: lda
+            COMPLEX(C_DOUBLE_COMPLEX), INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)           , INTENT(IN)  :: indexing
+            TYPE(MATRIX_DESCR)       , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T)    , INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_Z_DENSE2COO
+        END FUNCTION
+
+        ! convert dense matrix to BSR representation
+        FUNCTION MKL_SPARSE_S_DENSE2BSR(rows,cols,dense_layout,lda,adns,indexing,block_size,block_layout,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_S_DENSE2BSR')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER              , INTENT(IN)  :: rows
+            INTEGER              , INTENT(IN)  :: cols
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_FLOAT)        , INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)       , INTENT(IN)  :: indexing
+            INTEGER              , INTENT(IN)  :: block_size
+            INTEGER(C_INT)       , INTENT(IN)  :: block_layout
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T), INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_S_DENSE2BSR
+        END FUNCTION
+        FUNCTION MKL_SPARSE_D_DENSE2BSR(rows,cols,dense_layout,lda,adns,indexing,block_size,block_layout,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_D_DENSE2BSR')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER              , INTENT(IN)  :: rows
+            INTEGER              , INTENT(IN)  :: cols
+            INTEGER(C_INT)       , INTENT(IN)  :: dense_layout
+            INTEGER              , INTENT(IN)  :: lda
+            REAL(C_DOUBLE)       , INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)       , INTENT(IN)  :: indexing
+            INTEGER              , INTENT(IN)  :: block_size
+            INTEGER(C_INT)       , INTENT(IN)  :: block_layout
+            TYPE(MATRIX_DESCR)   , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T), INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_D_DENSE2BSR
+        END FUNCTION
+        FUNCTION MKL_SPARSE_C_DENSE2BSR(rows,cols,dense_layout,lda,adns,indexing,block_size,block_layout,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_C_DENSE2BSR')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER                 , INTENT(IN)  :: rows
+            INTEGER                 , INTENT(IN)  :: cols
+            INTEGER(C_INT)          , INTENT(IN)  :: dense_layout
+            INTEGER                 , INTENT(IN)  :: lda
+            COMPLEX(C_FLOAT_COMPLEX), INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)          , INTENT(IN)  :: indexing
+            INTEGER                 , INTENT(IN)  :: block_size
+            INTEGER(C_INT)          , INTENT(IN)  :: block_layout
+            TYPE(MATRIX_DESCR)      , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T)   , INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_C_DENSE2BSR
+        END FUNCTION
+        FUNCTION MKL_SPARSE_Z_DENSE2BSR(rows,cols,dense_layout,lda,adns,indexing,block_size,block_layout,descr,dest) &
+                 BIND(C, name='MKL_SPARSE_Z_DENSE2BSR')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE_COMPLEX
+            IMPORT SPARSE_MATRIX_T
+            IMPORT MATRIX_DESCR
+            INTEGER                  , INTENT(IN)  :: rows
+            INTEGER                  , INTENT(IN)  :: cols
+            INTEGER(C_INT)           , INTENT(IN)  :: dense_layout
+            INTEGER                  , INTENT(IN)  :: lda
+            COMPLEX(C_DOUBLE_COMPLEX), INTENT(IN), DIMENSION(*) :: adns
+            INTEGER(C_INT)           , INTENT(IN)  :: indexing
+            INTEGER                  , INTENT(IN)  :: block_size
+            INTEGER(C_INT)           , INTENT(IN)  :: block_layout
+            TYPE(MATRIX_DESCR)       , INTENT(IN)  :: descr
+            TYPE(SPARSE_MATRIX_T)    , INTENT(OUT) :: dest
+            INTEGER(C_INT) MKL_SPARSE_Z_DENSE2BSR
+        END FUNCTION
+
+!****************************************************************************************
+!*********************************** Export routines  ***********************************
+!****************************************************************************************
+
+!   Export internal representation of sparse matrices
 
         FUNCTION MKL_SPARSE_S_EXPORT_BSR(source,indexing,block_layout,rows,cols,block_size,rows_start,rows_end,col_indx,values) &
                  BIND(C, name='MKL_SPARSE_S_EXPORT_BSR')
@@ -631,6 +965,63 @@ MODULE MKL_SPBLAS
             TYPE(C_PTR)          , INTENT(INOUT) :: row_indx
             TYPE(C_PTR)          , INTENT(INOUT) :: values
             INTEGER(C_INT) MKL_SPARSE_Z_EXPORT_CSC
+        END FUNCTION
+
+FUNCTION MKL_SPARSE_S_EXPORT_COO(source,indexing,rows,cols,nnz,row_indx,col_indx,values) &
+                 BIND(C, name='MKL_SPARSE_S_EXPORT_COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT, C_PTR
+            IMPORT SPARSE_MATRIX_T
+            TYPE(SPARSE_MATRIX_T), INTENT(IN)    :: source
+            INTEGER(C_INT)       , INTENT(INOUT) :: indexing
+            INTEGER              , INTENT(INOUT) :: rows
+            INTEGER              , INTENT(INOUT) :: cols
+            INTEGER              , INTENT(INOUT) :: nnz
+            TYPE(C_PTR)          , INTENT(INOUT) :: row_indx
+            TYPE(C_PTR)          , INTENT(INOUT) :: col_indx
+            TYPE(C_PTR)          , INTENT(INOUT) :: values
+            INTEGER(C_INT) MKL_SPARSE_S_EXPORT_COO
+        END FUNCTION
+        FUNCTION MKL_SPARSE_D_EXPORT_COO(source,indexing,rows,cols,nnz,row_indx,col_indx,values) &
+                 BIND(C, name='MKL_SPARSE_D_EXPORT_COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE, C_PTR
+            IMPORT SPARSE_MATRIX_T
+            TYPE(SPARSE_MATRIX_T), INTENT(IN)    :: source
+            INTEGER(C_INT)       , INTENT(INOUT) :: indexing
+            INTEGER              , INTENT(INOUT) :: rows
+            INTEGER              , INTENT(INOUT) :: cols
+            INTEGER              , INTENT(INOUT) :: nnz
+            TYPE(C_PTR)          , INTENT(INOUT) :: row_indx
+            TYPE(C_PTR)          , INTENT(INOUT) :: col_indx
+            TYPE(C_PTR)          , INTENT(INOUT) :: values
+            INTEGER(C_INT) MKL_SPARSE_D_EXPORT_COO
+        END FUNCTION
+        FUNCTION MKL_SPARSE_C_EXPORT_COO(source,indexing,rows,cols,nnz,row_indx,col_indx,values) &
+                 BIND(C, name='MKL_SPARSE_C_EXPORT_COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_FLOAT_COMPLEX, C_PTR
+            IMPORT SPARSE_MATRIX_T
+            TYPE(SPARSE_MATRIX_T), INTENT(IN)    :: source
+            INTEGER(C_INT)       , INTENT(INOUT) :: indexing
+            INTEGER              , INTENT(INOUT) :: rows
+            INTEGER              , INTENT(INOUT) :: cols
+            INTEGER              , INTENT(INOUT) :: nnz
+            TYPE(C_PTR)          , INTENT(INOUT) :: row_indx
+            TYPE(C_PTR)          , INTENT(INOUT) :: col_indx
+            TYPE(C_PTR)          , INTENT(INOUT) :: values
+            INTEGER(C_INT) MKL_SPARSE_C_EXPORT_COO
+        END FUNCTION
+        FUNCTION MKL_SPARSE_Z_EXPORT_COO(source,indexing,rows,cols,nnz,row_indx,col_indx,values) &
+                 BIND(C, name='MKL_SPARSE_Z_EXPORT_COO')
+            USE, INTRINSIC :: ISO_C_BINDING , ONLY : C_INT, C_DOUBLE_COMPLEX, C_PTR
+            IMPORT SPARSE_MATRIX_T
+            TYPE(SPARSE_MATRIX_T) , INTENT(IN)    :: source
+            INTEGER(C_INT)        , INTENT(INOUT) :: indexing
+            INTEGER               , INTENT(INOUT) :: rows
+            INTEGER               , INTENT(INOUT) :: cols
+            INTEGER               , INTENT(INOUT) :: nnz
+            TYPE(C_PTR)           , INTENT(INOUT) :: row_indx
+            TYPE(C_PTR)           , INTENT(INOUT) :: col_indx
+            TYPE(C_PTR)           , INTENT(INOUT) :: values
+            INTEGER(C_INT) MKL_SPARSE_Z_EXPORT_COO
         END FUNCTION
 
 !****************************************************************************************
@@ -1589,7 +1980,7 @@ MODULE MKL_SPBLAS
             IMPORT SPARSE_MATRIX_T
             IMPORT MATRIX_DESCR
             TYPE(SPARSE_MATRIX_T), INTENT(INOUT) :: A
-            INTEGER(C_INT)       , INTENT(IN) :: operation   
+            INTEGER(C_INT)       , INTENT(IN) :: operation
             TYPE(MATRIX_DESCR)   , INTENT(IN) :: descr          ! sparse_matrix_type_t + sparse_fill_mode_t + sparse_diag_type_t
             INTEGER              , INTENT(IN) :: expected_calls
             INTEGER(C_INT) MKL_SPARSE_SET_LU_SMOOTHER_HINT

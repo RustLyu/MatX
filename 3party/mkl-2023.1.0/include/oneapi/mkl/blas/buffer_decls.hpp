@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018-2022 Intel Corporation.
+* Copyright (C) 2018 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -123,6 +123,21 @@ ONEMKL_DECLARE_BUF_TRMM(std::complex<double>)
 
 #undef ONEMKL_DECLARE_BUF_TRMM
 
+#define ONEMKL_DECLARE_BUF_TRMM_OOP(T) \
+DLL_EXPORT void trmm(sycl::queue &queue, side left_right, uplo upper_lower, transpose trans, diag unit_diag, \
+              std::int64_t m, std::int64_t n, \
+              T alpha, sycl::buffer<T, 1> &a, std::int64_t lda, \
+              sycl::buffer<T, 1> &b, std::int64_t ldb, \
+              T beta, sycl::buffer<T, 1> &c, std::int64_t ldc, \
+              compute_mode mode = MKL_BLAS_COMPUTE_MODE);
+
+ONEMKL_DECLARE_BUF_TRMM_OOP(float)
+ONEMKL_DECLARE_BUF_TRMM_OOP(double)
+ONEMKL_DECLARE_BUF_TRMM_OOP(std::complex<float>)
+ONEMKL_DECLARE_BUF_TRMM_OOP(std::complex<double>)
+
+#undef ONEMKL_DECLARE_BUF_TRMM_OOP
+
 #define ONEMKL_DECLARE_BUF_TRSM(T) \
 DLL_EXPORT void trsm(sycl::queue &queue, side left_right, uplo upper_lower, transpose trans, diag unit_diag, \
               std::int64_t m, std::int64_t n, \
@@ -136,6 +151,21 @@ ONEMKL_DECLARE_BUF_TRSM(std::complex<float>)
 ONEMKL_DECLARE_BUF_TRSM(std::complex<double>)
 
 #undef ONEMKL_DECLARE_BUF_TRSM
+
+#define ONEMKL_DECLARE_BUF_TRSM_OOP(T) \
+DLL_EXPORT void trsm(sycl::queue &queue, side left_right, uplo upper_lower, transpose trans, diag unit_diag, \
+              std::int64_t m, std::int64_t n, \
+              T alpha, sycl::buffer<T, 1> &a, std::int64_t lda, \
+              sycl::buffer<T, 1> &b, std::int64_t ldb, \
+              T beta, sycl::buffer<T, 1> &c, std::int64_t ldc, \
+              compute_mode mode = MKL_BLAS_COMPUTE_MODE);
+
+ONEMKL_DECLARE_BUF_TRSM_OOP(float)
+ONEMKL_DECLARE_BUF_TRSM_OOP(double)
+ONEMKL_DECLARE_BUF_TRSM_OOP(std::complex<float>)
+ONEMKL_DECLARE_BUF_TRSM_OOP(std::complex<double>)
+
+#undef ONEMKL_DECLARE_BUF_TRSM_OOP
 
 // Level 2
 
@@ -467,25 +497,33 @@ ONEMKL_DECLARE_BUF_DOTU(std::complex<double>)
 
 #undef ONEMKL_DECLARE_BUF_DOTU
 
-#define ONEMKL_DECLARE_BUF_IAMAX(T) \
-DLL_EXPORT void iamax(sycl::queue &queue, std::int64_t n, sycl::buffer<T, 1> &x, std::int64_t incx, \
-               sycl::buffer<std::int64_t, 1> &result);
+#define ONEMKL_DECLARE_BUF_IAMAX(Tf, Ti) \
+DLL_EXPORT void iamax(sycl::queue &queue, std::int64_t n, sycl::buffer<Tf, 1> &x, std::int64_t incx, \
+                      sycl::buffer<Ti, 1> &result, index_base base=index_base::zero);
 
-ONEMKL_DECLARE_BUF_IAMAX(float)
-ONEMKL_DECLARE_BUF_IAMAX(double)
-ONEMKL_DECLARE_BUF_IAMAX(std::complex<float>)
-ONEMKL_DECLARE_BUF_IAMAX(std::complex<double>)
+ONEMKL_DECLARE_BUF_IAMAX(float, std::int64_t)
+ONEMKL_DECLARE_BUF_IAMAX(float, std::int32_t)
+ONEMKL_DECLARE_BUF_IAMAX(double, std::int64_t)
+ONEMKL_DECLARE_BUF_IAMAX(double, std::int32_t)
+ONEMKL_DECLARE_BUF_IAMAX(std::complex<float>, std::int64_t)
+ONEMKL_DECLARE_BUF_IAMAX(std::complex<float>, std::int32_t)
+ONEMKL_DECLARE_BUF_IAMAX(std::complex<double>, std::int64_t)
+ONEMKL_DECLARE_BUF_IAMAX(std::complex<double>, std::int32_t)
 
 #undef ONEMKL_DECLARE_BUF_IAMAX
 
-#define ONEMKL_DECLARE_BUF_IAMIN(T) \
-DLL_EXPORT void iamin(sycl::queue &queue, std::int64_t n, sycl::buffer<T, 1> &x, std::int64_t incx, \
-               sycl::buffer<std::int64_t, 1> &result);
+#define ONEMKL_DECLARE_BUF_IAMIN(Tf, Ti) \
+DLL_EXPORT void iamin(sycl::queue &queue, std::int64_t n, sycl::buffer<Tf, 1> &x, std::int64_t incx, \
+                      sycl::buffer<Ti, 1> &result, index_base base=index_base::zero);
 
-ONEMKL_DECLARE_BUF_IAMIN(float)
-ONEMKL_DECLARE_BUF_IAMIN(double)
-ONEMKL_DECLARE_BUF_IAMIN(std::complex<float>)
-ONEMKL_DECLARE_BUF_IAMIN(std::complex<double>)
+ONEMKL_DECLARE_BUF_IAMIN(float, std::int64_t)
+ONEMKL_DECLARE_BUF_IAMIN(float, std::int32_t)
+ONEMKL_DECLARE_BUF_IAMIN(double, std::int64_t)
+ONEMKL_DECLARE_BUF_IAMIN(double, std::int32_t)
+ONEMKL_DECLARE_BUF_IAMIN(std::complex<float>, std::int64_t)
+ONEMKL_DECLARE_BUF_IAMIN(std::complex<float>, std::int32_t)
+ONEMKL_DECLARE_BUF_IAMIN(std::complex<double>, std::int64_t)
+ONEMKL_DECLARE_BUF_IAMIN(std::complex<double>, std::int32_t)
 
 #undef ONEMKL_DECLARE_BUF_IAMIN
 

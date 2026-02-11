@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2022 Intel Corporation.
+* Copyright (C) 2022 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -19,7 +19,7 @@
 #include <vector>
 #include <bitset>
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 
 #include "oneapi/mkl/exceptions.hpp"
 #include "oneapi/mkl/experimental/data_fitting/spline_and_data_params.hpp"

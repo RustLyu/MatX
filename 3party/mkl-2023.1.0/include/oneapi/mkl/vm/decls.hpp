@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019-2022 Intel Corporation.
+* Copyright (C) 2019 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -19,16 +19,14 @@
 #include <cstdint>
 #include <exception>
 
-#include <CL/sycl.hpp>
-
-#include "oneapi/mkl/types.hpp"
+#include <sycl/sycl.hpp>
 
 #ifdef MKL_BUILD_DLL
-#define __ONEAPI_MKL_VM_EXPORT __declspec(dllexport)
-#define __ONEAPI_MKL_VM_EXPORT_CPP __declspec(dllexport)
+#define ONEAPI_MKL_VM_EXPORT __declspec(dllexport)
+#define ONEAPI_MKL_VM_EXPORT_CPP __declspec(dllexport)
 #else
-#define __ONEAPI_MKL_VM_EXPORT extern
-#define __ONEAPI_MKL_VM_EXPORT_CPP
+#define ONEAPI_MKL_VM_EXPORT extern
+#define ONEAPI_MKL_VM_EXPORT_CPP
 #endif
 
 namespace oneapi {
@@ -42,11 +40,11 @@ struct slice {
   int64_t stride;
 
   constexpr slice() : start(0), size(0), stride(0) {}
-  constexpr slice(slice const &rhs) = default;
+  constexpr slice(slice const& rhs) = default;
 
   constexpr slice(size_t _start, size_t _size, int64_t _stride)
       : start(_start), size(_size), stride(_stride) {}
-}; // struct slice
+};     // struct slice
 #endif // #ifndef _ONEAPI_MKL_SLICE_
 
 namespace vm {
@@ -87,7 +85,7 @@ enum class mode : std::uint32_t {
   verbose_mask = 0x7000000,
 
   default_mode = (ha | global_status_quiet | slice_normal | badarg_exception |
-                  fallback_enabled | verbose_quiet)
+                  fallback_permissive | verbose_quiet)
 };
 
 enum class status : std::uint32_t {
@@ -122,8 +120,8 @@ operator|(T lhs, T rhs) {
 }
 
 template <typename T>
-constexpr typename std::enable_if<bits_enabled<T>::enabled, T>::type &
-operator|=(T &lhs, T rhs) {
+constexpr typename std::enable_if<bits_enabled<T>::enabled, T>::type&
+operator|=(T& lhs, T rhs) {
   auto r = static_cast<typename std::underlying_type_t<T>>(lhs) |
            static_cast<typename std::underlying_type_t<T>>(rhs);
   lhs = static_cast<T>(r);
@@ -140,7 +138,7 @@ operator&(T lhs, T rhs) {
 
 template <typename T>
 constexpr typename std::enable_if<bits_enabled<T>::enabled, T>::type
-operator&=(T &lhs, T rhs) {
+operator&=(T& lhs, T rhs) {
   auto r = static_cast<typename std::underlying_type_t<T>>(lhs) &
            static_cast<typename std::underlying_type_t<T>>(rhs);
   lhs = static_cast<T>(r);
@@ -157,7 +155,7 @@ operator^(T lhs, T rhs) {
 
 template <typename T>
 constexpr typename std::enable_if<bits_enabled<T>::enabled, T>::type
-operator^=(T &lhs, T rhs) {
+operator^=(T& lhs, T rhs) {
   auto r = static_cast<typename std::underlying_type_t<T>>(lhs) ^
            static_cast<typename std::underlying_type_t<T>>(rhs);
   lhs = static_cast<T>(r);
@@ -210,17 +208,17 @@ namespace detail {
 using std::int64_t;
 namespace one_vm = oneapi::mkl::vm;
 
-struct __ONEAPI_MKL_VM_EXPORT_CPP error_handler_base {
+struct ONEAPI_MKL_VM_EXPORT_CPP error_handler_base {
   virtual ~error_handler_base() {}
 };
 
 template <typename T>
-struct __ONEAPI_MKL_VM_EXPORT_CPP error_handler : private error_handler_base {
+struct ONEAPI_MKL_VM_EXPORT_CPP error_handler : public error_handler_base {
   bool enabled_;
   bool is_usm_;
 
   sycl::buffer<one_vm::status, 1> buf_status_;
-  one_vm::status *usm_status_;
+  one_vm::status* usm_status_;
   std::int64_t len_;
 
   one_vm::status status_to_fix_;
@@ -242,7 +240,7 @@ struct __ONEAPI_MKL_VM_EXPORT_CPP error_handler : private error_handler_base {
         usm_status_{nullptr}, len_{0}, status_to_fix_{status_to_fix},
         fixup_value_{fixup_value}, copy_sign_{copy_sign} {}
 
-  error_handler(one_vm::status *array, std::int64_t len = 1,
+  error_handler(one_vm::status* array, std::int64_t len = 1,
                 one_vm::status status_to_fix = one_vm::status::not_defined,
                 T fixup_value = {}, bool copy_sign = false)
       : enabled_{true}, is_usm_{true},
@@ -251,7 +249,7 @@ struct __ONEAPI_MKL_VM_EXPORT_CPP error_handler : private error_handler_base {
         usm_status_{array}, len_{len}, status_to_fix_{status_to_fix},
         fixup_value_{fixup_value}, copy_sign_{copy_sign} {}
 
-  error_handler(sycl::buffer<one_vm::status, 1> &buf, std::int64_t len = 1,
+  error_handler(sycl::buffer<one_vm::status, 1>& buf, std::int64_t len = 1,
                 one_vm::status status_to_fix = one_vm::status::not_defined,
                 T fixup_value = {}, bool copy_sign = false)
       : enabled_{true}, is_usm_{false},
@@ -266,14 +264,14 @@ struct __ONEAPI_MKL_VM_EXPORT_CPP error_handler : private error_handler_base {
 using detail::error_handler;
 
 // Service functions
-__ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::mode get_mode(sycl::queue &queue);
-__ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::mode
-set_mode(sycl::queue &queue, oneapi::mkl::vm::mode new_mode);
+ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::mode get_mode(sycl::queue& queue);
+ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::mode
+set_mode(sycl::queue& queue, oneapi::mkl::vm::mode new_mode);
 
-__ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::status get_status(sycl::queue &queue);
-__ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::status
-set_status(sycl::queue &queue, oneapi::mkl::vm::status new_status);
-__ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::status clear_status(sycl::queue &queue);
+ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::status get_status(sycl::queue& queue);
+ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::status
+set_status(sycl::queue& queue, oneapi::mkl::vm::status new_status);
+ONEAPI_MKL_VM_EXPORT oneapi::mkl::vm::status clear_status(sycl::queue& queue);
 
 } // namespace vm
 } // namespace mkl

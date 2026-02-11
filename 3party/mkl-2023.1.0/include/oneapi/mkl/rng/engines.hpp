@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019-2022 Intel Corporation.
+* Copyright (C) 2019 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -92,13 +92,36 @@ private:
 //
 // Supported parallelization methods:
 //      skip_ahead
+//
+namespace mrg32k3a_mode {
+struct optimal {};
+struct custom {
+    custom() = delete;
+#if __cplusplus >= 202002L
+    explicit custom(std::uint32_t n_streams) : num_streams(n_streams){}
+#endif
+    std::uint32_t num_streams;
+};
+constexpr optimal optimal_v{};
+} // namespace mrg32k3a_mode
+
 class DLL_EXPORT mrg32k3a : detail::engine_base<mrg32k3a> {
 public:
     static constexpr std::uint32_t default_seed = 1;
 
     mrg32k3a(sycl::queue queue, std::uint32_t seed = default_seed);
+    
+    mrg32k3a(sycl::queue queue, std::uint32_t seed, mrg32k3a_mode::optimal mode);
+    
+    mrg32k3a(sycl::queue queue, std::uint32_t seed, mrg32k3a_mode::custom mode);
 
     mrg32k3a(sycl::queue queue, std::initializer_list<std::uint32_t> seed);
+
+    mrg32k3a(sycl::queue queue, std::initializer_list<std::uint32_t> seed, 
+             mrg32k3a_mode::optimal mode);
+
+    mrg32k3a(sycl::queue queue, std::initializer_list<std::uint32_t> seed, 
+             mrg32k3a_mode::custom mode);
 
     mrg32k3a(const mrg32k3a& other);
 
@@ -492,6 +515,9 @@ private:
 //
 // Represents Mersenne Twister pseudorandom number generator MT2203 (a set of 6024
 // basic generators)
+//
+// Supported parallelization methods:
+//      skip_ahead
 class DLL_EXPORT mt2203 : detail::engine_base<mt2203> {
 public:
     static constexpr std::uint32_t default_seed = 1;
@@ -515,6 +541,11 @@ public:
     ~mt2203();
 
 private:
+    void skip_ahead(std::uint64_t num_to_skip);
+
+    template <typename Engine>
+    friend void skip_ahead(Engine& engine, std::uint64_t num_to_skip);
+
     template <typename Distr, typename Engine>
     friend void generate(const Distr& distr, Engine& engine, std::int64_t n,
                          sycl::buffer<typename Distr::result_type, 1>& r);

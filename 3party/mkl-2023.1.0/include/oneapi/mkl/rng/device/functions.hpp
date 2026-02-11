@@ -1,28 +1,30 @@
 /*******************************************************************************
-* Copyright 2020-2022 Intel Corporation.
+* Copyright (C) 2020 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DEVICE_FUNCTIONS_HPP_
 #define _MKL_RNG_DEVICE_FUNCTIONS_HPP_
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 
 #include "oneapi/mkl/rng/device/detail/distribution_base.hpp"
 
-namespace oneapi {
-namespace mkl {
-namespace rng {
-namespace device {
+namespace oneapi::mkl::rng::device {
 
 // GENERATE FUNCTIONS
 
@@ -52,9 +54,6 @@ void skip_ahead(Engine& engine, std::initializer_list<std::uint64_t> num_to_skip
     engine.skip_ahead(num_to_skip);
 }
 
-} // namespace device
-} // namespace rng
-} // namespace mkl
-} // namespace oneapi
+} // namespace oneapi::mkl::rng::device
 
 #endif // _MKL_RNG_DEVICE_FUNCTIONS_HPP_

@@ -1,6 +1,4 @@
-﻿include(${CMAKE_CURRENT_LIST_DIR}/../cmake/MatXDeps.cmake)
-
-add_library(matx_blas
+﻿add_library(matx_blas
   src/matx_blas_backend.c
   src/matx_blas_ref.c
   src/matx_sparse_blas_backend.c
@@ -17,6 +15,7 @@ target_link_libraries(matx_blas
 
 target_include_directories(matx_blas
   PUBLIC
+    $<BUILD_INTERFACE:${openblas_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -27,6 +26,7 @@ target_compile_definitions(matx_blas
     MATX_ENABLE_OPENBLAS=$<BOOL:${MATX_ENABLE_OPENBLAS}>
     MATX_ENABLE_BLIS=$<BOOL:${MATX_ENABLE_BLIS}>
     MATX_ENABLE_MKL=$<BOOL:${MATX_ENABLE_MKL}>
+    MATX_ENABLE_GRAPHBLAS=$<BOOL:${MATX_ENABLE_GRAPHBLAS}>
 )
 
 if(MATX_BLAS_BACKEND STREQUAL "REFERENCE")
@@ -35,28 +35,24 @@ endif()
 
 if(MATX_ENABLE_OPENBLAS)
   target_compile_definitions(matx_blas PRIVATE MATX_HAVE_OPENBLAS=1)
-  target_link_libraries(matx_blas PRIVATE OpenBLAS::OpenBLAS)
+  target_link_libraries(matx_blas PRIVATE ${openblas_lib})
 endif()
 
 if(MATX_ENABLE_BLIS)
   target_compile_definitions(matx_blas PRIVATE MATX_HAVE_BLIS=1)
-  target_link_libraries(matx_blas PRIVATE BLIS::BLIS)
+  target_link_libraries(matx_blas PRIVATE ${amdblis_lib})
 endif()
 
 if(MATX_ENABLE_MKL)
   target_compile_definitions(matx_blas PRIVATE MATX_HAVE_MKL=1)
-  target_link_libraries(matx_blas PRIVATE MKL::MKL)
+  target_link_libraries(matx_blas PRIVATE ${mkl_lib})
 endif()
 
-if(MATX_CXSPARSE_FOUND)
-  target_compile_definitions(matx_blas PRIVATE MATX_HAVE_CXSPARSE=1)
-  target_link_libraries(matx_blas PRIVATE CXSparse::CXSparse)
+if(MATX_ENABLE_GRAPHBLAS)
+    target_compile_definitions(matx_blas PRIVATE MATX_HAVE_GRAPHBLAS=1)
+    target_link_libraries(matx_blas PRIVATE ${graphblas_lib})
 endif()
 
-if(MATX_GRAPHBLAS_FOUND)
-  target_compile_definitions(matx_blas PRIVATE MATX_HAVE_GRAPHBLAS=1)
-  target_link_libraries(matx_blas PRIVATE GraphBlas::GraphBlas)
-endif()
 
 target_sources(matx_blas
   PUBLIC

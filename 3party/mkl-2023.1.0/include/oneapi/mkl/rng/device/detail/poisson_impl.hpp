@@ -1,15 +1,20 @@
 /*******************************************************************************
-* Copyright 2021-2022 Intel Corporation.
+* Copyright (C) 2021 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DEVICE_POISSON_IMPL_HPP_
@@ -17,11 +22,7 @@
 
 #include <limits>
 
-namespace oneapi {
-namespace mkl {
-namespace rng {
-namespace device {
-namespace detail {
+namespace oneapi::mkl::rng::device::detail {
 
 // Implementation of Poisson distribution uses 3 methods depending on lambda parameter:
 //    - table-lookup method [1] for small lambdas (lambda < 60)
@@ -73,33 +74,6 @@ struct poisson_parameters {
         }
     }
 
-    poisson_parameters& operator=(const poisson_parameters& other) {
-        if (this == &other) {
-            return *this;
-        }
-        for(int i = 0; i < RNG_POISSON_N_PRECOMPUTED_CDF; i++) {
-            prob[i] = other.prob[i];
-        }
-        floored_lambda_ = other.floored_lambda_;
-        log_lambda_ = other.log_lambda_;
-        lgamma_floored_lambda_ = other.lgamma_floored_lambda_;
-        sqrt_lambda_ = other.sqrt_lambda_;
-        sqrt_floored_lambda_ = other.sqrt_floored_lambda_;
-        dx_ = other.dx_;
-        delta_ = other.delta_;
-        dpdfl_ = other.dpdfl_;
-        sqrt_half_dpdfl_ = other.sqrt_half_dpdfl_;
-        inv_dpdfl_ = other.inv_dpdfl_;
-        c2_add_coeff_ = other.c2_add_coeff_;
-        c_add_coeff_ = other.c_add_coeff_;
-        c1_ = other.c1_;
-        c2_ = other.c2_;
-        c3_ = other.c3_;
-        c4_ = other.c4_;
-        c5_ = other.c5_;
-        c_ = other.c_;
-        return *this;
-    }
     double prob[RNG_POISSON_N_PRECOMPUTED_CDF];
     double floored_lambda_ = 0.0;
     double log_lambda_ = 0.0;
@@ -119,9 +93,9 @@ struct poisson_parameters {
     double c4_ = 0.0;
     double c5_ = 0.0;
     double c_ = 0.0;
-    const double exp_one_by_78 = 1.0129030479320018583185514777512983L;
-    const double pi_4_ = 0.7853981633974483096156608458198757L;
-    const double spi_2_ = 1.2533141373155002512078826424055226L;
+    static constexpr double exp_one_by_78 = 1.0129030479320018583185514777512983L;
+    static constexpr double pi_4_ = 0.7853981633974483096156608458198757L;
+    static constexpr double spi_2_ = 1.2533141373155002512078826424055226L;
 };
 
 template <typename IntType>
@@ -189,12 +163,12 @@ protected:
         double res_;
         bool rejection_flag = true;
         do {
-            const double uniform_var = params_.c_ * uniform_.generate_single(engine);
+            const double uniform_var = params_.c_ * engine.generate_single(0.0, 1.0);
             const double exponential_var = exponential_.generate_single(engine);
             double w = 0.0;
             if (uniform_var <= params_.c1_) {
                 const double gaussian_var = gaussian_.generate_single(engine);
-                const double y = -sycl::abs(gaussian_var) * params_.sqrt_floored_lambda_ - 1.0;
+                const double y = -sycl::fabs(gaussian_var) * params_.sqrt_floored_lambda_ - 1.0;
                 res_ = sycl::floor(y);
                 w = -gaussian_var * gaussian_var / 2.0;
                 if (res_ < -params_.floored_lambda_)
@@ -202,7 +176,7 @@ protected:
             }
             else if (uniform_var <= params_.c2_) {
                 const double gaussian_var = gaussian_.generate_single(engine);
-                const double y = 1.0 + sycl::abs(gaussian_var) * params_.sqrt_half_dpdfl_;
+                const double y = 1.0 + sycl::fabs(gaussian_var) * params_.sqrt_half_dpdfl_;
                 res_ = sycl::ceil(y);
                 w = y * (2.0 - y) * params_.inv_dpdfl_;
                 if (res_ > params_.delta_)
@@ -243,7 +217,7 @@ protected:
         if constexpr (EngineType::vec_size == 1) {
             res = 0;
             if (lambda_ < RNG_POISSON_LAMBDA_LOW_BOUND) {
-                double uniform_var = uniform_.generate(engine);
+                double uniform_var = engine.generate(0.0, 1.0);
                 return get_one_num_small_lambdas(uniform_var);
             }
             else if (lambda_ < RNG_POISSON_LAMBDA_HUGE_BOUND) {
@@ -253,13 +227,13 @@ protected:
                 double res_;
                 bool rejection_flag = true;
                 do {
-                    const double uniform_var = params_.c_ * uniform_.generate(engine);
+                    const double uniform_var = params_.c_ * engine.generate(0.0, 1.0);
                     const double exponential_var = exponential_.generate(engine);
                     double w = 0.0;
                     if (uniform_var <= params_.c1_) {
                         const double gaussian_var = gaussian_.generate(engine);
                         const double y =
-                            -sycl::abs(gaussian_var) * params_.sqrt_floored_lambda_ - 1.0;
+                            -sycl::fabs(gaussian_var) * params_.sqrt_floored_lambda_ - 1.0;
                         res_ = sycl::floor(y);
                         w = -gaussian_var * gaussian_var / 2.0;
                         if (res_ < -params_.floored_lambda_)
@@ -267,7 +241,7 @@ protected:
                     }
                     else if (uniform_var <= params_.c2_) {
                         const double gaussian_var = gaussian_.generate(engine);
-                        const double y = 1.0 + sycl::abs(gaussian_var) * params_.sqrt_half_dpdfl_;
+                        const double y = 1.0 + sycl::fabs(gaussian_var) * params_.sqrt_half_dpdfl_;
                         res_ = sycl::ceil(y);
                         w = y * (2.0 - y) * params_.inv_dpdfl_;
                         if (res_ > params_.delta_)
@@ -304,7 +278,7 @@ protected:
         }
         else {
             if (lambda_ < RNG_POISSON_LAMBDA_LOW_BOUND) {
-                auto uniform_var = uniform_.generate(engine);
+                auto uniform_var = engine.generate(0.0, 1.0);
                 for (int i = 0; i < EngineType::vec_size; ++i) {
                     res[i] = get_one_num_small_lambdas(uniform_var[i]);
                 }
@@ -330,7 +304,7 @@ protected:
     IntType generate_single(EngineType& engine) {
         IntType res = 0;
         if (lambda_ < RNG_POISSON_LAMBDA_LOW_BOUND) {
-            double uniform_var = uniform_.generate_single(engine);
+            double uniform_var = engine.generate_single(0.0, 1.0);
             return get_one_num_small_lambdas(uniform_var);
         }
         else if (lambda_ < RNG_POISSON_LAMBDA_HUGE_BOUND) {
@@ -343,17 +317,12 @@ protected:
         return res;
     }
 
-    distribution_base<oneapi::mkl::rng::device::uniform<double>> uniform_ = { 0.0, 1.0 };
     distribution_base<oneapi::mkl::rng::device::gaussian<double>> gaussian_ = { 0.0, 1.0 };
     distribution_base<oneapi::mkl::rng::device::exponential<double>> exponential_ = { 0.0, 1.0 };
     poisson_parameters params_;
     double lambda_;
 };
 
-} // namespace detail
-} // namespace device
-} // namespace rng
-} // namespace mkl
-} // namespace oneapi
+} // namespace oneapi::mkl::rng::device::detail
 
 #endif // _MKL_RNG_DEVICE_POISSON_IMPL_HPP_

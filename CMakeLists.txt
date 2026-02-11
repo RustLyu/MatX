@@ -4,12 +4,11 @@ project(MatX LANGUAGES C CXX)
 
 # ---- Global options ----
 option(MATX_BUILD_TESTS "Build unit tests (gtest)" ON)
-option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS backend if found/provided" OFF)
+option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS backend if found/provided" ON)
 option(MATX_ENABLE_BLIS "Enable BLIS backend if found/provided" ON)
 option(MATX_ENABLE_LIBFLAME "Enable LIBFLAME backend if found/provided" ON)
 option(MATX_ENABLE_MKL "Enable MKL backend if found/provided" ON)
 option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse backend if found/provided" ON)
-option(MATX_ENABLE_CXSPARSE "Enable CXSparse for sparse numerical ops if found" ON)
 option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" ON)
 set(MATX_BLAS_BACKEND "AUTO" CACHE STRING "BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
 
@@ -27,19 +26,37 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+# graphblas
+set(graphblas_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/cmake")
+set(graphblas_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0")
+find_package(graphblas REQUIRED)
 
-#add_library(matx_options INTERFACE)
-#target_compile_definitions(matx_options INTERFACE
-#  $<$<CONFIG:Debug>:MATX_DEBUG=1>
-#)
-#if(MSVC)
-#  target_compile_options(matx_options INTERFACE /W4 /permissive-)
-#else()
-#  target_compile_options(matx_options INTERFACE -Wall -Wextra -Wpedantic)
-#endif()
+# amd-blis
+set(amdblis_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-blis/cmake")
+set(amdblis_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-blis/")
+find_package(amdblis REQUIRED)
 
-#include(GNUInstallDirs)
+# amd-libflame
+set(libflame_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-libflame/cmake")
+set(libflame_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-libflame")
+find_package(libflame REQUIRED)
+
+# suitesparse
+set(suitesparse_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/cmake")
+set(suitesparse_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0")
+find_package(suitesparse REQUIRED)
+
+# mkl
+set(mkl_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/mkl-2023.1.0/cmake")
+set(mkl_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/mkl-2023.1.0")
+find_package(mkl REQUIRED)
+
+# openblas
+set(openblas_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas/cmake")
+set(openblas_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas")
+find_package(openblas REQUIRED)
+
+include(GNUInstallDirs)
 
 add_subdirectory(core)
 add_subdirectory(blas)

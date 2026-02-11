@@ -1,5 +1,5 @@
 !===============================================================================
-! Copyright 2020-2022 Intel Corporation.
+! Copyright (C) 2020 Intel Corporation
 !
 ! This software and the related documents are Intel copyrighted  materials,  and
 ! your use of  them is  governed by the  express license  under which  they were
@@ -303,6 +303,28 @@
        type(c_ptr),intent(in) :: interop
      end subroutine mkl_blas_cgemm_omp_offload_lp64
 
+     subroutine mkl_blas_zgemm3m_omp_offload_lp64 ( transa, transb, m, n, k, alpha, a, lda,        &
+          &b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: transa, transb
+       integer,intent(in)                 :: m, n, k, lda, ldb, ldc
+       complex*16,intent(in)              :: alpha, beta
+       complex*16,intent(in)              :: a( lda, * ), b( ldb, * )
+       complex*16,intent(inout)           :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_zgemm3m_omp_offload_lp64
+
+     subroutine mkl_blas_cgemm3m_omp_offload_lp64 ( transa, transb, m, n, k, alpha, a, lda,        &
+          &b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)              :: transa, transb
+       integer,intent(in)                  :: m, n, k, lda, ldb, ldc
+       complex,intent(in)                  :: alpha, beta
+       complex,intent(in)                  :: a( lda, * ), b( ldb, * )
+       complex,intent(inout)               :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_cgemm3m_omp_offload_lp64
+     
      subroutine mkl_blas_gemm_s8u8s32_omp_offload_lp64 ( transa, transb, offsetc, m, n, k,       &
           &alpha, a, lda, ao, b, ldb, bo, beta, c, ldc, co, interop ) BIND(C)
        use, intrinsic :: iso_c_binding
@@ -560,6 +582,49 @@
        type(c_ptr),intent(in) :: interop
      end subroutine mkl_blas_ctrmm_omp_offload_lp64
 
+     subroutine mkl_blas_strmm_oop_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha,        &
+          &a, lda, b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: side, uplo, trans, diag
+       integer,intent(in)                 :: m, n, lda, ldb, ldc
+       real,intent(in)                    :: alpha, beta
+       real,intent(in)                    :: a( lda, * ), b( ldb, * )
+       real,intent(inout)                 :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_strmm_oop_omp_offload_lp64
+
+     subroutine mkl_blas_dtrmm_oop_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha,        &
+          &a, lda, b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: side, uplo, trans, diag
+       integer,intent(in)                 :: m, n, lda, ldb, ldc
+       double precision,intent(in)        :: alpha, beta
+       double precision,intent(in)        :: a( lda, * ), b( ldb, * )
+       double precision,intent(inout)     :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_dtrmm_oop_omp_offload_lp64
+
+     subroutine mkl_blas_ctrmm_oop_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha,        &
+          &a, lda, b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: side, uplo, trans, diag
+       integer,intent(in)                 :: m, n, lda, ldb, ldc
+       complex,intent(in)                 :: alpha, beta
+       complex,intent(in)                 :: a( lda, * ), b( ldb, * )
+       complex,intent(inout)              :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_ctrmm_oop_omp_offload_lp64
+
+     subroutine mkl_blas_ztrmm_oop_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha,        &
+          &a, lda, b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: side, uplo, trans, diag
+       integer,intent(in)                 :: m, n, lda, ldb, ldc
+       complex*16,intent(in)              :: alpha, beta
+       complex*16,intent(in)              :: a( lda, * ), b( ldb, * )
+       complex*16,intent(inout)           :: c( ldc, * )
+     end subroutine mkl_blas_ztrmm_oop_omp_offload_lp64
+
      subroutine mkl_blas_dtrsm_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha, a, lda,        &
           &b, ldb, interop ) BIND(C)
        use, intrinsic :: iso_c_binding
@@ -603,6 +668,50 @@
        complex,intent(inout)               :: b( ldb, * )
        type(c_ptr),intent(in) :: interop
      end subroutine mkl_blas_ctrsm_omp_offload_lp64
+
+     subroutine mkl_blas_strsm_oop_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha,        &
+          &a, lda, b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: side, uplo, trans, diag
+       integer,intent(in)                 :: m, n, lda, ldb, ldc
+       real,intent(in)                    :: alpha, beta
+       real,intent(in)                    :: a( lda, * ), b( ldb, * )
+       real,intent(inout)                 :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_strsm_oop_omp_offload_lp64
+
+     subroutine mkl_blas_dtrsm_oop_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha,        &
+          &a, lda, b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: side, uplo, trans, diag
+       integer,intent(in)                 :: m, n, lda, ldb, ldc
+       double precision,intent(in)        :: alpha, beta
+       double precision,intent(in)        :: a( lda, * ), b( ldb, * )
+       double precision,intent(inout)     :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_dtrsm_oop_omp_offload_lp64
+
+     subroutine mkl_blas_ctrsm_oop_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha,        &
+          &a, lda, b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: side, uplo, trans, diag
+       integer,intent(in)                 :: m, n, lda, ldb, ldc
+       complex,intent(in)                 :: alpha, beta
+       complex,intent(in)                 :: a( lda, * ), b( ldb, * )
+       complex,intent(inout)              :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_ctrsm_oop_omp_offload_lp64
+
+     subroutine mkl_blas_ztrsm_oop_omp_offload_lp64 ( side, uplo, trans, diag, m, n, alpha,        &
+          &a, lda, b, ldb, beta, c, ldc, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: side, uplo, trans, diag
+       integer,intent(in)                 :: m, n, lda, ldb, ldc
+       complex*16,intent(in)              :: alpha, beta
+       complex*16,intent(in)              :: a( lda, * ), b( ldb, * )
+       complex*16,intent(inout)           :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_ztrsm_oop_omp_offload_lp64
 
      subroutine mkl_blas_dgemmt_omp_offload_lp64 ( uplo, transa, transb, m, n, alpha, a, lda,        &
           &b, ldb, beta, c, ldc, interop ) BIND(C)
@@ -1916,6 +2025,28 @@
        type(c_ptr),intent(in) :: interop
      end subroutine mkl_blas_cgemm_batch_strided_omp_offload_lp64
 
+     subroutine mkl_blas_zgemm3m_batch_strided_omp_offload_lp64 ( transa, transb, m, n, k, alpha, a, lda, stridea,        &
+          &b, ldb, strideb, beta, c, ldc, stridec, batch_size, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)             :: transa, transb
+       integer,intent(in)                 :: m, n, k, lda, stridea, ldb, strideb, ldc, stridec, batch_size
+       complex*16,intent(in)              :: alpha, beta
+       complex*16,intent(in)              :: a( lda, * ), b( ldb, * )
+       complex*16,intent(inout)           :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_zgemm3m_batch_strided_omp_offload_lp64
+
+     subroutine mkl_blas_cgemm3m_batch_strided_omp_offload_lp64 ( transa, transb, m, n, k, alpha, a, lda, stridea,        &
+          &b, ldb, strideb, beta, c, ldc, stridec, batch_size, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)              :: transa, transb
+       integer,intent(in)                  :: m, n, k, lda, stridea, ldb, strideb, ldc, stridec, batch_size
+       complex,intent(in)                  :: alpha, beta
+       complex,intent(in)                  :: a( lda, * ), b( ldb, * )
+       complex,intent(inout)               :: c( ldc, * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_cgemm3m_batch_strided_omp_offload_lp64
+     
      subroutine mkl_blas_ssyrk_batch_strided_omp_offload_lp64 ( uplo, trans, n, k, alpha, a, lda, stridea,        &
           beta, c, ldc, stridec, batch_size, interop ) BIND(C)
        use, intrinsic :: iso_c_binding
@@ -2356,6 +2487,30 @@
        type(c_ptr),intent(in) :: interop
      end subroutine mkl_blas_cgemm_batch_omp_offload_lp64
 
+     subroutine mkl_blas_zgemm3m_batch_omp_offload_lp64 ( transa, transb, m, n, k, alpha, a, lda,        &
+          &b, ldb, beta, c, ldc, group_count, group_size, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)                 :: transa(*), transb(*)
+       integer,intent(in)                     :: m(*), n(*), k(*), lda(*), ldb(*), ldc(*)
+       integer,intent(in)                     :: group_size(*), group_count
+       complex*16,intent(in)                  :: alpha(*), beta(*)
+       integer(KIND=C_INTPTR_T),intent(in)    :: a( * ), b( * )
+       integer(KIND=C_INTPTR_T),intent(inout) :: c( * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_zgemm3m_batch_omp_offload_lp64
+
+     subroutine mkl_blas_cgemm3m_batch_omp_offload_lp64 ( transa, transb, m, n, k, alpha, a, lda,        &
+          &b, ldb, beta, c, ldc, group_count, group_size, interop ) BIND(C)
+       use, intrinsic :: iso_c_binding
+       character*1,intent(in)                 :: transa(*), transb(*)
+       integer,intent(in)                     :: m(*), n(*), k(*), lda(*), ldb(*), ldc(*)
+       integer,intent(in)                     :: group_size(*), group_count
+       complex,intent(in)                     :: alpha(*), beta(*)
+       integer(KIND=C_INTPTR_T),intent(in)    :: a( * ), b( * )
+       integer(KIND=C_INTPTR_T),intent(inout) :: c( * )
+       type(c_ptr),intent(in) :: interop
+     end subroutine mkl_blas_cgemm3m_batch_omp_offload_lp64
+     
      subroutine mkl_blas_dgemv_batch_omp_offload_lp64 ( trans, m, n, alpha, a, lda, x, incx,   &
           &beta, y, incy, group_count, group_size, interop ) BIND(C)
        use, intrinsic :: iso_c_binding

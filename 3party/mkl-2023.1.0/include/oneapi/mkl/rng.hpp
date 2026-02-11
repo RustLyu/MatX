@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019-2022 Intel Corporation.
+* Copyright (C) 2019 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -18,5 +18,6 @@
 #include "oneapi/mkl/rng/functions.hpp"
 #include "oneapi/mkl/rng/distributions.hpp"
 #include "oneapi/mkl/rng/engines.hpp"
+#include "oneapi/mkl/rng/spec.hpp"
 
 #endif // _RNG_HPP__

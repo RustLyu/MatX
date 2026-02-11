@@ -1,5 +1,5 @@
 !===============================================================================
-! Copyright 2020-2022 Intel Corporation.
+! Copyright (C) 2020 Intel Corporation
 !
 ! This software and the related documents are Intel copyrighted  materials,  and
 ! your use of  them is  governed by the  express license  under which  they were
@@ -460,8 +460,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        !DEC$ ATTRIBUTES REFERENCE :: dfti_commit_descriptor_external
        INTEGER dfti_commit_descriptor_external
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
-       !$omp declare variant( dfti_commit_descriptor_external:mkl_dfti_commit_descriptor_external_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp declare variant( dfti_commit_descriptor_external:mkl_dfti_commit_descriptor_external_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(targetsync))
+       !$omp declare variant( dfti_commit_descriptor_external:mkl_dfti_commit_descriptor_external_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args(interop(prefer_type("sycl","level_zero"),targetsync))
      END FUNCTION dfti_commit_descriptor_external
 
   END INTERFACE DftiCommitDescriptor
@@ -626,8 +625,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        INTEGER dfti_compute_forward_s_cpu
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_SPKP), INTENT(INOUT), DIMENSION(..) :: sSrcDst
-       !$omp  declare variant( dfti_compute_forward_s_cpu:mkl_dfti_compute_forward_s_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_s_cpu:mkl_dfti_compute_forward_s_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:sSrcDst ) 
+       !$omp  declare variant( dfti_compute_forward_s_cpu:mkl_dfti_compute_forward_s_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:sSrcDst ) 
      END FUNCTION dfti_compute_forward_s_cpu
 
      ! overloading of DftiComputeForward for SP C2C DFT (inplace)
@@ -638,8 +636,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        INTEGER dfti_compute_forward_c_cpu
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_SPKP), INTENT(INOUT), DIMENSION(..) :: cSrcDst
-       !$omp  declare variant( dfti_compute_forward_c_cpu:mkl_dfti_compute_forward_c_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_c_cpu:mkl_dfti_compute_forward_c_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:cSrcDst )
+       !$omp  declare variant( dfti_compute_forward_c_cpu:mkl_dfti_compute_forward_c_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:cSrcDst )
      END FUNCTION dfti_compute_forward_c_cpu
 
      ! overloading of DftiComputeForward for SP C2C DFT (inplace, split complex)
@@ -651,8 +648,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_SPKP), DIMENSION(..) :: sSrcDstRe
        REAL(DFTI_SPKP), DIMENSION(..) :: sSrcDstIm
-       !$omp  declare variant( dfti_compute_forward_ss_cpu:mkl_dfti_compute_forward_ss_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant(dfti_compute_forward_ss_cpu:mkl_dfti_compute_forward_ss_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:sSrcDstRe,sSrcDstIm )
+       !$omp  declare variant(dfti_compute_forward_ss_cpu:mkl_dfti_compute_forward_ss_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:sSrcDstRe,sSrcDstIm )
      END FUNCTION dfti_compute_forward_ss_cpu
 
      ! overloading of DftiComputeForward for SP R2C DFT (out-of-place)
@@ -664,8 +660,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_SPKP), INTENT(IN), DIMENSION(..) :: sSrc
        COMPLEX(DFTI_SPKP), INTENT(OUT), DIMENSION(..) :: cDst
-       !$omp  declare variant( dfti_compute_forward_sc_cpu:mkl_dfti_compute_forward_sc_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_sc_cpu:mkl_dfti_compute_forward_sc_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:sSrc,cDst )
+       !$omp  declare variant( dfti_compute_forward_sc_cpu:mkl_dfti_compute_forward_sc_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:sSrc,cDst )
      END FUNCTION dfti_compute_forward_sc_cpu
 
      ! overloading of DftiComputeForward for SP C2C DFT (out-of-place)
@@ -677,8 +672,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_SPKP), INTENT(IN), DIMENSION(..) :: cSrc
        COMPLEX(DFTI_SPKP), INTENT(OUT), DIMENSION(..) :: cDst
-       !$omp  declare variant( dfti_compute_forward_cc_cpu:mkl_dfti_compute_forward_cc_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_cc_cpu:mkl_dfti_compute_forward_cc_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:cSrc,cDst )
+       !$omp  declare variant( dfti_compute_forward_cc_cpu:mkl_dfti_compute_forward_cc_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:cSrc,cDst )
      END FUNCTION dfti_compute_forward_cc_cpu
 
      ! overloading of DftiComputeForward for SP C2C DFT (out-of-place, split
@@ -693,8 +687,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        REAL(DFTI_SPKP), INTENT(IN), DIMENSION(..) :: sSrcIm
        REAL(DFTI_SPKP), INTENT(OUT), DIMENSION(..) :: sDstRe
        REAL(DFTI_SPKP), INTENT(OUT), DIMENSION(..) :: sDstIm
-       !$omp  declare variant( dfti_compute_forward_ssss_cpu:mkl_dfti_compute_forward_ssss_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_ssss_cpu:mkl_dfti_compute_forward_ssss_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:sSrcRe,sSrcIm,sDstRe,sDstIm )
+       !$omp  declare variant( dfti_compute_forward_ssss_cpu:mkl_dfti_compute_forward_ssss_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:sSrcRe,sSrcIm,sDstRe,sDstIm )
      END FUNCTION dfti_compute_forward_ssss_cpu
 
      ! overloading of DftiComputeForward for DP R2C DFT (inplace)
@@ -705,8 +698,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        INTEGER dfti_compute_forward_d_cpu
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_DPKP), INTENT(INOUT), DIMENSION(..) :: dSrcDst
-       !$omp  declare variant( dfti_compute_forward_d_cpu:mkl_dfti_compute_forward_d_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_d_cpu:mkl_dfti_compute_forward_d_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:dSrcDst )
+       !$omp  declare variant( dfti_compute_forward_d_cpu:mkl_dfti_compute_forward_d_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:dSrcDst )
      END FUNCTION dfti_compute_forward_d_cpu
 
      ! overloading of DftiComputeForward for DP C2C DFT (inplace)
@@ -717,8 +709,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        INTEGER dfti_compute_forward_z_cpu
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_DPKP), INTENT(INOUT), DIMENSION(..) :: zSrcDst
-       !$omp  declare variant( dfti_compute_forward_z_cpu:mkl_dfti_compute_forward_z_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_z_cpu:mkl_dfti_compute_forward_z_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:zSrcDst )
+       !$omp  declare variant( dfti_compute_forward_z_cpu:mkl_dfti_compute_forward_z_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:zSrcDst )
      END FUNCTION dfti_compute_forward_z_cpu
 
      ! overloading of DftiComputeForward for DP C2C DFT (inplace, split complex)
@@ -730,8 +721,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_DPKP), DIMENSION(..) :: dSrcDstRe
        REAL(DFTI_DPKP), DIMENSION(..) :: dSrcDstIm
-       !$omp  declare variant( dfti_compute_forward_dd_cpu:mkl_dfti_compute_forward_dd_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_dd_cpu:mkl_dfti_compute_forward_dd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:dSrcDstRe,dSrcDstIm )
+       !$omp  declare variant( dfti_compute_forward_dd_cpu:mkl_dfti_compute_forward_dd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:dSrcDstRe,dSrcDstIm )
      END FUNCTION dfti_compute_forward_dd_cpu
 
      ! overloading of DftiComputeForward for DP R2C DFT (out-of-place)
@@ -743,8 +733,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_DPKP), INTENT(IN), DIMENSION(..) :: dSrc
        COMPLEX(DFTI_DPKP), INTENT(OUT), DIMENSION(..) :: zDst
-       !$omp  declare variant( dfti_compute_forward_dz_cpu:mkl_dfti_compute_forward_dz_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_dz_cpu:mkl_dfti_compute_forward_dz_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:dSrc,zDst )
+       !$omp  declare variant( dfti_compute_forward_dz_cpu:mkl_dfti_compute_forward_dz_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:dSrc,zDst )
      END FUNCTION dfti_compute_forward_dz_cpu
 
      ! overloading of DftiComputeForward for DP C2C DFT (out-of-place)
@@ -756,8 +745,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_DPKP), INTENT(IN), DIMENSION(..) :: zSrc
        COMPLEX(DFTI_DPKP), INTENT(OUT), DIMENSION(..) :: zDst
-       !$omp  declare variant( dfti_compute_forward_zz_cpu:mkl_dfti_compute_forward_zz_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_zz_cpu:mkl_dfti_compute_forward_zz_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:zSrc,zDst )
+       !$omp  declare variant( dfti_compute_forward_zz_cpu:mkl_dfti_compute_forward_zz_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:zSrc,zDst )
      END FUNCTION dfti_compute_forward_zz_cpu
 
      ! overloading of DftiComputeForward for DP C2C DFT (out-of-place, split
@@ -772,8 +760,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        REAL(DFTI_DPKP), INTENT(IN), DIMENSION(..) :: dSrcIm
        REAL(DFTI_DPKP), INTENT(OUT), DIMENSION(..) :: dDstRe
        REAL(DFTI_DPKP), INTENT(OUT), DIMENSION(..) :: dDstIm
-       !$omp  declare variant( dfti_compute_forward_dddd_cpu:mkl_dfti_compute_forward_dddd_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_forward_dddd_cpu:mkl_dfti_compute_forward_dddd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:dSrcRe,dSrcIm,dDstRe,dDstIm )
+       !$omp  declare variant( dfti_compute_forward_dddd_cpu:mkl_dfti_compute_forward_dddd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:dSrcRe,dSrcIm,dDstRe,dDstIm )
      END FUNCTION dfti_compute_forward_dddd_cpu
 
   END INTERFACE DftiComputeForward
@@ -940,8 +927,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        INTEGER dfti_compute_backward_s_cpu
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_SPKP), INTENT(INOUT), DIMENSION(..) :: sSrcDst
-       !$omp  declare variant( dfti_compute_backward_s_cpu:mkl_dfti_compute_backward_s_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_s_cpu:mkl_dfti_compute_backward_s_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:sSrcDst )
+       !$omp  declare variant( dfti_compute_backward_s_cpu:mkl_dfti_compute_backward_s_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:sSrcDst )
      END FUNCTION dfti_compute_backward_s_cpu
 
      ! overloading of DftiComputeBackward for SP C2C DFT (inplace)
@@ -952,8 +938,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        INTEGER dfti_compute_backward_c_cpu
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_SPKP), INTENT(INOUT), DIMENSION(..) :: cSrcDst
-       !$omp  declare variant( dfti_compute_backward_c_cpu:mkl_dfti_compute_backward_c_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_c_cpu:mkl_dfti_compute_backward_c_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:cSrcDst )
+       !$omp  declare variant( dfti_compute_backward_c_cpu:mkl_dfti_compute_backward_c_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:cSrcDst )
      END FUNCTION dfti_compute_backward_c_cpu
 
      ! overloading of DftiComputeBackward for SP C2C DFT (inplace, split complex)
@@ -965,8 +950,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_SPKP), DIMENSION(..) :: sSrcDstRe
        REAL(DFTI_SPKP), DIMENSION(..) :: sSrcDstIm
-       !$omp  declare variant( dfti_compute_backward_ss_cpu:mkl_dfti_compute_backward_ss_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_ss_cpu:mkl_dfti_compute_backward_ss_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:sSrcDstRe,sSrcDstIm )
+       !$omp  declare variant( dfti_compute_backward_ss_cpu:mkl_dfti_compute_backward_ss_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:sSrcDstRe,sSrcDstIm )
      END FUNCTION dfti_compute_backward_ss_cpu
 
      ! overloading of DftiComputeBackward for SP C2R DFT (out-of-place)
@@ -978,8 +962,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_SPKP), INTENT(IN), DIMENSION(..) :: cSrc
        REAL(DFTI_SPKP), INTENT(OUT), DIMENSION(..) :: sDst
-       !$omp  declare variant( dfti_compute_backward_cs_cpu:mkl_dfti_compute_backward_cs_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_cs_cpu:mkl_dfti_compute_backward_cs_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:cSrc,sDst )
+       !$omp  declare variant( dfti_compute_backward_cs_cpu:mkl_dfti_compute_backward_cs_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:cSrc,sDst )
      END FUNCTION dfti_compute_backward_cs_cpu
 
      ! overloading of DftiComputeBackward for SP C2C DFT (out-of-place)
@@ -991,8 +974,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_SPKP), INTENT(IN), DIMENSION(..) :: cSrc
        COMPLEX(DFTI_SPKP), INTENT(OUT), DIMENSION(..) :: cDst
-       !$omp  declare variant( dfti_compute_backward_cc_cpu:mkl_dfti_compute_backward_cc_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_cc_cpu:mkl_dfti_compute_backward_cc_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:cSrc,cDst )
+       !$omp  declare variant( dfti_compute_backward_cc_cpu:mkl_dfti_compute_backward_cc_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:cSrc,cDst )
      END FUNCTION dfti_compute_backward_cc_cpu
 
      ! overloading of DftiComputeBackward for SP C2C DFT (out-of-place, split
@@ -1007,8 +989,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        REAL(DFTI_SPKP), INTENT(IN), DIMENSION(..) :: sSrcIm
        REAL(DFTI_SPKP), INTENT(OUT), DIMENSION(..) :: sDstRe
        REAL(DFTI_SPKP), INTENT(OUT), DIMENSION(..) :: sDstIm
-       !$omp  declare variant( dfti_compute_backward_ssss_cpu:mkl_dfti_compute_backward_ssss_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_ssss_cpu:mkl_dfti_compute_backward_ssss_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:sSrcRe,sSrcIm,sDstRe,sDstIm )
+       !$omp  declare variant( dfti_compute_backward_ssss_cpu:mkl_dfti_compute_backward_ssss_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:sSrcRe,sSrcIm,sDstRe,sDstIm )
      END FUNCTION dfti_compute_backward_ssss_cpu
 
      ! overloading of DftiComputeBackward for DP C2R DFT (inplace)
@@ -1019,8 +1000,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        INTEGER dfti_compute_backward_d_cpu
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_DPKP), INTENT(INOUT), DIMENSION(..) :: dSrcDst
-       !$omp  declare variant( dfti_compute_backward_d_cpu:mkl_dfti_compute_backward_d_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_d_cpu:mkl_dfti_compute_backward_d_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:dSrcDst )
+       !$omp  declare variant( dfti_compute_backward_d_cpu:mkl_dfti_compute_backward_d_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:dSrcDst )
      END FUNCTION dfti_compute_backward_d_cpu
 
      ! overloading of DftiComputeBackward for DP C2C DFT (inplace)
@@ -1031,8 +1011,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        INTEGER dfti_compute_backward_z_cpu
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_DPKP), INTENT(INOUT), DIMENSION(..) :: zSrcDst
-       !$omp  declare variant( dfti_compute_backward_z_cpu:mkl_dfti_compute_backward_z_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_z_cpu:mkl_dfti_compute_backward_z_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:zSrcDst )
+       !$omp  declare variant( dfti_compute_backward_z_cpu:mkl_dfti_compute_backward_z_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:zSrcDst )
      END FUNCTION dfti_compute_backward_z_cpu
 
      ! overloading of DftiComputeBackward for DP C2C DFT (inplace, split complex)
@@ -1044,8 +1023,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        REAL(DFTI_DPKP), DIMENSION(..) :: dSrcDstRe
        REAL(DFTI_DPKP), DIMENSION(..) :: dSrcDstIm
-       !$omp  declare variant( dfti_compute_backward_dd_cpu:mkl_dfti_compute_backward_dd_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_dd_cpu:mkl_dfti_compute_backward_dd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:dSrcDstRe,dSrcDstIm )
+       !$omp  declare variant( dfti_compute_backward_dd_cpu:mkl_dfti_compute_backward_dd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:dSrcDstRe,dSrcDstIm )
      END FUNCTION dfti_compute_backward_dd_cpu
 
      ! overloading of DftiComputeBackward for DP C2R DFT (out-of-place)
@@ -1057,8 +1035,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_DPKP), INTENT(IN), DIMENSION(..) :: zSrc
        REAL(DFTI_DPKP), INTENT(OUT), DIMENSION(..) :: dDst
-       !$omp  declare variant( dfti_compute_backward_zd_cpu:mkl_dfti_compute_backward_zd_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_zd_cpu:mkl_dfti_compute_backward_zd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:zSrc,dDst )
+       !$omp  declare variant( dfti_compute_backward_zd_cpu:mkl_dfti_compute_backward_zd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:zSrc,dDst )
      END FUNCTION dfti_compute_backward_zd_cpu
 
      ! overloading of DftiComputeBackward for DP C2C DFT (out-of-place)
@@ -1070,8 +1047,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        TYPE(DFTI_DESCRIPTOR), POINTER :: desc
        COMPLEX(DFTI_DPKP), INTENT(IN), DIMENSION(..) :: zSrc
        COMPLEX(DFTI_DPKP), INTENT(OUT), DIMENSION(..) :: zDst
-       !$omp  declare variant( dfti_compute_backward_zz_cpu:mkl_dfti_compute_backward_zz_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_zz_cpu:mkl_dfti_compute_backward_zz_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:zSrc,zDst )
+       !$omp  declare variant( dfti_compute_backward_zz_cpu:mkl_dfti_compute_backward_zz_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:zSrc,zDst )
      END FUNCTION dfti_compute_backward_zz_cpu
 
      ! overloading of DftiComputeBackward for DP C2C DFT (out-of-place, split
@@ -1086,8 +1062,7 @@ MODULE MKL_DFTI_OMP_OFFLOAD
        REAL(DFTI_DPKP), INTENT(IN), DIMENSION(..) :: dSrcIm
        REAL(DFTI_DPKP), INTENT(OUT), DIMENSION(..) :: dDstRe
        REAL(DFTI_DPKP), INTENT(OUT), DIMENSION(..) :: dDstIm
-       !$omp  declare variant( dfti_compute_backward_dddd_cpu:mkl_dfti_compute_backward_dddd_omp_offload ) match( construct={target variant dispatch}, device={arch(gen)} )
-       !$omp  declare variant( dfti_compute_backward_dddd_cpu:mkl_dfti_compute_backward_dddd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(targetsync) ) adjust_args( need_device_ptr:dSrcRe,dSrcIm,dDstRe,dDstIm )
+       !$omp  declare variant( dfti_compute_backward_dddd_cpu:mkl_dfti_compute_backward_dddd_omp_offload ) match( construct={dispatch}, device={arch(gen)} ) append_args( interop(prefer_type("sycl","level_zero"),targetsync) ) adjust_args( need_device_addr:dSrcRe,dSrcIm,dDstRe,dDstIm )
      END FUNCTION dfti_compute_backward_dddd_cpu
 
   END INTERFACE DftiComputeBackward

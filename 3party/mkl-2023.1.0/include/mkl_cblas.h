@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 1999-2022 Intel Corporation.
+* Copyright (C) 1999 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -595,11 +595,23 @@ void cblas_strmm(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                  const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                  const float alpha, const float *A, const MKL_INT lda,
                  float *B, const MKL_INT ldb) NOTHROW;
+void cblas_strmm_oop(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                    const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                    const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                    const float alpha, const float *A, const MKL_INT lda,
+                    const float *B, const MKL_INT ldb, const float beta,
+                    float *C, const MKL_INT ldc) NOTHROW;
 void cblas_strsm(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                  const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
                  const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                  const float alpha, const float *A, const MKL_INT lda,
                  float *B, const MKL_INT ldb) NOTHROW;
+void cblas_strsm_oop(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                    const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                    const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                    const float alpha, const float *A, const MKL_INT lda,
+                    const float *B, const MKL_INT ldb, const float beta,
+                    float *C, const MKL_INT ldc) NOTHROW;
 void cblas_strsm_batch(const CBLAS_LAYOUT Layout, const CBLAS_SIDE *Side_Array,
                        const CBLAS_UPLO *Uplo_Array, const CBLAS_TRANSPOSE *TransA_Array,
                        const CBLAS_DIAG *Diag_Array, const MKL_INT *M_Array,
@@ -668,11 +680,23 @@ void cblas_dtrmm(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                  const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                  const double alpha, const double *A, const MKL_INT lda,
                  double *B, const MKL_INT ldb) NOTHROW;
+void cblas_dtrmm_oop(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                    const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                    const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                    const double alpha, const double *A, const MKL_INT lda,
+                    const double *B, const MKL_INT ldb, const double beta,
+                    double *C, const MKL_INT ldc) NOTHROW;
 void cblas_dtrsm(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                  const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
                  const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                  const double alpha, const double *A, const MKL_INT lda,
                  double *B, const MKL_INT ldb) NOTHROW;
+void cblas_dtrsm_oop(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                    const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                    const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                    const double alpha, const double *A, const MKL_INT lda,
+                    const double *B, const MKL_INT ldb, const double beta,
+                    double *C, const MKL_INT ldc) NOTHROW;
 void cblas_dtrsm_batch(const CBLAS_LAYOUT Layout, const CBLAS_SIDE *Side_Array,
                        const CBLAS_UPLO *Uplo_Array, const CBLAS_TRANSPOSE *Transa_Array,
                        const CBLAS_DIAG *Diag_Array, const MKL_INT *M_Array,
@@ -697,7 +721,7 @@ void cblas_cgemm3m(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
                    const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
                    const MKL_INT K, const void *alpha, const void *A,
                    const MKL_INT lda, const void *B, const MKL_INT ldb,
-                   const void *beta, void *C, const MKL_INT ldc);
+                   const void *beta, void *C, const MKL_INT ldc) NOTHROW;
 void cblas_cgemm_batch(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE *TransA_Array,
                        const CBLAS_TRANSPOSE *TransB_Array, const MKL_INT *M_Array, const MKL_INT *N_Array,
                        const MKL_INT *K_Array, const void *alpha_Array, const void **A_Array,
@@ -716,7 +740,14 @@ void cblas_cgemm3m_batch(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE *Trans
                          const MKL_INT *K_Array, const void *alpha_Array, const void **A_Array,
                          const MKL_INT *lda_Array, const void **B_Array, const MKL_INT* ldb_Array,
                          const void *beta_Array, void **C_Array, const MKL_INT *ldc_Array,
-                         const MKL_INT group_count, const MKL_INT *group_size);
+                         const MKL_INT group_count, const MKL_INT *group_size) NOTHROW;
+void cblas_cgemm3m_batch_strided(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                               const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
+                               const MKL_INT K, const void *alpha, const void *A,
+                               const MKL_INT lda, const MKL_INT stridea,
+                               const void *B, const MKL_INT ldb, const MKL_INT strideb,
+                               const void *beta, void *C, const MKL_INT ldc, const MKL_INT stridec,
+                               const MKL_INT batch_size) NOTHROW;
 void cblas_cgemmt(const CBLAS_LAYOUT Layout, const CBLAS_UPLO Uplo,
                   const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
                   const MKL_INT N, const MKL_INT K,
@@ -752,11 +783,23 @@ void cblas_ctrmm(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                  const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                  const void *alpha, const void *A, const MKL_INT lda,
                  void *B, const MKL_INT ldb) NOTHROW;
+void cblas_ctrmm_oop(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                    const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                    const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                    const void *alpha, const void *A, const MKL_INT lda,
+                    const void *B, const MKL_INT ldb, const void *beta,
+                    void *C, const MKL_INT ldc) NOTHROW;
 void cblas_ctrsm(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                  const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
                  const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                  const void *alpha, const void *A, const MKL_INT lda,
                  void *B, const MKL_INT ldb) NOTHROW;
+void cblas_ctrsm_oop(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                    const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                    const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                    const void *alpha, const void *A, const MKL_INT lda,
+                    const void *B, const MKL_INT ldb, const void *beta,
+                    void *C, const MKL_INT ldc) NOTHROW;
 void cblas_ctrsm_batch(const CBLAS_LAYOUT Layout, const CBLAS_SIDE *Side_Array,
                        const CBLAS_UPLO *Uplo_Array, const CBLAS_TRANSPOSE *Transa_Array,
                        const CBLAS_DIAG *Diag_Array, const MKL_INT *M_Array,
@@ -781,7 +824,7 @@ void cblas_zgemm3m(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
                    const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
                    const MKL_INT K, const void *alpha, const void *A,
                    const MKL_INT lda, const void *B, const MKL_INT ldb,
-                   const void *beta, void *C, const MKL_INT ldc);
+                   const void *beta, void *C, const MKL_INT ldc) NOTHROW;
 void cblas_zgemm_batch(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE *TransA_Array,
                        const CBLAS_TRANSPOSE *TransB_Array, const MKL_INT *M_Array, const MKL_INT *N_Array,
                        const MKL_INT *K_Array, const void *alpha_Array, const void **A_Array,
@@ -800,7 +843,14 @@ void cblas_zgemm3m_batch(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE *Trans
                          const MKL_INT *K_Array, const void *alpha_Array, const void **A_Array,
                          const MKL_INT *lda_Array, const void **B_Array, const MKL_INT* ldb_Array,
                          const void *beta_Array, void **C_Array, const MKL_INT *ldc_Array,
-                         const MKL_INT group_count, const MKL_INT *group_size);
+                         const MKL_INT group_count, const MKL_INT *group_size) NOTHROW;
+void cblas_zgemm3m_batch_strided(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                               const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
+                               const MKL_INT K, const void *alpha, const void *A,
+                               const MKL_INT lda, const MKL_INT stridea,
+                               const void *B, const MKL_INT ldb, const MKL_INT strideb,
+                               const void *beta, void *C, const MKL_INT ldc, const MKL_INT stridec,
+                               const MKL_INT batch_size) NOTHROW;
 void cblas_zgemmt(const CBLAS_LAYOUT Layout, const CBLAS_UPLO Uplo,
                   const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
                   const MKL_INT N, const MKL_INT K,
@@ -836,11 +886,23 @@ void cblas_ztrmm(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                  const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                  const void *alpha, const void *A, const MKL_INT lda,
                  void *B, const MKL_INT ldb) NOTHROW;
+void cblas_ztrmm_oop(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                    const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                    const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                    const void *alpha, const void *A, const MKL_INT lda,
+                    const void *B, const MKL_INT ldb, const void *beta,
+                    void *C, const MKL_INT ldc) NOTHROW;
 void cblas_ztrsm(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                  const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
                  const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                  const void *alpha, const void *A, const MKL_INT lda,
                  void *B, const MKL_INT ldb) NOTHROW;
+void cblas_ztrsm_oop(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                    const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                    const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                    const void *alpha, const void *A, const MKL_INT lda,
+                    const void *B, const MKL_INT ldb, const void *beta,
+                    void *C, const MKL_INT ldc) NOTHROW;
 void cblas_ztrsm_batch(const CBLAS_LAYOUT Layout, const CBLAS_SIDE *Side_Array,
                        const CBLAS_UPLO *Uplo_Array, const CBLAS_TRANSPOSE *Transa_Array,
                        const CBLAS_DIAG *Diag_Array, const MKL_INT *M_Array,
@@ -955,12 +1017,36 @@ void cblas_gemm_bf16bf16f32(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE Tra
                             const float alpha, const MKL_BF16 *A, const MKL_INT lda,
                             const MKL_BF16 *B, const MKL_INT ldb, const float beta,
                             float *C, const MKL_INT ldc) NOTHROW;
+void cblas_gemm_f16f16f32(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                          const CBLAS_TRANSPOSE TransB,
+                          const MKL_INT M, const MKL_INT N, const MKL_INT K,
+                          const float alpha, const MKL_F16 *A, const MKL_INT lda,
+                          const MKL_F16 *B, const MKL_INT ldb, const float beta,
+                          float *C, const MKL_INT ldc) NOTHROW;
+void cblas_gemm_e5m2e5m2f32(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                            const CBLAS_TRANSPOSE TransB,
+                            const MKL_INT M, const MKL_INT N, const MKL_INT K,
+                            const float alpha, const MKL_E5M2 *A, const MKL_INT lda,
+                            const MKL_E5M2 *B, const MKL_INT ldb, const float beta,
+                            float *C, const MKL_INT ldc) NOTHROW;
+void cblas_gemm_e4m3e4m3f32(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                          const CBLAS_TRANSPOSE TransB,
+                          const MKL_INT M, const MKL_INT N, const MKL_INT K,
+                          const float alpha, const MKL_E4M3 *A, const MKL_INT lda,
+                          const MKL_E4M3 *B, const MKL_INT ldb, const float beta,
+                          float *C, const MKL_INT ldc) NOTHROW;
 
 size_t cblas_gemm_s8u8s32_pack_get_size(const CBLAS_IDENTIFIER identifier,
                                         const MKL_INT M, const MKL_INT N, const MKL_INT K);
 size_t cblas_gemm_s16s16s32_pack_get_size(const CBLAS_IDENTIFIER identifier,
                                           const MKL_INT M, const MKL_INT N, const MKL_INT K);
 size_t cblas_gemm_bf16bf16f32_pack_get_size(const CBLAS_IDENTIFIER identifier,
+                                          const MKL_INT M, const MKL_INT N, const MKL_INT K);
+size_t cblas_gemm_f16f16f32_pack_get_size(const CBLAS_IDENTIFIER identifier,
+                                          const MKL_INT M, const MKL_INT N, const MKL_INT K);
+size_t cblas_gemm_e5m2e5m2f32_pack_get_size(const CBLAS_IDENTIFIER identifier,
+                                          const MKL_INT M, const MKL_INT N, const MKL_INT K);
+size_t cblas_gemm_e4m3e4m3f32_pack_get_size(const CBLAS_IDENTIFIER identifier,
                                           const MKL_INT M, const MKL_INT N, const MKL_INT K);
 
 void cblas_gemm_s8u8s32_pack (const CBLAS_LAYOUT Layout, const CBLAS_IDENTIFIER identifier,
@@ -972,6 +1058,15 @@ void cblas_gemm_s16s16s32_pack(const CBLAS_LAYOUT Layout, const CBLAS_IDENTIFIER
 void cblas_gemm_bf16bf16f32_pack(const CBLAS_LAYOUT Layout, const CBLAS_IDENTIFIER identifier,
                                const CBLAS_TRANSPOSE Trans, const MKL_INT M, const MKL_INT N, const MKL_INT K,
                                const MKL_BF16 *src, const MKL_INT ld, MKL_BF16 *dest);
+void cblas_gemm_f16f16f32_pack(const CBLAS_LAYOUT Layout, const CBLAS_IDENTIFIER identifier,
+                               const CBLAS_TRANSPOSE Trans, const MKL_INT M, const MKL_INT N, const MKL_INT K,
+                               const MKL_F16 *src, const MKL_INT ld, MKL_F16 *dest);
+void cblas_gemm_e5m2e5m2f32_pack(const CBLAS_LAYOUT Layout, const CBLAS_IDENTIFIER identifier,
+                               const CBLAS_TRANSPOSE Trans, const MKL_INT M, const MKL_INT N, const MKL_INT K,
+                               const MKL_E5M2 *src, const MKL_INT ld, MKL_E5M2 *dest);
+void cblas_gemm_e4m3e4m3f32_pack(const CBLAS_LAYOUT Layout, const CBLAS_IDENTIFIER identifier,
+                               const CBLAS_TRANSPOSE Trans, const MKL_INT M, const MKL_INT N, const MKL_INT K,
+                               const MKL_E4M3 *src, const MKL_INT ld, MKL_E4M3 *dest);
 
 void cblas_gemm_s8u8s32_compute (const CBLAS_LAYOUT Layout, const MKL_INT TransA,
                                  const MKL_INT TransB, const CBLAS_OFFSET offsetc,
@@ -995,6 +1090,30 @@ void cblas_gemm_bf16bf16f32_compute(const CBLAS_LAYOUT Layout, const MKL_INT Tra
                                   const float alpha,
                                   const MKL_BF16 *A, const MKL_INT lda,
                                   const MKL_BF16 *B, const MKL_INT ldb,
+                                  const float beta,
+                                  float *C, const MKL_INT ldc);
+void cblas_gemm_f16f16f32_compute(const CBLAS_LAYOUT Layout, const MKL_INT TransA,
+                                  const MKL_INT TransB,
+                                  const MKL_INT M, const MKL_INT N, const MKL_INT K, 
+                                  const float alpha,
+                                  const MKL_F16 *A, const MKL_INT lda,
+                                  const MKL_F16 *B, const MKL_INT ldb,
+                                  const float beta,
+                                  float *C, const MKL_INT ldc);
+void cblas_gemm_e5m2e5m2f32_compute(const CBLAS_LAYOUT Layout, const MKL_INT TransA,
+                                  const MKL_INT TransB,
+                                  const MKL_INT M, const MKL_INT N, const MKL_INT K,
+                                  const float alpha,
+                                  const MKL_E5M2 *A, const MKL_INT lda,
+                                  const MKL_E5M2 *B, const MKL_INT ldb,
+                                  const float beta,
+                                  float *C, const MKL_INT ldc);
+void cblas_gemm_e4m3e4m3f32_compute(const CBLAS_LAYOUT Layout, const MKL_INT TransA,
+                                  const MKL_INT TransB,
+                                  const MKL_INT M, const MKL_INT N, const MKL_INT K, 
+                                  const float alpha,
+                                  const MKL_E4M3 *A, const MKL_INT lda,
+                                  const MKL_E4M3 *B, const MKL_INT ldb,
                                   const float beta,
                                   float *C, const MKL_INT ldc);
 

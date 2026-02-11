@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019-2022 Intel Corporation.
+* Copyright (C) 2019 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -207,6 +207,20 @@ void MKL_CBLAS_VARIANT_NAME(zgemm_batch)(const CBLAS_LAYOUT Layout, const CBLAS_
                        const void *beta_Array, void **C_Array, const MKL_INT *ldc_Array,
                        const MKL_INT group_count, const MKL_INT *group_size, void *interop_obj) NOTHROW;
 
+void MKL_CBLAS_VARIANT_NAME(cgemm3m_batch)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE *TransA_Array,
+                       const CBLAS_TRANSPOSE *TransB_Array, const MKL_INT *M_Array, const MKL_INT *N_Array,
+                       const MKL_INT *K_Array, const void *alpha_Array, const void **A_Array,
+                       const MKL_INT *lda_Array, const void **B_Array, const MKL_INT* ldb_Array,
+                       const void *beta_Array, void **C_Array, const MKL_INT *ldc_Array,
+                       const MKL_INT group_count, const MKL_INT *group_size, void *interop_obj) NOTHROW;
+
+void MKL_CBLAS_VARIANT_NAME(zgemm3m_batch)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE *TransA_Array,
+                       const CBLAS_TRANSPOSE *TransB_Array, const MKL_INT *M_Array, const MKL_INT *N_Array,
+                       const MKL_INT *K_Array, const void *alpha_Array, const void **A_Array,
+                       const MKL_INT *lda_Array, const void **B_Array, const MKL_INT* ldb_Array,
+                       const void *beta_Array, void **C_Array, const MKL_INT *ldc_Array,
+                       const MKL_INT group_count, const MKL_INT *group_size, void *interop_obj) NOTHROW;
+
 void MKL_BLAS_VARIANT_NAME(sgemm_batch)(const char *transa_array, const char *transb_array,
                  const MKL_INT *m_array, const MKL_INT *n_array, const MKL_INT *k_array,
                  const float *alpha_array, const float **a_array, const MKL_INT *lda_array,
@@ -229,6 +243,20 @@ void MKL_BLAS_VARIANT_NAME(cgemm_batch)(const char *transa_array, const char *tr
                  const MKL_INT *group_count, const MKL_INT *group_size, void *interop_obj) NOTHROW;
 
 void MKL_BLAS_VARIANT_NAME(zgemm_batch)(const char *transa_array, const char *transb_array,
+                 const MKL_INT *m_array, const MKL_INT *n_array, const MKL_INT *k_array,
+                 const MKL_Complex16 *alpha_array, const MKL_Complex16 **a_array, const MKL_INT *lda_array,
+                 const MKL_Complex16 **b_array, const MKL_INT *ldb_array,
+                 const MKL_Complex16 *beta_array, MKL_Complex16 **c_array, const MKL_INT *ldc_array,
+                 const MKL_INT *group_count, const MKL_INT *group_size, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(cgemm3m_batch)(const char *transa_array, const char *transb_array,
+                 const MKL_INT *m_array, const MKL_INT *n_array, const MKL_INT *k_array,
+                 const MKL_Complex8 *alpha_array, const MKL_Complex8 **a_array, const MKL_INT *lda_array,
+                 const MKL_Complex8 **b_array, const MKL_INT *ldb_array,
+                 const MKL_Complex8 *beta_array, MKL_Complex8 **c_array, const MKL_INT *ldc_array,
+                 const MKL_INT *group_count, const MKL_INT *group_size, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(zgemm3m_batch)(const char *transa_array, const char *transb_array,
                  const MKL_INT *m_array, const MKL_INT *n_array, const MKL_INT *k_array,
                  const MKL_Complex16 *alpha_array, const MKL_Complex16 **a_array, const MKL_INT *lda_array,
                  const MKL_Complex16 **b_array, const MKL_INT *ldb_array,
@@ -267,6 +295,22 @@ void MKL_CBLAS_VARIANT_NAME(zgemm_batch_strided)(const CBLAS_LAYOUT Layout, cons
                                const void *beta, void *C, const MKL_INT ldc, const MKL_INT stridec,
                                const MKL_INT batch_size, void *interop_obj) NOTHROW;
 
+void MKL_CBLAS_VARIANT_NAME(cgemm3m_batch_strided)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                               const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
+                               const MKL_INT K, const void *alpha, const void *A,
+                               const MKL_INT lda, const MKL_INT stridea,
+                               const void *B, const MKL_INT ldb, const MKL_INT strideb,
+                               const void *beta, void *C, const MKL_INT ldc, const MKL_INT stridec,
+                               const MKL_INT batch_size, void *interop_obj) NOTHROW;
+
+void MKL_CBLAS_VARIANT_NAME(zgemm3m_batch_strided)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                               const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
+                               const MKL_INT K, const void *alpha, const void *A,
+                               const MKL_INT lda, const MKL_INT stridea,
+                               const void *B, const MKL_INT ldb, const MKL_INT strideb,
+                               const void *beta, void *C, const MKL_INT ldc, const MKL_INT stridec,
+                               const MKL_INT batch_size, void *interop_obj) NOTHROW;
+
 void MKL_BLAS_VARIANT_NAME(sgemm_batch_strided)(const char *transa, const char *transb, const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
                  const float *alpha, const float *a, const MKL_INT *lda, const MKL_INT *stridea,
                  const float *b, const MKL_INT *ldb, const MKL_INT *strideb,
@@ -286,6 +330,18 @@ void MKL_BLAS_VARIANT_NAME(cgemm_batch_strided)(const char *transa, const char *
                  const MKL_INT *batch_size, void *interop_obj) NOTHROW;
 
 void MKL_BLAS_VARIANT_NAME(zgemm_batch_strided)(const char *transa, const char *transb, const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
+                 const MKL_Complex16 *alpha, const MKL_Complex16 *a, const MKL_INT *lda, const MKL_INT *stridea,
+                 const MKL_Complex16 *b, const MKL_INT *ldb, const MKL_INT *strideb,
+                 const MKL_Complex16 *beta, MKL_Complex16 *c, const MKL_INT *ldc, const MKL_INT *stridec,
+                 const MKL_INT *batch_size, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(cgemm3m_batch_strided)(const char *transa, const char *transb, const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
+                 const MKL_Complex8 *alpha, const MKL_Complex8 *a, const MKL_INT *lda, const MKL_INT *stridea,
+                 const MKL_Complex8 *b, const MKL_INT *ldb, const MKL_INT *strideb,
+                 const MKL_Complex8 *beta, MKL_Complex8 *c, const MKL_INT *ldc, const MKL_INT *stridec,
+                 const MKL_INT *batch_size, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(zgemm3m_batch_strided)(const char *transa, const char *transb, const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
                  const MKL_Complex16 *alpha, const MKL_Complex16 *a, const MKL_INT *lda, const MKL_INT *stridea,
                  const MKL_Complex16 *b, const MKL_INT *ldb, const MKL_INT *strideb,
                  const MKL_Complex16 *beta, MKL_Complex16 *c, const MKL_INT *ldc, const MKL_INT *stridec,
@@ -903,11 +959,25 @@ void MKL_CBLAS_VARIANT_NAME(strmm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE S
                                 const float alpha, const float *A, const MKL_INT lda,
                                 float *B, const MKL_INT ldb, void *interop_obj) NOTHROW;
 
+void MKL_CBLAS_VARIANT_NAME(strmm_oop)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                                const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                                const float alpha, const float *A, const MKL_INT lda,
+                                const float *B, const MKL_INT ldb, const float beta,
+                                float *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
+
 void MKL_CBLAS_VARIANT_NAME(strsm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                                 const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
                                 const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                                 const float alpha, const float *A, const MKL_INT lda,
                                 float *B, const MKL_INT ldb, void *interop_obj) NOTHROW;
+
+void MKL_CBLAS_VARIANT_NAME(strsm_oop)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                                const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                                const float alpha, const float *A, const MKL_INT lda,
+                                const float *B, const MKL_INT ldb, const float beta,
+                                float *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
 
 void MKL_CBLAS_VARIANT_NAME(dgemm)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
                                 const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
@@ -945,13 +1015,33 @@ void MKL_CBLAS_VARIANT_NAME(dtrmm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE S
                                 const double alpha, const double *A, const MKL_INT lda,
                                 double *B, const MKL_INT ldb, void *interop_obj) NOTHROW;
 
+void MKL_CBLAS_VARIANT_NAME(dtrmm_oop)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                                const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                                const double alpha, const double *A, const MKL_INT lda,
+                                const double *B, const MKL_INT ldb, const double beta,
+                                double *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
+
 void MKL_CBLAS_VARIANT_NAME(dtrsm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                                 const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
                                 const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                                 const double alpha, const double *A, const MKL_INT lda,
                                 double *B, const MKL_INT ldb, void *interop_obj) NOTHROW;
 
+void MKL_CBLAS_VARIANT_NAME(dtrsm_oop)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                                const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                                const double alpha, const double *A, const MKL_INT lda,
+                                const double *B, const MKL_INT ldb, const double beta,
+                                double *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
+
 void MKL_CBLAS_VARIANT_NAME(cgemm)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
+                                const MKL_INT K, const void *alpha, const void *A,
+                                const MKL_INT lda, const void *B, const MKL_INT ldb,
+                                const void *beta, void *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
+
+void MKL_CBLAS_VARIANT_NAME(cgemm3m)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
                                 const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
                                 const MKL_INT K, const void *alpha, const void *A,
                                 const MKL_INT lda, const void *B, const MKL_INT ldb,
@@ -987,13 +1077,33 @@ void MKL_CBLAS_VARIANT_NAME(ctrmm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE S
                                 const void *alpha, const void *A, const MKL_INT lda,
                                 void *B, const MKL_INT ldb, void *interop_obj) NOTHROW;
 
+void MKL_CBLAS_VARIANT_NAME(ctrmm_oop)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                                const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                                const void *alpha, const void *A, const MKL_INT lda,
+                                const void *B, const MKL_INT ldb, const void *beta,
+                                void *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
+
 void MKL_CBLAS_VARIANT_NAME(ctrsm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                                 const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
                                 const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                                 const void *alpha, const void *A, const MKL_INT lda,
                                 void *B, const MKL_INT ldb, void *interop_obj) NOTHROW;
 
+void MKL_CBLAS_VARIANT_NAME(ctrsm_oop)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                                const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                                const void *alpha, const void *A, const MKL_INT lda,
+                                const void *B, const MKL_INT ldb, const void *beta,
+                                void *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
+
 void MKL_CBLAS_VARIANT_NAME(zgemm)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
+                                const MKL_INT K, const void *alpha, const void *A,
+                                const MKL_INT lda, const void *B, const MKL_INT ldb,
+                                const void *beta, void *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
+
+void MKL_CBLAS_VARIANT_NAME(zgemm3m)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
                                 const CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
                                 const MKL_INT K, const void *alpha, const void *A,
                                 const MKL_INT lda, const void *B, const MKL_INT ldb,
@@ -1029,11 +1139,25 @@ void MKL_CBLAS_VARIANT_NAME(ztrmm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE S
                                 const void *alpha, const void *A, const MKL_INT lda,
                                 void *B, const MKL_INT ldb, void *interop_obj) NOTHROW;
 
+void MKL_CBLAS_VARIANT_NAME(ztrmm_oop)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                                const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                                const void *alpha, const void *A, const MKL_INT lda,
+                                const void *B, const MKL_INT ldb, const void *beta,
+                                void *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
+
 void MKL_CBLAS_VARIANT_NAME(ztrsm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
                                 const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
                                 const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
                                 const void *alpha, const void *A, const MKL_INT lda,
                                 void *B, const MKL_INT ldb, void *interop_obj) NOTHROW;
+
+void MKL_CBLAS_VARIANT_NAME(ztrsm_oop)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
+                                const CBLAS_UPLO Uplo, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_DIAG Diag, const MKL_INT M, const MKL_INT N,
+                                const void *alpha, const void *A, const MKL_INT lda,
+                                const void *B, const MKL_INT ldb, const void *beta,
+                                void *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
 
 // Routines with C, Z prefixes
 void MKL_CBLAS_VARIANT_NAME(chemm)(const CBLAS_LAYOUT Layout, const CBLAS_SIDE Side,
@@ -1083,6 +1207,13 @@ void MKL_CBLAS_VARIANT_NAME(gemm_s8u8s32)(const CBLAS_LAYOUT Layout, const CBLAS
                                           const float alpha, const void *A, const MKL_INT lda, const MKL_INT8 ao,
                                           const void *B, const MKL_INT ldb, const MKL_INT8 bo, const float beta,
                                           MKL_INT32 *C, const MKL_INT ldc, const MKL_INT32 *cb, void *interop_obj) NOTHROW;
+
+void MKL_CBLAS_VARIANT_NAME(gemm_f16f16f32)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
+                                              const CBLAS_TRANSPOSE TransB,
+                                              const MKL_INT M, const MKL_INT N, const MKL_INT K,
+                                              const float alpha, const MKL_F16 *A, const MKL_INT lda,
+                                              const MKL_F16 *B, const MKL_INT ldb, const float beta,
+                                              float *C, const MKL_INT ldc, void *interop_obj) NOTHROW;
 
 void MKL_CBLAS_VARIANT_NAME(gemm_bf16bf16f32)(const CBLAS_LAYOUT Layout, const CBLAS_TRANSPOSE TransA,
                                               const CBLAS_TRANSPOSE TransB,
@@ -1543,7 +1674,7 @@ void MKL_CBLAS_VARIANT_NAME(crot)(const MKL_INT N, void *X, const MKL_INT incX,
 
 void MKL_CBLAS_VARIANT_NAME(zrot)(const MKL_INT N, void *X, const MKL_INT incX,
                                 void *Y, const MKL_INT incY, const double c, const void *s, void *interop_obj) NOTHROW;
-    
+
 // Routines with S D C Z CS and ZD prefixes
 void MKL_CBLAS_VARIANT_NAME(sscal)(const MKL_INT N, const float alpha, float *X, const MKL_INT incX, void *interop_obj) NOTHROW;
 
@@ -1603,10 +1734,22 @@ void MKL_BLAS_VARIANT_NAME(strmm)(const char *side, const char *uplo, const char
                                const float *alpha, const float *a, const MKL_INT *lda,
                                float *b, const MKL_INT *ldb, void *interop_obj) NOTHROW;
 
+void MKL_BLAS_VARIANT_NAME(strmm_oop)(const char *side, const char *uplo, const char *transa,
+                               const char *diag, const MKL_INT *m, const MKL_INT *n,
+                               const float *alpha, const float *a, const MKL_INT *lda,
+                               const float *b, const MKL_INT *ldb, const float *beta,
+                               float *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
+
 void MKL_BLAS_VARIANT_NAME(strsm)(const char *side, const char *uplo, const char *transa,
                                const char *diag, const MKL_INT *m, const MKL_INT *n,
                                const float *alpha, const float *a, const MKL_INT *lda,
                                float *b, const MKL_INT *ldb, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(strsm_oop)(const char *side, const char *uplo, const char *transa,
+                               const char *diag, const MKL_INT *m, const MKL_INT *n,
+                               const float *alpha, const float *a, const MKL_INT *lda,
+                               const float *b, const MKL_INT *ldb, const float *beta,
+                               float *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
 
 void MKL_BLAS_VARIANT_NAME(dgemm)(const char *transa, const char *transb,
                                const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
@@ -1643,10 +1786,22 @@ void MKL_BLAS_VARIANT_NAME(dtrmm)(const char *side, const char *uplo, const char
                                const double *alpha, const double *a, const MKL_INT *lda,
                                double *b, const MKL_INT *ldb, void *interop_obj) NOTHROW;
 
+void MKL_BLAS_VARIANT_NAME(dtrmm_oop)(const char *side, const char *uplo, const char *transa,
+                               const char *diag, const MKL_INT *m, const MKL_INT *n,
+                               const double *alpha, const double *a, const MKL_INT *lda,
+                               const double *b, const MKL_INT *ldb, const double *beta,
+                               double *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
+
 void MKL_BLAS_VARIANT_NAME(dtrsm)(const char *side, const char *uplo, const char *transa,
                                const char *diag, const MKL_INT *m, const MKL_INT *n,
                                const double *alpha, const double *a, const MKL_INT *lda,
                                double *b, const MKL_INT *ldb, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(dtrsm_oop)(const char *side, const char *uplo, const char *transa,
+                               const char *diag, const MKL_INT *m, const MKL_INT *n,
+                               const double *alpha, const double *a, const MKL_INT *lda,
+                               const double *b, const MKL_INT *ldb, const double *beta,
+                               double *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
 
 void MKL_BLAS_VARIANT_NAME(cgemm)(const char *transa, const char *transb,
                                const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
@@ -1654,6 +1809,12 @@ void MKL_BLAS_VARIANT_NAME(cgemm)(const char *transa, const char *transb,
                                const MKL_Complex8 *b, const MKL_INT *ldb, const MKL_Complex8 *beta,
                                MKL_Complex8 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
 
+void MKL_BLAS_VARIANT_NAME(cgemm3m)(const char *transa, const char *transb,
+                               const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
+                               const MKL_Complex8 *alpha, const MKL_Complex8 *a, const MKL_INT *lda,
+                               const MKL_Complex8 *b, const MKL_INT *ldb, const MKL_Complex8 *beta,
+                               MKL_Complex8 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
+    
 void MKL_BLAS_VARIANT_NAME(cgemmt)(const char *uplo, const char *transa, const char *transb,
                                 const MKL_INT *n, const MKL_INT *k,
                                 const MKL_Complex8 *alpha, const MKL_Complex8 *a, const MKL_INT *lda,
@@ -1682,10 +1843,22 @@ void MKL_BLAS_VARIANT_NAME(ctrmm)(const char *side, const char *uplo, const char
                                const MKL_Complex8 *alpha, const MKL_Complex8 *a, const MKL_INT *lda,
                                MKL_Complex8 *b, const MKL_INT *ldb, void *interop_obj) NOTHROW;
 
+void MKL_BLAS_VARIANT_NAME(ctrmm_oop)(const char *side, const char *uplo, const char *transa,
+                               const char *diag, const MKL_INT *m, const MKL_INT *n,
+                               const MKL_Complex8 *alpha, const MKL_Complex8 *a, const MKL_INT *lda,
+                               const MKL_Complex8 *b, const MKL_INT *ldb, const MKL_Complex8 *beta,
+                               MKL_Complex8 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
+
 void MKL_BLAS_VARIANT_NAME(ctrsm)(const char *side, const char *uplo, const char *transa,
                                const char *diag, const MKL_INT *m, const MKL_INT *n,
                                const MKL_Complex8 *alpha, const MKL_Complex8 *a, const MKL_INT *lda,
                                MKL_Complex8 *b, const MKL_INT *ldb, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(ctrsm_oop)(const char *side, const char *uplo, const char *transa,
+                               const char *diag, const MKL_INT *m, const MKL_INT *n,
+                               const MKL_Complex8 *alpha, const MKL_Complex8 *a, const MKL_INT *lda,
+                               const MKL_Complex8 *b, const MKL_INT *ldb, const MKL_Complex8 *beta,
+                               MKL_Complex8 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
 
 void MKL_BLAS_VARIANT_NAME(zgemm)(const char *transa, const char *transb,
                                const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
@@ -1693,6 +1866,12 @@ void MKL_BLAS_VARIANT_NAME(zgemm)(const char *transa, const char *transb,
                                const MKL_Complex16 *b, const MKL_INT *ldb, const MKL_Complex16 *beta,
                                MKL_Complex16 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
 
+void MKL_BLAS_VARIANT_NAME(zgemm3m)(const char *transa, const char *transb,
+                               const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
+                               const MKL_Complex16 *alpha, const MKL_Complex16 *a, const MKL_INT *lda,
+                               const MKL_Complex16 *b, const MKL_INT *ldb, const MKL_Complex16 *beta,
+                               MKL_Complex16 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
+    
 void MKL_BLAS_VARIANT_NAME(zgemmt)(const char *uplo, const char *transa, const char *transb,
                                 const MKL_INT *n, const MKL_INT *k,
                                 const MKL_Complex16 *alpha, const MKL_Complex16 *a, const MKL_INT *lda,
@@ -1721,10 +1900,22 @@ void MKL_BLAS_VARIANT_NAME(ztrmm)(const char *side, const char *uplo, const char
                                const MKL_Complex16 *alpha, const MKL_Complex16 *a, const MKL_INT *lda,
                                MKL_Complex16 *b, const MKL_INT *ldb, void *interop_obj) NOTHROW;
 
+void MKL_BLAS_VARIANT_NAME(ztrmm_oop)(const char *side, const char *uplo, const char *transa,
+                               const char *diag, const MKL_INT *m, const MKL_INT *n,
+                               const MKL_Complex16 *alpha, const MKL_Complex16 *a, const MKL_INT *lda,
+                               const MKL_Complex16 *b, const MKL_INT *ldb, const MKL_Complex16 *beta,
+                               MKL_Complex16 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
+
 void MKL_BLAS_VARIANT_NAME(ztrsm)(const char *side, const char *uplo, const char *transa,
                                const char *diag, const MKL_INT *m, const MKL_INT *n,
                                const MKL_Complex16 *alpha, const MKL_Complex16 *a, const MKL_INT *lda,
                                MKL_Complex16 *b, const MKL_INT *ldb, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(ztrsm_oop)(const char *side, const char *uplo, const char *transa,
+                               const char *diag, const MKL_INT *m, const MKL_INT *n,
+                               const MKL_Complex16 *alpha, const MKL_Complex16 *a, const MKL_INT *lda,
+                               const MKL_Complex16 *b, const MKL_INT *ldb, const MKL_Complex16 *beta,
+                               MKL_Complex16 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
 
 // Routines with C, Z prefixes
 
@@ -1762,6 +1953,18 @@ void MKL_BLAS_VARIANT_NAME(hgemm)(const char *transa, const char *transb,
                                   const MKL_F16 *alpha, const MKL_F16 *a, const MKL_INT *lda,
                                   const MKL_F16 *b, const MKL_INT *ldb,
                                   const MKL_F16 *beta, MKL_F16 *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(gemm_f16f16f32)(const char *transa, const char *transb,
+                                           const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
+                                           const float *alpha, const MKL_F16 *a, const MKL_INT *lda,
+                                           const MKL_F16 *b, const MKL_INT *ldb,
+                                           const float *beta, float *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
+
+void MKL_BLAS_VARIANT_NAME(gemm_bf16bf16f32)(const char *transa, const char *transb,
+                                             const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
+                                             const float *alpha, const MKL_BF16 *a, const MKL_INT *lda,
+                                             const MKL_BF16 *b, const MKL_INT *ldb,
+                                             const float *beta, float *c, const MKL_INT *ldc, void *interop_obj) NOTHROW;
 
 void MKL_BLAS_VARIANT_NAME(gemm_s8u8s32)(const char *transa, const char *transb, const char *offsetc,
                                          const MKL_INT *m, const MKL_INT *n, const MKL_INT *k,
@@ -2222,7 +2425,7 @@ void MKL_BLAS_VARIANT_NAME(crot)(const MKL_INT *n, MKL_Complex8 *x, const MKL_IN
 void MKL_BLAS_VARIANT_NAME(zrot)(const MKL_INT *n, MKL_Complex16 *x, const MKL_INT *incx, MKL_Complex16 *y,
                                const MKL_INT *incy, const double *c, const MKL_Complex16 *s, void *interop_obj) NOTHROW;
 
-    
+
 // Routines with S D C Z CS and ZD prefixes
 void MKL_BLAS_VARIANT_NAME(sscal)(const MKL_INT *n, const float *a, float *x, const MKL_INT *incx, void *interop_obj) NOTHROW;
 
@@ -2235,7 +2438,7 @@ void MKL_BLAS_VARIANT_NAME(zscal)(const MKL_INT *n, const MKL_Complex16 *a, MKL_
 void MKL_BLAS_VARIANT_NAME(csscal)(const MKL_INT *n, const float *a, MKL_Complex8 *x, const MKL_INT *incx, void *interop_obj) NOTHROW;
 
 void MKL_BLAS_VARIANT_NAME(zdscal)(const MKL_INT *n, const double *a, MKL_Complex16 *x, const MKL_INT *incx, void *interop_obj) NOTHROW;
-    
+
 void MKL_BLAS_VARIANT_NAME(saxpby)(const MKL_INT *n, const float *alpha, const float *x, const MKL_INT *incx,
                                    const float *beta, float *y, const MKL_INT *incy, void *interop_obj) NOTHROW;
 

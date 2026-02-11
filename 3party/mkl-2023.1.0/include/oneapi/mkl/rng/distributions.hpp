@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2019-2022 Intel Corporation.
+* Copyright (C) 2019 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -261,22 +261,12 @@ public:
     static constexpr layout layout_type = Layout;
 
     struct param_type {
-        [[deprecated("Use the constructor with sycl::span instead")]]
-        param_type(std::uint32_t dimen, std::vector<RealType> mean, std::vector<RealType> matrix)
-                : dimen_(dimen),
-                  mean_(mean),
-                  matrix_(matrix) {
-                    mean_span_ = sycl::span<RealType>{mean_.data(), mean_.size()};
-                    matrix_span_ = sycl::span<RealType>{matrix_.data(), matrix_.size()};
-                  }
         param_type(std::uint32_t dimen, sycl::span<RealType> mean, sycl::span<RealType> matrix)
                 : dimen_(dimen),
                   mean_span_(mean),
                   matrix_span_(matrix) {}
 
         std::uint32_t dimen_;
-        std::vector<RealType> mean_;
-        std::vector<RealType> matrix_;
         sycl::span<RealType> mean_span_;
         sycl::span<RealType> matrix_span_;
     };
@@ -295,28 +285,8 @@ public:
         }
     }
 
-    [[deprecated("Use the constructor with sycl::span instead")]]
-    explicit gaussian_mv(std::uint32_t dimen, std::vector<RealType> mean,
-                         std::vector<RealType> matrix)
-            : dimen_(dimen),
-              mean_(mean),
-              matrix_(matrix) {
-        mean_span_ = sycl::span<RealType>{mean_.data(), mean_.size()};
-        matrix_span_ = sycl::span<RealType>{matrix_.data(), matrix_.size()};
-
-        if ((mean.size() != dimen)) {
-            throw oneapi::mkl::invalid_argument("rng", "gaussian_mv", "'mean' vector size is incorrect");
-        }
-        if ((matrix.size() != dimen * dimen) && (matrix.size() != dimen) &&
-            (matrix.size() != dimen * (dimen + 1) / 2)) {
-            throw oneapi::mkl::invalid_argument("rng", "gaussian_mv", "'matrix' size is incorrect");
-        }
-    }
-
     explicit gaussian_mv(const param_type& pt)
             : dimen_(pt.dimen_),
-              mean_(pt.mean_),
-              matrix_(pt.matrix_),
               mean_span_(pt.mean_span_),
               matrix_span_(pt.matrix_span_) {
 
@@ -332,12 +302,12 @@ public:
         return dimen_;
     }
 
-    std::vector<RealType> mean() const {
-        return std::vector<RealType>(mean_span_.begin(), mean_span_.end());
+    sycl::span<RealType> mean() const {
+        return mean_span_;
     }
 
-    std::vector<RealType> matrix() const {
-        return std::vector<RealType>(matrix_span_.begin(), matrix_span_.end());
+    sycl::span<RealType> matrix() const {
+        return matrix_span_;
     }
 
     param_type param() const {
@@ -352,16 +322,12 @@ public:
             throw oneapi::mkl::invalid_argument("rng", "gaussian_mv", "'matrix' size is < 0");
         }
         dimen_ = pt.dimen_;
-        mean_ = pt.mean_;
-        matrix_ = pt.matrix_;
         mean_span_ = pt.mean_span_;
         matrix_span_ = pt.matrix_span_;
     }
 
 private:
     std::uint32_t dimen_;
-    std::vector<RealType> mean_;
-    std::vector<RealType> matrix_;
     sycl::span<RealType> mean_span_;
     sycl::span<RealType> matrix_span_;
 };
@@ -1628,27 +1594,11 @@ public:
     using result_type = IntType;
 
     struct param_type {
-        [[deprecated("Use the constructor with sycl::span instead")]]
-        param_type(std::int32_t ntrial, std::vector<double> p) : ntrial_(ntrial), p_(p) {
-            p_span_ = sycl::span<double>{p_.data(), p_.size()};
-        }
         param_type(std::int32_t ntrial, sycl::span<double> p) : ntrial_(ntrial), p_span_(p) {}
 
         std::int32_t ntrial_;
-        std::vector<double> p_;
         sycl::span<double> p_span_;
     };
-
-    [[deprecated("Use the constructor with sycl::span instead")]]
-    explicit multinomial(std::int32_t ntrial, std::vector<double> p) : ntrial_(ntrial), p_(p) {
-        p_span_ = sycl::span<double>{p_.data(), p_.size()};
-        if (ntrial < 0) {
-            throw oneapi::mkl::invalid_argument("rng", "multinomial", "ntrial < 0");
-        }
-        if (p.size() < 1) {
-            throw oneapi::mkl::invalid_argument("rng", "multinomial", "size of p < 1");
-        }
-    }
 
     explicit multinomial(std::int32_t ntrial, sycl::span<double> p) : ntrial_(ntrial), p_span_(p) {
         if (ntrial < 0) {
@@ -1659,7 +1609,7 @@ public:
         }
     }
 
-    explicit multinomial(const param_type& pt) : ntrial_(pt.ntrial_), p_(pt.p_), p_span_(pt.p_span_) {
+    explicit multinomial(const param_type& pt) : ntrial_(pt.ntrial_), p_span_(pt.p_span_) {
         if (pt.ntrial_ < 0) {
             throw oneapi::mkl::invalid_argument("rng", "multinomial", "ntrial < 0");
         }
@@ -1672,8 +1622,8 @@ public:
         return ntrial_;
     }
 
-    std::vector<double> p() const {
-        return std::vector<double>(p_span_.begin(), p_span_.end());
+    sycl::span<double> p() const {
+        return p_span_;
     }
 
     param_type param() const {
@@ -1688,13 +1638,11 @@ public:
             throw oneapi::mkl::invalid_argument("rng", "multinomial", "size of p < 1");
         }
         ntrial_ = pt.ntrial_;
-        p_ = pt.p_;
         p_span_ = pt.p_span_;
     }
 
 private:
     std::int32_t ntrial_;
-    std::vector<double> p_;
     sycl::span<double> p_span_;
 };
 
@@ -1867,7 +1815,7 @@ private:
 //      oneapi::mkl::rng::poisson_v_method::gaussian_icdf_based
 //
 // Input arguments:
-//      lambda - vector of distribution parameters
+//      lambda - span of distribution parameters
 
 namespace poisson_v_method {
 struct gaussian_icdf_based {};
@@ -1888,25 +1836,10 @@ public:
     using result_type = IntType;
 
     struct param_type {
-        [[deprecated("Use the constructor with sycl::span instead")]]
-        param_type(std::vector<double> lambda) : lambda_(lambda) {
-            lambda_span_ = sycl::span<double>{lambda_.data(), lambda_.size()};
-        }
         param_type(sycl::span<double> lambda) : lambda_span_(lambda) {}
 
-        std::vector<double> lambda_;
         sycl::span<double> lambda_span_;
     };
-
-    [[deprecated("Use the constructor with sycl::span instead")]]
-    explicit poisson_v(std::vector<double> lambda) : lambda_(lambda)
-    {
-        lambda_span_ = sycl::span<double>{lambda_.data(), lambda_.size()};
-        if ((lambda.size() <= 0)) {
-        throw oneapi::mkl::invalid_argument("rng", "poisson_v",
-                                            "size of lambda < 0");
-        }
-    }
 
     explicit poisson_v(sycl::span<double> lambda) : lambda_span_(lambda) {
         if ((lambda.size() <= 0)) {
@@ -1915,14 +1848,14 @@ public:
         }
     }
 
-    explicit poisson_v(const param_type& pt) : lambda_(pt.lambda_), lambda_span_(pt.lambda_span_) {
+    explicit poisson_v(const param_type& pt) : lambda_span_(pt.lambda_span_) {
         if ((pt.lambda_span_.size() <= 0)) {
             throw oneapi::mkl::invalid_argument("rng", "poisson_v", "size of lambda < 0");
         }
     }
 
-    std::vector<double> lambda() const {
-        return std::vector<double>(lambda_span_.begin(), lambda_span_.end());
+    sycl::span<double> lambda() const {
+        return lambda_span_;
     }
 
     param_type param() const {
@@ -1933,12 +1866,10 @@ public:
         if ((pt.lambda_span_.size() <= 0)) {
             throw oneapi::mkl::invalid_argument("rng", "poisson_v", "size of lambda < 0");
         }
-        lambda_ = pt.lambda_;
         lambda_span_ = pt.lambda_span_;
     }
 
 private:
-    std::vector<double> lambda_;
     sycl::span<double> lambda_span_;
 };
 

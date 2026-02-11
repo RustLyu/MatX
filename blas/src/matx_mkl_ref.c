@@ -81,7 +81,22 @@ matx_status_t ref_spmm_c64_mkl(
 
 	return MATX_OK;
 }
+#include <windows.h>
+static inline int64_t get_time_us()
+{
+	static LARGE_INTEGER freq;
+	static int initialized = 0;
 
+	if (!initialized) {
+		QueryPerformanceFrequency(&freq);
+		initialized = 1;
+	}
+
+	LARGE_INTEGER counter;
+	QueryPerformanceCounter(&counter);
+
+	return (int64_t)(counter.QuadPart * 1000000LL / freq.QuadPart);
+}
 matx_status_t ref_spmv_f64_mkl(
 	matx_double alpha,
 	matx_coo_f64_t* A,
@@ -95,11 +110,12 @@ matx_status_t ref_spmv_f64_mkl(
 	{
 		coo_2_mkl_f64(A);
 	}
-
+	int64_t t0 = get_time_us();
 	struct matrix_descr descr;
 	descr.type = SPARSE_MATRIX_TYPE_GENERAL;
+	descr.diag = SPARSE_DIAG_NON_UNIT;
 
-	mkl_sparse_d_mv(
+	sparse_status_t st = mkl_sparse_d_mv(
 		SPARSE_OPERATION_NON_TRANSPOSE,
 		alpha,
 		(sparse_matrix_t)A->handle_mkl.impl,
@@ -108,7 +124,8 @@ matx_status_t ref_spmv_f64_mkl(
 		beta,
 		y->data
 	);
-
+	int64_t t1 = get_time_us();
+	printf("mkl time: %ld us\n", t1 - t0);
 	return MATX_OK;
 }
 
@@ -119,13 +136,19 @@ matx_status_t ref_spmm_f64_mkl(
 	matx_double beta,
 	matx_dense_f64_t* C)
 {
+	if (!A || !B || !C)
+		return MATX_ERR_INVALID_ARG;
+
 	if (A->handle_mkl.valid <= 0)
 	{
-		coo_2_mkl_f64(A);
+		coo_2_mkl_c64(A);
 	}
 
 	struct matrix_descr descr;
 	descr.type = SPARSE_MATRIX_TYPE_GENERAL;
+	descr.diag = SPARSE_DIAG_NON_UNIT;
+
+
 
 	mkl_sparse_d_mm(
 		SPARSE_OPERATION_NON_TRANSPOSE,

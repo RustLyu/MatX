@@ -1,5 +1,5 @@
 !===============================================================================
-! Copyright 1999-2022 Intel Corporation.
+! Copyright (C) 1999 Intel Corporation
 !
 ! This software and the related documents are Intel copyrighted  materials,  and
 ! your use of  them is  governed by the  express license  under which  they were
@@ -16,16 +16,18 @@
 !      Intel(R) oneAPI Math Kernel Library (oneMKL) interface
 !*******************************************************************************
 
-!DEC$ DEFINE __INTEL_MKL_BUILD_DATE = 20230303
+!DEC$ DEFINE __INTEL_MKL_BUILD_DATE = 20251007
 
 
-!DEC$ DEFINE __INTEL_MKL__          = 2023
+!DEC$ DEFINE __INTEL_MKL__          = 2025
 
 !DEC$ DEFINE __INTEL_MKL_MINOR__    = 0
-!DEC$ DEFINE __INTEL_MKL_UPDATE__   = 1
+!DEC$ DEFINE __INTEL_MKL_UPDATE__   = 3
+
+!DEC$ DEFINE __INTEL_MKL_PATCH__    = 0
 
 
-!DEC$ DEFINE INTEL_MKL_VERSION      = 20230001
+!DEC$ DEFINE INTEL_MKL_VERSION      = 20250300
 
 
       include 'mkl_blas.fi'

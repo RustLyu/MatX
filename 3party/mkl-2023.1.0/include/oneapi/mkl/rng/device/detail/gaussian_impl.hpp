@@ -1,15 +1,20 @@
 /*******************************************************************************
-* Copyright 2020-2022 Intel Corporation.
+* Copyright (C) 2020 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DEVICE_GAUSSIAN_IMPL_HPP_
@@ -17,11 +22,18 @@
 
 #include "vm_wrappers.hpp"
 
-namespace oneapi {
-namespace mkl {
-namespace rng {
-namespace device {
-namespace detail {
+namespace oneapi::mkl::rng::device::detail {
+
+// sqrt(2)
+template <typename RealType = float>
+constexpr inline RealType sqrt2() {
+    return 0x1.6A09E6P+0f; // 1.414213562
+}
+
+template <>
+constexpr inline double sqrt2<double>() {
+    return 0x1.6A09E667F3BCDP+0; // 1.414213562
+}
 
 template <typename RealType>
 class distribution_base<
@@ -65,10 +77,8 @@ public:
     }
 
 protected:
-
     template <typename EngineType>
-    __attribute__((always_inline))
-    inline auto generate(EngineType& engine) ->
+    __attribute__((always_inline)) inline auto generate(EngineType& engine) ->
         typename std::conditional<EngineType::vec_size == 1, RealType,
                                   sycl::vec<RealType, EngineType::vec_size>>::type {
         RealType u1, u2, u1_transformed;
@@ -149,8 +159,7 @@ protected:
     }
 
     template <typename EngineType>
-    __attribute__((always_inline))
-    inline RealType generate_single(EngineType& engine) {
+    __attribute__((always_inline)) inline RealType generate_single(EngineType& engine) {
         RealType u1, u2, u1_transformed;
         RealType res;
         if (!flag_) {
@@ -169,9 +178,6 @@ protected:
         return res;
     }
 
-    distribution_base<oneapi::mkl::rng::device::uniform<RealType>> uniform_ = {
-        RealType(0), static_cast<RealType>(1.0)
-    };
     RealType mean_;
     RealType stddev_;
     bool flag_ = false;
@@ -189,8 +195,7 @@ protected:
 #if MKL_RNG_USE_BINARY_CODE
 
 template <typename RealType>
-class distribution_base<
-    oneapi::mkl::rng::device::gaussian<RealType, gaussian_method::icdf>> {
+class distribution_base<oneapi::mkl::rng::device::gaussian<RealType, gaussian_method::icdf>> {
 public:
     struct param_type {
         param_type(RealType mean, RealType stddev) : mean_(mean), stddev_(stddev) {}
@@ -229,21 +234,19 @@ public:
     }
 
 protected:
-
     template <typename EngineType>
-    __attribute__((always_inline))
-    inline auto generate(EngineType& engine) ->
+    __attribute__((always_inline)) inline auto generate(EngineType& engine) ->
         typename std::conditional<EngineType::vec_size == 1, RealType,
                                   sycl::vec<RealType, EngineType::vec_size>>::type {
         if constexpr (EngineType::vec_size == 1) {
             return generate_single(engine);
         }
         else {
-            RealType stddev = stddev_ * distr_common::sqrt2<RealType>();
+            RealType stddev = stddev_ * sqrt2<RealType>();
             sycl::vec<RealType, EngineType::vec_size> res;
             sycl::vec<RealType, EngineType::vec_size> u =
                 engine.generate(RealType(-1), RealType(1));
-            for (std::int32_t i = 0; i < EngineType::vec_size; i++){
+            for (std::int32_t i = 0; i < EngineType::vec_size; i++) {
                 res[i] = erf_inv_wrapper(u[i]);
             }
             return res * stddev + mean_;
@@ -251,9 +254,8 @@ protected:
     }
 
     template <typename EngineType>
-    __attribute__((always_inline))
-    inline RealType generate_single(EngineType& engine) {
-        RealType stddev = stddev_ * distr_common::sqrt2<RealType>();
+    __attribute__((always_inline)) inline RealType generate_single(EngineType& engine) {
+        RealType stddev = stddev_ * sqrt2<RealType>();
         RealType u = engine.generate_single(RealType(-1), RealType(1));
         return sycl::fma(erf_inv_wrapper(u), stddev, mean_);
     }
@@ -263,10 +265,6 @@ protected:
 };
 #endif
 
-} // namespace detail
-} // namespace device
-} // namespace rng
-} // namespace mkl
-} // namespace oneapi
+} // namespace oneapi::mkl::rng::device::detail
 
 #endif // _MKL_RNG_DEVICE_GAUSSIAN_IMPL_HPP_

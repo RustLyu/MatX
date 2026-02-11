@@ -11,8 +11,6 @@
 
 add_library(MatX::core ALIAS matx_core)
 
-#target_link_libraries(matx_core PUBLIC )
-
 target_include_directories(matx_core
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -33,6 +31,7 @@ else()
   target_compile_definitions(matx_core PUBLIC MATX_PLATFORM_POSIX=1)
 endif()
 
+message(STATUS ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 

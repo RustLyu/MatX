@@ -1,15 +1,20 @@
 /*******************************************************************************
-* Copyright 2021-2022 Intel Corporation.
+* Copyright (C) 2021 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DEVICE_EXPONENTIAL_IMPL_HPP_
@@ -17,11 +22,7 @@
 
 #include "vm_wrappers.hpp"
 
-namespace oneapi {
-namespace mkl {
-namespace rng {
-namespace device {
-namespace detail {
+namespace oneapi::mkl::rng::device::detail {
 
 template <typename RealType, typename Method>
 class distribution_base<oneapi::mkl::rng::device::exponential<RealType, Method>> {
@@ -67,7 +68,7 @@ protected:
     auto generate(EngineType& engine) ->
         typename std::conditional<EngineType::vec_size == 1, RealType,
                                   sycl::vec<RealType, EngineType::vec_size>>::type {
-        auto res = uniform_.generate(engine);
+        auto res = engine.generate(RealType(0), RealType(1));
         if constexpr (EngineType::vec_size == 1) {
             res = ln_wrapper(res);
         }
@@ -85,7 +86,7 @@ protected:
 
     template <typename EngineType>
     RealType generate_single(EngineType& engine) {
-        RealType res = uniform_.generate_single(engine);
+        RealType res = engine.generate_single(RealType(0), RealType(1));
         res = ln_wrapper(res);
         res = a_ - res * beta_;
         if constexpr (std::is_same<Method, exponential_method::icdf_accurate>::value) {
@@ -94,9 +95,6 @@ protected:
         return res;
     }
 
-    distribution_base<oneapi::mkl::rng::device::uniform<RealType>> uniform_ = {
-        static_cast<RealType>(0.0), static_cast<RealType>(1.0)
-    };
     RealType a_;
     RealType beta_;
 
@@ -104,12 +102,15 @@ protected:
         oneapi::mkl::rng::device::poisson<std::int32_t, poisson_method::devroye>>;
     friend class distribution_base<
         oneapi::mkl::rng::device::poisson<std::uint32_t, poisson_method::devroye>>;
+    friend class distribution_base<oneapi::mkl::rng::device::gamma<float, gamma_method::marsaglia>>;
+    friend class distribution_base<
+        oneapi::mkl::rng::device::gamma<double, gamma_method::marsaglia>>;
+    friend class distribution_base<
+        oneapi::mkl::rng::device::gamma<float, gamma_method::marsaglia_accurate>>;
+    friend class distribution_base<
+        oneapi::mkl::rng::device::gamma<double, gamma_method::marsaglia_accurate>>;
 };
 
-} // namespace detail
-} // namespace device
-} // namespace rng
-} // namespace mkl
-} // namespace oneapi
+} // namespace oneapi::mkl::rng::device::detail
 
 #endif // _MKL_RNG_DEVICE_EXPONENTIAL_IMPL_HPP_

@@ -1,15 +1,20 @@
 /*******************************************************************************
-* Copyright 2023 Intel Corporation.
+* Copyright (C) 2023 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DEVICE_UNIFORM_BITS_IMPL_HPP_
@@ -17,39 +22,44 @@
 
 #include "engine_base.hpp"
 
-namespace oneapi {
-namespace mkl {
-namespace rng {
-namespace device {
-namespace detail {
+namespace oneapi::mkl::rng::device::detail {
 
 template <typename UIntType>
 class distribution_base<oneapi::mkl::rng::device::uniform_bits<UIntType>> {
 protected:
     template <typename EngineType>
-    auto generate(EngineType& engine) -> 
-        typename std::conditional<EngineType::vec_size == 1, UIntType, sycl::vec<UIntType, EngineType::vec_size>>::type
-    {
-        static_assert(std::is_same<EngineType, philox4x32x10<EngineType::vec_size>>::value ||
-                  std::is_same<EngineType, mcg59<EngineType::vec_size>>::value, 
-                  "oneMKL: uniform_bits works only with philox4x32x10/mcg59 engines");
+    auto generate(EngineType& engine) ->
+        typename std::conditional<EngineType::vec_size == 1, UIntType,
+                                  sycl::vec<UIntType, EngineType::vec_size>>::type {
+        static_assert(
+            std::is_same<EngineType, philox4x32x10<EngineType::vec_size>>::value ||
+                std::is_same<EngineType,
+                             count_engine_adaptor<philox4x32x10<EngineType::vec_size>>>::value ||
+                std::is_same<EngineType, mcg59<EngineType::vec_size>>::value ||
+                std::is_same<EngineType, count_engine_adaptor<mcg59<EngineType::vec_size>>>::value ||
+                std::is_same<EngineType, pcg64_dxsm<EngineType::vec_size>>::value ||
+                std::is_same<EngineType, 
+                             count_engine_adaptor<pcg64_dxsm<EngineType::vec_size>>>::value,
+            "oneMKL: uniform_bits works only with philox4x32x10/mcg59/pcg64_dxsm engines and their adaptors");
         return engine.template generate_uniform_bits<UIntType>();
     }
 
     template <typename EngineType>
-    UIntType generate_single(EngineType& engine) 
-    {
-        static_assert(std::is_same<EngineType, philox4x32x10<EngineType::vec_size>>::value ||
-                  std::is_same<EngineType, mcg59<EngineType::vec_size>>::value, 
-                  "oneMKL: uniform_bits works only with philox4x32x10/mcg59 engines");
+    UIntType generate_single(EngineType& engine) {
+        static_assert(
+            std::is_same<EngineType, philox4x32x10<EngineType::vec_size>>::value ||
+                std::is_same<EngineType,
+                             count_engine_adaptor<philox4x32x10<EngineType::vec_size>>>::value ||
+                std::is_same<EngineType, mcg59<EngineType::vec_size>>::value ||
+                std::is_same<EngineType, count_engine_adaptor<mcg59<EngineType::vec_size>>>::value ||
+                std::is_same<EngineType, pcg64_dxsm<EngineType::vec_size>>::value ||
+                std::is_same<EngineType, 
+                             count_engine_adaptor<pcg64_dxsm<EngineType::vec_size>>>::value,
+            "oneMKL: uniform_bits works only with philox4x32x10/mcg59/pcg64_dxsm engines and their adaptors");
         return engine.template generate_single_uniform_bits<UIntType>();
     }
 };
 
-} // namespace detail
-} // namespace device
-} // namespace rng
-} // namespace mkl
-} // namespace oneapi
+} // namespace oneapi::mkl::rng::device::detail
 
 #endif // _MKL_RNG_DEVICE_UNIFORM_BITS_IMPL_HPP_

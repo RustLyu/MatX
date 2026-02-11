@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2020-2022 Intel Corporation.
+* Copyright (C) 2020 Intel Corporation
 *
 * This software and the related documents are Intel copyrighted  materials,  and
 * your use of  them is  governed by the  express license  under which  they were
@@ -85,6 +85,14 @@ extern "C" {
                                                           const MKL_INT             expected_calls,
                                                           void                      *interop_obj);
 
+    sparse_status_t MKL_SPBLAS_VARIANT_NAME(set_sm_hint)( const sparse_matrix_t     A,
+                                                          const sparse_operation_t  operation,
+                                                          const struct matrix_descr descr,
+                                                          const sparse_layout_t     layout,
+                                                          const MKL_INT             dense_matrix_size, /* # of columns in dense matrix */
+                                                          const MKL_INT             expected_calls,
+                                                          void                      *interop_obj);
+
     sparse_status_t MKL_SPBLAS_VARIANT_NAME(optimize)( sparse_matrix_t  A, void *interop_obj);
 
     sparse_status_t MKL_SPBLAS_VARIANT_NAME(order)( const sparse_matrix_t  A, void *interop_obj);
@@ -155,6 +163,31 @@ extern "C" {
                                                    double                    *y,
                                                    const MKL_INT             ldy,
                                                    void                      *interop_obj);
+
+    /*   Solves triangular system y = alpha * A^{-1} * x   */
+    sparse_status_t MKL_SPBLAS_VARIANT_NAME(s_trsm)( const sparse_operation_t  operation,
+                                                     const float               alpha,
+                                                     const sparse_matrix_t     A,
+                                                     const struct matrix_descr descr,
+                                                     const sparse_layout_t     layout,
+                                                     const float               *x,
+                                                     const MKL_INT             columns,
+                                                     const MKL_INT             ldx,
+                                                     float                     *y,
+                                                     const MKL_INT             ldy,
+                                                     void                      *interop_obj);
+
+    sparse_status_t MKL_SPBLAS_VARIANT_NAME(d_trsm)( const sparse_operation_t  operation,
+                                                     const double              alpha,
+                                                     const sparse_matrix_t     A,
+                                                     const struct matrix_descr descr,
+                                                     const sparse_layout_t     layout,
+                                                     const double              *x,
+                                                     const MKL_INT             columns,
+                                                     const MKL_INT             ldx,
+                                                     double                    *y,
+                                                     const MKL_INT             ldy,
+                                                     void                      *interop_obj);
 
     /*   Computes product of sparse matrices: C = opA(A) * opB(B), result is sparse   */
     sparse_status_t MKL_SPBLAS_VARIANT_NAME(sp2m) ( const sparse_operation_t  transA, 

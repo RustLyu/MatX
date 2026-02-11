@@ -1,25 +1,26 @@
 /*******************************************************************************
-* Copyright 2021-2022 Intel Corporation.
+* Copyright (C) 2021 Intel Corporation
 *
-* This software and the related documents are Intel copyrighted  materials,  and
-* your use of  them is  governed by the  express license  under which  they were
-* provided to you (License).  Unless the License provides otherwise, you may not
-* use, modify, copy, publish, distribute,  disclose or transmit this software or
-* the related documents without Intel's prior written permission.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
 *
-* This software and the related documents  are provided as  is,  with no express
-* or implied  warranties,  other  than those  that are  expressly stated  in the
-* License.
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions
+* and limitations under the License.
+*
+*
+* SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
 
 #ifndef _MKL_RNG_DEVICE_BERNOULLI_IMPL_HPP_
 #define _MKL_RNG_DEVICE_BERNOULLI_IMPL_HPP_
 
-namespace oneapi {
-namespace mkl {
-namespace rng {
-namespace device {
-namespace detail {
+namespace oneapi::mkl::rng::device::detail {
 
 template <typename IntType, typename Method>
 class distribution_base<oneapi::mkl::rng::device::bernoulli<IntType, Method>> {
@@ -59,10 +60,9 @@ protected:
     auto generate(EngineType& engine) ->
         typename std::conditional<EngineType::vec_size == 1, IntType,
                                   sycl::vec<IntType, EngineType::vec_size>>::type {
-        // Usage of bit arithmetic doesn't improve the performance
-        auto uni_res = uniform_.generate(engine);
+        auto uni_res = engine.generate(0.0f, 1.0f);
         if constexpr (EngineType::vec_size == 1) {
-            return IntType{uni_res < p_};
+            return IntType{ uni_res < p_ };
         }
         else {
             sycl::vec<IntType, EngineType::vec_size> vec_out(IntType{ 0 });
@@ -77,18 +77,13 @@ protected:
 
     template <typename EngineType>
     IntType generate_single(EngineType& engine) {
-        auto uni_res = uniform_.generate_single(engine);
-        return IntType{uni_res < p_};
+        auto uni_res = engine.generate_single(0.0f, 1.0f);
+        return IntType{ uni_res < p_ };
     }
 
-    distribution_base<oneapi::mkl::rng::device::uniform<float>> uniform_ = { 0.0f, 1.0f };
     float p_;
 };
 
-} // namespace detail
-} // namespace device
-} // namespace rng
-} // namespace mkl
-} // namespace oneapi
+} // namespace oneapi::mkl::rng::device::detail
 
 #endif // _MKL_RNG_DEVICE_BERNOULLI_IMPL_HPP_
