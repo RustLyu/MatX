@@ -4,8 +4,9 @@ project(MatX LANGUAGES C CXX)
 
 # ---- Global options ----
 option(MATX_BUILD_TESTS "Build unit tests (gtest)" ON)
-option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS backend if found/provided" ON)
+option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS backend if found/provided" OFF)
 option(MATX_ENABLE_BLIS "Enable BLIS backend if found/provided" ON)
+option(MATX_ENABLE_LIBFLAME "Enable LIBFLAME backend if found/provided" ON)
 option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse backend if found/provided" ON)
 option(MATX_ENABLE_CXSPARSE "Enable CXSparse for sparse numerical ops if found" ON)
 option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" ON)

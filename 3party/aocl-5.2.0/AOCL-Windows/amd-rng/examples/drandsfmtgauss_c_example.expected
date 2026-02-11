@@ -1,0 +1,9 @@
+
+--RNG-example: sfmt gaussian random numbers using drandgaussian--
+-----------------------------------------------------------------
+
+Numbers from a SFMT gaussian distribution:
+    0.4006   -1.6056   -0.4159   -1.5167
+    1.6773    0.5960    0.5718   -0.3860
+    0.2104    1.3691    0.8921    1.5302
+

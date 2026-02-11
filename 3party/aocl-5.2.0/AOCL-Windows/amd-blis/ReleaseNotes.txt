@@ -1,0 +1,71 @@
+Copyright (C) 2025, Advanced Micro Devices, Inc.
+
+Copyright (C) 2014, The University of Texas at Austin
+
+AOCL-BLAS - Release Notes - version 5.2.0
+--------------------------------------------
+
+AOCL-BLAS is a portable software framework for instantiating high-performance 
+BLAS-like dense linear algebra libraries. The framework was designed to isolate 
+essential kernels of computation that enable optimized 
+implementations of most of its commonly used and computationally intensive 
+operations.  AMD has extensively optimized the implementation of BLIS for AMD processors. 
+
+Highlights of AOCL-BLAS 5.2.0
+--------------------------------
+
+Performance Optimizations:
+GEMM Improvements:
+•	Tuned ZGEMM thresholds for Zen4 and Zen5 architectures
+•	Optimized AVX512 ZGEMM kernel and edge-case handling
+•	Improved ZGEMM packing kernel for M-dimension edge cases 
+•	Optimal thread selection for ZGEMM on Zen5
+•	Implemented dgemm_thread_decision with K-threshold logic
+GEMV Enhancements:
+•	Added DGEMV no-transpose multithreaded implementations
+•	Exported AVX512 DGEMV kernels
+•	DGEMV bug fixes and code cleanup
+•	Added ability to handle non-unit incx in GEMV transpose kernel
+•	Improved numerical precision in ZGEMV API
+
+DCOPY Optimization:
+•	Tuned DCOPY aocl_dynamic logic for Zen4/Zen5 architectures
+
+New Features:
+•	Provided additional build options to disable optimized code paths for smaller matrices in GEMM and TRSM. These may be useful for testing and benchmarking, or to reduce numerical rounding differences when repeating calculations with different core counts. 
+•	Implemented the complete set of GEMMTR APIs
+
+Bug Fixes: 
+Critical Fixes:
+•	Fixed probable integer overflow in TPSV
+•	Fixed out-of-bound access in F32 matrix add/mul operations
+•	Bug fix in F32 AVX2 kernels
+•	Fixed out-of-bound memory accesses in F32 API
+•	Fixed ZTRSM accuracy for conjugate transpose
+•	Fixed DTRSM small threshold for extremely skinny sizes on Zen5
+•	Fixed GCC 12+ instruction scheduling issue in complex scalv kernel
+
+Memory Safety:
+•	Initialized mem_t structures safely and handle NULL communicator in threading
+
+Code Quality & Maintainability:
+DTL (Dynamic Trace Logging):
+•	DTL logging fixes and improvements
+•	Standardized DTL trace exit patterns
+
+Code Standardization:
+•	Standardized Zen kernel names
+•	Standardized Python files to use Python 3
+
+Security:
+•	Added compiler flags to improve security
+
+Build System:
+•	CMake improvements for Windows DLL handling
+
+
+Please refer AOCL User Guide for supported Operating Systems and Compilers.
+
+The package contains AOCL-BLAS Library binaries which includes optimizations for
+the AMD EPYC and AMD Ryzen processor families, header files and examples.
+

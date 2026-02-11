@@ -1,0 +1,49 @@
+Copyright (C) 2025 Advanced Micro Devices, Inc. All rights reserved.
+
+Copyright (C) 2014, The University of Texas at Austin
+
+AOCL-LAPACK library - Release Notes - version 5.2.0
+--------------------------------------------------------------------------------
+AOCL-LAPACK is a high performant implementation of Linear Algebra PACKage 
+(LAPACK). LAPACK provides routines for solving systems of linear equations, 
+least-squares problems, eigenvalue problems, singular value problems, and the 
+associated matrix factorizations. It is extensible, easy to use, and available 
+under an open-source license. AOCL-LAPACK is a C-only implementation. 
+Applications relying on standard Netlib LAPACK interfaces can utilize 
+AOCL-LAPACK with virtually no changes to their source code.
+In combination with the AOCL-BLAS library, which includes optimizations for the 
+AMD “Zen”-based processors, AOCL-LAPACK enables running high performing LAPACK 
+functionalities on AMD platforms. AOCL-LAPACK supports C, FORTRAN, and C++ 
+template interfaces (for a subset of APIs) for the LAPACK APIs.
+
+Highlights of AMD optimized AOCL-LAPACK 5.2.0
+--------------------------------------------------------------------------------
+Enhancements
+•	Improved performance of the following routines:
+  •	LU, Cholesky & QR Factorizations (DGETRF, DPOTRF & DGEQRF)
+  •	Symmetric Eigen Decomposition (DSYEVD)
+  •	Matrix Inverse routines (DGETRI & DPOTRI) for small sizes 
+•	Build System
+  •	AOCL-LAPACK has discontinued support for autoconf based build; only CMAKE based build is now supported
+  •	Added two new modes (avx2-strict, avx512-strict) under LF_ISA_CONFIG build flag to enforce specific ISA during execution
+•	Test suite framework 
+  •	Bit Reproducibility tests for test-suite supported LAPACK APIs
+  •	Benchmark mode addition to run tests for fixed duration, displaying additional metrics, and more.
+
+Please refer AOCL User Guide for supported Operating Systems and Compilers.
+
+The package contains AOCL-LAPACK Library binaries which includes optimizations 
+for the AMD EPYC and AMD Ryzen processor families, header files and examples.
+
+Note: 
+1. AOCL-LAPACK has dependency on libstdc++ library. On Linux, user must 
+   link libstdc++(-lstdc++) when AOCL-LAPACK library is used.
+2. AOCL-LAPACK depends on Python 3.x as a prerequisite.
+   Python 2.x is no longer supported.
+3. The pre-built AOCL-LAPACK binaries are compiled with ENABLE_AOCL_BLAS 
+   option. Hence applications must link with AOCL-BLAS when using prebuilt 
+   AOCL-LAPACK library.
+
+Known Issues
+--------------------------------------------------------------------------------
+1. Numerical failures in few Netlib LAPACK tests.

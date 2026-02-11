@@ -45,3 +45,11 @@ if(MATX_ENABLE_GRAPHBLAS)
   endif()
 endif()
 
+# ---- LIBFLAME ----
+set(MATX_LIBFLAME_FOUND OFF)
+if(MATX_ENABLE_LIBFLAME)
+  find_package(LIBFLAME QUIET)
+  if(LIBFLAME_FOUND)
+    set(MATX_LIBFLAME_FOUND ON)
+  endif()
+endif()

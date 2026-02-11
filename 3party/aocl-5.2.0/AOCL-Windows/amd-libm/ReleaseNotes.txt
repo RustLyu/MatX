@@ -1,0 +1,18 @@
+(C) 2008-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+ 
+AOCL LibM - Release Notes - AOCL version 5.2.0
+----------------------------------------------
+ 
+Highlights of AOCL LibM version 5.2.0
+-------------------------------------
+Build System Enhancements
+-   Upgraded CMake Build System to a robust, fully integrated CMake build system with comprehensive cross-platform support significantly improving the project's modularity, scalability, and maintainability.
+-   Updated the AOCL-Utils library to support both dynamic and static linking (default) options to AOCL-Utils.
+ 
+API Additions and Optimizations
+-   Added the new erfc API with scalar and vector variants for both float and double precision on Zen platforms.
+-   Optimized performance of functions for Zen and AVX2 architectures. Vector and vector array variants added for: erfcf, erf, asin, acos, cosh, tan, atan, and tanh functions.
+-   Enhanced performance testing framework with comprehensive validation for all optimized APIs.
+ 
+Other Improvements
+-   Resolved Coverity-reported issues to improve code quality and reliability

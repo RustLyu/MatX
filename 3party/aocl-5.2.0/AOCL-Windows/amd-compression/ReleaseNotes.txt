@@ -1,0 +1,44 @@
+Copyright (C) 2025 Advanced Micro Devices, Inc. All rights reserved.
+
+AOCL-Compression - Release Notes - AOCL version 5.2.0
+-----------------------------------------------------
+
+AOCL Compression is a software framework of various lossless compression and
+decompression methods tuned and optimized for AMD Zen based CPUs.
+The framework offers a single set of unified APIs for all the supported
+compression and decompression methods which facilitate the applications to
+easily integrate and use them.
+AOCL Compression supports lz4, zlib/deflate, lzma, zstd, bzip2, snappy, and 
+lz4hc based compression and decompression methods along with their native APIs.
+The library offers openMP based multi-threaded implementation of lz4, zlib,
+zstd and snappy compression methods. 
+It supports a dynamic dispatcher feature that executes the most optimal
+function variant implemented using Function Multi-versioning thereby offering
+a single optimized library portable across different x86 CPU architectures.
+AOCL Compression framework is developed in C for Unix and Windows based systems.
+A test suite is provided for validation and performance benchmarking
+of the supported compression and decompression methods. This suite also supports
+the benchmarking of IPP compression methods, such as lz4, lz4hc, zlib and bzip2. 
+The library build framework offers CTest based testing of the test cases implemented 
+using GTest and the library test suite.
+
+Highlights of AOCL-Compression 5.2.0:
+------------------------------------
+•	Performance improvements
+    •	Improved single-threaded performance for ZLIB, BZIP2, ZSTD
+    •	Improved LZ4 and ZLIB multithreading performance
+•	Features
+    •	Multi-threaded support added for BZIP2 (compression and decompression) and LZMA (compression)
+    •	Introduced AOCL_COMPRESS_FAST mode in ZSTD for quicker compression at higher levels
+    •	Upgraded LZ4 to v1.10.0, ZSTD to v1.5.7, and ZLIB to v1.3.1
+•	Infra & Tooling
+    •	Removed OpenMP dependency for single-threaded builds
+    •	Added Clang/llvm-cov code coverage support
+•	Misc
+    •	Minor bug fixes
+
+Please refer to AOCL User Guide for supported Operating Systems and Compilers. 
+
+The package contains AOCL-Compression libraries, binaries and header files
+that are built with optimizations for AMD EPYC and Ryzen Processor family.
+

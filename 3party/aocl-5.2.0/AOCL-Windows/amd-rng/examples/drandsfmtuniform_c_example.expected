@@ -1,0 +1,9 @@
+
+--RNG-example: sfmt uniform random numbers using dranduniform--
+---------------------------------------------------------------
+
+Numbers from a SFMT uniform U(0,1) distribution:
+    0.7837    0.2557    0.8971    0.1240
+    0.1646    0.2597    0.1527    0.5376
+    0.4255    0.3831    0.0778    0.1909
+

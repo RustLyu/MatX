@@ -1,0 +1,27 @@
+Copyright (C) 2025 Advanced Micro Devices, Inc. All rights reserved.
+
+AOCL-Sparse - Release Notes - version 5.2.0
+-------------------------------------------------------------------------------
+
+AOCL-Sparse is a library that contains basic linear algebra subroutines
+for sparse matrices and vectors, optimized for AMD EPYC and AMD Ryzen
+processor families. It is designed to be used with C and C++.
+
+
+AOCL-Sparse 5.2.0 includes
+-------------------------------------------------------------------------------
+New Features
+    •	Support for sparse matrix creation in BSR format
+    •	Support CSC and BSR storage formats within SpMV
+    •	Vectorized SpMV with BSR storage format
+    •	Support CPP interfaces for a selected list of APIs
+Performance improvements
+    •	Multi-threaded performance across APIs
+    •	Level 2: SpMV variants 
+    •	Level 3: CSRMM and Sp2M variants
+Framework enhancements and Bug fixes
+
+
+Please refer to AOCL User Guide for supported Operating Systems and Compilers.
+
+The package contains AOCL-Sparse Library binaries, header files and examples.

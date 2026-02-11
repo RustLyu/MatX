@@ -1,0 +1,56 @@
+Copyright (C) 2025, Advanced Micro Devices, Inc. All Rights Reserved.
+
+AOCL FFTZ - Release Notes - AOCL version 5.2.0
+------------------------------------------------------
+AOCL FFTZ Contents
+--------------------
+AOCL-FFTZ is a high-performance Fast Fourier Transform (FFT) library designed for AMD "Zen"-based CPUs. Providing efficient computation of FFTs for both complex and real data, it supports a wide range of problem sizes and dimensions. The library is optimized for single-threaded and multi-threaded execution. AOCL-FFTZ can act as a drop-in replacement for FFTW for VASP application, with a similar API offering better functionality.
+
+- Key Features
+
+     - Unified library binary supporting both single and double precision, with compatibility for LP64 and ILP64 data models.
+     - Supports real and complex inputs for both in-place and out-of-place operations, with forward and backward transforms.
+     - Supports multi-dimensional and batched FFTs
+     - Optimized core compute kernels with vectorization (AVX128/256/512)
+     - Multi-threading via OpenMP
+     - Dynamic CPU feature detection and runtime dispatch
+     - Comprehensive logging support
+     - FFTW wrapper (plugin) support for seamless transition from FFTW to AOCL-FFTZ
+     - Integrated test bench for accuracy validation and performance benchmarking
+     - Extensive unit-testing with GTest and fuzz-testing with Google FuzzTest
+     - Memory analysis (Valgrind, ASAN) and code coverage tracking (gcov)
+     - Auto-generated Sphinx documentation
+
+- Special Highlights
+
+     - Industry-leading performance with optimization for VASP (Vienna Ab initio Simulation Package - a scientific software for material modeling) application 
+     - Automatically selects the highest-performing kernel available on the host CPU through the runtime dispatcher ensuring both portability and performance
+     - Portable C fallback ensures correctness on any x86-compatible processor
+     - Flexible problem descriptor API for LP64 and ILP64 systems, supporting arbitrarily batched and multi-dimensional transforms
+     - Half-complex output layout for real transforms to minimize memory footprint
+
+- Known Limitations
+
+     - Generic:
+         -  Out-of-order storage is currently unsupported
+         -  Standalone transpose operations are currently unsupported
+         -  Dynamic load model (dynamic thread scheduling) is currently unsupported
+         -  The `measure_stats` flag is reserved for future use and has no effect in this release
+
+     - Complex Transforms :
+         - 4-Dimensional transforms and higher are generally not very efficient and performant.
+
+     - Real Transforms:
+         - Real transforms are limited to one-dimensional signals in this release
+         - Real 1D transforms for prime sizes greater than 7 are not supported
+
+- Tested Platforms
+
+     - OS :
+         - Linux : Ubuntu 18 and later, RHEL, SLES, CentOS
+         - Windows 10 and later
+
+     - Compilers :
+         - GCC 8.0+ & AOCC 2.0+
+         - Microsoft Visual Studio with Clang 12+ 
+

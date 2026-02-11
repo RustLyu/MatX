@@ -21,8 +21,8 @@ target_compile_definitions(matx_solve
   PUBLIC MATX_SOLVE_BUILD=1
   PRIVATE
     MATX_SUITESPARSE_FOUND=$<BOOL:${MATX_SUITESPARSE_FOUND}>
-    MATX_OPENBLAS_FOUND=$<BOOL:${MATX_OPENBLAS_FOUND}>
-    MATX_BLIS_FOUND=$<BOOL:${MATX_BLIS_FOUND}>
+    MATX_ENABLE_OPENBLAS=$<BOOL:${MATX_ENABLE_OPENBLAS}>
+    MATX_ENABLE_LIBFLAME=$<BOOL:${MATX_ENABLE_LIBFLAME}>
 )
 
 if(MATX_SUITESPARSE_FOUND)
@@ -30,14 +30,19 @@ if(MATX_SUITESPARSE_FOUND)
   target_link_libraries(matx_solve PRIVATE SuiteSparse::SuiteSparse)
 endif()
 
-if(MATX_OPENBLAS_FOUND)
+if(MATX_ENABLE_OPENBLAS)
   target_compile_definitions(matx_solve PRIVATE MATX_HAVE_OPENBLAS=1)
   target_link_libraries(matx_solve PRIVATE OpenBLAS::OpenBLAS)
 endif()
 
-if(MATX_BLIS_FOUND)
+if(MATX_ENABLE_BLIS)
   target_compile_definitions(matx_solve PRIVATE MATX_HAVE_BLIS=1)
   target_link_libraries(matx_solve PRIVATE BLIS::BLIS)
+endif()
+
+if(MATX_ENABLE_LIBFLAME)
+  target_compile_definitions(matx_solve PRIVATE MATX_HAVE_LIBFLAME=1)
+  target_link_libraries(matx_solve PRIVATE LibFlame::LibFlame)
 endif()
 
 target_sources(matx_solve

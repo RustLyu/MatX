@@ -23,20 +23,20 @@ target_include_directories(matx_blas
 target_compile_definitions(matx_blas
   PUBLIC MATX_COMPUTE_BUILD=1
   PRIVATE
-    MATX_OPENBLAS_FOUND=$<BOOL:${MATX_OPENBLAS_FOUND}>
-    MATX_BLIS_FOUND=$<BOOL:${MATX_BLIS_FOUND}>
+    MATX_ENABLE_OPENBLAS=$<BOOL:${MATX_ENABLE_OPENBLAS}>
+    MATX_ENABLE_BLIS=$<BOOL:${MATX_ENABLE_BLIS}>
 )
 
 if(MATX_BLAS_BACKEND STREQUAL "REFERENCE")
   target_compile_definitions(matx_blas PRIVATE MATX_BLAS_BACKEND_REFERENCE_ONLY=1)
 endif()
 
-if(MATX_OPENBLAS_FOUND)
+if(MATX_ENABLE_OPENBLAS)
   target_compile_definitions(matx_blas PRIVATE MATX_HAVE_OPENBLAS=1)
   target_link_libraries(matx_blas PRIVATE OpenBLAS::OpenBLAS)
 endif()
 
-if(MATX_BLIS_FOUND)
+if(MATX_ENABLE_BLIS)
   target_compile_definitions(matx_blas PRIVATE MATX_HAVE_BLIS=1)
   target_link_libraries(matx_blas PRIVATE BLIS::BLIS)
 endif()

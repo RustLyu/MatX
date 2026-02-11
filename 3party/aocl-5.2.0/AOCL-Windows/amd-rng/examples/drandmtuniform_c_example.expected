@@ -1,0 +1,9 @@
+
+--RNG-example: mt uniform random numbers using dranduniform--
+-------------------------------------------------------------
+
+Numbers from a MT uniform U(0,1) distribution:
+    0.8681    0.5332    0.0340    0.8097
+    0.7908    0.5620    0.1147    0.3959
+    0.3305    0.4299    0.1845    0.4421
+
