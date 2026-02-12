@@ -2,7 +2,8 @@
 
 extern "C" {
 #include "matx/matx.h"
-#include "matx/matx_solve.h"
+#include "matx/matx_sparse_solve.h"
+#include "matx/matx_dense_solve.h"
 }
 
 /* 4x4 identity-like sparse system: A = diag(2,2,2,2) in CSC */
@@ -15,7 +16,7 @@ matx_double values[4] = {2.0, 2.0, 2.0, 2.0};
   double b[4] = {4.0, 6.0, 8.0, 10.0};
   double x[4] = {0.0, 0.0, 0.0, 0.0};
 
-  matx_linsolve_t ls = matx_linsolve_default();
+  matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
   matx_factor_sparse_f64_t* F = NULL;
   matx_status_t st = matx_factor_csc_f64(&ls, &A, &F);
   if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -44,7 +45,7 @@ TEST(solve, sparse_real_4x4_solve_one_shot) {
   double b[4] = {2.0, 4.0, 6.0, 8.0};
   double x[4] = {0.0, 0.0, 0.0, 0.0};
 
-  matx_linsolve_t ls = matx_linsolve_default();
+  matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
   matx_status_t st = matx_solve_csc_f64(&ls, &A, b, x);
   if (st == MATX_ERR_NOT_SUPPORTED) {
     return;
@@ -68,7 +69,7 @@ TEST(solve, dense_real_4x4_factor_solve) {
   double b[4] = {2.0, 4.0, 6.0, 8.0};
   double x[4] = {0.0, 0.0, 0.0, 0.0};
 
-  matx_linsolve_t ls = matx_linsolve_default();
+  matx_dense_linsolve_t ls = matx_dense_linsolve_default();
   matx_factor_dense_f64_t* F = NULL;
   matx_status_t st = matx_factor_dense_f64(&ls, &A, &F);
   if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -102,7 +103,7 @@ TEST(solve, dense_real_4x4_solve_one_shot) {
   double b[4] = {3.0, 6.0, 9.0, 12.0};
   double x[4] = {0.0, 0.0, 0.0, 0.0};
 
-  matx_linsolve_t ls = matx_linsolve_default();
+  matx_dense_linsolve_t ls = matx_dense_linsolve_default();
   matx_status_t st = matx_solve_dense_f64(&ls, &A, b, x);
   matx_dense_f64_destroy(&A, &a);
   if (st == MATX_ERR_NOT_SUPPORTED) {

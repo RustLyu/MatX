@@ -29,7 +29,8 @@ target_link_libraries(${PROJECT_NAME}
     MatX::core
     MatX::dense_blas
     MatX::sparse_blas
-    MatX::solve
+    MatX::dense_solve
+    MatX::sparse_solve
 )
 
 if(MATX_ENABLE_OPENBLAS)
