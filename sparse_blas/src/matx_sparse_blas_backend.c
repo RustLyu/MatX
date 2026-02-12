@@ -1,4 +1,4 @@
-﻿#include "matx/matx_compute.h"
+﻿#include "matx/matx_sparse_compute.h"
 
 #include <string.h>
 
@@ -8,9 +8,9 @@ matx_sparse_backend_t matx_sparse_make_reference_mkl(void);
 
 const char* matx_sparse_backend_name(matx_sparse_backend_kind_t k) {
 	switch (k) {
-	case MATX_BLAS_BACKEND_REFERENCE: return "REFERENCE";
-	case MATX_BLAS_BACKEND_OPENBLAS: return "OPENBLAS";
-	case MATX_BLAS_BACKEND_BLIS: return "BLIS";
+	case MATX_SPARSE_BACKEND_REFERENCE: return "REFERENCE";
+	case MATX_SPARSE_BACKEND_GRAPHBLAS: return "OPENBLAS";
+	case MATX_SPARSE_BACKEND_MKL: return "MKL";
 	default: return "UNKNOWN";
 	}
 }
@@ -18,11 +18,11 @@ const char* matx_sparse_backend_name(matx_sparse_backend_kind_t k) {
 static matx_sparse_backend_t choose_default_backend(void) {
 	// Build-time selection (simple & portable). Can be extended to runtime CPUID switching later.
 	// If user wants strict control: set -DMATX_BLAS_BACKEND=OPENBLAS/BLIS/REFERENCE
-#if defined(MATX_BLAS_BACKEND_REFERENCE_ONLY)
+#if defined(MATX_SPARSE_BACKEND_REFERENCE)
 	return matx_blas_make_reference();
 #else
   // If no external backend is wired in, fall back to reference.
-	return matx_sparse_make_reference_mkl();
+	return matx_sparse_make_reference_grb();
 #endif
 }
 
@@ -38,7 +38,6 @@ matx_status_t matx_spmv_coo_c64(const matx_sparse_backend_t* backend,
 	matx_vec_c64_t* y)
 {
 	return backend->vt.spmv_c64(alpha, A, x, beta, y);
-	return MATX_OK;
 }
 
 matx_status_t matx_spmm_coo_c64(const matx_sparse_backend_t* backend,

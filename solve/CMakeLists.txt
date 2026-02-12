@@ -12,6 +12,7 @@ target_link_libraries(matx_solve
 target_include_directories(matx_solve
   PUBLIC
     $<BUILD_INTERFACE:${openblas_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${libflame_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -21,8 +22,8 @@ target_compile_definitions(matx_solve
   PRIVATE
     MATX_ENABLE_SUITESPARSE=$<BOOL:${MATX_ENABLE_SUITESPARSE}>
     MATX_ENABLE_OPENBLAS=$<BOOL:${MATX_ENABLE_OPENBLAS}>
-    MATX_ENABLE_LIBFLAME=$<BOOL:${MATX_ENABLE_LIBFLAME}>
     MATX_ENABLE_BLIS=$<BOOL:${MATX_ENABLE_BLIS}>
+    MATX_ENABLE_LIBFLAME=$<BOOL:${MATX_ENABLE_LIBFLAME}>
 )
 
 if(MATX_ENABLE_SUITESPARSE)
@@ -34,11 +35,6 @@ if(MATX_ENABLE_OPENBLAS)
   target_compile_definitions(matx_solve PRIVATE MATX_HAVE_OPENBLAS=1)
   message(STATUS "Linking OpenBLAS library: ${openblas_lib}")
   target_link_libraries(matx_solve PRIVATE ${openblas_lib})
-endif()
-
-if(MATX_ENABLE_BLIS)
-  target_compile_definitions(matx_solve PRIVATE MATX_HAVE_BLIS=1)
-  target_link_libraries(matx_solve PRIVATE ${amdblis_lib})
 endif()
 
 if(MATX_ENABLE_LIBFLAME)

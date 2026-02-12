@@ -1,11 +1,11 @@
-﻿#include "matx/matx_compute.h"
+﻿#include "matx/matx_dense_compute.h"
 
 #include <limits.h>
 
 #if MATX_ENABLE_OPENBLAS
 	#include "openblas/cblas.h"
 #elif MATX_ENABLE_BLIS
-	#include <amd-blis/include/ILP64/blis.h>
+	#include "blis.h"
 #endif
 
 static matx_status_t ref_dgemm(matx_layout_t layout,
@@ -143,8 +143,8 @@ static matx_status_t ref_daxpy(
 	if (lda != ldy)
 		return MATX_ERR_INVALID_ARG;
 
-	cblas_daxpy((int)n, alpha, x, (int)lda, y,
-		(int)ldy);
+	cblas_daxpy(n, alpha, x, lda, y,
+		ldy);
 	return MATX_OK;
 }
 

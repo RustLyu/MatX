@@ -11,7 +11,8 @@ extern "C" {
 #define MATX_VERSION_MAJOR 0
 #define MATX_VERSION_MINOR 1
 #define MATX_VERSION_PATCH 0
-
+#define MKL_ILP64
+#define OPENBLAS_USE64BITINT
 	typedef enum matx_status_t {
 		MATX_OK = 0,
 		MATX_ERR_INVALID_ARG = 1,
@@ -111,7 +112,7 @@ extern "C" {
 		matx_uint64_t cols,
 		matx_uint64_t stride,
 		matx_layout_t layout,
-		double* data);
+		matx_double* data);
 
 	void matx_dense_f64_destroy(matx_dense_f64_t* m, const matx_alloc_t* alloc);
 

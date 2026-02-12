@@ -1,8 +1,9 @@
-﻿#include "matx/matx_compute.h"
+﻿#include "matx/matx_sparse_compute.h"
 
 #include <limits.h>
-
-#include <mkl.h>
+#if MATX_ENABLE_MKL
+	#include "mkl.h"
+#endif
 
 matx_status_t ref_spmv_c64_mkl(
 	matx_complex_f64 alpha,
@@ -11,6 +12,7 @@ matx_status_t ref_spmv_c64_mkl(
 	matx_complex_f64 beta,
 	matx_vec_c64_t* y)
 {
+#if MATX_ENABLE_MKL
 	if (!A || !x || !y)
 		return MATX_ERR_INVALID_ARG;
 
@@ -40,7 +42,7 @@ matx_status_t ref_spmv_c64_mkl(
 		b,
 		(MKL_Complex16*)y->data
 	);
-
+#endif
 	return MATX_OK;
 }
 
@@ -51,6 +53,7 @@ matx_status_t ref_spmm_c64_mkl(
 	matx_complex_f64 beta,
 	matx_dense_c64_t* C)
 {
+#if MATX_ENABLE_MKL
 	if (!A || !B || !C)
 		return MATX_ERR_INVALID_ARG;
 
@@ -78,7 +81,7 @@ matx_status_t ref_spmm_c64_mkl(
 		(MKL_Complex16*)C->data,
 		C->cols
 	);
-
+#endif
 	return MATX_OK;
 }
 #include <windows.h>
@@ -104,6 +107,7 @@ matx_status_t ref_spmv_f64_mkl(
 	matx_double beta,
 	matx_vec_f64_t* y)
 {
+#if MATX_ENABLE_MKL
 	if (!A || !x || !y)
 		return MATX_ERR_INVALID_ARG;
 	if (A->handle_mkl.valid <= 0)
@@ -126,6 +130,7 @@ matx_status_t ref_spmv_f64_mkl(
 	);
 	int64_t t1 = get_time_us();
 	printf("mkl time: %ld us\n", t1 - t0);
+#endif
 	return MATX_OK;
 }
 
@@ -136,6 +141,7 @@ matx_status_t ref_spmm_f64_mkl(
 	matx_double beta,
 	matx_dense_f64_t* C)
 {
+#if MATX_ENABLE_MKL
 	if (!A || !B || !C)
 		return MATX_ERR_INVALID_ARG;
 
@@ -163,7 +169,7 @@ matx_status_t ref_spmm_f64_mkl(
 		C->data,
 		C->cols
 	);
-
+#endif
 	return MATX_OK;
 }
 

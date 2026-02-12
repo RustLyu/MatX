@@ -10,7 +10,8 @@ option(MATX_ENABLE_LIBFLAME "Enable LIBFLAME backend if found/provided" ON)
 option(MATX_ENABLE_MKL "Enable MKL backend if found/provided" ON)
 option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse backend if found/provided" ON)
 option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" ON)
-set(MATX_BLAS_BACKEND "AUTO" CACHE STRING "BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
+set(MATX_DENSE_BLAS_BACKEND "AUTO" CACHE STRING "DENSE BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
+set(MATX_SPARSE_BLAS_BACKEND "AUTO" CACHE STRING "SPARSE BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
 
 set_property(CACHE MATX_BLAS_BACKEND PROPERTY STRINGS AUTO OPENBLAS BLIS REFERENCE)
 
@@ -33,7 +34,7 @@ find_package(graphblas REQUIRED)
 
 # amd-blis
 set(amdblis_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-blis/cmake")
-set(amdblis_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-blis/")
+set(amdblis_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-blis")
 find_package(amdblis REQUIRED)
 
 # amd-libflame
@@ -59,7 +60,8 @@ find_package(openblas REQUIRED)
 include(GNUInstallDirs)
 
 add_subdirectory(core)
-add_subdirectory(blas)
+add_subdirectory(dense_blas)
+add_subdirectory(sparse_blas)
 add_subdirectory(solve)
 
 if(MATX_BUILD_TESTS)

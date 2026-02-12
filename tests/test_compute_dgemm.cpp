@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "matx/matx.h"
-#include "matx/matx_compute.h"
+#include "matx/matx_dense_compute.h"
 }
 
 static void fill_col_major(matx_dense_f64_t* M, double base) {

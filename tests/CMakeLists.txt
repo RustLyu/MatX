@@ -11,8 +11,9 @@ FetchContent_Declare(
 # gtest has its own CRT flags; keep default on MSVC.
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+project (matx_tests CXX)
 
-add_executable(matx_tests
+add_executable(${PROJECT_NAME}
   test_core_dense.cpp
   test_core_vec.cpp
   test_compute_dgemm.cpp
@@ -22,13 +23,38 @@ add_executable(matx_tests
   test_solve.cpp
 )
 
-target_link_libraries(matx_tests
+target_link_libraries(${PROJECT_NAME}
   PRIVATE
     GTest::gtest_main
     MatX::core
-    MatX::blas
+    MatX::dense_blas
+    MatX::sparse_blas
     MatX::solve
 )
+
+if(MATX_ENABLE_OPENBLAS)
+  target_link_libraries(${PROJECT_NAME} PRIVATE  ${openblas_lib})
+endif()
+
+if(MATX_ENABLE_BLIS)
+  target_link_libraries(${PROJECT_NAME} PRIVATE  ${amdblis_lib})
+endif()
+
+if(MATX_ENABLE_LIBFLAME)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${libflame_lib})
+endif()
+
+if(MATX_ENABLE_MKL)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${mkl_lib})
+endif()
+
+if(MATX_ENABLE_SUITESPARSE)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${suitesparse_lib})
+endif()
+
+if(MATX_ENABLE_GRAPHBLAS)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${graphblas_lib})
+endif()
 
 include(GoogleTest)
 gtest_discover_tests(matx_tests)

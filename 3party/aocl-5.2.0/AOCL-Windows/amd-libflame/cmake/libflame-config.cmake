@@ -3,7 +3,7 @@ include_directories(${libflame_INCLUDE_DIR})
 
 set(libflame_lib
   $<$<CONFIG:Debug>:
-    ${libflame_path}/ILP64/lib/AOCL-LibFlame-Win-MT-dll.lib
+    ${libflame_path}/lib/ILP64/AOCL-LibFlame-Win-MT-dll.lib
   >
   $<$<NOT:$<CONFIG:Debug>>:
     ${libflame_path}/lib/ILP64/AOCL-LibFlame-Win-MT-dll.lib

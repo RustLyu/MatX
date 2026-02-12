@@ -1,4 +1,6 @@
-﻿add_library(matx_core
+﻿project (matx_core C)
+
+add_library(${PROJECT_NAME}
   src/matx_alloc.c
   src/matx_dense_f64.c
   src/matx_error.c
@@ -9,32 +11,32 @@
   src/matx_sparse_c64.c
 )
 
-add_library(MatX::core ALIAS matx_core)
+add_library(MatX::core ALIAS ${PROJECT_NAME})
 
-target_include_directories(matx_core
+target_include_directories(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_sources(matx_core
+target_sources(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx.h>
     $<INSTALL_INTERFACE:include/matx/matx.h>
 )
 
-target_compile_definitions(matx_core PUBLIC MATX_CORE_BUILD=1)
+target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_CORE_BUILD=1)
 
 if(WIN32)
-  target_compile_definitions(matx_core PUBLIC MATX_PLATFORM_WINDOWS=1)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_PLATFORM_WINDOWS=1)
 else()
-  target_compile_definitions(matx_core PUBLIC MATX_PLATFORM_POSIX=1)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_PLATFORM_POSIX=1)
 endif()
 
 message(STATUS ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(TARGETS matx_core
+install(TARGETS ${PROJECT_NAME}
   EXPORT MatXTargets
 )

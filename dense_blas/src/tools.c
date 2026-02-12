@@ -1,7 +1,10 @@
-﻿#include "matx/matx_compute.h"
+﻿#include "matx/matx_dense_compute.h"
 
 #include <suitesparse/GraphBLAS.h>
-#include <mkl.h>
+
+#if MATX_ENABLE_MKL
+#include "mkl.h"
+#endif
 
 void free_grb_matrix(void* impl)
 {
@@ -10,11 +13,13 @@ void free_grb_matrix(void* impl)
 
 void free_mkl_matrix(void* impl)
 {
-	if (!impl) 
+#if MATX_ENABLE_MKL
+	if (!impl)
 		return;
 
 	sparse_matrix_t A = (sparse_matrix_t)impl;
 	mkl_sparse_destroy(A);
+#endif
 }
 
 void free_grb_vector(void* impl)
@@ -36,6 +41,7 @@ size_t coo_2_grb_f64(matx_coo_f64_t* A)
 
 size_t coo_2_mkl_f64(matx_coo_f64_t* A)
 {
+#if MATX_ENABLE_MKL
 	sparse_matrix_t coo;
 	sparse_matrix_t csr;
 	sparse_status_t st;
@@ -47,15 +53,25 @@ size_t coo_2_mkl_f64(matx_coo_f64_t* A)
 		column[i] = A->columns[i];
 	}
 
+	//st = mkl_sparse_d_create_coo(
+	//	&coo,
+	//	SPARSE_INDEX_BASE_ZERO,
+	//	(MKL_INT)A->nrows,
+	//	(MKL_INT)A->ncols,
+	//	(MKL_INT)A->nnz,
+	//	rows,
+	//	column,
+	//	A->values            
+	//);
 	st = mkl_sparse_d_create_coo(
 		&coo,
 		SPARSE_INDEX_BASE_ZERO,
 		(MKL_INT)A->nrows,
 		(MKL_INT)A->ncols,
 		(MKL_INT)A->nnz,
-		rows,
-		column,
-		A->values            
+		A->rows,
+		A->columns,
+		A->values
 	);
 
 	if (st != SPARSE_STATUS_SUCCESS) {
@@ -75,12 +91,13 @@ size_t coo_2_mkl_f64(matx_coo_f64_t* A)
 	A->handle_mkl.type = MATX_HANDLE_TYPE_MKL_MATRIX;
 	A->handle_mkl.valid = 1;
 	A->handle_mkl.custom_free_func = &free_mkl_matrix;
-
-	return 0; 
+#endif
+	return 0;
 }
 
 size_t coo_2_mkl_c64(matx_coo_c64_t* A)
 {
+#if MATX_ENABLE_MKL
 	sparse_matrix_t coo;
 	sparse_matrix_t csr;
 
@@ -92,17 +109,26 @@ size_t coo_2_mkl_c64(matx_coo_c64_t* A)
 		rows[i] = A->rows[i];
 		column[i] = A->columns[i];
 	}
-
 	st = mkl_sparse_z_create_coo(
 		&coo,
 		SPARSE_INDEX_BASE_ZERO,
 		A->nrows,
 		A->ncols,
 		A->nnz,
-		rows,
-		column,
+		A->rows,
+		A->columns,
 		(MKL_Complex16*)A->values
 	);
+	//st = mkl_sparse_z_create_coo(
+	//	&coo,
+	//	SPARSE_INDEX_BASE_ZERO,
+	//	A->nrows,
+	//	A->ncols,
+	//	A->nnz,
+	//	rows,
+	//	column,
+	//	(MKL_Complex16*)A->values
+	//);
 
 	if (st != SPARSE_STATUS_SUCCESS)
 		return -1;
@@ -119,7 +145,7 @@ size_t coo_2_mkl_c64(matx_coo_c64_t* A)
 	A->handle_mkl.type = MATX_HANDLE_TYPE_MKL_MATRIX;
 	A->handle_mkl.valid = 1;
 	A->handle_mkl.custom_free_func = &free_mkl_matrix;
-
+#endif
 	return 0;
 }
 

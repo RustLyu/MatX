@@ -7,7 +7,7 @@
 #if MATX_ENABLE_OPENBLAS
 #include "openblas/cblas.h"
 #elif MATX_ENABLE_LIBFLAME
-    #include <amd-libflame/include/ILP64/FLAME.h>
+    #include "FLAME.h"
 #endif
 
 #include "suitesparse/klu.h"

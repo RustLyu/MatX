@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "matx/matx.h"
-#include "matx/matx_compute.h"
+#include "matx/matx_sparse_compute.h"
 }
 
 /* 4x4 sparse CSC: full matrix for simplicity. col_ptr[0..4], row_ind[0..16], values[16] */

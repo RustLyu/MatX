@@ -2,7 +2,7 @@
 
 extern "C" {
 #include "matx/matx.h"
-#include "matx/matx_compute.h"
+#include "matx/matx_dense_compute.h"
 }
 
 TEST(compute_vec, axpy_f64) {
