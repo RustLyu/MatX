@@ -116,20 +116,12 @@ static matx_status_t ss_factor_csc_c64(
 
 	if (!F->S) goto fail;
 
-	/* KLU 会修改 Ax，需要复制 */
-	void* Ax = malloc(A->nnz * sizeof(matx_double) * 2);
-	if (!Ax) goto fail;
-
-	memcpy(Ax, A->values, A->nnz * sizeof(matx_double) * 2);
-
 	F->N = klu_zl_factor(
 		A->col_ptr,
 		A->row_ind,
-		Ax,
+		A->values,
 		F->S,
 		&F->common);
-
-	free(Ax);
 
 	if (!F->N) goto fail;
 
