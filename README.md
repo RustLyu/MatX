@@ -68,13 +68,3 @@ Contributing & testing
 ----------------------
 - Please run the test suite locally before submitting changes. Use the `cmake` and `ctest` commands shown above.
 
-License
--------
-- If a `LICENSE` file exists in this repository, consult it for licensing terms. If not, contact the project maintainers to clarify project licensing.
-
-Changed file
-------------
-- Updated: [README.md](README.md)
-
-If you want, I can add API usage examples, a quick-start tutorial, or CI steps next.
-
