@@ -48,13 +48,13 @@ set(suitesparse_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0")
 find_package(suitesparse REQUIRED)
 
 # mkl
-set(mkl_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/mkl-2023.1.0/cmake")
-set(mkl_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/mkl-2023.1.0")
+set(mkl_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/mkl-2025.3.0/cmake")
+set(mkl_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/mkl-2025.3.0")
 find_package(mkl REQUIRED)
 
 # openblas
-set(openblas_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas/cmake")
-set(openblas_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas")
+set(openblas_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas-0.3.30/cmake")
+set(openblas_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas-0.3.30")
 find_package(openblas REQUIRED)
 
 include(GNUInstallDirs)
