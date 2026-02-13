@@ -11,22 +11,24 @@
 static matx_status_t ref_dgemm(matx_layout_t layout,
 	matx_int64_t trans_a,
 	matx_int64_t trans_b,
-	size_t m,
-	size_t n,
-	size_t k,
+	matx_int64_t m,
+	matx_int64_t n,
+	matx_int64_t k,
 	matx_double alpha,
 	const matx_double* a,
-	size_t lda,
+	matx_int64_t lda,
 	const matx_double* b,
-	size_t ldb,
+	matx_int64_t ldb,
 	matx_double beta,
 	matx_double* c,
-	size_t ldc) {
-	if (!a || !b || !c) return MATX_ERR_INVALID_ARG;
-	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
+	matx_int64_t ldc) {
+	if (!a || !b || !c) 
+		return MATX_ERR_INVALID_ARG;
+	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) 
+		return MATX_ERR_INVALID_ARG;
 
-	if (m > (size_t)INT_MAX || n > (size_t)INT_MAX || k > (size_t)INT_MAX ||
-		lda > (size_t)INT_MAX || ldb > (size_t)INT_MAX || ldc > (size_t)INT_MAX) {
+	if (m > INT_MAX || n > INT_MAX || k > INT_MAX ||
+		lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX) {
 		return MATX_ERR_NOT_SUPPORTED;
 	}
 
@@ -40,34 +42,34 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
 	cblas_dgemm(order,
 		ta,
 		tb,
-		(int)m,
-		(int)n,
-		(int)k,
+		m,
+		n,
+		k,
 		alpha,
 		a,
-		(int)lda,
+		lda,
 		b,
-		(int)ldb,
+		ldb,
 		beta,
 		c,
-		(int)ldc);
+		ldc);
 	return MATX_OK;
 }
 
 static matx_status_t ref_zgemm(matx_layout_t layout,
 	matx_int64_t trans_a,
 	matx_int64_t trans_b,
-	size_t m,
-	size_t n,
-	size_t k,
+	matx_int64_t m,
+	matx_int64_t n,
+	matx_int64_t k,
 	const void* alpha,
 	const void* A,
-	size_t lda,
+	matx_int64_t lda,
 	const void* B,
-	size_t ldb,
+	matx_int64_t ldb,
 	const void* beta,
 	void* C,
-	size_t ldc) {
+	matx_int64_t ldc) {
 	if (!A || !B || !C || !alpha || !beta)
 		return MATX_ERR_INVALID_ARG;
 
@@ -85,28 +87,28 @@ static matx_status_t ref_zgemm(matx_layout_t layout,
 		trans_b ? CblasTrans : CblasNoTrans;
 
 	cblas_zgemm(order, ta, tb,
-		(int)m, (int)n, (int)k,
+		m, n, k,
 		alpha,
-		A, (int)lda,
-		B, (int)ldb,
+		A, lda,
+		B, ldb,
 		beta,
-		C, (int)ldc);
+		C, ldc);
 
 	return MATX_OK;
 }
 
 static matx_status_t ref_zgemv(matx_layout_t layout,
 	int trans_a,
-	size_t m,
-	size_t n,
+	matx_int64_t m,
+	matx_int64_t n,
 	const void* alpha,
 	const void* A,
-	size_t lda,
+	matx_int64_t lda,
 	const void* X,
-	size_t ldx,
+	matx_int64_t ldx,
 	const void* beta,
 	void* C,
-	size_t ldc) {
+	matx_int64_t ldc) {
 	if (!A || !X || !C || !alpha || !beta)
 		return MATX_ERR_INVALID_ARG;
 
@@ -121,23 +123,23 @@ static matx_status_t ref_zgemv(matx_layout_t layout,
 		trans_a ? CblasTrans : CblasNoTrans;
 
 	cblas_zgemv(order, ta,
-		(int)m, (int)n,
+		m, n,
 		alpha,
-		A, (int)lda,
-		X, (int)ldx,
+		A, lda,
+		X, ldx,
 		beta,
-		C, (int)ldc);
+		C, ldc);
 
 	return MATX_OK;
 }
 
 static matx_status_t ref_daxpy(
-	size_t n,
+	matx_int64_t n,
 	matx_double alpha,
 	const matx_double* x,
-	size_t lda,
+	matx_int64_t lda,
 	const void* y,
-	size_t ldy) {
+	matx_int64_t ldy) {
 	if (!x || !y)
 		return MATX_ERR_INVALID_ARG;
 	if (lda != ldy)
@@ -149,34 +151,34 @@ static matx_status_t ref_daxpy(
 }
 
 static matx_status_t ref_zaxpy(
-	size_t n,
+	matx_int64_t n,
 	const void* alpha,
 	const void* x,
-	size_t lda,
+	matx_int64_t lda,
 	const void* y,
-	size_t ldy) {
+	matx_int64_t ldy) {
 	if (!x || !y)
 		return MATX_ERR_INVALID_ARG;
 	if (lda != ldy)
 		return MATX_ERR_INVALID_ARG;
 
-	cblas_zaxpy((int)n, alpha, x, (int)lda, y,
-		(int)ldy);
+	cblas_zaxpy(n, alpha, x, lda, y,
+		ldy);
 	return MATX_OK;
 }
 
 static matx_status_t ref_dgemv(matx_layout_t layout,
 	matx_int64_t trans_a,
-	size_t m,
-	size_t n,
+	matx_int64_t m,
+	matx_int64_t n,
 	matx_double alpha,
 	const matx_double* A,
-	size_t lda,
+	matx_int64_t lda,
 	matx_double* B,
-	size_t ldb,
+	matx_int64_t ldb,
 	matx_double beta,
 	matx_double* C,
-	size_t ldc)
+	matx_int64_t ldc)
 {
 	if (!A || !C)
 		return MATX_ERR_INVALID_ARG;
@@ -192,25 +194,25 @@ static matx_status_t ref_dgemv(matx_layout_t layout,
 		trans_a ? CblasTrans : CblasNoTrans;
 
 	cblas_dgemv(order, ta,
-		(int)m, (int)n,
+		m, n,
 		alpha,
-		A, (int)lda,
-		B, (int)ldb,
+		A, lda,
+		B, ldb,
 		beta,
-		C, (int)ldc);
+		C, ldc);
 
 	return MATX_OK;
 }
 
 static matx_status_t ref_dgeadd(matx_layout_t trans_a,
-	size_t rows,
-	size_t cols,
+	matx_int64_t rows,
+	matx_int64_t cols,
 	matx_double alpha,
 	const matx_double* A,
-	size_t lda,
+	matx_int64_t lda,
 	matx_double beta,
 	matx_double* B,
-	size_t ldb)
+	matx_int64_t ldb)
 {
 	if (!A || !B)
 		return MATX_ERR_INVALID_ARG;
@@ -225,7 +227,8 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
 
 	cblas_dgeadd(
 		order,
-		(int)rows, (int)cols,
+		rows, 
+		cols,
 		alpha,
 		A, lda,
 		beta,
@@ -240,10 +243,10 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
 			matx_int64_t len = rows * cols;
 
 			if (beta != 1.0)
-				cblas_dscal((int)len, beta, B, 1);
+				cblas_dscal(len, beta, B, 1);
 
 			if (alpha != 0.0)
-				cblas_daxpy((int)len, alpha, A, 1, B, 1);
+				cblas_daxpy(len, alpha, A, 1, B, 1);
 
 			return MATX_OK;
 		}
@@ -255,10 +258,10 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
 			matx_int64_t len = rows * cols;
 
 			if (beta != 1.0)
-				cblas_dscal((int)len, beta, B, 1);
+				cblas_dscal(len, beta, B, 1);
 
 			if (alpha != 0.0)
-				cblas_daxpy((int)len, alpha, A, 1, B, 1);
+				cblas_daxpy(len, alpha, A, 1, B, 1);
 
 			return MATX_OK;
 		}
@@ -266,22 +269,22 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
 
 	for (size_t j = 0; j < cols; ++j)
 	{
-		cblas_dscal((int)rows, beta, B + j * ldb, 1);
-		cblas_daxpy((int)rows, alpha, A + j * lda, 1, B + j * ldb, 1);
+		cblas_dscal((rows, beta, B + j * ldb, 1);
+		cblas_daxpy(rows, alpha, A + j * lda, 1, B + j * ldb, 1);
 	}
 #endif
 	return MATX_OK;
 }
 
 static matx_status_t ref_zgeadd(matx_layout_t trans_a,
-	size_t rows,
-	size_t cols,
+	matx_int64_t rows,
+	matx_int64_t cols,
 	const void* alpha,
 	const void* A,
-	size_t lda,
+	matx_int64_t lda,
 	const void* beta,
 	void* B,
-	size_t ldb)
+	matx_int64_t ldb)
 {
 	if (!A || !B)
 		return MATX_ERR_INVALID_ARG;
@@ -295,7 +298,7 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
 
 	cblas_zgeadd(
 		order,
-		(int)rows, (int)cols,
+		rows, cols,
 		alpha,
 		A, lda,
 		beta,
@@ -313,8 +316,8 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
 		if (lda == cols && ldb == cols)
 		{
 			len = rows * cols;
-			cblas_zscal((int)len, beta_p, B, 1);
-			cblas_zaxpy((int)len, alpha_p, A, 1, B, 1);
+			cblas_zscal(len, beta_p, B, 1);
+			cblas_zaxpy(len, alpha_p, A, 1, B, 1);
 
 			return MATX_OK;
 		}
@@ -325,20 +328,20 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
 		{
 			len = rows * cols;
 
-			cblas_zscal((int)len, beta_p, B, 1);
-			cblas_zaxpy((int)len, alpha_p, A, 1, B, 1);
+			cblas_zscal((matx_int64_t)len, beta_p, B, 1);
+			cblas_zaxpy((matx_int64_t)len, alpha_p, A, 1, B, 1);
 
 			return MATX_OK;
 		}
 	}
 
-	for (int j = 0; j < (int)cols; ++j)
+	for (matx_int64_t j = 0; j < cols; ++j)
 	{
-		void* Bcol = (char*)B + j * ldb * sizeof(double) * 2;
-		const void* Acol = (const char*)A + j * lda * sizeof(double) * 2;
+		void* Bcol = (char*)B + j * ldb * sizeof(matx_double) * 2;
+		const void* Acol = (const char*)A + j * lda * sizeof(matx_double) * 2;
 
-		cblas_zscal((int)rows, beta_p, Bcol, 1);
-		cblas_zaxpy((int)rows, alpha_p, Acol, 1, Bcol, 1);
+		cblas_zscal(rows, beta_p, Bcol, 1);
+		cblas_zaxpy(rows, alpha_p, Acol, 1, Bcol, 1);
 	}
 #endif
 	return MATX_OK;
