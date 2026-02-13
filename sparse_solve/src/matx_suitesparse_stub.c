@@ -19,7 +19,9 @@ static matx_status_t ss_factor_csc_f64(const matx_coo_f64_t* A,
 	if (!A || !out_F) 
 		return MATX_ERR_INVALID_ARG;
 	
-	coo_to_csc_f64(A);
+	matx_status_t st = coo_to_csc_f64(A);
+	if(st != MATX_OK)
+		return st;
 
 	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->handle_csc.values) 
 		return MATX_ERR_INVALID_ARG;
@@ -50,7 +52,13 @@ static matx_status_t ss_factor_csc_f64(const matx_coo_f64_t* A,
 		return MATX_ERR_INTERNAL;
 	}
 
-	coo_to_csc_f64_value_remap(A);
+	st = coo_to_csc_f64_value_remap(A);
+
+	if(st != MATX_OK) {
+		klu_l_free_symbolic(&F->S, &F->common);
+		free(F);
+		return st;
+	}
 
 	F->N = klu_l_factor(A->handle_csc.col_ptr,
 		A->handle_csc.row_ind,
@@ -101,7 +109,9 @@ static matx_status_t ss_factor_csc_c64(
 	if (!A || !out_F) 
 		return MATX_ERR_INVALID_ARG;
 
-	coo_to_csc_c64(A);
+	matx_status_t st = coo_to_csc_c64(A);
+	if(st != MATX_OK)
+		return st;
 
 	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->values)
 		return MATX_ERR_INVALID_ARG;
@@ -131,7 +141,9 @@ static matx_status_t ss_factor_csc_c64(
 	if (!F->S) 
 		goto fail;
 
-	coo_to_csc_c64_value_remap(A);
+	st = coo_to_csc_c64_value_remap(A);
+	if(st != MATX_OK)
+		goto fail;
 
 	F->N = klu_zl_factor(
 		A->handle_csc.col_ptr,
@@ -140,7 +152,8 @@ static matx_status_t ss_factor_csc_c64(
 		F->S,
 		&F->common);
 
-	if (!F->N) goto fail;
+	if (!F->N) 
+		goto fail;
 
 	*out_F = F;
 	return MATX_OK;

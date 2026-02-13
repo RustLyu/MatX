@@ -192,13 +192,13 @@ extern "C" {
 		matx_csc_f64_t handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
 	} matx_coo_f64_t;
 
-	matx_status_t matx_sparse_f64_create(matx_csc_f64_t* out,
+	matx_status_t matx_csc_sparse_f64_create(matx_csc_f64_t* out,
 		matx_int64_t nrows,
 		matx_int64_t ncols,
 		matx_int64_t nnz,
 		const matx_alloc_t* alloc);
 
-	matx_status_t matx_sparse_f64_wrap(matx_csc_f64_t* out,
+	matx_status_t matx_csc_sparse_f64_wrap(matx_csc_f64_t* out,
 		matx_int64_t nrows,
 		matx_int64_t ncols,
 		matx_int64_t nnz,
@@ -206,7 +206,7 @@ extern "C" {
 		const matx_int64_t* row_ind,
 		const matx_double* values);
 
-	void matx_sparse_f64_destroy(matx_coo_f64_t* m, const matx_alloc_t* alloc);
+	void matx_coo_sparse_f64_destroy(matx_coo_f64_t* m, const matx_alloc_t* alloc);
 
 	typedef struct matx_csc_c64_t {
 		matx_int64_t nrows;
@@ -234,13 +234,13 @@ extern "C" {
 		matx_csc_c64_t handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
 	} matx_coo_c64_t;
 
-	matx_status_t matx_sparse_c64_create(matx_coo_c64_t* out,
+	matx_status_t matx_coo_sparse_c64_create(matx_coo_c64_t* out,
 		matx_int64_t nrows,
 		matx_int64_t ncols,
 		matx_int64_t nnz,
 		const matx_alloc_t* alloc);
 
-	matx_status_t matx_sparse_c64_wrap(matx_coo_c64_t* out,
+	matx_status_t matx_coo_sparse_c64_wrap(matx_coo_c64_t* out,
 		matx_int64_t nrows,
 		matx_int64_t ncols,
 		matx_int64_t nnz,
@@ -248,7 +248,15 @@ extern "C" {
 		const matx_int64_t* cols,
 		const matx_complex_f64* values);
 
-	void matx_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc);
+	void matx_coo_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc);
+
+	matx_status_t matx_csc_sparse_c64_create(matx_csc_c64_t* out,
+		matx_int64_t nrows,
+		matx_int64_t ncols,
+		matx_int64_t nnz,
+		const matx_alloc_t* alloc);
+	void matx_csc_sparse_c64_destroy(matx_csc_c64_t* m, const matx_alloc_t* alloc);
+	void matx_csc_sparse_f64_destroy(matx_csc_f64_t* m, const matx_alloc_t* alloc);
 
 #ifdef __cplusplus
 }

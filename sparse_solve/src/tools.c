@@ -221,7 +221,6 @@ int build_Ax_from_coo_f64(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
 matx_status_t coo_to_csc_f64(matx_coo_f64_t* coo)
 {
     int s = coo_2_csc(coo->columns, coo->rows, coo->ncols, coo->nnz, coo->handle_csc.col_ptr, coo->handle_csc.row_ind, (matx_int64_t*)coo->handle_csc.coo_csc_index_map);
-    coo->handle_csc.only_value_update = 0;
     coo->handle_csc.struct_update = 0;
     return MATX_OK;
 }
@@ -229,7 +228,6 @@ matx_status_t coo_to_csc_f64(matx_coo_f64_t* coo)
 matx_status_t coo_to_csc_c64(matx_coo_c64_t* coo)
 {
     coo_2_csc(coo->columns, coo->rows, coo->ncols, coo->nnz, coo->handle_csc.col_ptr, coo->handle_csc.row_ind, (matx_int64_t*)coo->handle_csc.coo_csc_index_map);
-    coo->handle_csc.only_value_update = 0;
     coo->handle_csc.struct_update = 0;
     return MATX_OK;
 }

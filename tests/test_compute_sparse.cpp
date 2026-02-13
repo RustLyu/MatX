@@ -173,7 +173,7 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
         EXPECT_NEAR(y.data[i].real, expected_real, eps) << "y[" << i << "] real part error";
         EXPECT_NEAR(y.data[i].imag, expected_imag, eps) << "y[" << i << "] imag part error";
     }
-    matx_sparse_c64_destroy(&A, &a);
+    matx_coo_sparse_c64_destroy(&A, &a);
     matx_vec_c64_destroy(&x, &a);
     matx_vec_c64_destroy(&y, &a);
 }
@@ -208,7 +208,7 @@ TEST(compute_sparse, spmm_csc_f64_4x4) {
   EXPECT_NEAR(C.data[0], 1.0, 1e-12);
   EXPECT_NEAR(C.data[5], 1.0, 1e-12);
 
-  matx_sparse_f64_destroy(&A, &a);
+  matx_coo_sparse_f64_destroy(&A, &a);
   matx_dense_f64_destroy(&B, &a);
   matx_dense_f64_destroy(&C, &a);
 }
@@ -254,7 +254,7 @@ TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_status_t st = matx_spmm_coo_c64(&backend, alpha, &A, &B, beta, &C);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(C.data[0].real, 1.0, 1e-12);
-  matx_sparse_c64_destroy(&A, &a);
+  matx_coo_sparse_c64_destroy(&A, &a);
   matx_dense_c64_destroy(&B, &a);
   matx_dense_c64_destroy(&C, &a);
 }

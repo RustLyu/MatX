@@ -31,7 +31,7 @@ TEST(solve, sparse_real_4x4_factor_solve) {
 		.handle_mkl = nullptr
 	};
 	auto alloc = matx_alloc_default();
-	matx_sparse_f64_create(&coo_A.handle_csc, 4, 4, nnz, &alloc);
+	matx_csc_sparse_f64_create(&coo_A.handle_csc, 4, 4, nnz, &alloc);
 	double b[4] = { 4.0, 6.0, 8.0, 10.0 };
 	double x[4] = { 0.0, 0.0, 0.0, 0.0 };
 
@@ -78,7 +78,7 @@ TEST(solve, sparse_real_4x4_solve_one_shot) {
 		.handle_mkl = nullptr
 	};
 	auto alloc = matx_alloc_default();
-	matx_sparse_f64_create(&coo_A.handle_csc, 4, 4, nnz, &alloc);
+	matx_csc_sparse_f64_create(&coo_A.handle_csc, 4, 4, nnz, &alloc);
 
 	double b[4] = { 2.0, 4.0, 6.0, 8.0 };
 	double x[4] = { 0.0, 0.0, 0.0, 0.0 };
