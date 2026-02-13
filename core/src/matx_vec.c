@@ -3,7 +3,7 @@
 #include <string.h>
 
 matx_status_t matx_vec_f64_create(matx_vec_f64_t* out,
-    matx_uint64_t n,
+    matx_int64_t n,
                                   const matx_alloc_t* alloc) {
   if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
   memset(out, 0, sizeof(*out));
@@ -19,8 +19,8 @@ matx_status_t matx_vec_f64_create(matx_vec_f64_t* out,
 }
 
 matx_status_t matx_vec_f64_wrap(matx_vec_f64_t* out,
-    matx_uint64_t n,
-    matx_uint64_t stride,
+    matx_int64_t n,
+    matx_int64_t stride,
     matx_double* data) {
   if (!out || !data || n == 0 || stride == 0) return MATX_ERR_INVALID_ARG;
   out->n = n;
@@ -40,7 +40,7 @@ void matx_vec_f64_destroy(matx_vec_f64_t* v,
 }
 
 matx_status_t matx_vec_c64_create(matx_vec_c64_t* out,
-    matx_uint64_t n,
+    matx_int64_t n,
                                   const matx_alloc_t* alloc) {
   if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
   memset(out, 0, sizeof(*out));
@@ -56,8 +56,8 @@ matx_status_t matx_vec_c64_create(matx_vec_c64_t* out,
 }
 
 matx_status_t matx_vec_c64_wrap(matx_vec_c64_t* out,
-    matx_uint64_t n,
-    matx_uint64_t stride,
+    matx_int64_t n,
+    matx_int64_t stride,
                                 matx_complex_f64* data) {
   if (!out || !data || n == 0 || stride == 0) return MATX_ERR_INVALID_ARG;
   out->n = n;

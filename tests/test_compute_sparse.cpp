@@ -8,10 +8,10 @@ extern "C" {
 /* 4x4 sparse CSC: full matrix for simplicity. col_ptr[0..4], row_ind[0..16], values[16] */
 TEST(compute_sparse, spmv_csc_f64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_uint64_t I[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };  // 行索引
-  matx_uint64_t J[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };  // 列索引
+  matx_int64_t I[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };  // 行索引
+  matx_int64_t J[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };  // 列索引
   matx_double values[16];
-  for (matx_uint64_t i = 0; i < 16; ++i) 
+  for (matx_int64_t i = 0; i < 16; ++i) 
       values[i] = (i % 4 == i / 4) ? 2.0 : 0.5;
 
   // 构造 COO 矩阵
@@ -58,11 +58,11 @@ TEST(compute_sparse, spmv_csc_f64_cd) {
     size_t nrows, ncols;
     infile >> nrows >> ncols;
 
-    std::vector<matx_uint64_t> rows;
-    std::vector<matx_uint64_t> cols;
+    std::vector<matx_int64_t> rows;
+    std::vector<matx_int64_t> cols;
     std::vector<matx_double> vals;
 
-    matx_uint64_t r, c;
+    matx_int64_t r, c;
     double v;
     while (infile >> r >> c >> v) {
         rows.push_back(r);
@@ -78,7 +78,7 @@ TEST(compute_sparse, spmv_csc_f64_cd) {
     matx_coo_f64_t A = {
         .nrows = 12,
         .ncols = 12,
-        .nnz = vals.size(),
+        .nnz = (matx_int64_t)vals.size(),
         .rows = rows.data(),
         .columns = cols.data(),
         .values = vals.data(),
@@ -121,13 +121,13 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
     const int rows = 4, cols = 4;
     const int nnz = 16;
 
-    matx_uint64_t coo_rows[16];
-    matx_uint64_t coo_cols[16];
+    matx_int64_t coo_rows[16];
+    matx_int64_t coo_cols[16];
     matx_complex_f64 coo_values[16];
 
-    for (matx_uint64_t i = 0; i < nnz; ++i) {
-        matx_uint64_t row = i % 4;
-        matx_uint64_t col = i / 4;
+    for (matx_int64_t i = 0; i < nnz; ++i) {
+        matx_int64_t row = i % 4;
+        matx_int64_t col = i / 4;
 
         coo_rows[i] = row;
         coo_cols[i] = col;
@@ -180,8 +180,8 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
 
 TEST(compute_sparse, spmm_csc_f64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_uint64_t I[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
-  matx_uint64_t J[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
+  matx_int64_t I[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+  matx_int64_t J[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
   matx_double values[16];
   for (int i = 0; i < 16; ++i) 
       values[i] = (i % 4 == i / 4) ? 1.0 : 0.0;
@@ -215,10 +215,10 @@ TEST(compute_sparse, spmm_csc_f64_4x4) {
 
 TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_uint64_t nnz = 4;
+  matx_int64_t nnz = 4;
 
-  matx_uint64_t rows[16] = { 0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3 };
-  matx_uint64_t cols[16] = { 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3 };
+  matx_int64_t rows[16] = { 0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3 };
+  matx_int64_t cols[16] = { 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3 };
 
   matx_complex_f64 values[16];
   for (int i = 0; i < 16; ++i) {

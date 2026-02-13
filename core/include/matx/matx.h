@@ -21,7 +21,7 @@ extern "C" {
 		MATX_ERR_INTERNAL = 4
 	} matx_status_t;
 
-	typedef uint64_t matx_uint64_t;
+	typedef int64_t matx_int64_t;
 	typedef double matx_double;
 
 	const char* matx_status_string(matx_status_t st);
@@ -71,10 +71,10 @@ extern "C" {
 
 	// ---- Dense vector (double) ----
 	typedef struct matx_vec_f64_t {
-		matx_uint64_t n;
-		matx_uint64_t stride;
+		matx_int64_t n;
+		matx_int64_t stride;
 		matx_double* data;
-		matx_uint64_t flags;
+		matx_int64_t flags;
 		matx_handle_t handle_grb;
 	} matx_vec_f64_t;
 
@@ -92,25 +92,25 @@ extern "C" {
 
 	// ---- Dense matrix (double) ----
 	typedef struct matx_dense_f64_t {
-		matx_uint64_t  rows;
-		matx_uint64_t  cols;
-		matx_uint64_t  stride;     // leading dimension: if col-major => ld = stride (>= rows); if row-major => ld = stride (>= cols)
+		matx_int64_t  rows;
+		matx_int64_t  cols;
+		matx_int64_t  stride;     // leading dimension: if col-major => ld = stride (>= rows); if row-major => ld = stride (>= cols)
 		matx_layout_t layout;
 		matx_double* data;
-		matx_uint64_t flags;    // reserved for future (ownership, alignment, etc.)
+		matx_int64_t flags;    // reserved for future (ownership, alignment, etc.)
 		matx_handle_t handle_grb;
 	} matx_dense_f64_t;
 
 	matx_status_t matx_dense_f64_create(matx_dense_f64_t* out,
-		matx_uint64_t rows,
-		matx_uint64_t cols,
+		matx_int64_t rows,
+		matx_int64_t cols,
 		matx_layout_t layout,
 		const matx_alloc_t* alloc);
 
 	matx_status_t matx_dense_f64_wrap(matx_dense_f64_t* out,
-		matx_uint64_t rows,
-		matx_uint64_t cols,
-		matx_uint64_t stride,
+		matx_int64_t rows,
+		matx_int64_t cols,
+		matx_int64_t stride,
 		matx_layout_t layout,
 		matx_double* data);
 
@@ -118,20 +118,20 @@ extern "C" {
 
 	// ---- Dense vector (complex) ----
 	typedef struct matx_vec_c64_t {
-		matx_uint64_t n;
-		matx_uint64_t stride;
+		matx_int64_t n;
+		matx_int64_t stride;
 		matx_complex_f64* data;
-		matx_uint64_t flags;
+		matx_int64_t flags;
 		matx_handle_t handle_grb;
 	} matx_vec_c64_t;
 
 	matx_status_t matx_vec_c64_create(matx_vec_c64_t* out,
-		matx_uint64_t n,
+		matx_int64_t n,
 		const matx_alloc_t* alloc);
 
 	matx_status_t matx_vec_c64_wrap(matx_vec_c64_t* out,
-		matx_uint64_t n,
-		matx_uint64_t stride,
+		matx_int64_t n,
+		matx_int64_t stride,
 		matx_complex_f64* data);
 
 	void matx_vec_c64_destroy(matx_vec_c64_t* v,
@@ -139,25 +139,25 @@ extern "C" {
 
 	// ---- Dense matrix (complex) ----
 	typedef struct matx_dense_c64_t {
-		matx_uint64_t rows;
-		matx_uint64_t cols;
-		matx_uint64_t stride;
+		matx_int64_t rows;
+		matx_int64_t cols;
+		matx_int64_t stride;
 		matx_layout_t layout;
 		matx_complex_f64* data;
-		matx_uint64_t flags;
+		matx_int64_t flags;
 		matx_handle_t handle_grb;
 	} matx_dense_c64_t;
 
 	matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
-		matx_uint64_t rows,
-		matx_uint64_t cols,
+		matx_int64_t rows,
+		matx_int64_t cols,
 		matx_layout_t layout,
 		const matx_alloc_t* alloc);
 
 	matx_status_t matx_dense_c64_wrap(matx_dense_c64_t* out,
-		matx_uint64_t rows,
-		matx_uint64_t cols,
-		matx_uint64_t stride,
+		matx_int64_t rows,
+		matx_int64_t cols,
+		matx_int64_t stride,
 		matx_layout_t layout,
 		matx_complex_f64* data);
 
@@ -166,78 +166,86 @@ extern "C" {
 
 	// ---- Sparse CSC (real/complex) ----
 	typedef struct matx_csc_f64_t {
-		matx_uint64_t nrows;
-		matx_uint64_t ncols;
-		matx_uint64_t nnz;
-		const matx_uint64_t* col_ptr;
-		const matx_uint64_t* row_ind;
+		matx_int64_t nrows;
+		matx_int64_t ncols;
+		matx_int64_t nnz;
+		const matx_int64_t* col_ptr;
+		const matx_int64_t* row_ind;
 		const matx_double* values;
+		const matx_int64_t* coo_csc_index_map;
+		matx_int64_t struct_update; // coo to csc conversion may involve sorting and duplicate summation, these flags can be used to track whether the structure/values are up to date with the original COO data
+		matx_int64_t only_value_update; // if the structure is up to date, but values have been updated, this flag can be set to indicate that only values need to be updated in the CSC representation without redoing the entire COO to CSC conversion
 		uint32_t flags;
 	} matx_csc_f64_t;
 
 
 	typedef struct matx_coo_f64_t {
-		matx_uint64_t nrows;
-		matx_uint64_t ncols;
-		matx_uint64_t nnz;
-		const matx_uint64_t* rows;
-		const matx_uint64_t* columns;
+		matx_int64_t nrows;
+		matx_int64_t ncols;
+		matx_int64_t nnz;
+		const matx_int64_t* rows;
+		const matx_int64_t* columns;
 		const matx_double* values;
-		matx_uint64_t flags;
+		matx_int64_t flags;
 		matx_handle_t handle_grb;
 		matx_handle_t handle_mkl;
+		matx_csc_f64_t handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
 	} matx_coo_f64_t;
 
 	matx_status_t matx_sparse_f64_create(matx_csc_f64_t* out,
-		matx_uint64_t nrows,
-		matx_uint64_t ncols,
-		matx_uint64_t nnz,
+		matx_int64_t nrows,
+		matx_int64_t ncols,
+		matx_int64_t nnz,
 		const matx_alloc_t* alloc);
 
 	matx_status_t matx_sparse_f64_wrap(matx_csc_f64_t* out,
-		matx_uint64_t nrows,
-		matx_uint64_t ncols,
-		matx_uint64_t nnz,
-		const matx_uint64_t* col_ptr,
-		const matx_uint64_t* row_ind,
+		matx_int64_t nrows,
+		matx_int64_t ncols,
+		matx_int64_t nnz,
+		const matx_int64_t* col_ptr,
+		const matx_int64_t* row_ind,
 		const matx_double* values);
 
 	void matx_sparse_f64_destroy(matx_coo_f64_t* m, const matx_alloc_t* alloc);
 
 	typedef struct matx_csc_c64_t {
-		matx_uint64_t nrows;
-		matx_uint64_t ncols;
-		matx_uint64_t nnz;
-		const matx_uint64_t* col_ptr;
-		const matx_uint64_t* row_ind;
+		matx_int64_t nrows;
+		matx_int64_t ncols;
+		matx_int64_t nnz;
+		const matx_int64_t* col_ptr;
+		const matx_int64_t* row_ind;
 		const matx_complex_f64* values;
-		matx_uint64_t flags;
+		const matx_int64_t* coo_csc_index_map;
+		matx_int64_t struct_update; // coo to csc conversion may involve sorting and duplicate summation, these flags can be used to track whether the structure/values are up to date with the original COO data
+		matx_int64_t only_value_update; // if the structure is up to date, but values have been updated, this flag can be set to indicate that only values need to be updated in the CSC representation without redoing the entire COO to CSC conversion
+		matx_int64_t flags;
 	} matx_csc_c64_t;
 
 	typedef struct matx_coo_c64_t {
-		matx_uint64_t nrows;
-		matx_uint64_t ncols;
-		matx_uint64_t nnz;
-		const matx_uint64_t* rows;
-		const matx_uint64_t* columns;
+		matx_int64_t nrows;
+		matx_int64_t ncols;
+		matx_int64_t nnz;
+		const matx_int64_t* rows;
+		const matx_int64_t* columns;
 		const matx_complex_f64* values;
-		matx_uint64_t flags;
+		matx_int64_t flags;
 		matx_handle_t handle_grb;
 		matx_handle_t handle_mkl;
+		matx_csc_c64_t handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
 	} matx_coo_c64_t;
 
 	matx_status_t matx_sparse_c64_create(matx_coo_c64_t* out,
-		matx_uint64_t nrows,
-		matx_uint64_t ncols,
-		matx_uint64_t nnz,
+		matx_int64_t nrows,
+		matx_int64_t ncols,
+		matx_int64_t nnz,
 		const matx_alloc_t* alloc);
 
 	matx_status_t matx_sparse_c64_wrap(matx_coo_c64_t* out,
-		matx_uint64_t nrows,
-		matx_uint64_t ncols,
-		matx_uint64_t nnz,
-		const matx_uint64_t* rows,
-		const matx_uint64_t* cols,
+		matx_int64_t nrows,
+		matx_int64_t ncols,
+		matx_int64_t nnz,
+		const matx_int64_t* rows,
+		const matx_int64_t* cols,
 		const matx_complex_f64* values);
 
 	void matx_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc);

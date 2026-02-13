@@ -9,8 +9,8 @@
 #endif
 
 static matx_status_t ref_dgemm(matx_layout_t layout,
-	matx_uint64_t trans_a,
-	matx_uint64_t trans_b,
+	matx_int64_t trans_a,
+	matx_int64_t trans_b,
 	size_t m,
 	size_t n,
 	size_t k,
@@ -55,8 +55,8 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
 }
 
 static matx_status_t ref_zgemm(matx_layout_t layout,
-	matx_uint64_t trans_a,
-	matx_uint64_t trans_b,
+	matx_int64_t trans_a,
+	matx_int64_t trans_b,
 	size_t m,
 	size_t n,
 	size_t k,
@@ -166,7 +166,7 @@ static matx_status_t ref_zaxpy(
 }
 
 static matx_status_t ref_dgemv(matx_layout_t layout,
-	matx_uint64_t trans_a,
+	matx_int64_t trans_a,
 	size_t m,
 	size_t n,
 	matx_double alpha,
@@ -237,7 +237,7 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
 	{
 		if (lda == cols && ldb == cols)
 		{
-			matx_uint64_t len = rows * cols;
+			matx_int64_t len = rows * cols;
 
 			if (beta != 1.0)
 				cblas_dscal((int)len, beta, B, 1);
@@ -252,7 +252,7 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
 	{
 		if (lda == rows && ldb == rows)
 		{
-			matx_uint64_t len = rows * cols;
+			matx_int64_t len = rows * cols;
 
 			if (beta != 1.0)
 				cblas_dscal((int)len, beta, B, 1);

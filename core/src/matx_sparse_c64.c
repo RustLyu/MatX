@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 matx_status_t matx_sparse_c64_create(matx_coo_c64_t* out,
-    matx_uint64_t nrows,
-    matx_uint64_t ncols,
-    matx_uint64_t nnz,
+    matx_int64_t nrows,
+    matx_int64_t ncols,
+    matx_int64_t nnz,
     const matx_alloc_t* alloc) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
         return MATX_ERR_INVALID_ARG;
@@ -14,8 +14,8 @@ matx_status_t matx_sparse_c64_create(matx_coo_c64_t* out,
 
     memset(out, 0, sizeof(*out));
     
-    matx_uint64_t* rows = (matx_uint64_t*)matx_malloc(alloc, nnz * sizeof(matx_uint64_t));
-    matx_uint64_t* cols = (matx_uint64_t*)matx_malloc(alloc, (nnz) * sizeof(matx_uint64_t));
+    matx_int64_t* rows = (matx_int64_t*)matx_malloc(alloc, nnz * sizeof(matx_int64_t));
+    matx_int64_t* cols = (matx_int64_t*)matx_malloc(alloc, (nnz) * sizeof(matx_int64_t));
     matx_complex_f64* values_buf = (matx_complex_f64*)matx_malloc(alloc, nnz * sizeof(matx_complex_f64));
 
     if (!rows || !cols || !values_buf) {
@@ -38,11 +38,11 @@ matx_status_t matx_sparse_c64_create(matx_coo_c64_t* out,
 }
 
 matx_status_t matx_sparse_c64_wrap(matx_coo_c64_t* out,
-    matx_uint64_t nrows,
-    matx_uint64_t ncols,
-    matx_uint64_t nnz,
-    const matx_uint64_t* rows,
-    const matx_uint64_t* cols,
+    matx_int64_t nrows,
+    matx_int64_t ncols,
+    matx_int64_t nnz,
+    const matx_int64_t* rows,
+    const matx_int64_t* cols,
     const matx_complex_f64* values) {
     if (!out || !rows || !cols || !values) {
         return MATX_ERR_INVALID_ARG;
@@ -73,8 +73,8 @@ void matx_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc) {
     }
 
     if ((m->flags & 1u) != 0u) {
-        matx_free(alloc, (matx_uint64_t*)m->rows);
-        matx_free(alloc, (matx_uint64_t*)m->columns);
+        matx_free(alloc, (matx_int64_t*)m->rows);
+        matx_free(alloc, (matx_int64_t*)m->columns);
         matx_free(alloc, (matx_complex_f64*)m->values);
     }
 
@@ -97,6 +97,6 @@ void matx_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc) {
         m->handle_mkl.impl = NULL;
         m->handle_mkl.valid = -1;
     }
-
+	// TODO:DESTORY handle_csc if valid
     memset(m, 0, sizeof(*m));
 }

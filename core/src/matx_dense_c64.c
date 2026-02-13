@@ -3,8 +3,8 @@
 #include <string.h>
 
 matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
-    matx_uint64_t rows,
-    matx_uint64_t cols,
+    matx_int64_t rows,
+    matx_int64_t cols,
                                     matx_layout_t layout,
                                     const matx_alloc_t* alloc) {
   if (!out || !alloc || rows == 0 || cols == 0) return MATX_ERR_INVALID_ARG;
@@ -27,9 +27,9 @@ matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
 }
 
 matx_status_t matx_dense_c64_wrap(matx_dense_c64_t* out,
-                                  matx_uint64_t rows,
-    matx_uint64_t cols,
-    matx_uint64_t stride,
+                                  matx_int64_t rows,
+    matx_int64_t cols,
+    matx_int64_t stride,
                                   matx_layout_t layout,
                                   matx_complex_f64* data) {
   if (!out || !data || rows == 0 || cols == 0) return MATX_ERR_INVALID_ARG;

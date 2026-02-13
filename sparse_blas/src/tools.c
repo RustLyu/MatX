@@ -1,4 +1,5 @@
 ﻿#include "matx/matx_sparse_compute.h"
+#include "matx/matx.h"
 
 #include <suitesparse/GraphBLAS.h>
 
@@ -163,7 +164,7 @@ size_t dense_2_grb_f64(matx_dense_f64_t* A)
 size_t grb_2_dense_f64(matx_dense_f64_t* A)
 {
 	GrB_Type t;
-	matx_uint64_t s = 0;
+	matx_int64_t s = 0;
 	bool iso = false;
 	GrB_Info info = GxB_Matrix_export_FullC(A->handle_grb.impl, &t, &A->rows, &A->cols, &A->data, &s, &iso, NULL);
 	A->handle_grb.custom_free_func = &free_grb_matrix;
@@ -223,7 +224,7 @@ size_t dense_2_grb_c64(matx_dense_c64_t* A)
 size_t grb_2_dense_c64(matx_dense_c64_t* A)
 {
 	GrB_Type t;
-	matx_uint64_t s = 0;
+	matx_int64_t s = 0;
 	bool iso = false;
 	GrB_Info info = GxB_Matrix_export_FullC(A->handle_grb.impl, &t, &A->rows, &A->cols, &A->data, &s, &iso, NULL);
 	A->handle_grb.custom_free_func = &free_grb_matrix;

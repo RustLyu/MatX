@@ -18,7 +18,7 @@ matx_sparse_linsolve_t matx_sparse_linsolve_default(void) {
 
 // Sparse real
 matx_status_t matx_factor_csc_f64(const matx_sparse_linsolve_t* ls,
-                                  const matx_csc_f64_t* A,
+                                  const matx_coo_f64_t* A,
                                   matx_factor_sparse_f64_t** out_F) {
   if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.factor_csc_f64) return MATX_ERR_NOT_SUPPORTED;
@@ -43,7 +43,7 @@ void matx_factor_csc_f64_destroy(const matx_sparse_linsolve_t* ls,
 }
 
 matx_status_t matx_solve_csc_f64(const matx_sparse_linsolve_t* ls,
-                                 const matx_csc_f64_t* A,
+                                 const matx_coo_f64_t* A,
                                  const matx_double* b,
     matx_double* x) {
   if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
@@ -58,7 +58,7 @@ matx_status_t matx_solve_csc_f64(const matx_sparse_linsolve_t* ls,
 
 // Complex variants (default to NOT_SUPPORTED until backend provides them)
 matx_status_t matx_factor_csc_c64(const matx_sparse_linsolve_t* ls,
-                                  const matx_csc_c64_t* A,
+                                  const matx_coo_c64_t* A,
                                   matx_factor_sparse_c64_t** out_F) {
   if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.factor_csc_c64) return MATX_ERR_NOT_SUPPORTED;
@@ -76,20 +76,23 @@ matx_status_t matx_solve_csc_c64_factor(const matx_sparse_linsolve_t* ls,
 
 void matx_factor_csc_c64_destroy(const matx_sparse_linsolve_t* ls,
                                  matx_factor_sparse_c64_t* F) {
-  if (!ls || !F) return;
+  if (!ls || !F) 
+      return;
   if (ls->vt.factor_csc_c64_destroy) {
     ls->vt.factor_csc_c64_destroy(F);
   }
 }
 
 matx_status_t matx_solve_csc_c64(const matx_sparse_linsolve_t* ls,
-                                 const matx_csc_c64_t* A,
+                                 const matx_coo_c64_t* A,
                                  const matx_vec_c64_t* b,
                                  matx_vec_c64_t* x) {
-  if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
+  if (!ls || !A || !b || !x) 
+      return MATX_ERR_INVALID_ARG;
   matx_factor_sparse_c64_t* F = NULL;
   matx_status_t st = matx_factor_csc_c64(ls, A, &F);
-  if (st != MATX_OK) return st;
+  if (st != MATX_OK) 
+      return st;
   st = matx_solve_csc_c64_factor(ls, F, b, x);
   matx_factor_csc_c64_destroy(ls, F);
   return st;

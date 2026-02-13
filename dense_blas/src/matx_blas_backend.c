@@ -30,8 +30,8 @@ matx_dense_backend_t matx_blas_default(void) {
 }
 
 matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
-	matx_uint64_t trans_a,
-	matx_uint64_t trans_b,
+	matx_int64_t trans_a,
+	matx_int64_t trans_b,
 	matx_double alpha,
 	const matx_dense_f64_t* A,
 	const matx_dense_f64_t* B,
@@ -43,15 +43,15 @@ matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 	if (A->layout != B->layout || A->layout != C->layout) return MATX_ERR_INVALID_ARG;
 	if (A->layout != MATX_COL_MAJOR && A->layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
 
-	const matx_uint64_t a_rows = A->rows;
-	const matx_uint64_t a_cols = A->cols;
-	const matx_uint64_t b_rows = B->rows;
-	const matx_uint64_t b_cols = B->cols;
+	const matx_int64_t a_rows = A->rows;
+	const matx_int64_t a_cols = A->cols;
+	const matx_int64_t b_rows = B->rows;
+	const matx_int64_t b_cols = B->cols;
 
-	const matx_uint64_t m = (trans_a ? a_cols : a_rows);
-	const matx_uint64_t kA = (trans_a ? a_rows : a_cols);
-	const matx_uint64_t kB = (trans_b ? b_cols : b_rows);
-	const matx_uint64_t n = (trans_b ? b_rows : b_cols);
+	const matx_int64_t m = (trans_a ? a_cols : a_rows);
+	const matx_int64_t kA = (trans_a ? a_rows : a_cols);
+	const matx_int64_t kB = (trans_b ? b_cols : b_rows);
+	const matx_int64_t n = (trans_b ? b_rows : b_cols);
 
 	if (kA != kB) return MATX_ERR_INVALID_ARG;
 	if (C->rows != m || C->cols != n) return MATX_ERR_INVALID_ARG;
@@ -74,8 +74,8 @@ matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 
 
 matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
-	matx_uint64_t trans_a,
-	matx_uint64_t trans_b,
+	matx_int64_t trans_a,
+	matx_int64_t trans_b,
 	matx_complex_f64 alpha,
 	const matx_dense_c64_t* A,
 	const matx_dense_c64_t* B,
@@ -86,14 +86,14 @@ matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 	if (A->layout != B->layout || A->layout != C->layout)
 		return MATX_ERR_INVALID_ARG;
 
-	const matx_uint64_t a_rows = A->rows;
-	const matx_uint64_t a_cols = A->cols;
-	const matx_uint64_t b_rows = B->rows;
-	const matx_uint64_t b_cols = B->cols;
-	const matx_uint64_t m = trans_a ? a_cols : a_rows;
-	const matx_uint64_t kA = trans_a ? a_rows : a_cols;
-	const matx_uint64_t kB = trans_b ? b_cols : b_rows;
-	const matx_uint64_t n = trans_b ? b_rows : b_cols;
+	const matx_int64_t a_rows = A->rows;
+	const matx_int64_t a_cols = A->cols;
+	const matx_int64_t b_rows = B->rows;
+	const matx_int64_t b_cols = B->cols;
+	const matx_int64_t m = trans_a ? a_cols : a_rows;
+	const matx_int64_t kA = trans_a ? a_rows : a_cols;
+	const matx_int64_t kB = trans_b ? b_cols : b_rows;
+	const matx_int64_t n = trans_b ? b_rows : b_cols;
 
 	if (kA != kB)
 		return MATX_ERR_INVALID_ARG;
@@ -117,7 +117,7 @@ matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
-	matx_uint64_t trans_a,
+	matx_int64_t trans_a,
 	matx_complex_f64 alpha,
 	const matx_dense_c64_t* A,
 	const matx_vec_c64_t* x,
@@ -127,10 +127,10 @@ matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 	if (!A || !x || !y || !A->data || !x->data || !y->data)
 		return MATX_ERR_INVALID_ARG;
 
-	const matx_uint64_t m = A->rows;
-	const matx_uint64_t n = A->cols;
-	const matx_uint64_t len_x = trans_a ? m : n;
-	const matx_uint64_t len_y = trans_a ? n : m;
+	const matx_int64_t m = A->rows;
+	const matx_int64_t n = A->cols;
+	const matx_int64_t len_x = trans_a ? m : n;
+	const matx_int64_t len_y = trans_a ? n : m;
 
 	if (x->n != len_x || y->n != len_y)
 		return MATX_ERR_INVALID_ARG;
@@ -151,7 +151,7 @@ matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
-	matx_uint64_t trans_a,
+	matx_int64_t trans_a,
 	matx_double alpha,
 	const matx_dense_f64_t* A,
 	const matx_vec_f64_t* x,

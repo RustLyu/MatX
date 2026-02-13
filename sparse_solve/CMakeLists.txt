@@ -3,6 +3,7 @@
 add_library(${PROJECT_NAME}
   src/matx_solve_backend.c
   src/matx_suitesparse_stub.c
+  src/tools.c
 )
 
 add_library(MatX::sparse_solve ALIAS ${PROJECT_NAME})
