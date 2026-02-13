@@ -11,8 +11,6 @@ extern "C" {
 	} matx_dense_linsolve_backend_kind_t;
 
 	// Opaque factorization handles
-	typedef struct matx_factor_sparse_f64_t matx_factor_sparse_f64_t;
-	typedef struct matx_factor_sparse_f64_t matx_factor_sparse_c64_t;
 	typedef struct matx_factor_dense_f64_t matx_factor_dense_f64_t;
 	typedef struct matx_factor_dense_f64_t matx_factor_dense_c64_t;
 
@@ -53,8 +51,8 @@ extern "C" {
 
 	matx_status_t matx_solve_dense_f64_factor(const matx_dense_linsolve_t* ls,
 		const matx_factor_dense_f64_t* F,
-		const double* b,
-		double* x);
+		const matx_double* b,
+		matx_double* x);
 
 	void matx_factor_dense_f64_destroy(const matx_dense_linsolve_t* ls,
 		matx_factor_dense_f64_t* F);

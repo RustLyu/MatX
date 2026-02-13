@@ -13,13 +13,6 @@ struct matx_factor_sparse_f64_t {
 	matx_uint64_t n;
 };
 
-// Dense factorization (simple LU in C for now)
-struct matx_factor_dense_f64_t {
-	matx_uint64_t n;
-	matx_double* lu; // column-major, combined L+U
-	matx_uint64_t* piv;   // pivot indices, size n
-};
-
 // Sparse real: KLU-based ---------------------------------------------------
 static matx_status_t ss_factor_csc_f64(const matx_csc_f64_t* A,
 	matx_factor_sparse_f64_t** out_F) {

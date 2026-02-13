@@ -9,7 +9,7 @@ matx_sparse_backend_t matx_sparse_make_reference_mkl(void);
 const char* matx_sparse_backend_name(matx_sparse_backend_kind_t k) {
 	switch (k) {
 	case MATX_SPARSE_BACKEND_REFERENCE: return "REFERENCE";
-	case MATX_SPARSE_BACKEND_GRAPHBLAS: return "OPENBLAS";
+	case MATX_SPARSE_BACKEND_GRAPHBLAS: return "GRAPHBLAS";
 	case MATX_SPARSE_BACKEND_MKL: return "MKL";
 	default: return "UNKNOWN";
 	}
