@@ -1,7 +1,5 @@
 ﻿#include "matx/matx_sparse_compute.h"
 
-#include <string.h>
-
 // Forward decls
 matx_sparse_backend_t matx_sparse_make_reference_grb(void);
 matx_sparse_backend_t matx_sparse_make_reference_mkl(void);

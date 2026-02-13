@@ -1,7 +1,5 @@
 ﻿#include "matx/matx.h"
 
-#include <string.h>
-
 matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
     matx_int64_t rows,
     matx_int64_t cols,

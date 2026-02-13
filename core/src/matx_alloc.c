@@ -1,6 +1,4 @@
-#include "matx/matx.h"
-
-#include <stdlib.h>
+﻿#include "matx/matx.h"
 
 static void* matx_std_malloc(size_t size, void* user) {
   (void)user;

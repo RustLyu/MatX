@@ -1,8 +1,6 @@
 ﻿#include "matx/matx_sparse_solve.h"
 
 #include <limits.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "suitesparse/klu.h"
 

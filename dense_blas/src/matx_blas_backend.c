@@ -1,7 +1,5 @@
 ﻿#include "matx/matx_dense_compute.h"
 
-#include <string.h>
-
 // Forward decls
 matx_dense_backend_t matx_blas_make_reference(void);
 

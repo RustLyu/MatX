@@ -1,8 +1,6 @@
 ﻿#include "matx/matx_dense_solve.h"
 
 #include <limits.h>
-#include <stdlib.h>
-#include <string.h>
 
 #if MATX_ENABLE_OPENBLAS
 #include "openblas/cblas.h"

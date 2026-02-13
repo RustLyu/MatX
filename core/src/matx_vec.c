@@ -1,7 +1,5 @@
 ﻿#include "matx/matx.h"
 
-#include <string.h>
-
 matx_status_t matx_vec_f64_create(matx_vec_f64_t* out,
     matx_int64_t n,
                                   const matx_alloc_t* alloc) {
