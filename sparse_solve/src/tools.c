@@ -134,10 +134,10 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
         Ap[j + 1] += Ap[j];
     }
 
-    if (*Ai == NULL || *coo2csc == NULL) {
-        free(*Ap);
-        free(*Ai);
-        free(*coo2csc);
+    if (Ai == NULL || coo2csc == NULL) {
+        free(Ap);
+        free(Ai);
+        free(coo2csc);
         free_merged_entries(merged, merged_len);
         free(entries);
         return COO2CSC_ERR_MEMORY;
@@ -145,9 +145,9 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
 
     matx_int64_t* next = (matx_int64_t*)malloc(final_nnz * sizeof(matx_int64_t));
     if (next == NULL) {
-        free(*Ap);
-        free(*Ai);
-        free(*coo2csc);
+        free(Ap);
+        free(Ai);
+        free(coo2csc);
         free_merged_entries(merged, merged_len);
         free(entries);
         return COO2CSC_ERR_MEMORY;
