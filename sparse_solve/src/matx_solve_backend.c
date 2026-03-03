@@ -49,7 +49,8 @@ matx_status_t matx_solve_csc_f64(const matx_sparse_linsolve_t* ls,
   if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
   matx_factor_sparse_f64_t* F = NULL;
   matx_status_t st = matx_factor_csc_f64(ls, A, &F);
-  if (st != MATX_OK) return st;
+  if (st != MATX_OK) 
+      return st;
   st = matx_solve_csc_f64_factor(ls, F, b, x);
   matx_factor_csc_f64_destroy(ls, F);
   return st;
