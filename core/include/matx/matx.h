@@ -79,13 +79,13 @@ extern "C" {
 	} matx_vec_f64_t;
 
 	matx_status_t matx_vec_f64_create(matx_vec_f64_t* out,
-		size_t n,
+		matx_int64_t n,
 		const matx_alloc_t* alloc);
 
 	matx_status_t matx_vec_f64_wrap(matx_vec_f64_t* out,
-		size_t n,
-		size_t stride,
-		double* data);
+		matx_int64_t n,
+		matx_int64_t stride,
+		matx_double* data);
 
 	void matx_vec_f64_destroy(matx_vec_f64_t* v,
 		const matx_alloc_t* alloc);
