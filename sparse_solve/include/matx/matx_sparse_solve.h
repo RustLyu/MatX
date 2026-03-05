@@ -24,7 +24,7 @@ extern "C" {
 		void (*factor_csc_f64_destroy)(matx_factor_sparse_f64_t* F);
 
 		// Sparse complex
-		matx_status_t(*factor_csc_c64)(const matx_coo_f64_t* A,
+		matx_status_t(*factor_csc_c64)(const matx_coo_c64_t* A,
 			matx_factor_sparse_c64_t** out_F);
 		matx_status_t(*solve_csc_c64)(const matx_factor_sparse_c64_t* F,
 			const matx_vec_c64_t* b,
