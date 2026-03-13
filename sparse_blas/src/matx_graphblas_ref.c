@@ -4,6 +4,8 @@
 #include <limits.h>
 
 #include <suitesparse/GraphBLAS.h>
+#include "matx/matx_log.h"
+#include "matx/matx_tm.h"
 
 matx_status_t ref_spmv_c64(
 	matx_complex_f64 alpha,
@@ -101,22 +103,6 @@ matx_status_t ref_spmm_c64(
 	grb_2_dense_c64(C);
 	return MATX_OK;
 }
-#include <windows.h>
-static inline matx_int64_t get_time_us()
-{
-	static LARGE_INTEGER freq;
-	static int initialized = 0;
-
-	if (!initialized) {
-		QueryPerformanceFrequency(&freq);
-		initialized = 1;
-	}
-
-	LARGE_INTEGER counter;
-	QueryPerformanceCounter(&counter);
-
-	return (matx_int64_t)(counter.QuadPart * 1000000LL / freq.QuadPart);
-}
 
 matx_status_t ref_spmv_f64(
 	matx_double alpha,
@@ -152,7 +138,7 @@ matx_status_t ref_spmv_f64(
 	/* ---------------- gy = alpha*A*x + beta*y ---------------- */
 
 	GrB_Vector temp;
-	matx_int64_t t0 = get_time_us();
+	matx_int64_t t0 = matx_tm_now(MATX_TM_MICROSECOND);
 	info = GrB_Vector_new(&temp, GrB_FP64, y->n);
 	// temp = A*x
 	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Vector*)x->handle_grb.impl, NULL);
@@ -162,8 +148,10 @@ matx_status_t ref_spmv_f64(
 	info = GrB_apply(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, *(GrB_Vector*)y->handle_grb.impl, &beta, NULL);
 	// gy = temp + gy
 	info = GrB_eWiseAdd(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, *(GrB_Vector*)y->handle_grb.impl, NULL);
-	matx_int64_t t1 = get_time_us();
-	printf("GraphBLAS SpMV time: %ld us\n", t1 - t0);
+	matx_int64_t t1 = matx_tm_now(MATX_TM_MICROSECOND);
+	//printf("GraphBLAS SpMV time: %ld us\n", t1 - t0);
+	matx_log_init("./logs");
+	MATX_TRACE("GraphBLAS SpMV time: %ld us\n", t1 - t0);
 	GrB_Vector_free(&temp);
 	grb_2_vec_f64(y);
 	return MATX_OK;

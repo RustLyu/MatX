@@ -5,30 +5,6 @@
 	#include "mkl.h"
 #endif
 
-#if _WIN32 || _WIN64
-	#include <windows.h>
-	static inline int64_t get_time_us()
-	{
-		static LARGE_INTEGER freq;
-		static int initialized = 0;
-
-		if (!initialized) {
-			QueryPerformanceFrequency(&freq);
-			initialized = 1;
-		}
-
-		LARGE_INTEGER counter;
-		QueryPerformanceCounter(&counter);
-
-		return (int64_t)(counter.QuadPart * 1000000LL / freq.QuadPart);
-	}
-#else
-	static inline int64_t get_time_us()
-	{
-		return 0;
-	}
-#endif
-
 matx_status_t ref_spmv_c64_mkl(
 	matx_complex_f64 alpha,
 	matx_coo_c64_t* A,
