@@ -269,7 +269,7 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
 
 	for (size_t j = 0; j < cols; ++j)
 	{
-		cblas_dscal((rows, beta, B + j * ldb, 1);
+		cblas_dscal(rows, beta, B + j * ldb, 1);
 		cblas_daxpy(rows, alpha, A + j * lda, 1, B + j * ldb, 1);
 	}
 #endif

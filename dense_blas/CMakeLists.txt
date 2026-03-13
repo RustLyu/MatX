@@ -14,11 +14,9 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME}
-  PUBLIC
-    $<BUILD_INTERFACE:${openblas_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${amdblis_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_compile_definitions(${PROJECT_NAME}
@@ -27,6 +25,18 @@ target_compile_definitions(${PROJECT_NAME}
     MATX_ENABLE_OPENBLAS=$<BOOL:${MATX_ENABLE_OPENBLAS}>
     MATX_ENABLE_BLIS=$<BOOL:${MATX_ENABLE_BLIS}>
 )
+
+if(MATX_ENABLE_OPENBLAS)
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:${openblas_INCLUDE_DIR}>
+    )
+elseif(MATX_ENABLE_BLIS)
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:${amdblis_INCLUDE_DIR}>
+    )
+endif()
 
 if(MATX_DENSE_BLAS_BACKEND STREQUAL "REFERENCE")
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_DENSE_BLAS_BACKEND_REFERENCE_ONLY=1)

@@ -28,6 +28,18 @@ target_compile_definitions(${PROJECT_NAME}
     MATX_ENABLE_GRAPHBLAS=$<BOOL:${MATX_ENABLE_GRAPHBLAS}>
 )
 
+if(MATX_ENABLE_MKL)
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:${mkl_INCLUDE_DIR}>
+    )
+elseif(MATX_ENABLE_GRAPHBLAS)
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:${graphblas_INCLUDE_DIR}>
+    )
+endif()
+
 if(MATX_SPARSE_BLAS_BACKEND STREQUAL "REFERENCE")
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_SPARSE_BLAS_BACKEND_REFERENCE_ONLY=1)
 endif()
