@@ -3,6 +3,7 @@
 #include <limits.h>
 
 #include "suitesparse/klu.h"
+#include "matx/matx_log.h"
 
 struct matx_factor_sparse_f64_t {
 	klu_l_symbolic* S;
@@ -88,12 +89,12 @@ static matx_status_t ss_solve_csc_f64(const matx_factor_sparse_f64_t* F,
 	const int status = klu_l_solve(F->S, F->N, n, 1, x, &F->common);
 	if (!status)
 	{
-		printf("KLU solve failed with status %d\n", status);
+		MATX_ERROR("KLU solve failed with status %d", status);
 		return MATX_ERR_INTERNAL;
 	}
 	else
 	{
-		printf("KLU solve succeeded with status %d\n", status);
+		MATX_TRACE("KLU solve succeeded with status %d", status);
 	}
 	return MATX_OK;
 }

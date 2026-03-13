@@ -151,7 +151,7 @@ matx_status_t ref_spmv_f64(
 	matx_int64_t t1 = matx_tm_now(MATX_TM_MICROSECOND);
 	//printf("GraphBLAS SpMV time: %ld us\n", t1 - t0);
 	matx_log_init("./logs");
-	MATX_TRACE("GraphBLAS SpMV time: %ld us\n", t1 - t0);
+	MATX_TRACE("GraphBLAS SpMV time: %ld micro.s", t1 - t0);
 	GrB_Vector_free(&temp);
 	grb_2_vec_f64(y);
 	return MATX_OK;
