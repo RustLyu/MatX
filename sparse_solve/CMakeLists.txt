@@ -9,6 +9,11 @@ add_library(${PROJECT_NAME}
 add_library(MatX::sparse_solve ALIAS ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+    MatX::tools
+)
+
+target_link_libraries(${PROJECT_NAME}
   PUBLIC MatX::core
 )
 

@@ -13,6 +13,12 @@ add_library(${PROJECT_NAME}
 
 add_library(MatX::core ALIAS ${PROJECT_NAME})
 
+
+target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+    MatX::tools
+)
+
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

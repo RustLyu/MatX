@@ -8,7 +8,9 @@ add_library(${PROJECT_NAME}
 add_library(MatX::dense_solve ALIAS ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
-  PUBLIC MatX::core
+  PUBLIC 
+  MatX::core
+  MatX::tools
 )
 
 target_include_directories(${PROJECT_NAME}

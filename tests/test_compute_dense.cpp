@@ -4,7 +4,6 @@ extern "C" {
 #include "matx/matx.h"
 #include "matx/matx_dense_compute.h"
 }
-
 static void fill_dense_f64_4x4(matx_dense_f64_t* M, double base) {
   for (size_t j = 0; j < 4; ++j)
     for (size_t i = 0; i < 4; ++i)

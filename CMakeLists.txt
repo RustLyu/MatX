@@ -27,6 +27,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(spdlog_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/spdlog_1.17.0/lib/cmake/spdlog")
+find_package(spdlog REQUIRED)
+message(STATUS "spdlog found at " spdlog::spdlog)
+
 # graphblas
 set(graphblas_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/cmake")
 set(graphblas_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0")
@@ -59,6 +63,7 @@ find_package(openblas REQUIRED)
 
 include(GNUInstallDirs)
 
+add_subdirectory(tools)
 add_subdirectory(core)
 add_subdirectory(dense_blas)
 add_subdirectory(sparse_blas)
