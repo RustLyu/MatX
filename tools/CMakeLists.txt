@@ -1,4 +1,4 @@
-﻿project (matx_toools C CXX)
+﻿project (matx_tools C CXX)
 
 add_library(${PROJECT_NAME}
   src/matx_log.cc
