@@ -1,0 +1,13 @@
+prefix=/c/Users/PC/aocl/5.2.0/gcc
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: AOCL-LAPACK
+Description: AOCL-LAPACK is a high performant implementation of Linear Algebra PACKage(LAPACK)
+Version: 5.2.0
+Requires: blis-mt
+Requires.private: aocl-utils
+Cflags: -I${includedir}
+Libs: -L${libdir} -lflame 
+Libs.private: -lpthread -lm -fopenmp 

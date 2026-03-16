@@ -1,0 +1,11 @@
+prefix=/c/Users/PC/aocl/5.2.0/gcc
+exec_prefix=/c/Users/PC/aocl/5.2.0/gcc
+libdir=/c/Users/PC/aocl/5.2.0/gcc/lib
+includedir=/c/Users/PC/aocl/5.2.0/gcc/include
+
+Name: BLIS
+Description: BLAS-like Library Instantiation Software Framework
+Version: AOCL-BLAS 5.2.0 Build 20251223
+Libs: -L${libdir} -lblis-mt
+Libs.private: -Wl,-z,now -Wl,-z,relro -lm -lpthread -fopenmp
+Cflags: -I/c/Users/PC/aocl/5.2.0/gcc/include

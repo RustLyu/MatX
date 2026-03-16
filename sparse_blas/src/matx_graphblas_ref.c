@@ -3,7 +3,7 @@
 
 #include <limits.h>
 
-#include <suitesparse/GraphBLAS.h>
+#include <GraphBLAS.h>
 #include "matx/matx_log.h"
 #include "matx/matx_tm.h"
 

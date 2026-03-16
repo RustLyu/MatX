@@ -1,6 +1,20 @@
 ﻿cmake_minimum_required(VERSION 3.20)
 project(MatX LANGUAGES C CXX)
 
+if (WIN32)
+    message(STATUS "current os：Windows")
+    set(3Party_path "${CMAKE_CURRENT_SOURCE_DIR}/3Party/win32")
+elseif (LINUX)
+    message(STATUS "current os：Linux")
+    set(3Party_path "${CMAKE_CURRENT_SOURCE_DIR}/3Party/linux")
+elseif (APPLE)
+    message(STATUS "current os：macOS")
+else ()
+    message(WARNING "未识别的系统！")
+endif ()
+
+message(STATUS "current 3Party path ${3Party_path}")
+
 # ---- Global options ----
 option(MATX_BUILD_TESTS "Build unit tests (gtest)" ON)
 
@@ -29,7 +43,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---- spdlog ----
-set(spdlog_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/spdlog_1.17.0/lib/cmake/spdlog")
+set(spdlog_DIR "${3Party_path}/spdlog_1.17.0/lib/cmake/spdlog")
 find_package(spdlog REQUIRED)
 message(STATUS "spdlog found at ${spdlog_DIR}")
 
@@ -143,37 +157,37 @@ endif()
 # ---- BLAS backend ----
 if(MATX_ENABLE_OPENBLAS)
   set(openblas_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas-0.3.30/lib/cmake")
+      "${3Party_path}/openblas-0.3.30/lib/cmake")
   find_package(openblas REQUIRED)
 elseif(MATX_ENABLE_BLIS)
   set(amdblis_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-blis/cmake")
+      "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-blis/cmake")
   find_package(amdblis REQUIRED)
 elseif(MATX_ENABLE_MKL)
   set(mkl_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/3party/mkl-2025.3.0/cmake")
+      "${3Party_path}/mkl-2025.3.0/cmake")
   find_package(mkl REQUIRED)
 endif()
 
 # ---- LAPACK backend ----
 if(MATX_ENABLE_LIBFLAME)
   set(libflame_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/3party/aocl-5.2.0/AOCL-Windows/amd-libflame/cmake")
+      "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-libflame/cmake")
   find_package(libflame REQUIRED)
 endif()
 
 # ---- Sparse / Graph libraries ----
 if(MATX_ENABLE_SUITESPARSE)
-  set(SuiteSparse_config_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/SuiteSparse_config")
-  set(BTF_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/BTF")
-  set(AMD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/AMD")
-  set(COLAMD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/COLAMD")
-  set(klu_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/KLU")
+  set(SuiteSparse_config_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/SuiteSparse_config")
+  set(BTF_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/BTF")
+  set(AMD_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/AMD")
+  set(COLAMD_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/COLAMD")
+  set(klu_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/KLU")
   find_package(klu REQUIRED)
 endif()
 
 if(MATX_ENABLE_GRAPHBLAS)
-  set(GraphBLAS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/GraphBLAS")
+  set(GraphBLAS_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/GraphBLAS")
   find_package(GraphBLAS REQUIRED)
 endif()
 
