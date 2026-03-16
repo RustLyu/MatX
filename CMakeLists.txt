@@ -143,7 +143,7 @@ endif()
 # ---- BLAS backend ----
 if(MATX_ENABLE_OPENBLAS)
   set(openblas_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas-0.3.30/cmake")
+      "${CMAKE_CURRENT_SOURCE_DIR}/3party/openblas-0.3.30/lib/cmake")
   find_package(openblas REQUIRED)
 elseif(MATX_ENABLE_BLIS)
   set(amdblis_DIR
@@ -164,13 +164,17 @@ endif()
 
 # ---- Sparse / Graph libraries ----
 if(MATX_ENABLE_SUITESPARSE)
-  set(suitesparse_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/cmake")
-  find_package(suitesparse REQUIRED)
+  set(SuiteSparse_config_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/SuiteSparse_config")
+  set(BTF_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/BTF")
+  set(AMD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/AMD")
+  set(COLAMD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/COLAMD")
+  set(klu_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/KLU")
+  find_package(klu REQUIRED)
 endif()
 
 if(MATX_ENABLE_GRAPHBLAS)
-  set(graphblas_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/cmake")
-  find_package(graphblas REQUIRED)
+  set(GraphBLAS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3party/suitesparse-v7.11.0/lib/cmake/GraphBLAS")
+  find_package(GraphBLAS REQUIRED)
 endif()
 
 # ---- Include MatX submodules ----

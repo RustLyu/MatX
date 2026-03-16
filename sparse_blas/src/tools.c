@@ -1,7 +1,7 @@
 ﻿#include "matx/matx_sparse_compute.h"
 #include "matx/matx.h"
 
-#include <suitesparse/GraphBLAS.h>
+#include <GraphBLAS.h>
 
 #if MATX_ENABLE_MKL
 #include "mkl.h"

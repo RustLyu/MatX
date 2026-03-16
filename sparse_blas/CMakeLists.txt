@@ -33,11 +33,6 @@ if(MATX_ENABLE_MKL)
         PUBLIC
             $<BUILD_INTERFACE:${mkl_INCLUDE_DIR}>
     )
-elseif(MATX_ENABLE_GRAPHBLAS)
-    target_include_directories(${PROJECT_NAME}
-        PUBLIC
-            $<BUILD_INTERFACE:${graphblas_INCLUDE_DIR}>
-    )
 endif()
 
 if(MATX_SPARSE_BLAS_BACKEND STREQUAL "REFERENCE")
@@ -51,7 +46,7 @@ endif()
 
 if(MATX_ENABLE_GRAPHBLAS)
     target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_GRAPHBLAS=1)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${graphblas_lib})
+    target_link_libraries(${PROJECT_NAME} PRIVATE SuiteSparse::GraphBLAS)
 endif()
 
 

@@ -2,7 +2,7 @@
 
 #include <limits.h>
 
-#include "suitesparse/klu.h"
+#include "klu.h"
 #include "matx/matx_log.h"
 
 struct matx_factor_sparse_f64_t {
