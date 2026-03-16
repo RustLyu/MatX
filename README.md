@@ -1,51 +1,49 @@
 ## MatX
 
-`MatX` is a C-based linear algebra library split into 4 subprojects:
+MatX is a modular linear-algebra & numerical-compute library written in C/C++.
+It is CMake-based and targets Windows/Linux. The project supports dense BLAS/LAPACK
+backends (OpenBLAS / AOCL BLIS+libFLAME / MKL) and SuiteSparse backends for sparse
+operations (KLU and SuiteSparse:GraphBLAS).
 
-- **core**: basic data types (dense matrices, allocators, error codes)
-- **compute**: numerical compute on core types (BLAS backend: reference / OpenBLAS / BLIS)
-- **solve**: linear solves on core types (temporarily via SuiteSparse; extensible backend interface)
-- **tests**: unit tests using GoogleTest
+### Repository layout
 
-### Build (Windows / Linux)
+- `tools`: logging, timers, shared utilities.
+- `core`: core types (dense/sparse matrices, vectors, allocators, error codes).
+- `dense_blas`: dense compute APIs and backend adapters.
+- `sparse_blas`: sparse compute APIs and backend adapters (GraphBLAS / MKL).
+- `dense_solve`: dense linear solves (LU factor/solve via LAPACK).
+- `sparse_solve`: sparse linear solves (KLU factor/solve, real+complex).
+- `tests`: unit tests using GoogleTest.
+- `3party/`: vendored third-party packages used by top-level CMake.
 
-# MatX
+### Backends & auto-selection
 
-Overview
---------
-MatX is a modular linear-algebra and numerical-compute library written in C/C++.
-It splits functionality into focused subprojects and supports multiple dense
-and sparse backends (OpenBLAS, MKL, BLIS, SuiteSparse, etc.). The build system
-is CMake-based and lets you select or auto-detect available backends.
+Top-level CMake performs a **CPU vendor detection** and (unless overridden) selects:
 
-Repository layout
------------------
-- `core` — core data types and utilities (dense matrices, allocators, error codes).
-- `dense_blas` — dense BLAS interfaces and backend adapters (OpenBLAS / BLIS / MKL / reference).
-- `sparse_blas` — sparse matrix numeric interfaces and backends.
-- `dense_solve`, `sparse_solve` — solvers that plug into the numeric backends.
-- `tests` — unit tests using GoogleTest.
-- `3party/` — local copies of third-party libraries (this repository includes vendors such as OpenBLAS, MKL, SuiteSparse, AOCL, etc.).
+- **AMD**: AOCL **BLIS** + **libFLAME** (+ GraphBLAS enabled)
+- **Intel**: **OpenBLAS** (+ GraphBLAS enabled)
+- **Other/unknown**: OpenBLAS (GraphBLAS disabled)
 
-Key features
-------------
-- Modular design for easy backend replacement and extension.
-- Support for multiple dense and sparse backends with CMake feature flags.
-- Cross-platform (Windows / Linux). Uses C17 and C++20 language standards.
+You can override this by toggling the backend options below.
 
-Dependencies & CMake options
-----------------------------
-- Required: `CMake >= 3.20`.
-- Optional/Pluggable backends: OpenBLAS, MKL, BLIS, LIBFLAME, SuiteSparse, GraphBLAS, etc.
-- Common CMake options:
-  - `-DMATX_BUILD_TESTS=ON|OFF` — build unit tests (default: ON).
-  - `-DMATX_ENABLE_OPENBLAS=ON|OFF`, `-DMATX_ENABLE_MKL=ON|OFF`, `-DMATX_ENABLE_SUITESPARSE=ON|OFF` — enable/disable specific backends.
+### CMake options (high level)
+
+- **Tests**: `-DMATX_BUILD_TESTS=ON|OFF` (default: ON)
+- **Dense BLAS/LAPACK**:
+  - `-DMATX_ENABLE_OPENBLAS=ON|OFF`
+  - `-DMATX_ENABLE_BLIS=ON|OFF`
+  - `-DMATX_ENABLE_LIBFLAME=ON|OFF`
+  - `-DMATX_ENABLE_MKL=ON|OFF`
   - `-DMATX_DENSE_BLAS_BACKEND=AUTO|OPENBLAS|BLIS|REFERENCE`
-  - `-DMATX_SPARSE_BLAS_BACKEND=AUTO|OPENBLAS|BLIS|REFERENCE`
+- **Sparse**:
+  - `-DMATX_ENABLE_SUITESPARSE=ON|OFF`
+  - `-DMATX_ENABLE_GRAPHBLAS=ON|OFF`
+  - `-DMATX_SPARSE_BLAS_BACKEND=AUTO|OPENBLAS|BLIS|REFERENCE` (backend selector for sparse compute module)
 
-Quick build examples
---------------------
+### Build
+
 Windows (Visual Studio x64, PowerShell):
+
 ```powershell
 cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DMATX_BUILD_TESTS=ON
 cmake --build build --config Release -- /m
@@ -53,18 +51,15 @@ ctest --test-dir build -C Release --output-on-failure
 ```
 
 Linux:
+
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DMATX_BUILD_TESTS=ON
 cmake --build build -j$(nproc)
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Notes
------
-- The project includes several third-party libraries under `3party/` (for example `openblas-0.3.30/`, `mkl-2025.3.0/`, `suitesparse-v7.11.0/`). The top-level CMakeLists attempts to find and use these local packages when available.
-- If a high-performance backend is not found, MatX falls back to reference implementations for core dense operations. Some sparse-solver features may return a "not supported" error when SuiteSparse or other sparse backends are not available.
+### Notes
 
-Contributing & testing
-----------------------
-- Please run the test suite locally before submitting changes. Use the `cmake` and `ctest` commands shown above.
+- MatX currently assumes **column-major** for some solver paths (notably dense LU factor/solve). See module headers for exact constraints.
+- Sparse COO inputs are lazily converted to CSC and cached in `matx_coo_*::handle_csc` for SuiteSparse KLU, to avoid repeated conversions when re-solving.
 
