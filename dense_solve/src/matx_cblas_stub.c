@@ -1,4 +1,4 @@
-﻿#include "matx/matx_dense_solve.h"
+#include "matx/matx_dense_solve.h"
 
 #include <limits.h>
 #include <stdlib.h>
@@ -14,6 +14,12 @@ struct matx_factor_dense_f64_t {
 	matx_int64_t n;
 	matx_double* lu; // column-major, combined L+U
 	matx_int64_t* piv;   // pivot indices, size n
+};
+
+struct matx_factor_dense_c64_t {
+	matx_int64_t n;
+	matx_double* lu;     // interleaved complex: [re,im,re,im,...] column-major
+	matx_int64_t* piv;   // pivot indices
 };
 
 // Dense real: LU + solve using LAPACK when available -----------------------
@@ -123,11 +129,15 @@ static matx_status_t ss_factor_dense_c64(
 	if (!F->lu || !F->piv) goto fail;
 
 	/* copy matrix */
-	for (size_t j = 0; j < n; ++j)
-		for (size_t i = 0; i < n; ++i)
-			memcpy(&F->lu[2 * (i + j * n)],
-				&A->data[2 * (i + j * A->stride)],
-				sizeof(matx_double) * 2);
+	const matx_double* src = (const matx_double*)A->data;
+	for (size_t j = 0; j < (size_t)n; ++j) {
+		for (size_t i = 0; i < (size_t)n; ++i) {
+			const size_t src_idx = 2u * (i + j * (size_t)A->stride);
+			const size_t dst_idx = 2u * (i + j * (size_t)n);
+			F->lu[dst_idx + 0] = src[src_idx + 0];
+			F->lu[dst_idx + 1] = src[src_idx + 1];
+		}
+	}
 
 	matx_int64_t N = (matx_int64_t)n;
 	matx_int64_t lda = (matx_int64_t)n;
@@ -157,6 +167,7 @@ static matx_status_t ss_solve_dense_c64(
 
 	size_t n = F->n;
 
+	if (b->stride != 1 || x->stride != 1) return MATX_ERR_NOT_SUPPORTED;
 	memcpy(x->data, b->data, sizeof(matx_double) * 2 * n);
 
 	matx_int64_t N = (matx_int64_t)n;
@@ -168,7 +179,7 @@ static matx_status_t ss_solve_dense_c64(
 
 	zgetrs_(&trans, &N, &nrhs,
 		F->lu, &lda, F->piv,
-		x->data, &ldb,
+		(matx_double*)x->data, &ldb,
 		&info);
 
 	if (info != 0) return MATX_ERR_INTERNAL;

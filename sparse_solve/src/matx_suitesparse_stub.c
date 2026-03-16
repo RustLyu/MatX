@@ -1,4 +1,4 @@
-﻿#include "matx/matx_sparse_solve.h"
+#include "matx/matx_sparse_solve.h"
 
 #include <limits.h>
 
@@ -6,6 +6,13 @@
 #include "matx/matx_log.h"
 
 struct matx_factor_sparse_f64_t {
+	klu_l_symbolic* S;
+	klu_l_numeric* N;
+	klu_l_common common;
+	matx_int64_t n;
+};
+
+struct matx_factor_sparse_c64_t {
 	klu_l_symbolic* S;
 	klu_l_numeric* N;
 	klu_l_common common;
@@ -119,7 +126,7 @@ static matx_status_t ss_factor_csc_c64(
 	if(st != MATX_OK)
 		return st;
 
-	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->values)
+	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->handle_csc.values)
 		return MATX_ERR_INVALID_ARG;
 	if (A->nrows != A->ncols)
 		return MATX_ERR_INVALID_ARG;
@@ -154,7 +161,7 @@ static matx_status_t ss_factor_csc_c64(
 	F->N = klu_zl_factor(
 		A->handle_csc.col_ptr,
 		A->handle_csc.row_ind,
-		A->handle_csc.values,
+		(double*)A->handle_csc.values,
 		F->S,
 		&F->common);
 
@@ -175,16 +182,20 @@ static matx_status_t ss_solve_csc_c64(
 	const matx_vec_c64_t* b,
 	matx_vec_c64_t* x)
 {
-	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!F || !b || !x)
+		return MATX_ERR_INVALID_ARG;
+	if (b->stride != 1 || x->stride != 1)
+		return MATX_ERR_NOT_SUPPORTED;
 
 	matx_int64_t n = F->n;
 
-	memcpy(x->data, b->data, sizeof(matx_double) * 2 * n);
+	memcpy(x->data, b->data, sizeof(matx_complex_f64) * n);
 
 	matx_int64_t status = klu_zl_solve(
-		F->S, F->N, n, 1, (double*)x->data, &F->common);
+		F->S, F->N, n, 1, (matx_double*)x->data, &F->common);
 
-	if (!status) return MATX_ERR_INTERNAL;
+	if (!status) 
+		return MATX_ERR_INTERNAL;
 
 	return MATX_OK;
 }
@@ -194,7 +205,7 @@ static void ss_factor_csc_c64_destroy(
 {
 	if (!F) return;
 
-	klu_l_free_numeric(&F->N, &F->common);
+	klu_zl_free_numeric(&F->N, &F->common);
 	klu_l_free_symbolic(&F->S, &F->common);
 	free(F);
 }

@@ -49,7 +49,7 @@ matx_status_t matx_csc_sparse_c64_create(matx_csc_c64_t* out,
     matx_int64_t* row_ind_buf = (matx_int64_t*)matx_malloc(alloc, nnz * sizeof(matx_int64_t));
     matx_complex_f64* values_buf = (matx_complex_f64*)matx_malloc(alloc, nnz * sizeof(matx_complex_f64));
     matx_int64_t* coo_2_csc_id_map = (matx_int64_t*)matx_malloc(alloc, nnz * sizeof(matx_int64_t));
-
+    memset(values_buf, 0, sizeof(matx_complex_f64) * nnz);
     if (!col_ptr_buf || !row_ind_buf || !values_buf) {
         if (col_ptr_buf) matx_free(alloc, col_ptr_buf);
         if (row_ind_buf) matx_free(alloc, row_ind_buf);

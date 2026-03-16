@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "matx/matx.h"
 
@@ -12,7 +12,7 @@ extern "C" {
 
 	// Opaque factorization handles
 	typedef struct matx_factor_sparse_f64_t matx_factor_sparse_f64_t;
-	typedef struct matx_factor_sparse_f64_t matx_factor_sparse_c64_t;
+	typedef struct matx_factor_sparse_c64_t matx_factor_sparse_c64_t;
 
 	typedef struct matx_sparse_linsolve_vtable_t {
 		// Sparse real
