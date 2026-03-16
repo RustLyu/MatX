@@ -1,10 +1,16 @@
-﻿set(mkl_INCLUDE_DIR ${mkl_DIR}/../include)
-#include_directories(${mkl_INCLUDE_DIR})
+﻿set(mkl_ROOT "${mkl_DIR}/..")
 
-set(mkl_lib
-    -Wl,--start-group
-    ${mkl_DIR}/lib/mkl_intel_ilp64_dll.lib
-    ${mkl_DIR}/lib/mkl_intel_thread_dll.lib
-    ${mkl_DIR}/lib/mkl_core_dll.lib
-    -Wl,--end-group
+add_library(mkl::mkl IMPORTED SHARED GLOBAL)
+
+set_target_properties(mkl::mkl PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${mkl_ROOT}/include"
+)
+
+set_target_properties(mkl::mkl PROPERTIES
+    IMPORTED_IMPLIB "${mkl_DIR}/lib/mkl_intel_ilp64_dll.lib"
+    IMPORTED_LOCATION "${mkl_ROOT}/bin/mkl_intel_ilp64.dll"
+    INTERFACE_LINK_LIBRARIES "\
+${mkl_DIR}/lib/mkl_intel_ilp64_dll.lib;\
+${mkl_DIR}/lib/mkl_intel_thread_dll.lib;\
+${mkl_DIR}/lib/mkl_core_dll.lib"
 )

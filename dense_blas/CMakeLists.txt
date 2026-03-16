@@ -26,30 +26,18 @@ target_compile_definitions(${PROJECT_NAME}
     MATX_ENABLE_BLIS=$<BOOL:${MATX_ENABLE_BLIS}>
 )
 
-if(MATX_ENABLE_OPENBLAS)
-    target_include_directories(${PROJECT_NAME}
-        PUBLIC
-            $<BUILD_INTERFACE:${openblas_INCLUDE_DIR}>
-    )
-elseif(MATX_ENABLE_BLIS)
-    target_include_directories(${PROJECT_NAME}
-        PUBLIC
-            $<BUILD_INTERFACE:${amdblis_INCLUDE_DIR}>
-    )
-endif()
-
 if(MATX_DENSE_BLAS_BACKEND STREQUAL "REFERENCE")
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_DENSE_BLAS_BACKEND_REFERENCE_ONLY=1)
 endif()
 
 if(MATX_ENABLE_BLIS)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_BLIS=1)
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${amdblis_lib})
+  target_link_libraries(${PROJECT_NAME} PRIVATE amdblis::amdblis)
 endif()
 
 if(MATX_ENABLE_OPENBLAS)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_OPENBLAS=1)
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${openblas_lib})
+  target_link_libraries(${PROJECT_NAME} PRIVATE openblas::openblas)
 endif()
 
 target_sources(${PROJECT_NAME}
