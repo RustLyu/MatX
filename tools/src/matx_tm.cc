@@ -1,12 +1,11 @@
-#include "matx/matx_tm.h"
-
 #include <chrono>
+#include "matx/matx_tm.h"
 
 matx_int64_t matx_tm_now(matx_tm_unit unit)
 {
 	auto now = std::chrono::system_clock::now();
 	auto ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(now);
-	uint64_t count = ns.time_since_epoch().count();
+	matx_int64_t count = ns.time_since_epoch().count();
 
 	switch (unit)
 	{

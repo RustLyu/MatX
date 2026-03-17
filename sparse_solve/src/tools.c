@@ -1,4 +1,5 @@
-﻿#include "matx/matx.h"
+﻿#include "matx/matx_types.h"
+#include "matx/matx_func.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -26,6 +26,8 @@ option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse backend if found/provided" ON
 option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" OFF)
 option(MATX_ENABLE_AOCL_SPARSE "Enable amd AOCL SPARSE for sparse numerical ops if found" OFF)
 
+option(BUILD_SHARED_LIBS "Build shared library (ON) or static (OFF)" OFF)
+
 set(MATX_DENSE_BLAS_BACKEND "AUTO" CACHE STRING "DENSE BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
 set(MATX_SPARSE_BLAS_BACKEND "AUTO" CACHE STRING "SPARSE BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
 
@@ -204,6 +206,7 @@ endif()
 
 # ---- Include MatX submodules ----
 include(GNUInstallDirs)
+add_subdirectory(types)
 add_subdirectory(tools)
 add_subdirectory(core)
 add_subdirectory(dense_blas)

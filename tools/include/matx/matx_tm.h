@@ -1,7 +1,7 @@
 #ifndef MATX_TM_H
 #define MATX_TM_H
 
-#include "matx/matx.h"
+#include "matx/matx_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,7 +14,7 @@ extern "C" {
         MATX_TM_NANOSECOND
     } matx_tm_unit;
 
-	matx_int64_t matx_tm_now(matx_tm_unit unit);
+    MATX_API matx_int64_t matx_tm_now(matx_tm_unit unit);
 
 #ifdef __cplusplus
 }

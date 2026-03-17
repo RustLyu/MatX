@@ -1,4 +1,5 @@
-﻿#include "matx/matx.h"
+﻿#include "matx/matx_types.h"
+#include "matx/matx_func.h"
 
 matx_status_t matx_coo_sparse_c64_create(matx_coo_c64_t* out,
     matx_int64_t nrows,

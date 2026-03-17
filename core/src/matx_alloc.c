@@ -1,6 +1,7 @@
 ﻿#include <stdlib.h>
 
-#include "matx/matx.h"
+#include "matx/matx_types.h"
+#include "matx/matx_func.h"
 #include "matx/matx_log.h"
 
 static void* matx_std_malloc(size_t size, void* user) {

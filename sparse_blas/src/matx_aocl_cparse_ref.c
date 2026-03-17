@@ -6,7 +6,7 @@
 	#include <aoclsparse.h>
 #endif
 
-matx_status_t ref_spmv_c64(
+matx_status_t ref_spmv_c64_aocl(
 	matx_complex_f64 alpha,
 	matx_coo_c64_t* A,
 	matx_vec_c64_t* x,
@@ -53,7 +53,7 @@ matx_status_t ref_spmv_c64(
 	return MATX_OK;
 }
 
-matx_status_t ref_spmm_c64(
+matx_status_t ref_spmm_c64_aocl(
 	matx_complex_f64 alpha,
 	const matx_coo_c64_t* A,
 	const matx_dense_c64_t* B,
@@ -101,7 +101,7 @@ matx_status_t ref_spmm_c64(
 	return MATX_OK;
 }
 
-matx_status_t ref_spmv_f64(
+matx_status_t ref_spmv_f64_aocl(
 	matx_double alpha,
 	matx_coo_f64_t* A,
 	matx_vec_f64_t* x,
@@ -150,7 +150,7 @@ matx_status_t ref_spmv_f64(
 	return MATX_OK;
 }
 
-matx_status_t ref_spmm_f64(
+matx_status_t ref_spmm_f64_aocl(
 	matx_double alpha,
 	matx_coo_f64_t* A,
 	matx_dense_f64_t* B,
@@ -197,10 +197,10 @@ matx_status_t ref_spmm_f64(
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 	matx_sparse_backend_t b;
 	b.kind = MATX_SPARSE_BACKEND_AOCL_CPARSE;
-	b.vt.spmm_c64 = ref_spmm_c64;
-	b.vt.spmv_c64 = ref_spmv_c64;
-	b.vt.spmm_f64 = ref_spmm_f64;
-	b.vt.spmv_f64 = ref_spmv_f64;
+	b.vt.spmm_c64 = ref_spmm_c64_aocl;
+	b.vt.spmv_c64 = ref_spmv_c64_aocl;
+	b.vt.spmm_f64 = ref_spmm_f64_aocl;
+	b.vt.spmv_f64 = ref_spmv_f64_aocl;
 	return b;
 }
 

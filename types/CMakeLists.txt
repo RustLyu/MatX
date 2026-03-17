@@ -1,18 +1,15 @@
-﻿project (matx_tools C CXX)
+﻿project (matx_types C)
 
 add_library(${PROJECT_NAME}
-  src/matx_log.cc
-  src/matx_tm.cc
+	src/matx_version.c
 )
 
-add_library(MatX::tools ALIAS ${PROJECT_NAME})
+add_library(MatX::types ALIAS ${PROJECT_NAME})
+
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
-    MatX::types
-    spdlog::spdlog
 )
-
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -22,10 +19,8 @@ target_include_directories(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME}
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_log.h>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_tm.h>
-    $<INSTALL_INTERFACE:include/matx/matx_log.h>
-    $<INSTALL_INTERFACE:include/matx/matx_tm.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_types.h>
+    $<INSTALL_INTERFACE:include/matx/matx_types.h>
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_CORE_BUILD=1)
@@ -34,6 +29,11 @@ if(WIN32)
   target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_PLATFORM_WINDOWS=1)
 else()
   target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_PLATFORM_POSIX=1)
+endif()
+
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_BUILD_SHARED)
+    #option(MATX_BUILD_SHARED "Build shared libs" ON)
 endif()
 
 message(STATUS ${CMAKE_INSTALL_INCLUDEDIR})

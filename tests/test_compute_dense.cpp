@@ -1,7 +1,8 @@
 ﻿#include <gtest/gtest.h>
 
 extern "C" {
-#include "matx/matx.h"
+#include "matx/matx_types.h"
+#include "matx/matx_func.h"
 #include "matx/matx_dense_compute.h"
 }
 static void fill_dense_f64_4x4(matx_dense_f64_t* M, double base) {

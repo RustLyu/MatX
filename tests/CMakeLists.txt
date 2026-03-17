@@ -29,6 +29,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
     GTest::gtest_main
+    MatX::types
     MatX::core
     MatX::dense_blas
     MatX::sparse_blas

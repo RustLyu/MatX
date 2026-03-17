@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-#include "matx/matx.h"
+#include "matx/matx_types.h"
+#include "matx/matx_func.h"
 }
 
 TEST(core_dense, create_destroy) {

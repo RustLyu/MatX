@@ -1,5 +1,6 @@
 ﻿#include "matx/matx_sparse_compute.h"
-#include "matx/matx.h"
+#include "matx/matx_types.h"
+#include "matx/matx_func.h"
 
 #include <GraphBLAS.h>
 

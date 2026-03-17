@@ -1,4 +1,5 @@
-#include "matx/matx.h"
+#include "matx/matx_types.h"
+#include "matx/matx_func.h"
 
 const char* matx_status_string(matx_status_t st) {
   switch (st) {

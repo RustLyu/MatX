@@ -7,6 +7,20 @@
 extern "C" {
 #endif
 
+#ifdef MATX_BUILD_SHARED
+	#ifdef MATX_PLATFORM_WINDOWS
+		#ifdef MATX_AOCL_EXPORTS
+		#define MATX_API __declspec(dllexport)
+		#else
+		#define MATX_API __declspec(dllimport)
+		#endif
+		#else
+		#define MATX_API
+	#endif
+#else
+	#define MATX_API
+#endif
+
 	// ---- Version ----
 #define MATX_VERSION_MAJOR 0
 #define MATX_VERSION_MINOR 1
@@ -25,9 +39,6 @@ extern "C" {
 	typedef int64_t matx_int64_t;
 	typedef double matx_double;
 
-	const char* matx_status_string(matx_status_t st);
-	const char* matx_version_string(void);
-
 	// ---- Alloc ----
 	typedef void* (*matx_malloc_fn)(size_t size, void* user);
 	typedef void (*matx_free_fn)(void* ptr, void* user);
@@ -37,10 +48,6 @@ extern "C" {
 		matx_free_fn free_fn;
 		void* user;
 	} matx_alloc_t;
-
-	matx_alloc_t matx_alloc_default(void);
-	void* matx_malloc(const matx_alloc_t* a, size_t size);
-	void matx_free(const matx_alloc_t* a, void* ptr);
 
 	// ---- Layout ----
 	typedef enum matx_layout_t {
@@ -80,18 +87,6 @@ extern "C" {
 		matx_handle_t handle_grb;
 	} matx_vec_f64_t;
 
-	matx_status_t matx_vec_f64_create(matx_vec_f64_t* out,
-		matx_int64_t n,
-		const matx_alloc_t* alloc);
-
-	matx_status_t matx_vec_f64_wrap(matx_vec_f64_t* out,
-		matx_int64_t n,
-		matx_int64_t stride,
-		matx_double* data);
-
-	void matx_vec_f64_destroy(matx_vec_f64_t* v,
-		const matx_alloc_t* alloc);
-
 	// ---- Dense matrix (double) ----
 	typedef struct matx_dense_f64_t {
 		matx_int64_t  rows;
@@ -103,21 +98,6 @@ extern "C" {
 		matx_handle_t handle_grb;
 	} matx_dense_f64_t;
 
-	matx_status_t matx_dense_f64_create(matx_dense_f64_t* out,
-		matx_int64_t rows,
-		matx_int64_t cols,
-		matx_layout_t layout,
-		const matx_alloc_t* alloc);
-
-	matx_status_t matx_dense_f64_wrap(matx_dense_f64_t* out,
-		matx_int64_t rows,
-		matx_int64_t cols,
-		matx_int64_t stride,
-		matx_layout_t layout,
-		matx_double* data);
-
-	void matx_dense_f64_destroy(matx_dense_f64_t* m, const matx_alloc_t* alloc);
-
 	// ---- Dense vector (complex) ----
 	typedef struct matx_vec_c64_t {
 		matx_int64_t n;
@@ -126,18 +106,6 @@ extern "C" {
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 	} matx_vec_c64_t;
-
-	matx_status_t matx_vec_c64_create(matx_vec_c64_t* out,
-		matx_int64_t n,
-		const matx_alloc_t* alloc);
-
-	matx_status_t matx_vec_c64_wrap(matx_vec_c64_t* out,
-		matx_int64_t n,
-		matx_int64_t stride,
-		matx_complex_f64* data);
-
-	void matx_vec_c64_destroy(matx_vec_c64_t* v,
-		const matx_alloc_t* alloc);
 
 	// ---- Dense matrix (complex) ----
 	typedef struct matx_dense_c64_t {
@@ -149,22 +117,6 @@ extern "C" {
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 	} matx_dense_c64_t;
-
-	matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
-		matx_int64_t rows,
-		matx_int64_t cols,
-		matx_layout_t layout,
-		const matx_alloc_t* alloc);
-
-	matx_status_t matx_dense_c64_wrap(matx_dense_c64_t* out,
-		matx_int64_t rows,
-		matx_int64_t cols,
-		matx_int64_t stride,
-		matx_layout_t layout,
-		matx_complex_f64* data);
-
-	void matx_dense_c64_destroy(matx_dense_c64_t* m,
-		const matx_alloc_t* alloc);
 
 	// ---- Sparse CSC (real/complex) ----
 	typedef struct matx_csc_f64_t {
@@ -195,22 +147,6 @@ extern "C" {
 		matx_csc_f64_t handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
 	} matx_coo_f64_t;
 
-	matx_status_t matx_csc_sparse_f64_create(matx_csc_f64_t* out,
-		matx_int64_t nrows,
-		matx_int64_t ncols,
-		matx_int64_t nnz,
-		const matx_alloc_t* alloc);
-
-	matx_status_t matx_csc_sparse_f64_wrap(matx_csc_f64_t* out,
-		matx_int64_t nrows,
-		matx_int64_t ncols,
-		matx_int64_t nnz,
-		const matx_int64_t* col_ptr,
-		const matx_int64_t* row_ind,
-		const matx_double* values);
-
-	void matx_coo_sparse_f64_destroy(matx_coo_f64_t* m, const matx_alloc_t* alloc);
-
 	typedef struct matx_csc_c64_t {
 		matx_int64_t nrows;
 		matx_int64_t ncols;
@@ -237,31 +173,7 @@ extern "C" {
 		matx_handle_t handle_aocl;
 		matx_csc_c64_t handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
 	} matx_coo_c64_t;
-
-	matx_status_t matx_coo_sparse_c64_create(matx_coo_c64_t* out,
-		matx_int64_t nrows,
-		matx_int64_t ncols,
-		matx_int64_t nnz,
-		const matx_alloc_t* alloc);
-
-	matx_status_t matx_coo_sparse_c64_wrap(matx_coo_c64_t* out,
-		matx_int64_t nrows,
-		matx_int64_t ncols,
-		matx_int64_t nnz,
-		const matx_int64_t* rows,
-		const matx_int64_t* cols,
-		const matx_complex_f64* values);
-
-	void matx_coo_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc);
-
-	matx_status_t matx_csc_sparse_c64_create(matx_csc_c64_t* out,
-		matx_int64_t nrows,
-		matx_int64_t ncols,
-		matx_int64_t nnz,
-		const matx_alloc_t* alloc);
-	void matx_csc_sparse_c64_destroy(matx_csc_c64_t* m, const matx_alloc_t* alloc);
-	void matx_csc_sparse_f64_destroy(matx_csc_f64_t* m, const matx_alloc_t* alloc);
-
+	MATX_API const char* matx_version_string(void);
 #ifdef __cplusplus
 }
 #endif

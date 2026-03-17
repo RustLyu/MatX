@@ -12,6 +12,7 @@ add_library(MatX::sparse_blas ALIAS ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC 
+    MatX::types
     MatX::core
     MatX::tools
 )

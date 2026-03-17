@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-#include "matx/matx.h"
+#include "matx/matx_types.h"
+#include "matx/matx_func.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,14 +107,14 @@ extern "C" {
 		matx_dense_vtable_t vt;
 	} matx_dense_backend_t;
 
-	matx_dense_backend_t matx_blas_make_reference(void);
+	MATX_API matx_dense_backend_t matx_blas_make_reference(void);
 
 	// Initialize default backend based on MATX_BLAS_BACKEND (AUTO picks a reasonable default at build time).
-	matx_dense_backend_t matx_blas_default(void);
-	const char* matx_blas_backend_name(matx_dense_backend_kind_t k);
+	MATX_API  matx_dense_backend_t matx_blas_default(void);
+	MATX_API  const char* matx_blas_backend_name(matx_dense_backend_kind_t k);
 
 	// Convenience API operating on MatX dense types.
-	matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
+	MATX_API  matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_int64_t trans_b,
 		matx_double alpha,
@@ -122,7 +123,7 @@ extern "C" {
 		matx_double beta,
 		matx_dense_f64_t* C);
 
-	matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
+	MATX_API matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_int64_t trans_b,
 		matx_complex_f64 alpha,
@@ -133,12 +134,12 @@ extern "C" {
 
 	// ---- Level 1: vector ops ----
 	// y := alpha * x + y
-	matx_status_t matx_axpy_f64(const matx_dense_backend_t* blas,
+	MATX_API matx_status_t matx_axpy_f64(const matx_dense_backend_t* blas,
 		matx_double alpha,
 		const matx_vec_f64_t* x,
 		matx_vec_f64_t* y);
 
-	matx_status_t matx_axpy_c64(
+	MATX_API matx_status_t matx_axpy_c64(
 		const matx_dense_backend_t* blas,
 		matx_complex_f64 alpha,
 		const matx_vec_c64_t* x,
@@ -146,7 +147,7 @@ extern "C" {
 
 	// ---- Level 2: matrix-vector ----
 	// y := alpha * op(A) * x + beta * y  (dense)
-	matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
+	MATX_API matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_double alpha,
 		const matx_dense_f64_t* A,
@@ -154,7 +155,7 @@ extern "C" {
 		matx_double beta,
 		matx_vec_f64_t* y);
 
-	matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
+	MATX_API matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_complex_f64 alpha,
 		const matx_dense_c64_t* A,
@@ -164,7 +165,7 @@ extern "C" {
 
 	// ---- Level 3: matrix-matrix ----
 	// C := alpha * op(A) * op(B) + beta * C  (dense)
-	matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
+	MATX_API matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_int64_t trans_b,
 		matx_double alpha,
@@ -174,14 +175,14 @@ extern "C" {
 		matx_dense_f64_t* C);
 
 	// B := alpha * A + beta * B  (dense complex)
-	matx_status_t matx_geadd_c64(const matx_dense_backend_t* blas,
+	MATX_API matx_status_t matx_geadd_c64(const matx_dense_backend_t* blas,
 		matx_complex_f64 alpha,
 		const matx_dense_c64_t* A,
 		matx_complex_f64 beta,
 		matx_dense_c64_t* B);
 
 	// B := alpha * A + beta * B  (dense real)
-	matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
+	MATX_API matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
 		matx_double alpha,
 		const matx_dense_f64_t* A,
 		matx_double beta,
