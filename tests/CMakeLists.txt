@@ -38,30 +38,6 @@ target_link_libraries(${PROJECT_NAME}
     MatX::tools
 )
 
-if(MATX_ENABLE_OPENBLAS)
-  target_link_libraries(${PROJECT_NAME} PRIVATE  ${openblas_lib})
-endif()
-
-if(MATX_ENABLE_BLIS)
-  target_link_libraries(${PROJECT_NAME} PRIVATE  ${amdblis_lib})
-endif()
-
-if(MATX_ENABLE_LIBFLAME)
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${libflame_lib})
-endif()
-
-if(MATX_ENABLE_MKL)
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${mkl_lib})
-endif()
-
-if(MATX_ENABLE_SUITESPARSE)
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${suitesparse_lib})
-endif()
-
-if(MATX_ENABLE_GRAPHBLAS)
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${graphblas_lib})
-endif()
-
 include(GoogleTest)
 gtest_discover_tests(matx_tests)
 
