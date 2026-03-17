@@ -195,6 +195,86 @@ matx_status_t ref_spmm_f64_grb(
 	return MATX_OK;
 }
 
+matx_status_t ref_dsp2md_f64_grb(
+	matx_double alpha,
+	matx_coo_f64_t* A,
+	matx_coo_f64_t* B,
+	matx_double beta,
+	matx_dense_f64_t* C)
+{
+	if (!A || !B || !C)
+		return MATX_ERR_INVALID_ARG;
+
+	/* build A */
+	if (A->handle_grb.valid <= 0)
+	{
+		coo_2_grb_f64(A);
+	}
+	if (B->handle_grb.valid <= 0)
+	{
+		dense_2_grb_f64(B);
+	}
+	if (C->handle_grb.valid <= 0)
+	{
+		dense_2_grb_f64(C);
+	}
+
+	/* C = alpha*A*B + beta*C */
+
+	// 1. temp = alpha * A * B
+	GrB_Matrix temp;
+	GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->rows, C->cols);
+	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Matrix*)B->handle_grb.impl, NULL);
+	info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, &alpha, NULL);
+	//2. gC = beta * gC
+	info = GrB_apply(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, *(GrB_Matrix*)C->handle_grb.impl, &beta, NULL);
+	//3. gC = temp + gC
+	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
+	GrB_Matrix_free(&temp);
+	grb_2_dense_f64(C);
+	return MATX_OK;
+}
+
+matx_status_t ref_dsp2md_c64_grb(
+	matx_complex_f64 alpha,
+	matx_coo_c64_t* A,
+	matx_coo_c64_t* B,
+	matx_complex_f64 beta,
+	matx_dense_c64_t* C)
+{
+	if (!A || !B || !C)
+		return MATX_ERR_INVALID_ARG;
+
+	/* build A */
+	if (A->handle_grb.valid <= 0)
+	{
+		coo_2_grb_c64(A);
+	}
+	if (B->handle_grb.valid <= 0)
+	{
+		dense_2_grb_c64(B);
+	}
+	if (C->handle_grb.valid <= 0)
+	{
+		dense_2_grb_c64(C);
+	}
+
+	/* C = alpha*A*B + beta*C */
+
+	// 1. temp = alpha * A * B
+	GrB_Matrix temp;
+	GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->rows, C->cols);
+	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Matrix*)B->handle_grb.impl, NULL);
+	info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, &alpha, NULL);
+	//2. gC = beta * gC
+	info = GrB_apply(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, *(GrB_Matrix*)C->handle_grb.impl, &beta, NULL);
+	//3. gC = temp + gC
+	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
+	GrB_Matrix_free(&temp);
+	grb_2_dense_f64(C);
+	return MATX_OK;
+}
+
 matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 	GrB_Info info = GrB_init(GrB_NONBLOCKING);
 	if (info != GrB_SUCCESS)
@@ -208,7 +288,9 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 			.spmm_c64 = ref_spmm_c64_grb,
 			.spmv_c64 = ref_spmv_c64_grb,
 			.spmm_f64 = ref_spmm_f64_grb,
-			.spmv_f64 = ref_spmv_f64_grb
+			.spmv_f64 = ref_spmv_f64_grb,
+			.dsp2md_f64 = ref_dsp2md_f64_grb,
+			.dsp2md_c64 = ref_dsp2md_c64_grb
 		}
 	};
 	return b;

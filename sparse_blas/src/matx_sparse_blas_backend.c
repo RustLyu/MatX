@@ -69,3 +69,13 @@ matx_status_t matx_spmm_coo_f64(const matx_sparse_backend_t* backend,
 {
 	return backend->vt.spmm_f64(alpha, A, B, beta, C);
 }
+
+matx_status_t matx_dsp2md_coo_f64(const matx_sparse_backend_t* backend,
+	matx_double alpha,
+	matx_coo_f64_t* A,
+	matx_coo_f64_t* B,
+	matx_double beta,
+	matx_dense_f64_t* C)
+{
+	return backend->vt.dsp2md_f64(alpha, A, B, beta, C);
+}

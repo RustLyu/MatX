@@ -6,6 +6,7 @@
 	#include <aoclsparse.h>
 #endif
 
+// y = \alpha \, op(A) \, x + \beta \, y,
 matx_status_t ref_spmv_c64_aocl(
 	matx_complex_f64 alpha,
 	matx_coo_c64_t* A,
@@ -53,6 +54,7 @@ matx_status_t ref_spmv_c64_aocl(
 	return MATX_OK;
 }
 
+//    C = \alpha \, op(A) \, B + \beta \, C,
 matx_status_t ref_spmm_c64_aocl(
 	matx_complex_f64 alpha,
 	const matx_coo_c64_t* A,
@@ -101,6 +103,7 @@ matx_status_t ref_spmm_c64_aocl(
 	return MATX_OK;
 }
 
+// y = \alpha \, op(A) \, x + \beta \, y
 matx_status_t ref_spmv_f64_aocl(
 	matx_double alpha,
 	matx_coo_f64_t* A,
@@ -148,7 +151,7 @@ matx_status_t ref_spmv_f64_aocl(
 
 	return MATX_OK;
 }
-
+//C = α * A * B + β * C
 matx_status_t ref_spmm_f64_aocl(
 	matx_double alpha,
 	matx_coo_f64_t* A,
@@ -192,6 +195,109 @@ matx_status_t ref_spmm_f64_aocl(
 	return MATX_OK;
 }
 
+// C := α · op(A) · op(B) + β · C
+matx_status_t ref_dsp2md_f64_aocl(
+	matx_double alpha,
+	matx_coo_f64_t* A,
+	matx_coo_f64_t* B,
+	matx_double beta,
+	matx_dense_f64_t* C)
+{
+#if MATX_HAVE_AOCL_SPARSE
+	if (!A || !B || !C)
+		return MATX_ERR_INVALID_ARG;
+
+	if (A->handle_aocl.valid <= 0)
+	{
+		if (coo_2_aocl_f64(A) != 0)
+			return MATX_ERR_INTERNAL;
+	}
+
+	if (B->handle_aocl.valid <= 0)
+	{
+		if (coo_2_aocl_f64(B) != 0)
+			return MATX_ERR_INTERNAL;
+	}
+
+	aoclsparse_mat_descr descr;
+	aoclsparse_create_mat_descr(&descr);
+
+	aoclsparse_set_mat_type(descr, aoclsparse_matrix_type_general);
+	aoclsparse_set_mat_diag_type(descr, aoclsparse_diag_type_non_unit);
+
+	aoclsparse_status status =
+		aoclsparse_dsp2md(
+			aoclsparse_operation_none, descr,
+			(aoclsparse_matrix)A->handle_aocl.impl,
+			aoclsparse_operation_none, descr,
+			(aoclsparse_matrix)A->handle_aocl.impl,
+			alpha, beta,
+			C->data,
+			aoclsparse_order_row,
+			C->stride
+		);
+
+	aoclsparse_destroy_mat_descr(descr);
+
+	if (status != aoclsparse_status_success)
+		return MATX_ERR_INTERNAL;
+#endif
+	return MATX_OK;
+}
+
+// C := α · op(A) · op(B) + β · C
+matx_status_t ref_dsp2md_c64_aocl(
+	matx_complex_f64 alpha,
+	matx_coo_c64_t* A,
+	matx_coo_c64_t* B,
+	matx_complex_f64 beta,
+	matx_dense_c64_t* C)
+{
+#if MATX_HAVE_AOCL_SPARSE
+	if (!A || !B || !C)
+		return MATX_ERR_INVALID_ARG;
+
+	if (A->handle_aocl.valid <= 0)
+	{
+		if (coo_2_aocl_c64(A) != 0)
+			return MATX_ERR_INTERNAL;
+	}
+
+	if (B->handle_aocl.valid <= 0)
+	{
+		if (coo_2_aocl_c64(B) != 0)
+			return MATX_ERR_INTERNAL;
+	}
+
+	aoclsparse_mat_descr descr;
+	aoclsparse_create_mat_descr(&descr);
+
+	aoclsparse_set_mat_type(descr, aoclsparse_matrix_type_general);
+	aoclsparse_set_mat_diag_type(descr, aoclsparse_diag_type_non_unit);
+
+	aoclsparse_double_complex a = { alpha.real, alpha.imag };
+	aoclsparse_double_complex b = { beta.real, beta.imag };
+
+	aoclsparse_status status =
+		aoclsparse_zsp2md(
+			aoclsparse_operation_none, descr,
+			(aoclsparse_matrix)A->handle_aocl.impl,
+			aoclsparse_operation_none, descr,
+			(aoclsparse_matrix)A->handle_aocl.impl,
+			a, 
+			b,
+			C->data,
+			aoclsparse_order_row,
+			C->stride
+		);
+
+	aoclsparse_destroy_mat_descr(descr);
+
+	if (status != aoclsparse_status_success)
+		return MATX_ERR_INTERNAL;
+#endif
+	return MATX_OK;
+}
 
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 	matx_sparse_backend_t b =
@@ -201,7 +307,9 @@ matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 			.spmm_c64 = ref_spmm_c64_aocl,
 			.spmv_c64 = ref_spmv_c64_aocl,
 			.spmm_f64 = ref_spmm_f64_aocl,
-			.spmv_f64 = ref_spmv_f64_aocl
+			.spmv_f64 = ref_spmv_f64_aocl,
+			.dsp2md_f64 = ref_dsp2md_f64_aocl,
+			.dsp2md_c64 = ref_dsp2md_c64_aocl
 		}
 	};
 	MATX_TRACE("AOCL INIT");

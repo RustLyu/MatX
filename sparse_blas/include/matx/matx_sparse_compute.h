@@ -33,6 +33,18 @@ extern "C" {
 			matx_dense_f64_t* B,
 			matx_double beta,
 			matx_dense_f64_t* C);
+		matx_status_t(*dsp2md_f64)(
+			matx_double alpha,
+			matx_coo_f64_t* A,
+			matx_coo_f64_t* B,
+			matx_double beta,
+			matx_dense_f64_t* C);
+		matx_status_t(*dsp2md_c64)(
+			matx_complex_f64 alpha,
+			matx_coo_c64_t* A,
+			matx_coo_c64_t* B,
+			matx_complex_f64 beta,
+			matx_dense_c64_t* C);
 		matx_status_t(*spmv_f64)(
 			matx_double alpha,
 			matx_coo_f64_t* A,
@@ -74,6 +86,13 @@ extern "C" {
 		matx_double alpha,
 		matx_coo_f64_t* A,
 		matx_dense_f64_t* B,
+		matx_double beta,
+		matx_dense_f64_t* C);
+
+	MATX_API matx_status_t matx_dsp2md_coo_f64(const matx_sparse_backend_t* backend,
+		matx_double alpha,
+		matx_coo_f64_t* A,
+		matx_coo_f64_t* B,
 		matx_double beta,
 		matx_dense_f64_t* C);
 
