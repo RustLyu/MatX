@@ -138,7 +138,6 @@ matx_status_t ref_spmv_f64_aocl(
 			y->data
 		);
 	aoclsparse_destroy_mat_descr(descr);
-	matx_log_init("./logs");
 	if (status != aoclsparse_status_success)
 	{
 		MATX_DEBUG("aoclsparse_dmv failed with status %d", status);
@@ -195,12 +194,17 @@ matx_status_t ref_spmm_f64_aocl(
 
 
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
-	matx_sparse_backend_t b;
-	b.kind = MATX_SPARSE_BACKEND_AOCL_CPARSE;
-	b.vt.spmm_c64 = ref_spmm_c64_aocl;
-	b.vt.spmv_c64 = ref_spmv_c64_aocl;
-	b.vt.spmm_f64 = ref_spmm_f64_aocl;
-	b.vt.spmv_f64 = ref_spmv_f64_aocl;
+	matx_sparse_backend_t b =
+	{
+		.kind = MATX_SPARSE_BACKEND_AOCL_CPARSE,
+		.vt = {
+			.spmm_c64 = ref_spmm_c64_aocl,
+			.spmv_c64 = ref_spmv_c64_aocl,
+			.spmm_f64 = ref_spmm_f64_aocl,
+			.spmv_f64 = ref_spmv_f64_aocl
+		}
+	};
+	MATX_TRACE("AOCL INIT");
 	return b;
 }
 

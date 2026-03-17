@@ -160,12 +160,16 @@ matx_status_t ref_spmm_f64_mkl(
 
 
 matx_sparse_backend_t matx_sparse_make_reference_mkl(void) {
-	matx_sparse_backend_t b;
-	b.kind = MATX_SPARSE_BACKEND_MKL;
-	b.vt.spmm_c64 = ref_spmm_c64_mkl;
-	b.vt.spmv_c64 = ref_spmv_c64_mkl;
-	b.vt.spmm_f64 = ref_spmm_f64_mkl;
-	b.vt.spmv_f64 = ref_spmv_f64_mkl;
+	matx_sparse_backend_t b =
+	{
+		.kind = MATX_SPARSE_BACKEND_MKL,
+		.vt = {
+			.spmm_c64 = ref_spmm_c64_mkl,
+			.spmv_c64 = ref_spmv_c64_mkl,
+			.spmm_f64 = ref_spmm_f64_mkl,
+			.spmv_f64 = ref_spmv_f64_mkl
+		}
+	};
 	return b;
 }
 

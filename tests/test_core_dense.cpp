@@ -2,10 +2,12 @@
 
 extern "C" {
 #include "matx/matx_types.h"
+#include "matx/matx_log.h"
 #include "matx/matx_func.h"
 }
 
 TEST(core_dense, create_destroy) {
+  matx_log_init("./logs");
   matx_alloc_t a = matx_alloc_default();
   matx_dense_f64_t M;
   ASSERT_EQ(matx_dense_f64_create(&M, 3, 4, MATX_COL_MAJOR, &a), MATX_OK);
