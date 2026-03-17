@@ -39,7 +39,6 @@ else()
   target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_PLATFORM_POSIX=1)
 endif()
 
-message(STATUS ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
