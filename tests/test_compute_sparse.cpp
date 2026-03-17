@@ -23,7 +23,8 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
       .columns = J,
 	  .values = values,
       .flags = 0,
-	  .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
+	  .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1},
+      .handle_aocl = {.impl = NULL, .type = MATX_HANDLE_TYPE_AOCL_MATRIX, .valid = -1}
   };
 
   matx_vec_f64_t x, y;
@@ -41,7 +42,7 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
   /* y = A*x; A has diagonal 2, off-diag 0.5. So y_i = 2*1 + 0.5*3 = 3.5 */
   EXPECT_NEAR(y.data[0], 3.5, 1e-12);
   EXPECT_NEAR(y.data[3], 3.5, 1e-12);
-
+  matx_coo_sparse_f64_destroy(&A, &a);
   matx_vec_f64_destroy(&x, &a);
   matx_vec_f64_destroy(&y, &a);
 }
@@ -83,7 +84,8 @@ TEST(compute_sparse, spmv_csc_f64_cd) {
         .columns = cols.data(),
         .values = vals.data(),
         .flags = 0,
-        .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
+        .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1},
+        .handle_aocl = {.impl = NULL, .type = MATX_HANDLE_TYPE_AOCL_MATRIX, .valid = -1}
     };
 
     matx_vec_f64_t x, y;
@@ -109,7 +111,7 @@ TEST(compute_sparse, spmv_csc_f64_cd) {
     /* y = A*x; A has diagonal 2, off-diag 0.5. So y_i = 2*1 + 0.5*3 = 3.5 */
     //EXPECT_NEAR(y.data[0], 3.5, 1e-12);
     //EXPECT_NEAR(y.data[3], 3.5, 1e-12);
-
+    matx_coo_sparse_f64_destroy(&A, &a);
     matx_vec_f64_destroy(&x, &a);
     matx_vec_f64_destroy(&y, &a);
 }
@@ -143,7 +145,8 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
         .columns = coo_cols,    
         .values = coo_values,
         .flags = 0,
-        .handle_grb = {.impl = NULL, .type= MATX_HANDLE_TYPE_GRB_MATRIX, .valid=-1}
+        .handle_grb = {.impl = NULL, .type= MATX_HANDLE_TYPE_GRB_MATRIX, .valid=-1},
+        .handle_aocl = {.impl = NULL, .type = MATX_HANDLE_TYPE_AOCL_MATRIX, .valid = -1}
     };
     matx_vec_c64_t x, y;
     ASSERT_EQ(matx_vec_c64_create(&x, cols, &a), MATX_OK);

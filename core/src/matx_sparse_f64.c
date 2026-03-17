@@ -145,6 +145,16 @@ void matx_coo_sparse_f64_destroy(matx_coo_f64_t* m, const matx_alloc_t* alloc) {
         m->handle_mkl.valid = -1;
     }
 
+    if (m->handle_aocl.valid > 0)
+    {
+        if (m->handle_aocl.custom_free_func && m->handle_aocl.impl)
+        {
+            m->handle_aocl.custom_free_func(m->handle_aocl.impl);
+        }
+        m->handle_aocl.impl = NULL;
+        m->handle_aocl.valid = -1;
+    }
+
     // TODO:DESTORY handle_csc if valid
     matx_csc_sparse_f64_destroy(&m->handle_csc, alloc);
     memset(m, 0, sizeof(*m));

@@ -24,6 +24,7 @@ option(MATX_ENABLE_LIBFLAME "Enable LIBFLAME backend if found/provided" OFF)
 option(MATX_ENABLE_MKL "Enable MKL backend if found/provided" OFF)
 option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse backend if found/provided" ON)
 option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" OFF)
+option(MATX_ENABLE_AOCL_SPARSE "Enable amd AOCL SPARSE for sparse numerical ops if found" OFF)
 
 set(MATX_DENSE_BLAS_BACKEND "AUTO" CACHE STRING "DENSE BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
 set(MATX_SPARSE_BLAS_BACKEND "AUTO" CACHE STRING "SPARSE BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
@@ -111,12 +112,14 @@ if(NOT DEFINED MATX_BLAS_AUTO_SELECTED)
     set(MATX_ENABLE_OPENBLAS OFF CACHE BOOL "" FORCE)
     set(MATX_ENABLE_MKL OFF CACHE BOOL "" FORCE)
     set(MATX_ENABLE_GRAPHBLAS ON CACHE BOOL "" FORCE)
+    set(MATX_ENABLE_AOCL_SPARSE ON CACHE BOOL "" FORCE)
   elseif(CPU_PLATFORM STREQUAL "INTEL")
     set(MATX_ENABLE_OPENBLAS ON CACHE BOOL "Enable OpenBLAS backend" FORCE)
     set(MATX_ENABLE_GRAPHBLAS ON CACHE BOOL "Enable GraphBLAS" FORCE)
     set(MATX_ENABLE_BLIS OFF CACHE BOOL "" FORCE)
     set(MATX_ENABLE_LIBFLAME OFF CACHE BOOL "" FORCE)
     set(MATX_ENABLE_MKL OFF CACHE BOOL "" FORCE)
+    set(MATX_ENABLE_AOCL_SPARSE ON CACHE BOOL "" FORCE)
   else()
     set(MATX_ENABLE_OPENBLAS ON CACHE BOOL "Enable OpenBLAS backend" FORCE)
     set(MATX_ENABLE_BLIS OFF CACHE BOOL "" FORCE)
@@ -157,7 +160,8 @@ endif()
 # ---- BLAS backend ----
 if(MATX_ENABLE_OPENBLAS)
   set(openblas_DIR
-      "${3Party_path}/openblas-0.3.30/lib/cmake")
+      "${3Party_path}/openblas-0.3.30/lib/cmake/OpenBLAS")
+      message(STATUS "Looking for OpenBLAS in ${openblas_DIR}")
   find_package(openblas REQUIRED)
 elseif(MATX_ENABLE_BLIS)
   set(amdblis_DIR
@@ -177,6 +181,13 @@ if(MATX_ENABLE_LIBFLAME)
 endif()
 
 # ---- Sparse / Graph libraries ----
+
+if(MATX_ENABLE_AOCL_SPARSE)
+set(aoclsparse_DIR
+      "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-sparse/cmake")
+  find_package(aoclsparse REQUIRED)
+endif()
+
 if(MATX_ENABLE_SUITESPARSE)
   set(SuiteSparse_config_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/SuiteSparse_config")
   set(BTF_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/BTF")

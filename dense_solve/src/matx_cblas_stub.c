@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #if MATX_ENABLE_OPENBLAS
-#include "openblas/cblas.h"
+#include "cblas.h"
 #elif MATX_ENABLE_LIBFLAME
 #include "FLAME.h"
 #endif

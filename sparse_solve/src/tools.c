@@ -6,47 +6,40 @@
 #include <stdint.h>
 #include <errno.h>
 
-// 定义 MKL 复数类型（和原代码一致）
 typedef struct {
     double real;
     double imag;
 } MKL_Complex16;
 
-// 错误码定义（替代 C++ 异常）
 #define COO2CSC_SUCCESS 0
 #define COO2CSC_ERR_OUT_OF_RANGE 1
 #define COO2CSC_ERR_MEMORY 2
 #define COO2CSC_ERR_NULL_PTR 3
 
-// ===================== 辅助结构体与函数 =====================
-// 替代 C++ 的 Entry 结构体
+
 typedef struct {
     matx_int64_t col;
     matx_int64_t row;
     matx_int64_t idx;
 } Entry;
 
-// 替代 C++ 的 MergedEntry 结构体
 typedef struct {
     matx_int64_t col;
     matx_int64_t row;
-    matx_int64_t* coo_indices;  // 动态数组存储COO索引
-    matx_int64_t coo_indices_len; // 数组长度
+    matx_int64_t* coo_indices;
+    matx_int64_t coo_indices_len;
 } MergedEntry;
 
-// qsort 比较函数（替代 lambda 排序）
 static int entry_compare(const void* a, const void* b) {
     const Entry* entry_a = (const Entry*)a;
     const Entry* entry_b = (const Entry*)b;
 
-    // 先按列排序，列相同按行排序
     if (entry_a->col != entry_b->col) {
         return (entry_a->col < entry_b->col) ? -1 : 1;
     }
     return (entry_a->row < entry_b->row) ? -1 : 1;
 }
 
-// 释放 MergedEntry 数组的内存
 static void free_merged_entries(MergedEntry* merged, matx_int64_t merged_len) {
     if (merged == NULL) return;
     for (matx_int64_t i = 0; i < merged_len; ++i) {

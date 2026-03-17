@@ -29,7 +29,7 @@ target_compile_definitions(${PROJECT_NAME}
 
 if(MATX_ENABLE_OPENBLAS)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_OPENBLAS=1)
-  target_link_libraries(${PROJECT_NAME} PRIVATE openblas::openblas)
+  target_link_libraries(${PROJECT_NAME} PRIVATE OpenBLAS::OpenBLAS)
 endif()
 
 if(MATX_ENABLE_LIBFLAME)

@@ -13,6 +13,7 @@ extern "C" {
 #define MATX_VERSION_PATCH 0
 #define MKL_ILP64
 #define OPENBLAS_USE64BITINT
+#define aoclsparse_ILP64
 	typedef enum matx_status_t {
 		MATX_OK = 0,
 		MATX_ERR_INVALID_ARG = 1,
@@ -50,7 +51,8 @@ extern "C" {
 	typedef enum matx_handle_type_t {
 		MATX_HANDLE_TYPE_GRB_MATRIX = 1,
 		MATX_HANDLE_TYPE_GRB_VECTOR = 2,
-		MATX_HANDLE_TYPE_MKL_MATRIX = 3
+		MATX_HANDLE_TYPE_MKL_MATRIX = 3,
+		MATX_HANDLE_TYPE_AOCL_MATRIX = 4
 	} matx_handle_type_t;
 
 	typedef void(*free_ptr_func)(void* ptr);
@@ -189,6 +191,7 @@ extern "C" {
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 		matx_handle_t handle_mkl;
+		matx_handle_t handle_aocl;
 		matx_csc_f64_t handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
 	} matx_coo_f64_t;
 
@@ -231,6 +234,7 @@ extern "C" {
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 		matx_handle_t handle_mkl;
+		matx_handle_t handle_aocl;
 		matx_csc_c64_t handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
 	} matx_coo_c64_t;
 

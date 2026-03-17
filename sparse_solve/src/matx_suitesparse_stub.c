@@ -96,12 +96,12 @@ static matx_status_t ss_solve_csc_f64(const matx_factor_sparse_f64_t* F,
 	const int status = klu_l_solve(F->S, F->N, n, 1, x, &F->common);
 	if (!status)
 	{
-		MATX_ERROR("KLU solve failed with status %d", status);
+		//MATX_ERROR("KLU solve failed with status %d", status);
 		return MATX_ERR_INTERNAL;
 	}
 	else
 	{
-		MATX_TRACE("KLU solve succeeded with status %d", status);
+		//MATX_TRACE("KLU solve succeeded with status %d", status);
 	}
 	return MATX_OK;
 }

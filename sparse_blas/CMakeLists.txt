@@ -4,6 +4,7 @@ add_library(${PROJECT_NAME}
   src/matx_sparse_blas_backend.c
   src/matx_graphblas_ref.c
   src/matx_mkl_ref.c
+  src/matx_aocl_cparse_ref.c
   src/tools.c
 )
 
@@ -49,6 +50,10 @@ if(MATX_ENABLE_GRAPHBLAS)
     target_link_libraries(${PROJECT_NAME} PRIVATE SuiteSparse::GraphBLAS)
 endif()
 
+if(MATX_ENABLE_AOCL_SPARSE)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_AOCL_SPARSE=1)
+    target_link_libraries(${PROJECT_NAME} PRIVATE aoclsparse::aoclsparse)
+endif()
 
 target_sources(${PROJECT_NAME}
   PUBLIC
