@@ -211,16 +211,17 @@ static void ss_factor_csc_c64_destroy(
 }
 
 matx_sparse_linsolve_t matx_linsolve_make_suitesparse(void) {
-	matx_sparse_linsolve_t ls;
-	ls.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE;
-
-	ls.vt.factor_csc_f64 = &ss_factor_csc_f64;
-	ls.vt.solve_csc_f64 = &ss_solve_csc_f64;
-	ls.vt.factor_csc_f64_destroy = &ss_factor_csc_f64_destroy;
-
-	ls.vt.factor_csc_c64 = &ss_factor_csc_c64;
-	ls.vt.solve_csc_c64 = &ss_solve_csc_c64;
-	ls.vt.factor_csc_c64_destroy = &ss_factor_csc_c64_destroy;
-
+	matx_sparse_linsolve_t ls =
+	{
+		.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE,
+		.vt = {
+			.factor_csc_f64 = &ss_factor_csc_f64,
+			.solve_csc_f64 = &ss_solve_csc_f64,
+			.factor_csc_f64_destroy = &ss_factor_csc_f64_destroy,
+			.factor_csc_c64 = &ss_factor_csc_c64,
+			.solve_csc_c64 = &ss_solve_csc_c64,
+			.factor_csc_c64_destroy = &ss_factor_csc_c64_destroy
+		}
+	};
 	return ls;
 }

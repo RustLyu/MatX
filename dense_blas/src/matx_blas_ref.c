@@ -348,16 +348,20 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
 }
 
 matx_dense_backend_t matx_blas_make_reference(void) {
-	matx_dense_backend_t b;
-	b.kind = MATX_BLAS_BACKEND_REFERENCE;
-	b.vt.dgemm = &ref_dgemm;
-	b.vt.zgemm = &ref_zgemm;
-	b.vt.dgemv = &ref_dgemv;
-	b.vt.zgemv = &ref_zgemv;
-	b.vt.daxpy = &ref_daxpy;
-	b.vt.zaxpy = &ref_zaxpy;
-	b.vt.dgeadd = &ref_dgeadd;
-	b.vt.zgeadd = &ref_zgeadd;
+	matx_dense_backend_t b = {
+		.kind = MATX_BLAS_BACKEND_OPENBLAS,
+		.vt = {
+			.dgemm = &ref_dgemm,
+			.zgemm = &ref_zgemm,
+			.dgemv = &ref_dgemv,
+			.zgemv = &ref_zgemv,
+			.daxpy = &ref_daxpy,
+			.zaxpy = &ref_zaxpy,
+			.dgeadd = &ref_dgeadd,
+			.zgeadd = &ref_zgeadd
+		}
+	};
+
 	return b;
 }
 

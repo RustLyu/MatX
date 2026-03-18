@@ -198,16 +198,18 @@ static void ss_factor_dense_c64_destroy(
 
 
 matx_dense_linsolve_t matx_dense_linsolve_make_cblas(void) {
-	matx_dense_linsolve_t ls;
-	ls.kind = MATX_LINSOLVE_BACKEND_CBLAS;
+	matx_dense_linsolve_t ls = {
+		.kind = MATX_LINSOLVE_BACKEND_CBLAS,
+		.vt = {
+			.factor_dense_f64 = &ss_factor_dense_f64,
+			.solve_dense_f64 = &ss_solve_dense_f64,
+			.factor_dense_f64_destroy = &ss_factor_dense_f64_destroy,
 
-	ls.vt.factor_dense_f64 = &ss_factor_dense_f64;
-	ls.vt.solve_dense_f64 = &ss_solve_dense_f64;
-	ls.vt.factor_dense_f64_destroy = &ss_factor_dense_f64_destroy;
-
-	ls.vt.factor_dense_c64 = &ss_factor_dense_c64;
-	ls.vt.solve_dense_c64 = &ss_solve_dense_c64;
-	ls.vt.factor_dense_c64_destroy = &ss_factor_dense_c64_destroy;
+			.factor_dense_c64 = &ss_factor_dense_c64,
+			.solve_dense_c64 = &ss_solve_dense_c64,
+			.factor_dense_c64_destroy = &ss_factor_dense_c64_destroy
+		}
+	};
 
 	return ls;
 }
