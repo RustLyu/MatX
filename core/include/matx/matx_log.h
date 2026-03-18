@@ -1,6 +1,8 @@
 #ifndef MATX_LOG_H
 #define MATX_LOG_H
 
+#include "matx/matx_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,16 +19,16 @@ extern "C" {
         MATX_LOG_OFF,
     } matx_log_level;
 
-    void matx_log_init(const char* log_dir);
+    MATX_API void matx_log_init(const char* log_dir);
 
-    void matx_log_set_level(matx_log_level level);
+    MATX_API void matx_log_set_level(matx_log_level level);
 
-    void matx_log_trace(const char* file, int line, const char* fmt, ...);
-    void matx_log_debug(const char* file, int line, const char* fmt, ...);
-    void matx_log_info(const char* file, int line, const char* fmt, ...);
-    void matx_log_warn(const char* file, int line, const char* fmt, ...);
-    void matx_log_error(const char* file, int line, const char* fmt, ...);
-    void matx_log_fatal(const char* file, int line, const char* fmt, ...);
+    MATX_API void matx_log_trace(const char* file, int line, const char* fmt, ...);
+    MATX_API void matx_log_debug(const char* file, int line, const char* fmt, ...);
+    MATX_API void matx_log_info(const char* file, int line, const char* fmt, ...);
+    MATX_API void matx_log_warn(const char* file, int line, const char* fmt, ...);
+    MATX_API void matx_log_error(const char* file, int line, const char* fmt, ...);
+    MATX_API void matx_log_fatal(const char* file, int line, const char* fmt, ...);
 
 #define MATX_TRACE(fmt, ...) matx_log_trace(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define MATX_DEBUG(fmt, ...) matx_log_debug(__FILE__, __LINE__, fmt, ##__VA_ARGS__)

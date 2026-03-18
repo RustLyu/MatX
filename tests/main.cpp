@@ -5,12 +5,19 @@ extern "C" {
 #include "matx/matx_log.h"
 }
 
-
 class GlobalTestEnvironment : public testing::Environment {
 public:
     void SetUp() override {
         std::cout << "=== initial set up ===" << std::endl;
         matx_log_init("./logs");
+        matx_log_set_level(MATX_LOG_TRACE);
+        MATX_TRACE("hello world! %s", "rust");
+        MATX_DEBUG("hello world! %s %d", "rust", 23);
+        MATX_INFO("hello world! %s %d", "rust", 23);
+        MATX_WARN("hello world! %s %d", "rust", 23);
+        MATX_ERROR("hello world! %s %d", "rust", 23);
+        MATX_FATAL("hello world! %s %d", "rust", 23);
+        MATX_FATAL("hello world! %s %.2f", "rust", 7.688);
     }
 
     void TearDown() override {
