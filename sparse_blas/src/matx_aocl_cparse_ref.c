@@ -230,7 +230,7 @@ matx_status_t ref_dsp2md_f64_aocl(
 			aoclsparse_operation_none, descr,
 			(aoclsparse_matrix)A->handle_aocl.impl,
 			aoclsparse_operation_none, descr,
-			(aoclsparse_matrix)A->handle_aocl.impl,
+			(aoclsparse_matrix)B->handle_aocl.impl,
 			alpha, beta,
 			C->data,
 			aoclsparse_order_row,
@@ -246,7 +246,7 @@ matx_status_t ref_dsp2md_f64_aocl(
 }
 
 // C := α · op(A) · op(B) + β · C
-matx_status_t ref_dsp2md_c64_aocl(
+matx_status_t ref_zsp2md_c64_aocl(
 	matx_complex_f64 alpha,
 	matx_coo_c64_t* A,
 	matx_coo_c64_t* B,
@@ -283,7 +283,7 @@ matx_status_t ref_dsp2md_c64_aocl(
 			aoclsparse_operation_none, descr,
 			(aoclsparse_matrix)A->handle_aocl.impl,
 			aoclsparse_operation_none, descr,
-			(aoclsparse_matrix)A->handle_aocl.impl,
+			(aoclsparse_matrix)B->handle_aocl.impl,
 			a, 
 			b,
 			C->data,
@@ -309,7 +309,7 @@ matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 			.spmm_f64 = ref_spmm_f64_aocl,
 			.spmv_f64 = ref_spmv_f64_aocl,
 			.dsp2md_f64 = ref_dsp2md_f64_aocl,
-			.dsp2md_c64 = ref_dsp2md_c64_aocl
+			.zsp2md_c64 = ref_zsp2md_c64_aocl
 		}
 	};
 	MATX_TRACE("AOCL INIT");

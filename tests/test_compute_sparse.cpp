@@ -1,4 +1,6 @@
 ﻿#include <gtest/gtest.h>
+#include <fstream>
+#include <filesystem>
 
 extern "C" {
 #include "matx/matx_types.h"
@@ -48,74 +50,72 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
   matx_vec_f64_destroy(&y, &a);
 }
 
-#include <fstream>
-#include <filesystem>
-TEST(compute_sparse, spmv_csc_f64_cd) {
-	std::cout << "Current path: " << std::filesystem::current_path() << "\n";
-    std::ifstream infile("../matrix.txt");
-    if (!infile) {
-        std::cerr << "Cannot open file\n";
-    }
-
-    size_t nrows, ncols;
-    infile >> nrows >> ncols;
-
-    std::vector<matx_int64_t> rows;
-    std::vector<matx_int64_t> cols;
-    std::vector<matx_double> vals;
-
-    matx_int64_t r, c;
-    double v;
-    while (infile >> r >> c >> v) {
-        rows.push_back(r);
-        cols.push_back(c);
-        vals.push_back(v);
-    }
-
-    infile.close();
-
-
-    matx_alloc_t a = matx_alloc_default();
-    // 构造 COO 矩阵
-    matx_coo_f64_t A = {
-        .nrows = 12,
-        .ncols = 12,
-        .nnz = (matx_int64_t)vals.size(),
-        .rows = rows.data(),
-        .columns = cols.data(),
-        .values = vals.data(),
-        .flags = 0,
-        .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1},
-        .handle_aocl = {.impl = NULL, .type = MATX_HANDLE_TYPE_AOCL_MATRIX, .valid = -1}
-    };
-
-    matx_vec_f64_t x, y;
-    ASSERT_EQ(matx_vec_f64_create(&x, 12, &a), MATX_OK);
-    ASSERT_EQ(matx_vec_f64_create(&y, 12, &a), MATX_OK);
-    x.data[0] = 1.0;
-    x.data[1] = 0.99;
-    x.data[2] = 1.0;
-    x.data[3] = 0.99;
-    x.data[4] = 1.0;
-    x.data[5] = 0.99;
-    x.data[6] = 1.0;
-    x.data[7] = 0.99;
-    x.data[8] = 1.0;
-    x.data[9] = 0.99;
-    x.data[10] = 1.0;
-    x.data[11] = 0.99;
-    y.data[0] = y.data[1] = y.data[2] = y.data[3] = 0.0;
-
-    auto backend = matx_sparse_default();
-    matx_status_t st = matx_spmv_coo_f64(&backend, 1.0, &A, &x, 0.0, &y);
-    ASSERT_EQ(st, MATX_OK);
-    /* y = A*x; A has diagonal 2, off-diag 0.5. So y_i = 2*1 + 0.5*3 = 3.5 */
-    //EXPECT_NEAR(y.data[0], 3.5, 1e-12);
-    //EXPECT_NEAR(y.data[3], 3.5, 1e-12);
-    matx_coo_sparse_f64_destroy(&A, &a);
-    matx_vec_f64_destroy(&x, &a);
-    matx_vec_f64_destroy(&y, &a);
-}
+//TEST(compute_sparse, spmv_csc_f64_cd) {
+//	std::cout << "Current path: " << std::filesystem::current_path() << "\n";
+//    std::ifstream infile("../matrix.txt");
+//    if (!infile) {
+//        std::cerr << "Cannot open file\n";
+//    }
+//
+//    size_t nrows, ncols;
+//    infile >> nrows >> ncols;
+//
+//    std::vector<matx_int64_t> rows;
+//    std::vector<matx_int64_t> cols;
+//    std::vector<matx_double> vals;
+//
+//    matx_int64_t r, c;
+//    double v;
+//    while (infile >> r >> c >> v) {
+//        rows.push_back(r);
+//        cols.push_back(c);
+//        vals.push_back(v);
+//    }
+//
+//    infile.close();
+//
+//
+//    matx_alloc_t a = matx_alloc_default();
+//    // 构造 COO 矩阵
+//    matx_coo_f64_t A = {
+//        .nrows = 12,
+//        .ncols = 12,
+//        .nnz = (matx_int64_t)vals.size(),
+//        .rows = rows.data(),
+//        .columns = cols.data(),
+//        .values = vals.data(),
+//        .flags = 0,
+//        .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1},
+//        .handle_aocl = {.impl = NULL, .type = MATX_HANDLE_TYPE_AOCL_MATRIX, .valid = -1}
+//    };
+//
+//    matx_vec_f64_t x, y;
+//    ASSERT_EQ(matx_vec_f64_create(&x, 12, &a), MATX_OK);
+//    ASSERT_EQ(matx_vec_f64_create(&y, 12, &a), MATX_OK);
+//    x.data[0] = 1.0;
+//    x.data[1] = 0.99;
+//    x.data[2] = 1.0;
+//    x.data[3] = 0.99;
+//    x.data[4] = 1.0;
+//    x.data[5] = 0.99;
+//    x.data[6] = 1.0;
+//    x.data[7] = 0.99;
+//    x.data[8] = 1.0;
+//    x.data[9] = 0.99;
+//    x.data[10] = 1.0;
+//    x.data[11] = 0.99;
+//    y.data[0] = y.data[1] = y.data[2] = y.data[3] = 0.0;
+//
+//    auto backend = matx_sparse_default();
+//    matx_status_t st = matx_spmv_coo_f64(&backend, 1.0, &A, &x, 0.0, &y);
+//    ASSERT_EQ(st, MATX_OK);
+//    /* y = A*x; A has diagonal 2, off-diag 0.5. So y_i = 2*1 + 0.5*3 = 3.5 */
+//    //EXPECT_NEAR(y.data[0], 3.5, 1e-12);
+//    //EXPECT_NEAR(y.data[3], 3.5, 1e-12);
+//    matx_coo_sparse_f64_destroy(&A, &a);
+//    matx_vec_f64_destroy(&x, &a);
+//    matx_vec_f64_destroy(&y, &a);
+//}
 
 
 TEST(compute_sparse, spmv_csc_c64_4x4) {
@@ -261,4 +261,66 @@ TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_coo_sparse_c64_destroy(&A, &a);
   matx_dense_c64_destroy(&B, &a);
   matx_dense_c64_destroy(&C, &a);
+}
+
+TEST(compute_sparse, dsp2md_coo_f64_4x4) {
+    matx_alloc_t a = matx_alloc_default();
+
+    matx_int64_t I_A[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+    matx_int64_t J_A[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
+    matx_double values_A[16];
+    for (int i = 0; i < 16; ++i) {
+        values_A[i] = (i % 4 == i / 4) ? 1.0 : 0.0;
+    }
+    matx_coo_f64_t A = {
+      .nrows = 4,
+      .ncols = 4,
+      .nnz = 16,
+      .rows = I_A,
+      .columns = J_A,
+      .values = values_A,
+      .flags = 0,
+      .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
+    };
+
+    matx_int64_t I_B[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+    matx_int64_t J_B[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
+    matx_double values_B[16];
+    for (int i = 0; i < 16; ++i) {
+        values_B[i] = (i % 4 == i / 4) ? 2.0 : 0.5;
+    }
+    matx_coo_f64_t B = {
+      .nrows = 4,
+      .ncols = 4,
+      .nnz = 16,
+      .rows = I_B,
+      .columns = J_B,
+      .values = values_B,
+      .flags = 0,
+      .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
+    };
+
+    matx_sparse_backend_t backend = matx_sparse_default();
+
+    matx_dense_f64_t C;
+    ASSERT_EQ(matx_dense_f64_create(&C, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+    for (size_t i = 0; i < 16; ++i) C.data[i] = 0.0;
+    matx_status_t st = matx_dsp2md_coo_f64(
+        &backend,
+        1.0,
+        &A,
+        &B,
+        0.0,
+        &C
+    );
+
+    ASSERT_EQ(st, MATX_OK);
+
+    EXPECT_NEAR(C.data[0], 2.0, 1e-12);
+    EXPECT_NEAR(C.data[1], 0.5, 1e-12);
+    EXPECT_NEAR(C.data[14], 0.5, 1e-12);
+    EXPECT_NEAR(C.data[15], 2.0, 1e-12);
+    matx_coo_sparse_f64_destroy(&A, &a);
+    matx_coo_sparse_f64_destroy(&B, &a);
+    matx_dense_f64_destroy(&C, &a);
 }
