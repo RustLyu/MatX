@@ -17,6 +17,7 @@ FetchContent_MakeAvailable(googletest)
 project (matx_tests CXX)
 
 add_executable(${PROJECT_NAME}
+  main.cpp
   test_core_dense.cpp
   test_core_vec.cpp
   test_compute_dgemm.cpp
