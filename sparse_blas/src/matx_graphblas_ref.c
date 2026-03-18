@@ -118,11 +118,6 @@ matx_status_t ref_spmv_f64_grb(
 	matx_double beta,
 	matx_vec_f64_t* y)
 {
-	GrB_Info info = GrB_init(GrB_NONBLOCKING);
-	if (info != GrB_SUCCESS)
-	{
-		MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
-	}
 	if (!A || !x || !y)
 		return MATX_ERR_INVALID_ARG;
 
@@ -150,7 +145,7 @@ matx_status_t ref_spmv_f64_grb(
 
 	GrB_Vector temp;
 	matx_int64_t t0 = matx_tm_now(MATX_TM_MICROSECOND);
-	info = GrB_Vector_new(&temp, GrB_FP64, y->n);
+	GrB_Info info = GrB_Vector_new(&temp, GrB_FP64, y->n);
 	// temp = A*x
 	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Vector*)x->handle_grb.impl, NULL);
 	// temp = alpha*temp
@@ -289,6 +284,11 @@ matx_status_t ref_zsp2md_c64_grb(
 }
 
 matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
+	GrB_Info info = GrB_init(GrB_NONBLOCKING);
+	if (info != GrB_SUCCESS)
+	{
+		MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
+	}
 	matx_sparse_backend_t b = 
 	{
 		.kind = MATX_SPARSE_BACKEND_GRAPHBLAS,
