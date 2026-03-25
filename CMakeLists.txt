@@ -221,7 +221,7 @@ if(MATX_BUILD_TESTS)
 endif()
 
 # ---- Export targets ----
-install(EXPORT MatXTargets
+install(EXPORT MatXConfig
   NAMESPACE MatX::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MatX
 )

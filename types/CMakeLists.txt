@@ -33,12 +33,11 @@ endif()
 
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_BUILD_SHARED)
-    #option(MATX_BUILD_SHARED "Build shared libs" ON)
 endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(TARGETS ${PROJECT_NAME}
-  EXPORT MatXTargets
+  EXPORT MatXConfig
 )
