@@ -44,7 +44,7 @@ void matx_log_init(const char* log_dir)
         sinks.begin(), sinks.end());
 
     g_logger->set_pattern(
-        "%Y-%m-%d %H:%M:%S.%e [%t] [%^%l%$] %s:%# | %v");
+        "%Y-%m-%d %H:%M:%S.%e UTC%z [%t] [%^%l%$] %s:%# | %v");
 
     g_logger->set_level(spdlog::level::trace);
     g_logger->flush_on(spdlog::level::trace);

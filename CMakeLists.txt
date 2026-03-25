@@ -10,7 +10,7 @@ elseif (LINUX)
 elseif (APPLE)
     message(STATUS "current os：macOS")
 else ()
-    message(WARNING "未识别的系统！")
+    message(WARNING "UNKNOWN OS！")
 endif ()
 
 message(STATUS "current 3Party path ${3Party_path}")
