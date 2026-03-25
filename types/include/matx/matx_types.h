@@ -36,7 +36,7 @@ extern "C" {
 		MATX_ERR_INTERNAL = 4
 	} matx_status_t;
 
-	typedef int64_t matx_int64_t;
+	typedef long long matx_int64_t;
 	typedef double matx_double;
 
 	// ---- Alloc ----
