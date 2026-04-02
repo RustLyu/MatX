@@ -1,4 +1,4 @@
-/*****************************************************************************
+﻿/*****************************************************************************
   Copyright (c) 2010, Intel Corp.
   All rights reserved.
 
@@ -32,7 +32,7 @@
 
 #ifndef _LAPACKE_CONFIG_H_
 #define _LAPACKE_CONFIG_H_
-
+#define LAPACK_ILP64
 #ifdef __cplusplus
 #if defined(LAPACK_COMPLEX_CPP)
 #include <complex>

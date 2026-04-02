@@ -1,8 +1,8 @@
-libdir=E:/personal/OpenBLAS/proj/openblas/lib
+libdir=E:/personal/OpenBLAS/proj/Release/lib
 libnameprefix=
 libnamesuffix=
 libsuffix=
-includedir=E:/personal/OpenBLAS/proj/openblas/include/openblas
+includedir=E:/personal/OpenBLAS/proj/Release/include/openblas
 
 openblas_config=USE_64BITINT= NO_CBLAS= NO_LAPACK= NO_LAPACKE= DYNAMIC_ARCH=OFF DYNAMIC_OLDER=OFF NO_AFFINITY=1 USE_OPENMP= generic MAX_THREADS=28 
 Name: OpenBLAS
