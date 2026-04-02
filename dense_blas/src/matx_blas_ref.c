@@ -1,10 +1,8 @@
 ﻿#include "matx/matx_dense_compute.h"
 
-#include <limits.h>
-
 #if MATX_ENABLE_OPENBLAS
 	#include "cblas.h"
-	//#include "lapack.h"
+	#include "lapack.h"
 #elif MATX_ENABLE_BLIS
 	#include "blis.h"
 	#include "FLAME.h"
@@ -87,7 +85,6 @@ static matx_status_t ref_zgemm(matx_layout_t layout,
 
 	const enum CBLAS_TRANSPOSE tb =
 		trans_b ? CblasTrans : CblasNoTrans;
-
 	cblas_zgemm(order, ta, tb,
 		m, n, k,
 		alpha,

@@ -1,10 +1,11 @@
-#include "matx/matx_dense_solve.h"
+﻿#include "matx/matx_dense_solve.h"
 
 #include <limits.h>
 #include <stdlib.h>
 
 #if MATX_ENABLE_OPENBLAS
 #include "cblas.h"
+#include "lapack.h"
 #elif MATX_ENABLE_LIBFLAME
 #include "FLAME.h"
 #endif

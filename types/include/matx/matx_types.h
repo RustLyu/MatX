@@ -28,6 +28,8 @@ extern "C" {
 #define MKL_ILP64
 #define OPENBLAS_USE64BITINT
 #define aoclsparse_ILP64
+#define HAVE_LAPACK_CONFIG_H
+#define __EMSCRIPTEN__
 	typedef enum matx_status_t {
 		MATX_OK = 0,
 		MATX_ERR_INVALID_ARG = 1,
