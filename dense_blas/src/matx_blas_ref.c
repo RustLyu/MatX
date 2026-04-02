@@ -373,7 +373,6 @@ matx_status_t ref_inv_dense_f64(
 	dgetrf_(&N, &N, out_Ainv, &lda, piv, &info);
 	if (info != 0) {
 		free(piv);
-		free(out_Ainv);
 		return MATX_ERR_INTERNAL;
 	}
 
@@ -386,14 +385,12 @@ matx_status_t ref_inv_dense_f64(
 
 	if (info != 0) {
 		free(piv);
-		free(out_Ainv);
 		return MATX_ERR_INTERNAL;
 	}
 
 	matx_double* work = (matx_double*)malloc(lwork * sizeof(matx_double));
 	if (!work) {
 		free(piv);
-		free(out_Ainv);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -405,7 +402,6 @@ matx_status_t ref_inv_dense_f64(
 	free(piv);
 
 	if (info != 0) {
-		free(out_Ainv);
 		return MATX_ERR_INTERNAL;
 	}
 	return MATX_OK;
@@ -432,14 +428,12 @@ matx_status_t ref_inv_dense_c64(
 
 	matx_int64_t* piv = (matx_int64_t*)malloc(rows * sizeof(matx_int64_t));
 	if (!piv) {
-		free(out_Ainv);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
 	zgetrf_(&N, &N, out_Ainv, &lda, piv, &info);
 	if (info != 0) {
 		free(piv);
-		free(out_Ainv);
 		return MATX_ERR_INTERNAL;
 	}
 
@@ -452,14 +446,12 @@ matx_status_t ref_inv_dense_c64(
 
 	if (info != 0) {
 		free(piv);
-		free(out_Ainv);
 		return MATX_ERR_INTERNAL;
 	}
 
 	matx_complex_f64* work = (matx_complex_f64*)malloc(lwork * sizeof(matx_complex_f64));
 	if (!work) {
 		free(piv);
-		free(out_Ainv);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -471,7 +463,6 @@ matx_status_t ref_inv_dense_c64(
 	free(piv);
 
 	if (info != 0) {
-		free(out_Ainv);
 		return MATX_ERR_INTERNAL;
 	}
 	return MATX_OK;
