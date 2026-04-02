@@ -25,6 +25,7 @@ target_compile_definitions(${PROJECT_NAME}
   PRIVATE
     MATX_ENABLE_OPENBLAS=$<BOOL:${MATX_ENABLE_OPENBLAS}>
     MATX_ENABLE_BLIS=$<BOOL:${MATX_ENABLE_BLIS}>
+    MATX_ENABLE_LIBFLAME=$<BOOL:${MATX_ENABLE_LIBFLAME}>
 )
 
 if(MATX_DENSE_BLAS_BACKEND STREQUAL "REFERENCE")
@@ -39,6 +40,11 @@ endif()
 if(MATX_ENABLE_OPENBLAS)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_OPENBLAS=1)
   target_link_libraries(${PROJECT_NAME} PRIVATE OpenBLAS::OpenBLAS)
+endif()
+
+if(MATX_ENABLE_LIBFLAME)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_LIBFLAME=1)
+  target_link_libraries(${PROJECT_NAME} PRIVATE libflame::libflame)
 endif()
 
 target_sources(${PROJECT_NAME}

@@ -100,6 +100,20 @@ extern "C" {
 			const void* beta,
 			void* B,
 			matx_int64_t ldb);
+
+		matx_status_t (*inv_dense_f64)(
+			matx_layout_t layout,
+			matx_int64_t rows,
+			matx_int64_t cols,
+			const matx_double* A,
+			matx_double* out_Ainv);
+
+		matx_status_t(*inv_dense_c64)(matx_layout_t layout,
+			matx_int64_t rows,
+			matx_int64_t cols,
+			const void* A,
+			void* out_Ainv);
+
 	} matx_dense_vtable_t;
 
 	typedef struct matx_dense_backend_t {

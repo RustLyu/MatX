@@ -4,8 +4,10 @@
 
 #if MATX_ENABLE_OPENBLAS
 	#include "cblas.h"
+	//#include "lapack.h"
 #elif MATX_ENABLE_BLIS
 	#include "blis.h"
+	#include "FLAME.h"
 #endif
 
 static matx_status_t ref_dgemm(matx_layout_t layout,
@@ -121,7 +123,6 @@ static matx_status_t ref_zgemv(matx_layout_t layout,
 
 	const enum CBLAS_TRANSPOSE ta =
 		trans_a ? CblasTrans : CblasNoTrans;
-
 	cblas_zgemv(order, ta,
 		m, n,
 		alpha,
@@ -347,6 +348,138 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
 	return MATX_OK;
 }
 
+matx_status_t ref_inv_dense_f64(
+	matx_layout_t layout,
+	matx_int64_t rows,
+	matx_int64_t cols,
+	const matx_double* A,
+	matx_double* out_Ainv)
+{
+	if (!A || !out_Ainv) 
+		return MATX_ERR_INVALID_ARG;
+	if (rows != cols) 
+		return MATX_ERR_INVALID_ARG;
+	if (layout != MATX_COL_MAJOR) 
+		return MATX_ERR_NOT_SUPPORTED;
+	memcpy(out_Ainv, A, sizeof(matx_double) * rows * cols);
+
+	matx_int64_t N = rows;
+	matx_int64_t lda = rows;
+	matx_int64_t info = 0;
+
+	matx_int64_t* piv = (matx_int64_t*)malloc(rows * sizeof(matx_int64_t));
+	if (!piv) {
+		free(out_Ainv);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
+
+	dgetrf_(&N, &N, out_Ainv, &lda, piv, &info);
+	if (info != 0) {
+		free(piv);
+		free(out_Ainv);
+		return MATX_ERR_INTERNAL;
+	}
+
+	matx_int64_t lwork = -1;
+	matx_double work_query;
+
+	dgetri_(&N, out_Ainv, &lda,
+		piv,
+		&work_query, &lwork, &info);
+
+	if (info != 0) {
+		free(piv);
+		free(out_Ainv);
+		return MATX_ERR_INTERNAL;
+	}
+
+	matx_double* work = (matx_double*)malloc(lwork * sizeof(matx_double));
+	if (!work) {
+		free(piv);
+		free(out_Ainv);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
+
+	dgetri_(&N, out_Ainv, &lda,
+		piv,
+		work, &lwork, &info);
+
+	free(work);
+	free(piv);
+
+	if (info != 0) {
+		free(out_Ainv);
+		return MATX_ERR_INTERNAL;
+	}
+	return MATX_OK;
+}
+
+matx_status_t ref_inv_dense_c64(
+	matx_layout_t layout,
+	matx_int64_t rows,
+	matx_int64_t cols,
+	const void* A,
+	void* out_Ainv)
+{
+	if (!A || !out_Ainv)
+		return MATX_ERR_INVALID_ARG;
+	if (rows != cols)
+		return MATX_ERR_INVALID_ARG;
+	if (layout != MATX_COL_MAJOR)
+		return MATX_ERR_NOT_SUPPORTED;
+	memcpy(out_Ainv, A, sizeof(matx_complex_f64) * rows * cols);
+
+	matx_int64_t N = rows;
+	matx_int64_t lda = rows;
+	matx_int64_t info = 0;
+
+	matx_int64_t* piv = (matx_int64_t*)malloc(rows * sizeof(matx_int64_t));
+	if (!piv) {
+		free(out_Ainv);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
+
+	zgetrf_(&N, &N, out_Ainv, &lda, piv, &info);
+	if (info != 0) {
+		free(piv);
+		free(out_Ainv);
+		return MATX_ERR_INTERNAL;
+	}
+
+	matx_int64_t lwork = -1;
+	matx_complex_f64 work_query;
+
+	zgetri_(&N, out_Ainv, &lda,
+		piv,
+		&work_query, &lwork, &info);
+
+	if (info != 0) {
+		free(piv);
+		free(out_Ainv);
+		return MATX_ERR_INTERNAL;
+	}
+
+	matx_complex_f64* work = (matx_complex_f64*)malloc(lwork * sizeof(matx_complex_f64));
+	if (!work) {
+		free(piv);
+		free(out_Ainv);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
+
+	zgetri_(&N, out_Ainv, &lda,
+		piv,
+		work, &lwork, &info);
+
+	free(work);
+	free(piv);
+
+	if (info != 0) {
+		free(out_Ainv);
+		return MATX_ERR_INTERNAL;
+	}
+	return MATX_OK;
+}
+
 matx_dense_backend_t matx_blas_make_reference(void) {
 	matx_dense_backend_t b = {
 		.kind = MATX_BLAS_BACKEND_OPENBLAS,
@@ -358,7 +491,9 @@ matx_dense_backend_t matx_blas_make_reference(void) {
 			.daxpy = &ref_daxpy,
 			.zaxpy = &ref_zaxpy,
 			.dgeadd = &ref_dgeadd,
-			.zgeadd = &ref_zgeadd
+			.zgeadd = &ref_zgeadd,
+			.inv_dense_f64 = &ref_inv_dense_f64,
+			.inv_dense_c64 = &ref_inv_dense_c64
 		}
 	};
 
