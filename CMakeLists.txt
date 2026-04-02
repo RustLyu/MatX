@@ -225,3 +225,9 @@ install(EXPORT MatXConfig
   NAMESPACE MatX::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MatX
 )
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generate_dir/include/config.h
+    @ONLY
+)
