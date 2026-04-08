@@ -46,7 +46,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---- spdlog ----
-set(spdlog_DIR "${3Party_path}/spdlog_1.17.0/lib64/cmake/spdlog")
+if (WIN32)
+	set(spdlog_DIR "${3Party_path}/spdlog_1.17.0/lib/cmake/spdlog")
+elseif (LINUX)
+	set(spdlog_DIR "${3Party_path}/spdlog_1.17.0/lib64/cmake/spdlog")
+endif()
 message(STATUS "spdlog found at ${spdlog_DIR}")
 find_package(spdlog REQUIRED)
 
@@ -161,9 +165,15 @@ endif()
 
 # ---- BLAS backend ----
 if(MATX_ENABLE_OPENBLAS)
-  set(OpenBLAS_DIR
-      "${3Party_path}/openblas-0.3.30/lib64/cmake/OpenBLAS")
-      message(STATUS "Looking for OpenBLAS in ${OpenBLAS_DIR}")
+   if (WIN32)
+	  set(OpenBLAS_DIR
+		  "${3Party_path}/openblas-0.3.30/lib/cmake/OpenBLAS")
+		  message(STATUS "Looking for OpenBLAS in ${OpenBLAS_DIR}")
+	  elseif (LINUX)
+	  	  set(OpenBLAS_DIR
+		  "${3Party_path}/openblas-0.3.30/lib64/cmake/OpenBLAS")
+		  message(STATUS "Looking for OpenBLAS in ${OpenBLAS_DIR}")
+	  endif()
   find_package(OpenBLAS REQUIRED)
 elseif(MATX_ENABLE_BLIS)
   set(amdblis_DIR
@@ -198,17 +208,31 @@ if(MATX_ENABLE_AOCL_SPARSE)
 endif()
 
 if(MATX_ENABLE_SUITESPARSE)
-  set(SuiteSparse_config_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/SuiteSparse_config")
-  set(BTF_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/BTF")
-  set(AMD_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/AMD")
-  set(COLAMD_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/COLAMD")
-  set(KLU_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/KLU")
+
+  if (WIN32)
+			set(SuiteSparse_config_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/SuiteSparse_config")
+			set(BTF_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/BTF")
+			set(AMD_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/AMD")
+			set(COLAMD_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/COLAMD")
+			set(KLU_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/KLU")
+  elseif (LINUX)
+			set(SuiteSparse_config_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/SuiteSparse_config")
+			set(BTF_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/BTF")
+			set(AMD_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/AMD")
+			set(COLAMD_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/COLAMD")
+			set(KLU_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/KLU")
+	  endif()
+  
   find_package(KLU REQUIRED)
 endif()
 
 if(MATX_ENABLE_GRAPHBLAS)
-  set(GraphBLAS_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/GraphBLAS")
-  find_package(GraphBLAS REQUIRED)
+	if (WIN32)
+	  set(GraphBLAS_DIR "${3Party_path}/suitesparse-v7.11.0/lib/cmake/GraphBLAS")
+	elseif (LINUX)
+	  set(GraphBLAS_DIR "${3Party_path}/suitesparse-v7.11.0/lib64/cmake/GraphBLAS")
+	endif()
+	find_package(GraphBLAS REQUIRED)
 endif()
 
 # ---- Include MatX submodules ----
