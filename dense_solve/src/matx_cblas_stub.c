@@ -2,6 +2,7 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if MATX_ENABLE_OPENBLAS
 #include "cblas.h"
@@ -144,7 +145,7 @@ static matx_status_t ss_factor_dense_c64(
 	matx_int64_t lda = (matx_int64_t)n;
 	matx_int64_t info = 0;
 
-	zgetrf_(&N, &N, F->lu, &lda, F->piv, &info);
+        zgetrf_(&N, &N, (void*)F->lu, &lda, F->piv, &info);
 
 	if (info != 0) goto fail;
 
@@ -179,8 +180,8 @@ static matx_status_t ss_solve_dense_c64(
 	char trans = 'N';
 
 	zgetrs_(&trans, &N, &nrhs,
-		F->lu, &lda, F->piv,
-		(matx_double*)x->data, &ldb,
+                (void*)F->lu, &lda, F->piv,
+                (void*)x->data, &ldb,
 		&info);
 
 	if (info != 0) return MATX_ERR_INTERNAL;

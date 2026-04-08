@@ -15,8 +15,8 @@ extern "C" {
 
 	typedef struct matx_blas_vtable_t {
 		matx_status_t(*dgemm)(matx_layout_t layout,
-			int trans_a,
-			int trans_b,
+            matx_int64_t trans_a,
+            matx_int64_t trans_b,
 			matx_int64_t m,
 			matx_int64_t n,
 			matx_int64_t k,
@@ -29,8 +29,8 @@ extern "C" {
 			matx_double* c,
 			matx_int64_t ldc);
 		matx_status_t(*zgemm)(matx_layout_t layout,
-			int trans_a,
-			int trans_b,
+            matx_int64_t trans_a,
+            matx_int64_t trans_b,
 			matx_int64_t m,
 			matx_int64_t n,
 			matx_int64_t k,
@@ -43,7 +43,7 @@ extern "C" {
 			void* C,
 			matx_int64_t ldc);
 		matx_status_t(*zgemv)(matx_layout_t layout,
-			int trans_a,
+            matx_int64_t trans_a,
 			matx_int64_t m,
 			matx_int64_t n,
 			const void* alpha,
@@ -56,7 +56,7 @@ extern "C" {
 			matx_int64_t ldc);
 
 		matx_status_t(*dgemv)(matx_layout_t layout,
-			int trans_a,
+            matx_int64_t trans_a,
 			matx_int64_t m,
 			matx_int64_t n,
 			matx_double alpha,

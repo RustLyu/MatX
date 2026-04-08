@@ -286,7 +286,7 @@ matx_status_t ref_zsp2md_c64_aocl(
 			(aoclsparse_matrix)B->handle_aocl.impl,
 			a, 
 			b,
-			C->data,
+                        (void*)C->data,
 			aoclsparse_order_row,
 			C->stride
 		);

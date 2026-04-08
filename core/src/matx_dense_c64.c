@@ -1,5 +1,6 @@
 ﻿#include "matx/matx_types.h"
 #include "matx/matx_func.h"
+#include <string.h>
 
 matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
     matx_int64_t rows,

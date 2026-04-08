@@ -234,7 +234,7 @@ matx_status_t coo_to_csc_c64_value_remap(matx_coo_c64_t* coo)
     return MATX_OK;
 }
 
-matx_status_t coo_to_csc_f64_value_remap(matx_coo_c64_t* coo)
+matx_status_t coo_to_csc_f64_value_remap(matx_coo_f64_t* coo)
 {
     build_Ax_from_coo_f64((matx_int64_t*)coo->handle_csc.coo_csc_index_map, coo->nnz, coo->values, coo->handle_csc.values);
     coo->handle_csc.only_value_update = 0;

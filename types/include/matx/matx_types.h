@@ -21,7 +21,7 @@ extern "C" {
 	#define MATX_API
 #endif
 
-	// ---- Version ----
+// ---- Version ----
 #define MATX_VERSION_MAJOR 0
 #define MATX_VERSION_MINOR 1
 #define MATX_VERSION_PATCH 0
@@ -30,6 +30,8 @@ extern "C" {
 #define aoclsparse_ILP64
 #define HAVE_LAPACK_CONFIG_H
 #define __EMSCRIPTEN__
+#define LAPACK_ILP64
+#define INT_MAX (2147483657)
 	typedef enum matx_status_t {
 		MATX_OK = 0,
 		MATX_ERR_INVALID_ARG = 1,
@@ -37,9 +39,13 @@ extern "C" {
 		MATX_ERR_NOT_SUPPORTED = 3,
 		MATX_ERR_INTERNAL = 4
 	} matx_status_t;
-
+#ifdef _WIN32
 	typedef long long matx_int64_t;
 	typedef double matx_double;
+#elif __linux__
+    typedef int64_t matx_int64_t;
+    typedef double matx_double;
+#endif
 
 	// ---- Alloc ----
 	typedef void* (*matx_malloc_fn)(size_t size, void* user);

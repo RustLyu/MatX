@@ -279,7 +279,7 @@ matx_status_t ref_zsp2md_c64_grb(
 	//3. gC = temp + gC
 	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
 	GrB_Matrix_free(&temp);
-	grb_2_dense_f64(C);
+        grb_2_dense_c64(C);
 	return MATX_OK;
 }
 

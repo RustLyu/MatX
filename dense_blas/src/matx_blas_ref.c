@@ -1,5 +1,5 @@
 ﻿#include "matx/matx_dense_compute.h"
-
+#include <string.h>
 #if MATX_ENABLE_OPENBLAS
 	#include "cblas.h"
 	#include "lapack.h"
@@ -97,7 +97,7 @@ static matx_status_t ref_zgemm(matx_layout_t layout,
 }
 
 static matx_status_t ref_zgemv(matx_layout_t layout,
-	int trans_a,
+        matx_int64_t trans_a,
 	matx_int64_t m,
 	matx_int64_t n,
 	const void* alpha,
@@ -440,9 +440,9 @@ matx_status_t ref_inv_dense_c64(
 	matx_int64_t lwork = -1;
 	matx_complex_f64 work_query;
 
-	zgetri_(&N, out_Ainv, &lda,
+        LAPACK_zgetri(&N, out_Ainv, &lda,
 		piv,
-		&work_query, &lwork, &info);
+                (void*)&work_query, &lwork, &info);
 
 	if (info != 0) {
 		free(piv);
@@ -457,7 +457,7 @@ matx_status_t ref_inv_dense_c64(
 
 	zgetri_(&N, out_Ainv, &lda,
 		piv,
-		work, &lwork, &info);
+                (void*)work, &lwork, &info);
 
 	free(work);
 	free(piv);

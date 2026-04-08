@@ -84,7 +84,7 @@ extern "C" {
 	MATX_API matx_status_t coo_to_csc_f64(matx_coo_f64_t* coo);
 	MATX_API matx_status_t coo_to_csc_c64(matx_coo_c64_t* coo);
 	MATX_API matx_status_t coo_to_csc_c64_value_remap(matx_coo_c64_t* coo);
-	MATX_API matx_status_t coo_to_csc_f64_value_remap(matx_coo_c64_t* coo);
+    MATX_API matx_status_t coo_to_csc_f64_value_remap(matx_coo_f64_t* coo);
 
 #ifdef __cplusplus
 }
