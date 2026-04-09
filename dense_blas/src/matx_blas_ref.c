@@ -136,7 +136,7 @@ static matx_status_t ref_daxpy(
 	matx_double alpha,
 	const matx_double* x,
 	matx_int64_t lda,
-	const void* y,
+	void* y,
 	matx_int64_t ldy) {
 	if (!x || !y)
 		return MATX_ERR_INVALID_ARG;
@@ -153,7 +153,7 @@ static matx_status_t ref_zaxpy(
 	const void* alpha,
 	const void* x,
 	matx_int64_t lda,
-	const void* y,
+	void* y,
 	matx_int64_t ldy) {
 	if (!x || !y)
 		return MATX_ERR_INVALID_ARG;

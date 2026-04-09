@@ -57,7 +57,7 @@ matx_status_t ref_spmv_c64_aocl(
 //    C = \alpha \, op(A) \, B + \beta \, C,
 matx_status_t ref_spmm_c64_aocl(
 	matx_complex_f64 alpha,
-	const matx_coo_c64_t* A,
+	matx_coo_c64_t* A,
 	const matx_dense_c64_t* B,
 	matx_complex_f64 beta,
 	matx_dense_c64_t* C)

@@ -42,7 +42,8 @@ static int entry_compare(const void* a, const void* b) {
 }
 
 static void free_merged_entries(MergedEntry* merged, matx_int64_t merged_len) {
-    if (merged == NULL) return;
+    if (merged == NULL) 
+        return;
     for (matx_int64_t i = 0; i < merged_len; ++i) {
         free(merged[i].coo_indices);
     }

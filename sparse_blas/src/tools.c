@@ -141,6 +141,8 @@ int coo_to_csr_optimized(
 	}
 
 	matx_int64_t* offset = (matx_int64_t*)malloc(nrows * sizeof(matx_int64_t));
+	if (offset == NULL || csr->row_ptr == NULL || nrows <= 0)
+		return -1;
 	memcpy(offset, csr->row_ptr, nrows * sizeof(matx_int64_t));
 
 	for (int i = 0; i < nnz; ++i) {

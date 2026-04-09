@@ -1,4 +1,4 @@
-#include "matx/matx_sparse_solve.h"
+﻿#include "matx/matx_sparse_solve.h"
 
 #include <limits.h>
 
@@ -20,7 +20,7 @@ struct matx_factor_sparse_c64_t {
 };
 
 // Sparse real: KLU-based ---------------------------------------------------
-static matx_status_t ss_factor_csc_f64(const matx_coo_f64_t* A,
+static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 	matx_factor_sparse_f64_t** out_F) {
 	if (!A || !out_F) 
 		return MATX_ERR_INVALID_ARG;
@@ -82,7 +82,7 @@ static matx_status_t ss_factor_csc_f64(const matx_coo_f64_t* A,
 	return MATX_OK;
 }
 
-static matx_status_t ss_solve_csc_f64(const matx_factor_sparse_f64_t* F,
+static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
 	const matx_double* b,
 	matx_double* x) {
 	if (!F || !b || !x) 
@@ -116,7 +116,7 @@ static void ss_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F) {
 
 
 static matx_status_t ss_factor_csc_c64(
-	const matx_coo_c64_t* A,
+	matx_coo_c64_t* A,
 	matx_factor_sparse_c64_t** out_F)
 {
 	if (!A || !out_F) 
@@ -178,7 +178,7 @@ fail:
 }
 
 static matx_status_t ss_solve_csc_c64(
-	const matx_factor_sparse_c64_t* F,
+	matx_factor_sparse_c64_t* F,
 	const matx_vec_c64_t* b,
 	matx_vec_c64_t* x)
 {

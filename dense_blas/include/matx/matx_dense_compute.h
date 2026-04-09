@@ -72,13 +72,13 @@ extern "C" {
 			matx_double alpha,
 			const matx_double* x,
 			matx_int64_t lda,
-			const void* y,
+			void* y,
 			matx_int64_t ldy);
 		matx_status_t(*zaxpy)(matx_int64_t n,
 			const void* alpha,
 			const void* x,
 			matx_int64_t lda,
-			const void* y,
+			void* y,
 			matx_int64_t ldy);
 
 		matx_status_t(*dgeadd)(matx_layout_t layout,

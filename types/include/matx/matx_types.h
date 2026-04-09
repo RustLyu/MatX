@@ -31,7 +31,9 @@ extern "C" {
 #define HAVE_LAPACK_CONFIG_H
 #define __EMSCRIPTEN__
 #define LAPACK_ILP64
-#define INT_MAX (2147483657)
+#ifndef INT_MAX
+	#define INT_MAX (2147483657)
+#endif
 	typedef enum matx_status_t {
 		MATX_OK = 0,
 		MATX_ERR_INVALID_ARG = 1,

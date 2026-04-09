@@ -66,8 +66,8 @@ matx_status_t ref_spmv_c64_grb(
 
 matx_status_t ref_spmm_c64_grb(
 	matx_complex_f64 alpha,
-	const matx_coo_c64_t* A,
-	const matx_dense_c64_t* B,
+	matx_coo_c64_t* A,
+	matx_dense_c64_t* B,
 	matx_complex_f64 beta,
 	matx_dense_c64_t* C)
 {

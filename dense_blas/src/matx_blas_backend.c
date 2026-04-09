@@ -262,7 +262,7 @@ matx_status_t matx_axpy_f64(const matx_dense_backend_t* blas,
 	if (x->n != y->n)
 		return MATX_ERR_INVALID_ARG;
 
-	blas->vt.daxpy
+	return blas->vt.daxpy
 	(x->n,
 		alpha,
 		x->data,
