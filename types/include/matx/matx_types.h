@@ -176,7 +176,7 @@ extern "C" {
 		matx_int64_t nnz;
 		const matx_int64_t* rows;
 		const matx_int64_t* columns;
-		const matx_complex_f64* values;
+		matx_complex_f64* values;
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 		matx_handle_t handle_mkl;

@@ -351,3 +351,44 @@ TEST(compute_sparse, transpose_coo_f64_2x2) {
     matx_status_t st = matx_transpose_coo_f64(&backend, &A, &B);
     ASSERT_EQ(st, MATX_OK);
 }
+
+
+TEST(compute_sparse, conj_c64_4x4) {
+    matx_alloc_t a = matx_alloc_default();
+    matx_int64_t nnz = 16;
+
+    matx_int64_t rows[16] = { 0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3 };
+    matx_int64_t cols[16] = { 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3 };
+
+    matx_complex_f64 values[16];
+    for (int i = 0; i < 16; ++i) {
+        values[i].real = i;
+        values[i].imag = i+1;
+    }
+
+    matx_coo_c64_t A = {
+        .nrows = 4,
+        .ncols = 4,
+        .nnz = nnz,
+        .rows = rows,
+        .columns = cols,
+        .values = values,
+        .flags = 0,
+        .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
+    };
+
+    matx_coo_c64_t B;
+    B.handle_grb.valid = -1;
+    ASSERT_EQ(matx_coo_sparse_c64_create(&B, 4, 4, 16, &a), MATX_OK);
+    
+    for (size_t i = 0; i < 16; ++i) {
+        B.values[i].real = 0.0;
+        B.values[i].imag = 0.0;
+    }
+
+    auto backend = matx_sparse_default();
+    matx_status_t st = matx_conj_coo_c64(&backend, &A, &B);
+    ASSERT_EQ(st, MATX_OK);
+    matx_coo_sparse_c64_destroy(&A, &a);
+    matx_coo_sparse_c64_destroy(&B, &a);
+}

@@ -307,7 +307,6 @@ matx_status_t ref_transpose_c64_grb(
 	matx_coo_f64_t* A, 
 	matx_coo_f64_t* out)
 {
-
 	if (!A)
 		return MATX_ERR_INVALID_ARG;
 
@@ -320,6 +319,28 @@ matx_status_t ref_transpose_c64_grb(
 	GrB_transpose(out->handle_grb.impl, NULL, NULL, *(GrB_Matrix*)A->handle_grb.impl, NULL);
 	grb_2_coo_c64(out);
 	return MATX_OK;
+}
+
+matx_status_t ref_conj_c64_grb(matx_coo_c64_t* A,
+	matx_coo_c64_t* out)
+{
+	if (!A)
+		return MATX_ERR_INVALID_ARG;
+
+	/* build A */
+	if (A->handle_grb.valid <= 0)
+	{
+		coo_2_grb_c64(A);
+	}
+
+	create_empty_grb_c64(out);
+	GrB_Info info = GrB_apply((GrB_Matrix)out->handle_grb.impl, NULL, NULL,
+		GxB_CONJ_FC64, *(GrB_Matrix*)A->handle_grb.impl, NULL);
+	if (info != GrB_SUCCESS)
+		return MATX_ERR_INTERNAL;
+	grb_2_coo_c64(out);
+	return MATX_OK;
+
 }
 
 matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
@@ -339,7 +360,8 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 			.dsp2md_f64 = ref_dsp2md_f64_grb,
 			.zsp2md_c64 = ref_zsp2md_c64_grb,
 			.transpose_f64 = ref_transpose_f64_grb,
-			.transpose_c64 = ref_transpose_c64_grb
+			.transpose_c64 = ref_transpose_c64_grb,
+			.conj_c64 = ref_conj_c64_grb
 		}
 	};
 	return b;

@@ -103,3 +103,8 @@ matx_status_t matx_transpose_coo_c64(const matx_sparse_backend_t* backend,
 {
 	return backend->vt.transpose_c64(A, out);
 }
+
+MATX_API matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t* A, matx_coo_c64_t* out)
+{
+	return backend->vt.conj_c64(A, out);
+}
