@@ -324,3 +324,30 @@ TEST(compute_sparse, dsp2md_coo_f64_4x4) {
     matx_coo_sparse_f64_destroy(&B, &a);
     matx_dense_f64_destroy(&C, &a);
 }
+
+
+TEST(compute_sparse, transpose_coo_f64_2x2) {
+    matx_alloc_t a = matx_alloc_default();
+    matx_int64_t I_A[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+    matx_int64_t J_A[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
+    matx_double values_A[16];
+    for (int i = 0; i < 16; ++i) {
+        values_A[i] = i;
+    }
+    matx_coo_f64_t A = {
+      .nrows = 4,
+      .ncols = 4,
+      .nnz = 16,
+      .rows = I_A,
+      .columns = J_A,
+      .values = values_A,
+      .flags = 0,
+      .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
+    };
+    matx_coo_f64_t B;
+    matx_coo_sparse_f64_create(&B, 4, 4, 16, &a);
+    matx_sparse_backend_t backend = matx_sparse_default();
+
+    matx_status_t st = matx_transpose_coo_f64(&backend, &A, &B);
+    ASSERT_EQ(st, MATX_OK);
+}

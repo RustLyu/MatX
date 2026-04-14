@@ -21,8 +21,8 @@ static matx_sparse_backend_t choose_default_backend(void) {
 	return matx_blas_make_reference();
 #else
   // If no external backend is wired in, fall back to reference.
-	//return matx_sparse_make_reference_grb();
-	return matx_sparse_make_reference_aocl();
+	return matx_sparse_make_reference_grb();
+	//return matx_sparse_make_reference_aocl();
 #endif
 }
 
@@ -88,4 +88,18 @@ matx_status_t matx_zsp2md_coo_c64(const matx_sparse_backend_t* backend,
 	matx_dense_c64_t* C)
 {
 	return backend->vt.zsp2md_c64(alpha, A, B, beta, C);
+}
+
+matx_status_t matx_transpose_coo_f64(const matx_sparse_backend_t* backend,
+	matx_coo_f64_t* A,
+	matx_coo_f64_t* out)
+{
+	return backend->vt.transpose_f64(A, out);
+}
+
+matx_status_t matx_transpose_coo_c64(const matx_sparse_backend_t* backend,
+	matx_coo_c64_t* A,
+	matx_coo_c64_t* out)
+{
+	return backend->vt.transpose_c64(A, out);
 }

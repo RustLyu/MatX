@@ -279,7 +279,46 @@ matx_status_t ref_zsp2md_c64_grb(
 	//3. gC = temp + gC
 	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
 	GrB_Matrix_free(&temp);
-        grb_2_dense_c64(C);
+    grb_2_dense_c64(C);
+	return MATX_OK;
+}
+
+matx_status_t ref_transpose_f64_grb(
+	matx_coo_f64_t* A, 
+	matx_coo_f64_t* out)
+{
+	if (!A)
+		return MATX_ERR_INVALID_ARG;
+
+	/* build A */
+	if (A->handle_grb.valid <= 0)
+	{
+		coo_2_grb_f64(A);
+	}
+	create_empty_grb_f64(out);
+	GrB_Info info = GrB_transpose(out->handle_grb.impl, NULL, NULL, *(GrB_Matrix*)A->handle_grb.impl, NULL);
+	if (info != GrB_SUCCESS)
+		return MATX_ERR_INTERNAL;
+	grb_2_coo_f64(out);
+	return MATX_OK;
+}
+
+matx_status_t ref_transpose_c64_grb(
+	matx_coo_f64_t* A, 
+	matx_coo_f64_t* out)
+{
+
+	if (!A)
+		return MATX_ERR_INVALID_ARG;
+
+	/* build A */
+	if (A->handle_grb.valid <= 0)
+	{
+		coo_2_grb_c64(A);
+	}
+	create_empty_grb_c64(out);
+	GrB_transpose(out->handle_grb.impl, NULL, NULL, *(GrB_Matrix*)A->handle_grb.impl, NULL);
+	grb_2_coo_c64(out);
 	return MATX_OK;
 }
 
@@ -298,9 +337,10 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 			.spmm_f64 = ref_spmm_f64_grb,
 			.spmv_f64 = ref_spmv_f64_grb,
 			.dsp2md_f64 = ref_dsp2md_f64_grb,
-			.zsp2md_c64 = ref_zsp2md_c64_grb
+			.zsp2md_c64 = ref_zsp2md_c64_grb,
+			.transpose_f64 = ref_transpose_f64_grb,
+			.transpose_c64 = ref_transpose_c64_grb
 		}
 	};
 	return b;
 }
-

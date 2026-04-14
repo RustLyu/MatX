@@ -42,9 +42,29 @@ void free_aocl_matrix(void* impl)
 size_t coo_2_grb_f64(matx_coo_f64_t* A)
 {
 	GrB_Matrix_free(A->handle_grb.impl);
-        GrB_Matrix_new((void*)&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols);
+    GrB_Matrix_new((void*)&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols);
 	GrB_Info info = GrB_Matrix_import_FP64(A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols, A->rows, A->columns, A->values,
 		A->nnz, A->nnz, A->nnz, GrB_COO_FORMAT);
+	A->handle_grb.type = MATX_HANDLE_TYPE_GRB_MATRIX;
+	A->handle_grb.valid = 1;
+	A->handle_grb.custom_free_func = &free_grb_matrix;
+	return 0;
+}
+
+size_t create_empty_grb_f64(matx_coo_f64_t* A)
+{
+	GrB_Matrix_free(A->handle_grb.impl);
+	GrB_Info info = GrB_Matrix_new(&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols);
+	A->handle_grb.type = MATX_HANDLE_TYPE_GRB_MATRIX;
+	A->handle_grb.valid = 1;
+	A->handle_grb.custom_free_func = &free_grb_matrix;
+	return 0;
+}
+
+size_t create_empty_grb_c64(matx_coo_c64_t* A)
+{
+	GrB_Matrix_free(A->handle_grb.impl);
+	GrB_Info info = GrB_Matrix_new(&A->handle_grb.impl, GxB_FC64, A->nrows, A->ncols);
 	A->handle_grb.type = MATX_HANDLE_TYPE_GRB_MATRIX;
 	A->handle_grb.valid = 1;
 	A->handle_grb.custom_free_func = &free_grb_matrix;
@@ -421,23 +441,27 @@ size_t grb_2_dense_f64(matx_dense_f64_t* A)
 	GrB_Type t;
 	matx_int64_t s = 0;
 	bool iso = false;
-        GrB_Info info = GxB_Matrix_export_FullC((void*)A->handle_grb.impl, &t, &A->rows, &A->cols, (void*)&A->data, &s, &iso, NULL);
+    GrB_Info info = GxB_Matrix_export_FullC((void*)A->handle_grb.impl, &t, &A->rows, &A->cols, (void*)&A->data, &s, &iso, NULL);
 	A->handle_grb.custom_free_func = &free_grb_matrix;
 	return 0;
 }
 
 size_t grb_2_coo_f64(matx_coo_f64_t* A)
 {
-        GrB_Info info = GxB_Matrix_export_FC64(A->rows, A->columns, (void*)A->values, &A->nrows, &A->ncols, &A->nnz, GrB_COO_FORMAT, *(GrB_Matrix*)A->handle_grb.impl);
+	A->nrows = -1;
+	A->ncols = -1;
+	GrB_Info info = GrB_Matrix_export(A->rows, A->columns, A->values, &A->nrows, &A->ncols, &A->nnz, GrB_COO_FORMAT, A->handle_grb.impl);
 	A->handle_grb.custom_free_func = &free_grb_matrix;
+	A->handle_grb.type = MATX_HANDLE_TYPE_GRB_MATRIX;
+	A->handle_grb.valid = 1;
 	return 0;
 }
 
 size_t vec_2_grb_f64(matx_vec_f64_t* v)
 {
 	GrB_Vector_free(v->handle_grb.impl);
-        GrB_Info info = GrB_Vector_new((void*)&v->handle_grb.impl, GrB_FP64, v->n);
-        info = GxB_Vector_import_Full((void*)v->handle_grb.impl, GrB_FP64, v->n, (void*)&v->data, v->n, false, NULL);
+    GrB_Info info = GrB_Vector_new((void*)&v->handle_grb.impl, GrB_FP64, v->n);
+    info = GxB_Vector_import_Full((void*)v->handle_grb.impl, GrB_FP64, v->n, (void*)&v->data, v->n, false, NULL);
 	v->handle_grb.type = MATX_HANDLE_TYPE_GRB_VECTOR;
 	v->handle_grb.valid = 1;
 	v->handle_grb.custom_free_func = &free_grb_vector;
@@ -447,8 +471,7 @@ size_t vec_2_grb_f64(matx_vec_f64_t* v)
 size_t grb_2_vec_f64(matx_vec_f64_t* v)
 {
 	GrB_Type t = GrB_FP64;
-	bool iso = false;
-        GrB_Info info = GxB_Vector_export_Full((void*)v->handle_grb.impl, &t, &v->n, (void*)&v->data, &v->n, false, NULL);
+    GrB_Info info = GxB_Vector_export_Full((void*)v->handle_grb.impl, &t, &v->n, (void*)&v->data, &v->n, false, NULL);
 	v->handle_grb.custom_free_func = &free_grb_vector;
 	return 0;
 }
@@ -488,7 +511,10 @@ size_t grb_2_dense_c64(matx_dense_c64_t* A)
 
 size_t grb_2_coo_c64(matx_coo_c64_t* A)
 {
-        GrB_Info info = GxB_Matrix_export_FC64(A->rows, A->columns, (void*)A->values, &A->nrows, &A->ncols, &A->nnz, GrB_COO_FORMAT, *(GrB_Matrix*)A->handle_grb.impl);
+	A->ncols = -1;
+	A->nrows = -1;
+	A->nnz = -1;
+    GrB_Info info = GxB_Matrix_export_FC64(A->rows, A->columns, (void*)A->values, &A->nrows, &A->ncols, &A->nnz, GrB_COO_FORMAT, A->handle_grb.impl);
 	A->handle_grb.custom_free_func = &free_grb_matrix;
 	return 0;
 }

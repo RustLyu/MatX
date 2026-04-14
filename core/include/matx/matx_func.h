@@ -69,6 +69,12 @@ extern "C" {
 	MATX_API void matx_dense_c64_destroy(matx_dense_c64_t* m,
 		const matx_alloc_t* alloc);
 
+	MATX_API matx_status_t matx_coo_sparse_f64_create(matx_coo_f64_t* out,
+		matx_int64_t nrows,
+		matx_int64_t ncols,
+		matx_int64_t nnz,
+		const matx_alloc_t* alloc);
+
 	MATX_API matx_status_t matx_csc_sparse_f64_create(matx_csc_f64_t* out,
 		matx_int64_t nrows,
 		matx_int64_t ncols,
