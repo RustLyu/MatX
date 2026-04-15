@@ -31,7 +31,7 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 	matx_status_t st = coo_to_csc_f64(A);
 	if (st != MATX_OK)
 	{
-		MATX_ERROR("coo_to_csc_f64 error:", st);
+		MATX_ERROR("coo_to_csc_f64 error:%d", st);
 		return st;
 	}
 
