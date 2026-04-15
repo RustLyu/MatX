@@ -42,7 +42,8 @@ void free_aocl_matrix(void* impl)
 size_t coo_2_grb_f64(matx_coo_f64_t* A)
 {
 	GrB_Matrix_free(A->handle_grb.impl);
-    GrB_Matrix_new((void*)&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols);
+	// void** == GrB_Matrix*
+    GrB_Matrix_new(&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols);
 	GrB_Info info = GrB_Matrix_import_FP64(A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols, A->rows, A->columns, A->values,
 		A->nnz, A->nnz, A->nnz, GrB_COO_FORMAT);
 	A->handle_grb.type = MATX_HANDLE_TYPE_GRB_MATRIX;
