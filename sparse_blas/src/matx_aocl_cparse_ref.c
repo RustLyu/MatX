@@ -1,7 +1,9 @@
 ﻿#include "matx/matx_sparse_compute.h"
 #include "matx/matx_log.h"
 
+#include <memory.h>
 #include <limits.h>
+
 #if MATX_HAVE_AOCL_SPARSE
 	#include <aoclsparse.h>
 #endif
@@ -299,6 +301,61 @@ matx_status_t ref_zsp2md_c64_aocl(
 	return MATX_OK;
 }
 
+matx_status_t ref_transpose_f64_aocl(
+	matx_coo_f64_t* A,
+	matx_coo_f64_t* out)
+{
+	if (!A)
+		return MATX_ERR_INVALID_ARG;
+	out->nrows = A->ncols;
+	out->ncols = A->nrows;
+	out->nnz = A->nnz;
+	memcpy(out->rows, A->columns, sizeof(matx_int64_t) * A->nnz);
+	memcpy(out->columns, A->rows, sizeof(matx_int64_t) * A->nnz);
+	memcpy(out->values, A->values, sizeof(matx_double) * A->nnz);
+	return MATX_OK;
+}
+
+matx_status_t ref_transpose_c64_aocl(
+	matx_coo_f64_t* A,
+	matx_coo_f64_t* out)
+{
+	if (!A)
+		return MATX_ERR_INVALID_ARG;
+	out->nrows = A->ncols;
+	out->ncols = A->nrows;
+	out->nnz = A->nnz;
+	memcpy(out->rows, A->columns, sizeof(matx_int64_t) * A->nnz);
+	memcpy(out->columns, A->rows, sizeof(matx_int64_t) * A->nnz);
+	memcpy(out->values, A->values, sizeof(matx_complex_f64) * A->nnz);
+	return MATX_OK;
+}
+
+matx_status_t ref_conj_trans_c64_aocl(matx_coo_c64_t* A,
+	matx_coo_c64_t* out)
+{
+	if (!A || !out)
+		return MATX_ERR_INVALID_ARG;
+
+	if (A->handle_aocl.valid <= 0) {
+		if (coo_2_aocl_c64(A) != 0)
+			return MATX_ERR_INTERNAL;
+	}
+
+	aoclsparse_status status = aoclsparse_convert_csr(
+		A->handle_aocl.impl,
+		aoclsparse_operation_conjugate_transpose,
+		out->handle_aocl.impl
+	);
+
+	if (status != aoclsparse_status_success) {
+		return MATX_ERR_INTERNAL;
+	}
+	aocl_2_coo_c64(out);
+	return MATX_OK;
+
+}
+
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 	matx_sparse_backend_t b =
 	{
@@ -309,7 +366,10 @@ matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 			.spmm_f64 = ref_spmm_f64_aocl,
 			.spmv_f64 = ref_spmv_f64_aocl,
 			.dsp2md_f64 = ref_dsp2md_f64_aocl,
-			.zsp2md_c64 = ref_zsp2md_c64_aocl
+			.zsp2md_c64 = ref_zsp2md_c64_aocl,
+			.transpose_f64 = ref_transpose_f64_aocl,
+			.transpose_c64 = ref_transpose_c64_aocl,
+			.conj_trans_c64 = ref_conj_trans_c64_aocl
 		}
 	};
 	MATX_TRACE("AOCL INIT");
