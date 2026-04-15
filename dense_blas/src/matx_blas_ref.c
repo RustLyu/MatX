@@ -1,8 +1,11 @@
 ﻿#include "matx/matx_dense_compute.h"
+#include "matx/matx_log.h"
+
 #include <string.h>
+
 #if MATX_ENABLE_OPENBLAS
 	#include "cblas.h"
-	#include "lapack.h"
+	#include "lapacke.h"
 #elif MATX_ENABLE_BLIS
 	#include "blis.h"
 	#include "FLAME.h"
@@ -365,45 +368,34 @@ matx_status_t ref_inv_dense_f64(
 	matx_int64_t info = 0;
 
 	matx_int64_t* piv = (matx_int64_t*)malloc(rows * sizeof(matx_int64_t));
-	if (!piv) {
+	if (!piv) 
+	{
 		free(out_Ainv);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
-	dgetrf_(&N, &N, out_Ainv, &lda, piv, &info);
-	if (info != 0) {
+	matx_int64_t status = LAPACKE_dgetrf(
+		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR
+		, rows
+		, cols
+		, out_Ainv
+		, lda
+		, piv);
+	if (status != 0)
+	{
+		MATX_ERROR("LAPACKE_dgetrf error:%d", status);
 		free(piv);
 		return MATX_ERR_INTERNAL;
 	}
 
-	matx_int64_t lwork = -1;
-	matx_double work_query;
-
-	dgetri_(&N, out_Ainv, &lda,
-		piv,
-		&work_query, &lwork, &info);
-
-	if (info != 0) {
-		free(piv);
+	status = LAPACKE_dgetri(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR
+		, rows, out_Ainv, lda, piv);
+	if (status != 0)
+	{
+		MATX_ERROR("LAPACKE_dgetri error:%d", status);
 		return MATX_ERR_INTERNAL;
 	}
-
-	matx_double* work = (matx_double*)malloc(lwork * sizeof(matx_double));
-	if (!work) {
-		free(piv);
-		return MATX_ERR_OUT_OF_MEMORY;
-	}
-
-	dgetri_(&N, out_Ainv, &lda,
-		piv,
-		work, &lwork, &info);
-
-	free(work);
 	free(piv);
-
-	if (info != 0) {
-		return MATX_ERR_INTERNAL;
-	}
 	return MATX_OK;
 }
 
@@ -427,44 +419,34 @@ matx_status_t ref_inv_dense_c64(
 	matx_int64_t info = 0;
 
 	matx_int64_t* piv = (matx_int64_t*)malloc(rows * sizeof(matx_int64_t));
-	if (!piv) {
+	if (!piv)
+	{
+		free(out_Ainv);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
-	zgetrf_(&N, &N, out_Ainv, &lda, piv, &info);
-	if (info != 0) {
+	matx_int64_t status = LAPACKE_zgetrf(
+		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR
+		, rows
+		, cols
+		, out_Ainv
+		, lda
+		, piv);
+	if (status != 0)
+	{
+		MATX_ERROR("LAPACKE_dgetrf error:%d", status);
 		free(piv);
 		return MATX_ERR_INTERNAL;
 	}
 
-	matx_int64_t lwork = -1;
-	matx_complex_f64 work_query;
-
-        LAPACK_zgetri(&N, out_Ainv, &lda,
-		piv,
-                (void*)&work_query, &lwork, &info);
-
-	if (info != 0) {
-		free(piv);
+	status = LAPACKE_zgetri(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR
+		, rows, out_Ainv, lda, piv);
+	if (status != 0)
+	{
+		MATX_ERROR("LAPACKE_dgetri error:%d", status);
 		return MATX_ERR_INTERNAL;
 	}
-
-	matx_complex_f64* work = (matx_complex_f64*)malloc(lwork * sizeof(matx_complex_f64));
-	if (!work) {
-		free(piv);
-		return MATX_ERR_OUT_OF_MEMORY;
-	}
-
-	zgetri_(&N, out_Ainv, &lda,
-		piv,
-                (void*)work, &lwork, &info);
-
-	free(work);
 	free(piv);
-
-	if (info != 0) {
-		return MATX_ERR_INTERNAL;
-	}
 	return MATX_OK;
 }
 
