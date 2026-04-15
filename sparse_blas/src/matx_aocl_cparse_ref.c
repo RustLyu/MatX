@@ -47,11 +47,15 @@ matx_status_t ref_spmv_c64_aocl(
 			(aoclsparse_double_complex*)x->data,
 			&b,
 			(aoclsparse_double_complex*)y->data);
-
+	
 	aoclsparse_destroy_mat_descr(descr);
 
 	if (status != aoclsparse_status_success)
+	{
+		MATX_ERROR("aoclsparse_zmv error: %d", status);
 		return MATX_ERR_INTERNAL;
+	}
+
 #endif
 	return MATX_OK;
 }
@@ -96,11 +100,12 @@ matx_status_t ref_spmm_c64_aocl(
 			(aoclsparse_double_complex*)C->data,
 			C->cols
 		);
-
 	aoclsparse_destroy_mat_descr(descr);
-
 	if (status != aoclsparse_status_success)
+	{
+		MATX_ERROR("aoclsparse_zcsrmm error: %d", status);
 		return MATX_ERR_INTERNAL;
+	}
 #endif
 	return MATX_OK;
 }
@@ -131,7 +136,11 @@ matx_status_t ref_spmv_f64_aocl(
 	aoclsparse_set_mat_diag_type(descr, aoclsparse_diag_type_non_unit);
 
 	aoclsparse_status status = aoclsparse_set_mv_hint(A->handle_aocl.impl, aoclsparse_operation_none, descr, 1);
-
+	if (status != aoclsparse_status_success)
+	{
+		MATX_ERROR("aoclsparse_set_mv_hint error: %d", status);
+		return MATX_ERR_INTERNAL;
+	}
 	status =
 		aoclsparse_dmv(
 			aoclsparse_operation_none,
@@ -145,10 +154,9 @@ matx_status_t ref_spmv_f64_aocl(
 	aoclsparse_destroy_mat_descr(descr);
 	if (status != aoclsparse_status_success)
 	{
-		MATX_DEBUG("aoclsparse_dmv failed with status %d", status);
+		MATX_ERROR("aoclsparse_dmv error: %d", status);
 		return MATX_ERR_INTERNAL;
 	}
-
 #endif
 
 	return MATX_OK;
@@ -190,9 +198,12 @@ matx_status_t ref_spmm_f64_aocl(
 		);
 
 	aoclsparse_destroy_mat_descr(descr);
-
 	if (status != aoclsparse_status_success)
+	{
+		MATX_ERROR("aoclsparse_dcsrmm error: %d", status);
 		return MATX_ERR_INTERNAL;
+	}
+
 #endif
 	return MATX_OK;
 }
@@ -242,7 +253,10 @@ matx_status_t ref_dsp2md_f64_aocl(
 	aoclsparse_destroy_mat_descr(descr);
 
 	if (status != aoclsparse_status_success)
+	{
+		MATX_ERROR("aoclsparse_dsp2md error: %d", status);
 		return MATX_ERR_INTERNAL;
+	}
 #endif
 	return MATX_OK;
 }
@@ -296,7 +310,10 @@ matx_status_t ref_zsp2md_c64_aocl(
 	aoclsparse_destroy_mat_descr(descr);
 
 	if (status != aoclsparse_status_success)
+	{
+		MATX_ERROR("aoclsparse_zsp2md error: %d", status);
 		return MATX_ERR_INTERNAL;
+	}
 #endif
 	return MATX_OK;
 }
@@ -348,7 +365,9 @@ matx_status_t ref_conj_trans_c64_aocl(matx_coo_c64_t* A,
 		out->handle_aocl.impl
 	);
 
-	if (status != aoclsparse_status_success) {
+	if (status != aoclsparse_status_success)
+	{
+		MATX_ERROR("aoclsparse_convert_csr error: %d", status);
 		return MATX_ERR_INTERNAL;
 	}
 	aocl_2_coo_c64(out);
