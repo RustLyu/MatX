@@ -52,13 +52,13 @@ matx_status_t ref_spmv_c64_grb(
 	GrB_Vector temp;
 	GrB_Vector_new(&temp, GxB_FC64, y->n);
 	//// temp = A*x
-	GrB_Info info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Vector*)x->handle_grb.impl, NULL);
+	GrB_Info info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, (GrB_Matrix)A->handle_grb.impl, (GrB_Vector)x->handle_grb.impl, NULL);
 	// temp = alpha*temp
 	info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
 	// gy = beta*gy
-	info = GrB_apply(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, *(GrB_Vector*)y->handle_grb.impl, b, NULL);
+	info = GrB_apply((GrB_Vector)y->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, (GrB_Vector)y->handle_grb.impl, b, NULL);
 	// gy = temp + gy
-	info = GrB_eWiseAdd(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Vector*)y->handle_grb.impl, NULL);
+	info = GrB_eWiseAdd((GrB_Vector)y->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, (GrB_Vector)y->handle_grb.impl, NULL);
 	GrB_Vector_free(&temp);
 	grb_2_vec_c64(y);
 	return MATX_OK;
@@ -100,12 +100,12 @@ matx_status_t ref_spmm_c64_grb(
 	// 1. temp = alpha * A * B
 	GrB_Matrix temp;
 	GrB_Matrix_new(&temp, GxB_FC64, C->rows, C->cols);
-	GrB_Info info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Matrix*)B->handle_grb.impl, NULL);
+	GrB_Info info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, (GrB_Matrix)A->handle_grb.impl, (GrB_Matrix)B->handle_grb.impl, NULL);
 	info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
 	//2. gC = beta * gC
-	info = GrB_apply(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, *(GrB_Matrix*)C->handle_grb.impl, b, NULL);
+	info = GrB_apply((GrB_Matrix)C->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, (GrB_Matrix)C->handle_grb.impl, b, NULL);
 	//3. gC = temp + gC
-	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
+	info = GrB_eWiseAdd((GrB_Matrix)C->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, (GrB_Matrix)C->handle_grb.impl, NULL);
 	GrB_Matrix_free(&temp);
 	grb_2_dense_c64(C);
 	return MATX_OK;
@@ -147,13 +147,13 @@ matx_status_t ref_spmv_f64_grb(
 	matx_int64_t t0 = matx_tm_now(MATX_TM_MICROSECOND);
 	GrB_Info info = GrB_Vector_new(&temp, GrB_FP64, y->n);
 	// temp = A*x
-	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Vector*)x->handle_grb.impl, NULL);
+	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, (GrB_Matrix)A->handle_grb.impl, (GrB_Vector)x->handle_grb.impl, NULL);
 	// temp = alpha*temp
 	info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
 	// gy = beta*gy
-	info = GrB_apply(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, *(GrB_Vector*)y->handle_grb.impl, beta, NULL);
+	info = GrB_apply((GrB_Vector)y->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, (GrB_Vector)y->handle_grb.impl, beta, NULL);
 	// gy = temp + gy
-	info = GrB_eWiseAdd(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, *(GrB_Vector*)y->handle_grb.impl, NULL);
+	info = GrB_eWiseAdd((GrB_Vector)y->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, (GrB_Vector)y->handle_grb.impl, NULL);
 	matx_int64_t t1 = matx_tm_now(MATX_TM_MICROSECOND);
 	//printf("GraphBLAS SpMV time: %ld us\n", t1 - t0);
 	MATX_TRACE("GraphBLAS SpMV time: %ld micro.s", t1 - t0);
@@ -191,12 +191,12 @@ matx_status_t ref_spmm_f64_grb(
 	// 1. temp = alpha * A * B
 	GrB_Matrix temp;
 	GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->rows, C->cols);
-	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Matrix*)B->handle_grb.impl, NULL);
+	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, (GrB_Matrix)A->handle_grb.impl, (GrB_Matrix)B->handle_grb.impl, NULL);
 	info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
 	//2. gC = beta * gC
-	info = GrB_apply(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, *(GrB_Matrix*)C->handle_grb.impl, beta, NULL);
+	info = GrB_apply((GrB_Matrix)C->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, (GrB_Matrix)C->handle_grb.impl, beta, NULL);
 	//3. gC = temp + gC
-	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
+	info = GrB_eWiseAdd((GrB_Matrix)C->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, (GrB_Matrix)C->handle_grb.impl, NULL);
 	GrB_Matrix_free(&temp);
 	grb_2_dense_f64(C);
 	return MATX_OK;
@@ -231,12 +231,12 @@ matx_status_t ref_dsp2md_f64_grb(
 	// 1. temp = alpha * A * B
 	GrB_Matrix temp;
 	GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->rows, C->cols);
-	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Matrix*)B->handle_grb.impl, NULL);
+	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, (GrB_Matrix)A->handle_grb.impl, (GrB_Matrix)B->handle_grb.impl, NULL);
 	info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
 	//2. gC = beta * gC
-	info = GrB_apply(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, *(GrB_Matrix*)C->handle_grb.impl, beta, NULL);
+	info = GrB_apply((GrB_Matrix)C->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, (GrB_Matrix)C->handle_grb.impl, beta, NULL);
 	//3. gC = temp + gC
-	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
+	info = GrB_eWiseAdd((GrB_Matrix)C->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, (GrB_Matrix)C->handle_grb.impl, NULL);
 	GrB_Matrix_free(&temp);
 	grb_2_dense_f64(C);
 	return MATX_OK;
@@ -272,12 +272,12 @@ matx_status_t ref_zsp2md_c64_grb(
 	// 1. temp = alpha * A * B
 	GrB_Matrix temp;
 	GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->rows, C->cols);
-	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, *(GrB_Matrix*)A->handle_grb.impl, *(GrB_Matrix*)B->handle_grb.impl, NULL);
+	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, (GrB_Matrix)A->handle_grb.impl, (GrB_Matrix)B->handle_grb.impl, NULL);
 	info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
 	//2. gC = beta * gC
-	info = GrB_apply(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, *(GrB_Matrix*)C->handle_grb.impl, b, NULL);
+	info = GrB_apply((GrB_Matrix)C->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, (GrB_Matrix)C->handle_grb.impl, b, NULL);
 	//3. gC = temp + gC
-	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
+	info = GrB_eWiseAdd((GrB_Matrix)C->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, (GrB_Matrix)C->handle_grb.impl, NULL);
 	GrB_Matrix_free(&temp);
     grb_2_dense_c64(C);
 	return MATX_OK;
@@ -296,7 +296,7 @@ matx_status_t ref_transpose_f64_grb(
 		coo_2_grb_f64(A);
 	}
 	create_empty_grb_f64(out);
-	GrB_Info info = GrB_transpose(out->handle_grb.impl, NULL, NULL, *(GrB_Matrix*)A->handle_grb.impl, NULL);
+	GrB_Info info = GrB_transpose((GrB_Matrix)out->handle_grb.impl, NULL, NULL, (GrB_Matrix)A->handle_grb.impl, NULL);
 	if (info != GrB_SUCCESS)
 		return MATX_ERR_INTERNAL;
 	grb_2_coo_f64(out);
@@ -307,7 +307,7 @@ matx_status_t ref_transpose_c64_grb(
 	matx_coo_f64_t* A, 
 	matx_coo_f64_t* out)
 {
-	if (!A)
+	if (!A || !out)
 		return MATX_ERR_INVALID_ARG;
 
 	/* build A */
@@ -315,13 +315,16 @@ matx_status_t ref_transpose_c64_grb(
 	{
 		coo_2_grb_c64(A);
 	}
-	create_empty_grb_c64(out);
-	GrB_transpose(out->handle_grb.impl, NULL, NULL, *(GrB_Matrix*)A->handle_grb.impl, NULL);
+	if(!out->handle_grb.impl)
+		return MATX_ERR_INVALID_ARG;
+	if (!out->handle_grb.impl)
+		create_empty_grb_c64(out);
+	GrB_Info info = GrB_transpose((GrB_Matrix)(out->handle_grb.impl), NULL, NULL, (GrB_Matrix)(A->handle_grb.impl), NULL);
 	grb_2_coo_c64(out);
 	return MATX_OK;
 }
 
-matx_status_t ref_conj_c64_grb(matx_coo_c64_t* A,
+matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t* A,
 	matx_coo_c64_t* out)
 {
 	if (!A)
@@ -332,10 +335,13 @@ matx_status_t ref_conj_c64_grb(matx_coo_c64_t* A,
 	{
 		coo_2_grb_c64(A);
 	}
-
-	create_empty_grb_c64(out);
+	if(!out->handle_grb.impl)
+		create_empty_grb_c64(out);
+	//1. transpose
+	ref_transpose_c64_grb(A, out);
+	//2.  conj
 	GrB_Info info = GrB_apply((GrB_Matrix)out->handle_grb.impl, NULL, NULL,
-		GxB_CONJ_FC64, *(GrB_Matrix*)A->handle_grb.impl, NULL);
+		GxB_CONJ_FC64, (GrB_Matrix)out->handle_grb.impl, NULL);
 	if (info != GrB_SUCCESS)
 		return MATX_ERR_INTERNAL;
 	grb_2_coo_c64(out);
@@ -361,7 +367,7 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 			.zsp2md_c64 = ref_zsp2md_c64_grb,
 			.transpose_f64 = ref_transpose_f64_grb,
 			.transpose_c64 = ref_transpose_c64_grb,
-			.conj_c64 = ref_conj_c64_grb
+			.conj_trans_c64 = ref_conj_trans_c64_grb
 		}
 	};
 	return b;
