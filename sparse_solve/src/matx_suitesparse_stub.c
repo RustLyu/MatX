@@ -22,28 +22,43 @@ struct matx_factor_sparse_c64_t {
 // Sparse real: KLU-based ---------------------------------------------------
 static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 	matx_factor_sparse_f64_t** out_F) {
-	if (!A || !out_F) 
+	if (!A || !out_F)
+	{
+		MATX_ERROR("input pointer is null error");
 		return MATX_ERR_INVALID_ARG;
+	}
 	
 	matx_status_t st = coo_to_csc_f64(A);
-	if(st != MATX_OK)
+	if (st != MATX_OK)
+	{
+		MATX_ERROR("coo_to_csc_f64 error:", st);
 		return st;
+	}
 
-	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->handle_csc.values) 
+	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->handle_csc.values)
+	{
+		MATX_ERROR("csc pointer is null error");
 		return MATX_ERR_INVALID_ARG;
+	}
 	if (A->nrows != A->ncols) 
 		return MATX_ERR_INVALID_ARG;
 
 	const matx_int64_t n = A->nrows;
 	if (n == 0) 
 		return MATX_ERR_INVALID_ARG;
-	if (n > (matx_int64_t)INT_MAX) 
+	if (n > (matx_int64_t)INT_MAX)
+	{
+		MATX_ERROR("n > INT_MAX");
 		return MATX_ERR_NOT_SUPPORTED;
+	}
 
 	matx_factor_sparse_f64_t* F =
 		(matx_factor_sparse_f64_t*)malloc(sizeof(*F));
-	if (!F) 
+	if (!F)
+	{
+		MATX_ERROR("malloc Factor handle error");
 		return MATX_ERR_OUT_OF_MEMORY;
+	}
 
 	memset(F, 0, sizeof(*F));
 	F->n = (matx_int64_t)n;
@@ -54,6 +69,7 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 		A->handle_csc.row_ind,
 		&F->common);
 	if (!F->S) {
+		MATX_ERROR("call klu_l_analyze error:%d", F->common.status);
 		free(F);
 		return MATX_ERR_INTERNAL;
 	}
@@ -61,6 +77,7 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 	st = coo_to_csc_f64_value_remap(A);
 
 	if(st != MATX_OK) {
+		MATX_ERROR("call coo_to_csc_f64_value_remap error:%d", F->common.status);
 		klu_l_free_symbolic(&F->S, &F->common);
 		free(F);
 		return st;
@@ -73,6 +90,7 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 		&F->common);
 
 	if (!F->N) {
+		MATX_ERROR("call klu_l_factor error:%d", F->common.status);
 		klu_l_free_symbolic(&F->S, &F->common);
 		free(F);
 		return MATX_ERR_INTERNAL;
@@ -85,8 +103,11 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
 	const matx_double* b,
 	matx_double* x) {
-	if (!F || !b || !x) 
+	if (!F || !b || !x)
+	{
+		MATX_ERROR("input pointer is null");
 		return MATX_ERR_INVALID_ARG;
+	}
 
 	const matx_int64_t n = F->n;
 	for (matx_int64_t i = 0; i < n; ++i) {
@@ -96,12 +117,8 @@ static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
 	const int status = klu_l_solve(F->S, F->N, n, 1, x, &F->common);
 	if (!status)
 	{
-		//MATX_ERROR("KLU solve failed with status %d", status);
+		MATX_ERROR("KLU solve failed with status %d", status);
 		return MATX_ERR_INTERNAL;
-	}
-	else
-	{
-		//MATX_TRACE("KLU solve succeeded with status %d", status);
 	}
 	return MATX_OK;
 }
@@ -119,26 +136,41 @@ static matx_status_t ss_factor_csc_c64(
 	matx_coo_c64_t* A,
 	matx_factor_sparse_c64_t** out_F)
 {
-	if (!A || !out_F) 
+	if (!A || !out_F)
+	{
+		MATX_ERROR("input pointer is null");
 		return MATX_ERR_INVALID_ARG;
+	}
 
 	matx_status_t st = coo_to_csc_c64(A);
-	if(st != MATX_OK)
+	if (st != MATX_OK)
+	{
+		MATX_ERROR("coo_to_csc_c64 error");
 		return st;
+	}
 
 	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->handle_csc.values)
+	{
+		MATX_ERROR("csc pointer error");
 		return MATX_ERR_INVALID_ARG;
+	}
 	if (A->nrows != A->ncols)
 		return MATX_ERR_INVALID_ARG;
 
 	const matx_int64_t n = A->nrows;
-	if (n > INT_MAX) 
+	if (n > INT_MAX)
+	{
+		MATX_ERROR("n > INT_MAX");
 		return MATX_ERR_NOT_SUPPORTED;
+	}
 
 	matx_factor_sparse_c64_t* F =
 		(matx_factor_sparse_c64_t*)malloc(sizeof(*F));
-	if (!F) 
+	if (!F)
+	{
+		MATX_ERROR("malloc F failed");
 		return MATX_ERR_OUT_OF_MEMORY;
+	}
 
 	memset(F, 0, sizeof(*F));
 	F->n = (matx_int64_t)n;
@@ -151,12 +183,18 @@ static matx_status_t ss_factor_csc_c64(
 		A->handle_csc.row_ind,
 		&F->common);
 
-	if (!F->S) 
+	if (!F->S)
+	{
+		MATX_ERROR("klu_l_analyze failed error:%d", F->common.status);
 		goto fail;
+	}
 
 	st = coo_to_csc_c64_value_remap(A);
-	if(st != MATX_OK)
+	if (st != MATX_OK)
+	{
+		MATX_ERROR("coo_to_csc_c64_value_remap failed");
 		goto fail;
+	}
 
 	F->N = klu_zl_factor(
 		A->handle_csc.col_ptr,
@@ -165,8 +203,11 @@ static matx_status_t ss_factor_csc_c64(
 		F->S,
 		&F->common);
 
-	if (!F->N) 
+	if (!F->N)
+	{
+		MATX_ERROR("klu_zl_factor failed error:%d", F->common.status);
 		goto fail;
+	}
 
 	*out_F = F;
 	return MATX_OK;
@@ -194,8 +235,11 @@ static matx_status_t ss_solve_csc_c64(
 	matx_int64_t status = klu_zl_solve(
 		F->S, F->N, n, 1, (matx_double*)x->data, &F->common);
 
-	if (!status) 
+	if (!status)
+	{
+		MATX_ERROR("klu_zl_solve failed");
 		return MATX_ERR_INTERNAL;
+	}
 
 	return MATX_OK;
 }

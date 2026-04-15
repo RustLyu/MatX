@@ -1,16 +1,8 @@
 ﻿#include "matx/matx_types.h"
 #include "matx/matx_func.h"
+#include "matx/matx_log.h"
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <errno.h>
-
-typedef struct {
-    double real;
-    double imag;
-} MKL_Complex16;
 
 #define COO2CSC_SUCCESS 0
 #define COO2CSC_ERR_OUT_OF_RANGE 1
@@ -68,11 +60,13 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
 
     for (matx_int64_t k = 0; k < nnz; ++k) {
         if (columns[k] < 0 || (columns[k] - 1) >= n) {
+            MATX_ERROR("column index biger than row. index:%d", k);
             free(entries);
             return COO2CSC_ERR_OUT_OF_RANGE;
         }
         if (rows[k] < 0) {
             free(entries);
+            MATX_ERROR("row index less than 0. index:%d", k);
             return COO2CSC_ERR_OUT_OF_RANGE;
         }
         entries[k].col = columns[k];
