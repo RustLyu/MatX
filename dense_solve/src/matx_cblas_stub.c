@@ -33,10 +33,10 @@ static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t* A,
 	if (!A || !out_F)
 		return MATX_ERR_INVALID_ARG;
 
-	if (A->rows != A->cols)
+	if (A->nrows != A->ncols)
 		return MATX_ERR_INVALID_ARG;
 
-	const size_t n = A->rows;
+	const size_t n = A->nrows;
 
 	matx_factor_dense_f64_t* F =
 		(matx_factor_dense_f64_t*)malloc(sizeof(*F));
@@ -45,10 +45,10 @@ static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t* A,
 	memset(F, 0, sizeof(*F));
 	F->n = n;
 
-	F->lu = (matx_double*)malloc(A->cols * A->rows * sizeof(matx_double));
-	matx_int64_t piv_size = (A->rows < A->cols ? A->rows : A->cols);
+	F->lu = (matx_double*)malloc(A->ncols * A->nrows * sizeof(matx_double));
+	matx_int64_t piv_size = (A->nrows < A->ncols ? A->nrows : A->ncols);
 	F->piv = (matx_int64_t*)malloc(piv_size * sizeof(matx_int64_t));
-	matx_int64_t lda = A->layout == MATX_COL_MAJOR ? A->rows : A->cols;
+	matx_int64_t lda = A->layout == MATX_COL_MAJOR ? A->nrows : A->ncols;
 	if (!F->lu || !F->piv) {
 		free(F->lu);
 		free(F->piv);
@@ -56,11 +56,11 @@ static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t* A,
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 	F->layout = A->layout;
-	cblas_dcopy(A->rows * A->cols, A->data, 1, F->lu, 1);
+	cblas_dcopy(A->nrows * A->ncols, A->data, 1, F->lu, 1);
 	matx_int64_t info = LAPACKE_dgetrf(
 		A->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-		A->rows,
-		A->cols,
+		A->nrows,
+		A->ncols,
 		F->lu,
 		lda,
 		F->piv
@@ -121,10 +121,10 @@ static matx_status_t ss_factor_dense_c64(
 	if (!A || !out_F)
 		return MATX_ERR_INVALID_ARG;
 
-	if (A->rows != A->cols)
+	if (A->nrows != A->ncols)
 		return MATX_ERR_INVALID_ARG;
 
-	const size_t n = A->rows;
+	const size_t n = A->nrows;
 
 	matx_factor_dense_c64_t* F =
 		(matx_factor_dense_c64_t*)malloc(sizeof(*F));
@@ -134,10 +134,10 @@ static matx_status_t ss_factor_dense_c64(
 	memset(F, 0, sizeof(*F));
 	F->n = n;
 
-	F->lu = (matx_complex_f64*)malloc(A->cols * A->rows * sizeof(matx_complex_f64));
-	matx_int64_t piv_size = (A->rows < A->cols ? A->rows : A->cols);
+	F->lu = (matx_complex_f64*)malloc(A->ncols * A->nrows * sizeof(matx_complex_f64));
+	matx_int64_t piv_size = (A->nrows < A->ncols ? A->nrows : A->ncols);
 	F->piv = (matx_int64_t*)malloc(piv_size * sizeof(matx_int64_t));
-	matx_int64_t lda = A->layout == MATX_COL_MAJOR ? A->rows : A->cols;
+	matx_int64_t lda = A->layout == MATX_COL_MAJOR ? A->nrows : A->ncols;
 	if (!F->lu || !F->piv) {
 		free(F->lu);
 		free(F->piv);
@@ -145,11 +145,11 @@ static matx_status_t ss_factor_dense_c64(
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 	F->layout = A->layout;
-	cblas_zcopy(A->rows * A->cols, A->data, 1, F->lu, 1);
+	cblas_zcopy(A->nrows * A->ncols, A->data, 1, F->lu, 1);
 	matx_int64_t info = LAPACKE_zgetrf(
 		A->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-		A->rows,
-		A->cols,
+		A->nrows,
+		A->ncols,
 		F->lu,
 		lda,
 		F->piv

@@ -7,8 +7,8 @@ extern "C" {
 }
 
 static void fill_col_major(matx_dense_f64_t* M, double base) {
-  for (size_t j = 0; j < M->cols; ++j) {
-    for (size_t i = 0; i < M->rows; ++i) {
+  for (size_t j = 0; j < M->ncols; ++j) {
+    for (size_t i = 0; i < M->nrows; ++i) {
       M->data[i + j * M->stride] = base + (double)(i + 10 * j);
     }
   }

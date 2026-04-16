@@ -41,10 +41,10 @@ matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 	if (A->layout != B->layout || A->layout != C->layout) return MATX_ERR_INVALID_ARG;
 	if (A->layout != MATX_COL_MAJOR && A->layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
 
-	const matx_int64_t a_rows = A->rows;
-	const matx_int64_t a_cols = A->cols;
-	const matx_int64_t b_rows = B->rows;
-	const matx_int64_t b_cols = B->cols;
+	const matx_int64_t a_rows = A->nrows;
+	const matx_int64_t a_cols = A->ncols;
+	const matx_int64_t b_rows = B->nrows;
+	const matx_int64_t b_cols = B->ncols;
 
 	const matx_int64_t m = (trans_a ? a_cols : a_rows);
 	const matx_int64_t kA = (trans_a ? a_rows : a_cols);
@@ -52,7 +52,7 @@ matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 	const matx_int64_t n = (trans_b ? b_rows : b_cols);
 
 	if (kA != kB) return MATX_ERR_INVALID_ARG;
-	if (C->rows != m || C->cols != n) return MATX_ERR_INVALID_ARG;
+	if (C->nrows != m || C->ncols != n) return MATX_ERR_INVALID_ARG;
 
 	return blas->vt.dgemm(A->layout,
 		trans_a,
@@ -84,10 +84,10 @@ matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 	if (A->layout != B->layout || A->layout != C->layout)
 		return MATX_ERR_INVALID_ARG;
 
-	const matx_int64_t a_rows = A->rows;
-	const matx_int64_t a_cols = A->cols;
-	const matx_int64_t b_rows = B->rows;
-	const matx_int64_t b_cols = B->cols;
+	const matx_int64_t a_rows = A->nrows;
+	const matx_int64_t a_cols = A->ncols;
+	const matx_int64_t b_rows = B->nrows;
+	const matx_int64_t b_cols = B->ncols;
 	const matx_int64_t m = trans_a ? a_cols : a_rows;
 	const matx_int64_t kA = trans_a ? a_rows : a_cols;
 	const matx_int64_t kB = trans_b ? b_cols : b_rows;
@@ -95,7 +95,7 @@ matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 
 	if (kA != kB)
 		return MATX_ERR_INVALID_ARG;
-	if (C->rows != m || C->cols != n)
+	if (C->nrows != m || C->ncols != n)
 		return MATX_ERR_INVALID_ARG;
 
 	return blas->vt.zgemm(A->layout,
@@ -125,8 +125,8 @@ matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 	if (!A || !x || !y || !A->data || !x->data || !y->data)
 		return MATX_ERR_INVALID_ARG;
 
-	const matx_int64_t m = A->rows;
-	const matx_int64_t n = A->cols;
+	const matx_int64_t m = A->nrows;
+	const matx_int64_t n = A->ncols;
 	const matx_int64_t len_x = trans_a ? m : n;
 	const matx_int64_t len_y = trans_a ? n : m;
 
@@ -159,8 +159,8 @@ matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
 	if (!A || !x || !y || !A->data || !x->data || !y->data)
 		return MATX_ERR_INVALID_ARG;
 
-	const size_t m = A->rows;
-	const size_t n = A->cols;
+	const size_t m = A->nrows;
+	const size_t n = A->ncols;
 	const size_t len_x = trans_a ? m : n;
 	const size_t len_y = trans_a ? n : m;
 
@@ -190,13 +190,13 @@ matx_status_t matx_geadd_c64(const matx_dense_backend_t* blas,
 {
 	if (!A || !B || !A->data || !B->data)
 		return MATX_ERR_INVALID_ARG;
-	if (A->rows != B->rows || A->cols != B->cols)
+	if (A->nrows != B->nrows || A->ncols != B->ncols)
 		return MATX_ERR_INVALID_ARG;
 	if (A->layout != B->layout)
 		return MATX_ERR_INVALID_ARG;
 
-	const size_t m = A->rows;
-	const size_t n = A->cols;
+	const size_t m = A->nrows;
+	const size_t n = A->ncols;
 	return blas->vt.zgeadd(
 		A->layout,
 		m, 
@@ -220,13 +220,13 @@ matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
 {
 	if (!A || !B || !A->data || !B->data)
 		return MATX_ERR_INVALID_ARG;
-	if (A->rows != B->rows || A->cols != B->cols)
+	if (A->nrows != B->nrows || A->ncols != B->ncols)
 		return MATX_ERR_INVALID_ARG;
 	if (A->layout != B->layout)
 		return MATX_ERR_INVALID_ARG;
 
-	const size_t m = A->rows;
-	const size_t n = A->cols;
+	const size_t m = A->nrows;
+	const size_t n = A->ncols;
 	return blas->vt.dgeadd(
 		A->layout,
 		m, n,

@@ -94,9 +94,9 @@ matx_status_t ref_spmm_c64_grb(
 	if (!A || !B || !C)
 		return MATX_ERR_INVALID_ARG;
 
-	if (A->ncols != B->rows ||
-		A->nrows != C->rows ||
-		B->cols != C->cols)
+	if (A->ncols != B->nrows ||
+		A->nrows != C->nrows ||
+		B->ncols != C->ncols)
 		return MATX_ERR_INVALID_ARG;
 
 	/* build A */
@@ -119,7 +119,7 @@ matx_status_t ref_spmm_c64_grb(
 
 	// 1. temp = alpha * A * B
 	GrB_Matrix temp;
-	GrB_Matrix_new(&temp, GxB_FC64, C->rows, C->cols);
+	GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
 	GrB_Info info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, (GrB_Matrix)A->handle_grb.impl, (GrB_Matrix)B->handle_grb.impl, NULL);
 	if (info != GrB_SUCCESS)
 	{
@@ -250,7 +250,7 @@ matx_status_t ref_spmm_f64_grb(
 
 	// 1. temp = alpha * A * B
 	GrB_Matrix temp;
-	GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->rows, C->cols);
+	GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->nrows, C->ncols);
 	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, (GrB_Matrix)A->handle_grb.impl, (GrB_Matrix)B->handle_grb.impl, NULL);
 	if (info != GrB_SUCCESS)
 	{
@@ -310,7 +310,7 @@ matx_status_t ref_dsp2md_f64_grb(
 
 	// 1. temp = alpha * A * B
 	GrB_Matrix temp;
-	GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->rows, C->cols);
+	GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->nrows, C->ncols);
 	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, (GrB_Matrix)A->handle_grb.impl, (GrB_Matrix)B->handle_grb.impl, NULL);
 	if (info != GrB_SUCCESS)
 	{
@@ -371,7 +371,7 @@ matx_status_t ref_zsp2md_c64_grb(
 	GxB_FC64_t b = { beta.real, beta.imag };
 	// 1. temp = alpha * A * B
 	GrB_Matrix temp;
-	GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->rows, C->cols);
+	GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
 	info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, (GrB_Matrix)A->handle_grb.impl, (GrB_Matrix)B->handle_grb.impl, NULL);
 	if (info != GrB_SUCCESS)
 	{

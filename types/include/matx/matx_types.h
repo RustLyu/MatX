@@ -61,8 +61,8 @@ extern "C" {
 
 	// ---- Layout ----
 	typedef enum matx_layout_t {
-		MATX_COL_MAJOR = 0,
-		MATX_ROW_MAJOR = 1
+		MATX_ROW_MAJOR = 101,
+		MATX_COL_MAJOR = 102
 	} matx_layout_t;
 
 	typedef enum matx_handle_type_t {
@@ -99,8 +99,8 @@ extern "C" {
 
 	// ---- Dense matrix (double) ----
 	typedef struct matx_dense_f64_t {
-		matx_int64_t  rows;
-		matx_int64_t  cols;
+		matx_int64_t  nrows;
+		matx_int64_t  ncols;
 		matx_int64_t  stride;     // leading dimension: if col-major => ld = stride (>= rows); if row-major => ld = stride (>= cols)
 		matx_layout_t layout;
 		matx_double* data;
@@ -119,8 +119,8 @@ extern "C" {
 
 	// ---- Dense matrix (complex) ----
 	typedef struct matx_dense_c64_t {
-		matx_int64_t rows;
-		matx_int64_t cols;
+		matx_int64_t nrows;
+		matx_int64_t ncols;
 		matx_int64_t stride;
 		matx_layout_t layout;
 		matx_complex_f64* data;

@@ -94,11 +94,11 @@ matx_status_t ref_spmm_c64_aocl(
 			descr,
 			aoclsparse_order_row,
 			(aoclsparse_double_complex*)B->data,
-			B->cols,
+			B->ncols,
 			B->stride,
 			b,
 			(aoclsparse_double_complex*)C->data,
-			C->cols
+			C->ncols
 		);
 	aoclsparse_destroy_mat_descr(descr);
 	if (status != aoclsparse_status_success)
@@ -191,7 +191,7 @@ matx_status_t ref_spmm_f64_aocl(
 			(aoclsparse_matrix)A->handle_aocl.impl,
 			descr, aoclsparse_order_row,
 			B->data,
-			B->cols, B->stride,
+			B->ncols, B->stride,
 			beta,
 			C->data,
 			C->stride

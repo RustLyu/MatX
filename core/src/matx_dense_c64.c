@@ -11,8 +11,8 @@ matx_status_t matx_dense_c64_create(matx_dense_c64_t* out,
   if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
 
   memset(out, 0, sizeof(*out));
-  out->rows = rows;
-  out->cols = cols;
+  out->nrows = rows;
+  out->ncols = cols;
   out->layout = layout;
   out->stride = (layout == MATX_COL_MAJOR) ? rows : cols;
   out->flags = 1u;
@@ -40,8 +40,8 @@ matx_status_t matx_dense_c64_wrap(matx_dense_c64_t* out,
     if (stride < cols) return MATX_ERR_INVALID_ARG;
   }
 
-  out->rows = rows;
-  out->cols = cols;
+  out->nrows = rows;
+  out->ncols = cols;
   out->stride = stride;
   out->layout = layout;
   out->data = data;

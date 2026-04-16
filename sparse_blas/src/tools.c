@@ -466,7 +466,7 @@ size_t coo_2_mkl_c64(matx_coo_c64_t* A)
 size_t dense_2_grb_f64(matx_dense_f64_t* A)
 {
 	GrB_Matrix_free(A->handle_grb.impl);
-	GrB_Info info = GxB_Matrix_import_FullC(&A->handle_grb.impl, GrB_FP64, A->rows, A->cols, (void*)&A->data, A->rows * A->cols, false, NULL);
+	GrB_Info info = GxB_Matrix_import_FullC(&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols, (void*)&A->data, A->nrows * A->ncols, false, NULL);
 	if (info != GrB_SUCCESS)
 	{
 		MATX_ERROR("grb import fullc, %d", info);
@@ -483,7 +483,7 @@ size_t grb_2_dense_f64(matx_dense_f64_t* A)
 	GrB_Type t;
 	matx_int64_t s = 0;
 	bool iso = false;
-	GrB_Info info = GxB_Matrix_export_FullC(&A->handle_grb.impl, &t, &A->rows, &A->cols, (void*)&A->data, &s, &iso, NULL);
+	GrB_Info info = GxB_Matrix_export_FullC(&A->handle_grb.impl, &t, &A->nrows, &A->ncols, (void*)&A->data, &s, &iso, NULL);
 	if (info != GrB_SUCCESS)
 	{
 		MATX_ERROR("grb export fullc, %d", info);
@@ -551,7 +551,7 @@ size_t coo_2_grb_c64(matx_coo_c64_t* A)
 
 size_t dense_2_grb_c64(matx_dense_c64_t* A)
 {
-	GrB_Info info = GxB_Matrix_import_FullC(&A->handle_grb.impl, GxB_FC64, A->rows, A->cols, (void*)&A->data, A->rows * A->cols, false, NULL);
+	GrB_Info info = GxB_Matrix_import_FullC(&A->handle_grb.impl, GxB_FC64, A->nrows, A->ncols, (void*)&A->data, A->nrows * A->ncols, false, NULL);
 	if (info != GrB_SUCCESS)
 	{
 		MATX_ERROR("grb dense mtx import error: %d", info);
@@ -568,7 +568,7 @@ size_t grb_2_dense_c64(matx_dense_c64_t* A)
 	GrB_Type t;
 	matx_int64_t s = 0;
 	bool iso = false;
-	GrB_Info info = GxB_Matrix_export_FullC(&A->handle_grb.impl, &t, &A->rows, &A->cols, (void*)&A->data, &s, &iso, NULL);
+	GrB_Info info = GxB_Matrix_export_FullC(&A->handle_grb.impl, &t, &A->nrows, &A->ncols, (void*)&A->data, &s, &iso, NULL);
 	if (info != GrB_SUCCESS)
 	{
 		MATX_ERROR("grb dense mtx export error: %d", info);

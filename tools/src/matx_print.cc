@@ -10,11 +10,11 @@ void matx_print_dense_mtx_f64(const matx_dense_f64_t* mtx, const char* file)
         return;
 
     auto os = std::ofstream(file, std::ios::trunc);
-    os << mtx->rows << " " << mtx->cols << " " << mtx->layout << std::endl;
+    os << mtx->nrows << " " << mtx->ncols << " " << mtx->layout << std::endl;
     os << std::fixed << std::setprecision(15);
 
-    for (matx_int64_t i = 0; i < mtx->rows; ++i) {
-        for (matx_int64_t j = 0; j < mtx->cols; ++j) {
+    for (matx_int64_t i = 0; i < mtx->nrows; ++i) {
+        for (matx_int64_t j = 0; j < mtx->ncols; ++j) {
             auto idx = (mtx->layout == MATX_ROW_MAJOR)
                 ? i * mtx->stride + j
                 : j * mtx->stride + i;
@@ -31,11 +31,11 @@ void matx_print_dense_mtx_c64(const matx_dense_c64_t* mtx, const char* file)
         return;
 
     auto os = std::ofstream(file, std::ios::trunc);
-    os << mtx->rows << " " << mtx->cols << " " << mtx->layout << std::endl;
+    os << mtx->nrows << " " << mtx->ncols << " " << mtx->layout << std::endl;
     os << std::fixed << std::setprecision(15);
 
-    for (matx_int64_t i = 0; i < mtx->rows; ++i) {
-        for (matx_int64_t j = 0; j < mtx->cols; ++j) {
+    for (matx_int64_t i = 0; i < mtx->nrows; ++i) {
+        for (matx_int64_t j = 0; j < mtx->ncols; ++j) {
             auto idx = (mtx->layout == MATX_ROW_MAJOR)
                 ? i * mtx->stride + j
                 : j * mtx->stride + i;

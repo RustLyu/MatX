@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
 extern "C" {
 #include "matx/matx_types.h"
@@ -11,8 +11,8 @@ TEST(core_dense, create_destroy) {
   matx_dense_f64_t M;
   ASSERT_EQ(matx_dense_f64_create(&M, 3, 4, MATX_COL_MAJOR, &a), MATX_OK);
   ASSERT_NE(M.data, nullptr);
-  EXPECT_EQ(M.rows, 3u);
-  EXPECT_EQ(M.cols, 4u);
+  EXPECT_EQ(M.nrows, 3u);
+  EXPECT_EQ(M.ncols, 4u);
   EXPECT_EQ(M.stride, 3u);
   matx_dense_f64_destroy(&M, &a);
   EXPECT_EQ(M.data, nullptr);
@@ -32,8 +32,8 @@ TEST(core_dense, create_4x4) {
   matx_dense_f64_t M;
   ASSERT_EQ(matx_dense_f64_create(&M, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
   ASSERT_NE(M.data, nullptr);
-  EXPECT_EQ(M.rows, 4u);
-  EXPECT_EQ(M.cols, 4u);
+  EXPECT_EQ(M.nrows, 4u);
+  EXPECT_EQ(M.ncols, 4u);
   EXPECT_EQ(M.stride, 4u);
   matx_dense_f64_destroy(&M, &a);
 }
@@ -43,8 +43,8 @@ TEST(core_dense, dense_c64_create_4x4) {
   matx_dense_c64_t M;
   ASSERT_EQ(matx_dense_c64_create(&M, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
   ASSERT_NE(M.data, nullptr);
-  EXPECT_EQ(M.rows, 4u);
-  EXPECT_EQ(M.cols, 4u);
+  EXPECT_EQ(M.nrows, 4u);
+  EXPECT_EQ(M.ncols, 4u);
   matx_dense_c64_destroy(&M, &a);
 }
 
