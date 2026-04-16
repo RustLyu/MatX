@@ -104,7 +104,7 @@ void matx_print_vec_c64(const matx_vec_c64_t* vec, const char* file)
     os << std::fixed << std::setprecision(15);
     for (matx_int64_t i = 0; i < vec->n; ++i)
     {
-        os << (double)vec->data[i].real << " " << (double)vec->data[i].imag << std::endl;
+        os << vec->data[i].real << " " << vec->data[i].imag << std::endl;
     }
     os.close();
 }
