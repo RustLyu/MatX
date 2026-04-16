@@ -3,6 +3,7 @@
 add_library(${PROJECT_NAME}
   src/matx_log.cc
   src/matx_tm.cc
+  src/matx_print.cc
 )
 
 add_library(MatX::tools ALIAS ${PROJECT_NAME})
@@ -24,6 +25,7 @@ target_sources(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_log.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_tm.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_print.h>
     $<INSTALL_INTERFACE:include/matx/matx_log.h>
     $<INSTALL_INTERFACE:include/matx/matx_tm.h>
 )

@@ -25,6 +25,7 @@ add_executable(${PROJECT_NAME}
   test_compute_dense.cpp
   test_compute_sparse.cpp
   test_solve.cpp
+  test_print_mtx.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
