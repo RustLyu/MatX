@@ -485,6 +485,54 @@ matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t* A,
 
 }
 
+matx_status_t ref_norm1_grb(
+	matx_vec_f64_t* A,
+	matx_double* out)
+{
+	if (A->handle_grb.valid <= 0)
+	{
+		vec_2_grb_c64(A);
+	}
+
+	// tmp = abs(x)
+	GrB_apply((GrB_Vector)A->handle_grb.impl, NULL, NULL, GrB_ABS_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
+	// sum(tmp)
+	GrB_reduce(&out, NULL, GrB_PLUS_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
+	return MATX_OK;
+}
+
+matx_status_t ref_norm2_grb(
+	matx_vec_f64_t* A,
+	matx_double* out)
+{
+	if (A->handle_grb.valid <= 0)
+	{
+		vec_2_grb_c64(A);
+	}
+
+	// tmp = x .* x
+	GrB_eWiseMult((GrB_Vector)A->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, (GrB_Vector)A->handle_grb.impl, (GrB_Vector)A->handle_grb.impl, NULL);
+	// sum
+	double sumsq;
+	GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
+
+	*out = sqrt(sumsq);
+	return MATX_OK;
+}
+
+matx_status_t ref_norminf_grb(
+	matx_vec_f64_t* A,
+	matx_double* out)
+{
+	if (A->handle_grb.valid <= 0)
+	{
+		vec_2_grb_c64(A);
+	}
+	GrB_apply((GrB_Vector)A->handle_grb.impl, NULL, NULL, GrB_ABS_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
+	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
+	return MATX_OK;
+}
+
 matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 	GrB_Info info = GrB_init(GrB_NONBLOCKING);
 	if (info != GrB_SUCCESS)
@@ -503,7 +551,10 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 			.zsp2md_c64 = ref_zsp2md_c64_grb,
 			.transpose_f64 = ref_transpose_f64_grb,
 			.transpose_c64 = ref_transpose_c64_grb,
-			.conj_trans_c64 = ref_conj_trans_c64_grb
+			.conj_trans_c64 = ref_conj_trans_c64_grb,
+			.norm1_f64 = ref_norm1_grb,
+			.norm2_f64 = ref_norm2_grb,
+			.norminf_f64 = ref_norminf_grb
 		}
 	};
 	return b;

@@ -60,6 +60,15 @@ extern "C" {
 		matx_status_t(*conj_trans_c64)(
 			matx_coo_c64_t* A,
 			matx_coo_c64_t* out);
+		matx_status_t(*norm1_f64)(
+			matx_vec_f64_t* A,
+			matx_double* out);
+		matx_status_t(*norm2_f64)(
+			matx_vec_f64_t* A,
+			matx_double* out);
+		matx_status_t(*norminf_f64)(
+			matx_vec_f64_t* A,
+			matx_double* out);
 
 	} matx_sparse_vtable_t;
 
@@ -133,6 +142,18 @@ extern "C" {
 	MATX_API matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend,
 		matx_coo_c64_t* A,
 		matx_coo_c64_t* out);
+
+	MATX_API matx_status_t matx_norm1_f64(const matx_sparse_backend_t* backend,
+		matx_vec_f64_t* A,
+		matx_double* out);
+
+	MATX_API matx_status_t matx_norm2_f64(const matx_sparse_backend_t* backend,
+		matx_vec_f64_t* A,
+		matx_double* out);
+
+	MATX_API matx_status_t matx_norminf_f64(const matx_sparse_backend_t* backend,
+		matx_vec_f64_t* A,
+		matx_double* out);
 
 	MATX_API void free_grb_matrix(void* impl);
 	MATX_API void free_grb_vector(void* impl);

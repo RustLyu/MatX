@@ -108,3 +108,18 @@ MATX_API matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend, m
 {
 	return backend->vt.conj_trans_c64(A, out);
 }
+
+MATX_API matx_status_t matx_norm1_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t* A, matx_double* out)
+{
+	return backend->vt.norm1_f64(A, out);
+}
+
+MATX_API matx_status_t matx_norm2_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t* A, matx_double* out)
+{
+	return backend->vt.norm2_f64(A, out);
+}
+
+MATX_API matx_status_t matx_norminf_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t* A, matx_double* out)
+{
+	return backend->vt.norminf_f64(A, out);
+}
