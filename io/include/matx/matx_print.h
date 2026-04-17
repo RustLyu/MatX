@@ -1,5 +1,5 @@
-﻿#ifndef MATX_LOG_H
-#define MATX_LOG_H
+﻿#ifndef MATX_PRINT_H
+#define MATX_PRINT_H
 
 #include "matx/matx_types.h"
 

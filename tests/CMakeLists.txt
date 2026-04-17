@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
   test_compute_sparse.cpp
   test_solve.cpp
   test_print_mtx.cpp
+  test_read_mtx.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -38,6 +39,7 @@ target_link_libraries(${PROJECT_NAME}
     MatX::dense_solve
     MatX::sparse_solve
     MatX::tools
+    MatX::io
 )
 
 include(GoogleTest)

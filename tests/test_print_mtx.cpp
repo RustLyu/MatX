@@ -27,7 +27,7 @@ TEST(print, sparse_real_4x4_print) {
 		.handle_grb = nullptr,
 		.handle_mkl = nullptr
 	};
-	matx_print_sparse_mtx_f64(&coo_A, "./sparse_real_4x4_print.txt");
+	matx_print_sparse_mtx_f64(&coo_A, "sparse_real_4x4_print.txt");
 }
 
 TEST(print, sparse_complex_4x4_print) {

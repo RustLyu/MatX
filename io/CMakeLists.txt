@@ -1,17 +1,17 @@
-﻿project (matx_tools C CXX)
+﻿project (matx_io C CXX)
 
 add_library(${PROJECT_NAME}
-  src/matx_log.cc
-  src/matx_tm.cc
+  src/matx_print.cc
+  src/matx_read.cc
 )
 
-add_library(MatX::tools ALIAS ${PROJECT_NAME})
+add_library(MatX::io ALIAS ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
     MatX::types
     MatX::core
-    spdlog::spdlog
+    MatX::tools
 )
 
 
@@ -23,8 +23,8 @@ target_include_directories(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME}
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_log.h>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_tm.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_print.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_read.h>
     $<INSTALL_INTERFACE:include/matx/matx_log.h>
     $<INSTALL_INTERFACE:include/matx/matx_tm.h>
 )

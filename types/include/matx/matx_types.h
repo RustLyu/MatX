@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,9 +45,11 @@ extern "C" {
 #ifdef _WIN32
 	typedef long long matx_int64_t;
 	typedef double matx_double;
+	typedef bool matx_bool;
 #elif __linux__
     typedef int64_t matx_int64_t;
     typedef double matx_double;
+	typedef bool matx_bool;
 #endif
 
 	// ---- Alloc ----
@@ -147,9 +150,9 @@ extern "C" {
 		matx_int64_t nrows;
 		matx_int64_t ncols;
 		matx_int64_t nnz;
-		const matx_int64_t* rows;
-		const matx_int64_t* columns;
-		const matx_double* values;
+		matx_int64_t* rows;
+		matx_int64_t* columns;
+		matx_double* values;
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 		matx_handle_t handle_mkl;
@@ -174,8 +177,8 @@ extern "C" {
 		matx_int64_t nrows;
 		matx_int64_t ncols;
 		matx_int64_t nnz;
-		const matx_int64_t* rows;
-		const matx_int64_t* columns;
+		matx_int64_t* rows;
+		matx_int64_t* columns;
 		matx_complex_f64* values;
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
