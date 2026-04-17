@@ -49,6 +49,11 @@ matx_status_t matx_coo_sparse_c64_create(
     return MATX_OK;
 }
 
+matx_status_t matx_coo_c64_dup(const matx_alloc_t* alloc, const matx_coo_c64_t* const in, matx_coo_c64_t* out)
+{
+    return matx_coo_sparse_c64_create(alloc, out, in->nrows, in->ncols, in->nnz, in->rows, in->columns, in->values);
+}
+
 matx_status_t matx_csc_sparse_c64_create(
     const matx_alloc_t* alloc,
     matx_csc_c64_t* out,

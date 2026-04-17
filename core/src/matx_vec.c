@@ -24,6 +24,11 @@ matx_status_t matx_vec_f64_create(
   return MATX_OK;
 }
 
+matx_status_t matx_vec_f64_dup(const matx_alloc_t* alloc, const matx_vec_f64_t* const in, const matx_vec_f64_t* const out)
+{
+    return matx_vec_f64_create(alloc, out, in->data, in->n);
+}
+
 matx_status_t matx_vec_f64_wrap(matx_vec_f64_t* out,
     matx_int64_t n,
     matx_int64_t stride,
@@ -65,6 +70,11 @@ matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc,
   }
 
   return MATX_OK;
+}
+
+matx_status_t matx_vec_c64_dup(const matx_alloc_t* alloc, matx_vec_c64_t* in, matx_vec_c64_t* out)
+{
+    return matx_vec_c64_create(alloc, out, in->data, in->n);
 }
 
 matx_status_t matx_vec_c64_wrap(matx_vec_c64_t* out,

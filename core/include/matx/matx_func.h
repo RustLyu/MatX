@@ -19,6 +19,10 @@ extern "C" {
 		matx_double* data,
 		matx_int64_t n);
 
+	MATX_API matx_status_t matx_vec_f64_dup(const matx_alloc_t* alloc,
+		const matx_vec_f64_t* const in,
+		const matx_vec_f64_t* const out);
+
 	MATX_API matx_status_t matx_vec_f64_wrap(matx_vec_f64_t* out,
 		matx_int64_t n,
 		matx_int64_t stride,
@@ -33,6 +37,12 @@ extern "C" {
 		matx_int64_t rows,
 		matx_int64_t cols,
 		matx_double* data);
+
+	MATX_API matx_status_t matx_dense_f64_dup(
+		const matx_alloc_t* alloc,
+		const matx_dense_f64_t* const in,
+		matx_dense_f64_t* out
+		);
 
 	MATX_API matx_status_t matx_dense_f64_wrap(matx_dense_f64_t* out,
 		matx_int64_t rows,
@@ -49,6 +59,11 @@ extern "C" {
 		matx_complex_f64* data,
 		matx_int64_t n);
 
+	MATX_API matx_status_t matx_vec_c64_dup(
+		const matx_alloc_t* alloc,
+		matx_vec_c64_t* in,
+		matx_vec_c64_t* out);
+
 	MATX_API matx_status_t matx_vec_c64_wrap(matx_vec_c64_t* out,
 		matx_int64_t n,
 		matx_int64_t stride,
@@ -63,6 +78,12 @@ extern "C" {
 		matx_int64_t rows,
 		matx_int64_t cols,
 		matx_complex_f64* data);
+
+	MATX_API matx_status_t matx_dense_c64_dup(
+		const matx_alloc_t* alloc,
+		const matx_dense_c64_t* const in,
+		matx_dense_c64_t* out
+	);
 
 	MATX_API matx_status_t matx_dense_c64_wrap(matx_dense_c64_t* out,
 		matx_int64_t rows,
@@ -82,6 +103,12 @@ extern "C" {
 		matx_int64_t* ap,
 		matx_int64_t* ai,
 		matx_double* ax);
+
+	MATX_API matx_status_t matx_coo_f64_dup(
+		const matx_alloc_t* alloc,
+		const matx_coo_f64_t* const in,
+		matx_coo_f64_t* out
+	);
 
 	MATX_API matx_status_t matx_csc_sparse_f64_create(
 		const matx_alloc_t* alloc,
@@ -109,6 +136,12 @@ extern "C" {
 		matx_int64_t* ap,
 		matx_int64_t* ai,
 		matx_complex_f64* ax);
+
+	MATX_API matx_status_t matx_coo_c64_dup(
+		const matx_alloc_t* alloc,
+		const matx_coo_c64_t* const in,
+		matx_coo_c64_t* out
+	);
 
 	MATX_API matx_status_t matx_coo_sparse_c64_wrap(matx_coo_c64_t* out,
 		matx_int64_t nrows,
