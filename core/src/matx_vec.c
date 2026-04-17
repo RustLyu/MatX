@@ -2,9 +2,10 @@
 #include "matx/matx_func.h"
 #include <string.h>
 
-matx_status_t matx_vec_f64_create(matx_vec_f64_t* out,
-    matx_int64_t n,
-                                  const matx_alloc_t* alloc) {
+matx_status_t matx_vec_f64_create(
+    const matx_alloc_t* alloc,
+    matx_vec_f64_t* out,
+    matx_int64_t n) {
   if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
   memset(out, 0, sizeof(*out));
   out->n = n;
@@ -30,8 +31,7 @@ matx_status_t matx_vec_f64_wrap(matx_vec_f64_t* out,
   return MATX_OK;
 }
 
-void matx_vec_f64_destroy(matx_vec_f64_t* v,
-                          const matx_alloc_t* alloc) {
+void matx_vec_f64_destroy(const matx_alloc_t* alloc, matx_vec_f64_t* v) {
   if (!v) return;
   if ((v->flags & 1u) != 0u && v->data && alloc) {
     matx_free(alloc, v->data);
@@ -39,9 +39,8 @@ void matx_vec_f64_destroy(matx_vec_f64_t* v,
   memset(v, 0, sizeof(*v));
 }
 
-matx_status_t matx_vec_c64_create(matx_vec_c64_t* out,
-    matx_int64_t n,
-                                  const matx_alloc_t* alloc) {
+matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc, matx_vec_c64_t* out,
+    matx_int64_t n) {
   if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
   memset(out, 0, sizeof(*out));
   out->n = n;
@@ -67,8 +66,7 @@ matx_status_t matx_vec_c64_wrap(matx_vec_c64_t* out,
   return MATX_OK;
 }
 
-void matx_vec_c64_destroy(matx_vec_c64_t* v,
-                          const matx_alloc_t* alloc) {
+void matx_vec_c64_destroy(const matx_alloc_t* alloc, matx_vec_c64_t* v) {
   if (!v) return;
   if ((v->flags & 1u) != 0u && v->data && alloc) {
     matx_free(alloc, v->data);

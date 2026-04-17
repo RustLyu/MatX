@@ -31,8 +31,8 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
   };
 
   matx_vec_f64_t x, y;
-  ASSERT_EQ(matx_vec_f64_create(&x, 4, &a), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&y, 4, &a), MATX_OK);
+  ASSERT_EQ(matx_vec_f64_create(&a, &x, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_f64_create(&a, &y, 4), MATX_OK);
   x.data[0] = 1.0;
   x.data[1] = 1.0;
   x.data[2] = 1.0;
@@ -45,9 +45,9 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
   /* y = A*x; A has diagonal 2, off-diag 0.5. So y_i = 2*1 + 0.5*3 = 3.5 */
   EXPECT_NEAR(y.data[0], 3.5, 1e-12);
   EXPECT_NEAR(y.data[3], 3.5, 1e-12);
-  matx_coo_sparse_f64_destroy(&A, &a);
-  matx_vec_f64_destroy(&x, &a);
-  matx_vec_f64_destroy(&y, &a);
+  matx_coo_sparse_f64_destroy(&a, &A);
+  matx_vec_f64_destroy(&a, &x);
+  matx_vec_f64_destroy(&a, &y);
 }
 
 //TEST(compute_sparse, spmv_csc_f64_cd) {
@@ -150,8 +150,8 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
         .handle_aocl = {.impl = NULL, .type = MATX_HANDLE_TYPE_AOCL_MATRIX, .valid = -1}
     };
     matx_vec_c64_t x, y;
-    ASSERT_EQ(matx_vec_c64_create(&x, cols, &a), MATX_OK);
-    ASSERT_EQ(matx_vec_c64_create(&y, rows, &a), MATX_OK);
+    ASSERT_EQ(matx_vec_c64_create(&a, &x, cols), MATX_OK);
+    ASSERT_EQ(matx_vec_c64_create(&a, &y, rows), MATX_OK);
 
     for (int i = 0; i < cols; ++i) {
         x.data[i].real = 1.0;
@@ -177,9 +177,9 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
         EXPECT_NEAR(y.data[i].real, expected_real, eps) << "y[" << i << "] real part error";
         EXPECT_NEAR(y.data[i].imag, expected_imag, eps) << "y[" << i << "] imag part error";
     }
-    matx_coo_sparse_c64_destroy(&A, &a);
-    matx_vec_c64_destroy(&x, &a);
-    matx_vec_c64_destroy(&y, &a);
+    matx_coo_sparse_c64_destroy(&a, &A);
+    matx_vec_c64_destroy(&a, &x);
+    matx_vec_c64_destroy(&a, &y);
 }
 
 TEST(compute_sparse, spmm_csc_f64_4x4) {
@@ -202,8 +202,8 @@ TEST(compute_sparse, spmm_csc_f64_4x4) {
   };
 
   matx_dense_f64_t B, C;
-  ASSERT_EQ(matx_dense_f64_create(&B, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
-  ASSERT_EQ(matx_dense_f64_create(&C, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+  ASSERT_EQ(matx_dense_f64_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_f64_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
   for (size_t i = 0; i < 16; ++i) B.data[i] = (i % 4 == i / 4) ? 1.0 : 0.0;
   for (size_t i = 0; i < 16; ++i) C.data[i] = 0.0;
   auto backend = matx_sparse_default();
@@ -212,9 +212,9 @@ TEST(compute_sparse, spmm_csc_f64_4x4) {
   EXPECT_NEAR(C.data[0], 1.0, 1e-12);
   EXPECT_NEAR(C.data[5], 1.0, 1e-12);
 
-  matx_coo_sparse_f64_destroy(&A, &a);
-  matx_dense_f64_destroy(&B, &a);
-  matx_dense_f64_destroy(&C, &a);
+  matx_coo_sparse_f64_destroy(&a, &A);
+  matx_dense_f64_destroy(&a, &B);
+  matx_dense_f64_destroy(&a, &C);
 }
 
 TEST(compute_sparse, spmm_csc_c64_4x4) {
@@ -244,8 +244,8 @@ TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_dense_c64_t B, C;
   B.handle_grb.valid = -1;
   C.handle_grb.valid = -1;
-  ASSERT_EQ(matx_dense_c64_create(&B, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
-  ASSERT_EQ(matx_dense_c64_create(&C, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+  ASSERT_EQ(matx_dense_c64_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_c64_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
   for (size_t i = 0; i < 16; ++i) {
     B.data[i].real = (i % 4 == i / 4) ? 1.0 : 0.0;
     B.data[i].imag = 0.0;
@@ -258,9 +258,9 @@ TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_status_t st = matx_spmm_coo_c64(&backend, alpha, &A, &B, beta, &C);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(C.data[0].real, 1.0, 1e-12);
-  matx_coo_sparse_c64_destroy(&A, &a);
-  matx_dense_c64_destroy(&B, &a);
-  matx_dense_c64_destroy(&C, &a);
+  matx_coo_sparse_c64_destroy(&a, &A);
+  matx_dense_c64_destroy(&a, &B);
+  matx_dense_c64_destroy(&a, &C);
 }
 
 TEST(compute_sparse, dsp2md_coo_f64_4x4) {
@@ -303,7 +303,7 @@ TEST(compute_sparse, dsp2md_coo_f64_4x4) {
     matx_sparse_backend_t backend = matx_sparse_default();
 
     matx_dense_f64_t C;
-    ASSERT_EQ(matx_dense_f64_create(&C, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+    ASSERT_EQ(matx_dense_f64_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
     for (size_t i = 0; i < 16; ++i) C.data[i] = 0.0;
     matx_status_t st = matx_dsp2md_coo_f64(
         &backend,
@@ -320,9 +320,9 @@ TEST(compute_sparse, dsp2md_coo_f64_4x4) {
     EXPECT_NEAR(C.data[1], 0.5, 1e-12);
     EXPECT_NEAR(C.data[14], 0.5, 1e-12);
     EXPECT_NEAR(C.data[15], 2.0, 1e-12);
-    matx_coo_sparse_f64_destroy(&A, &a);
-    matx_coo_sparse_f64_destroy(&B, &a);
-    matx_dense_f64_destroy(&C, &a);
+    matx_coo_sparse_f64_destroy(&a, &A);
+    matx_coo_sparse_f64_destroy(&a, &B);
+    matx_dense_f64_destroy(&a, &C);
 }
 
 
@@ -345,7 +345,7 @@ TEST(compute_sparse, transpose_coo_f64_2x2) {
       .handle_grb = {.impl = NULL, .type = MATX_HANDLE_TYPE_GRB_MATRIX, .valid = -1}
     };
     matx_coo_f64_t B;
-    matx_coo_sparse_f64_create(&B, 4, 4, 16, &a);
+    matx_coo_sparse_f64_create(&a, &B, 4, 4, 16, NULL, NULL, NULL);
     matx_sparse_backend_t backend = matx_sparse_default();
 
     matx_status_t st = matx_transpose_coo_f64(&backend, &A, &B);
@@ -379,7 +379,7 @@ TEST(compute_sparse, conj_c64_4x4) {
 
     matx_coo_c64_t B;
     B.handle_grb.valid = -1;
-    ASSERT_EQ(matx_coo_sparse_c64_create(&B, 4, 4, 16, &a), MATX_OK);
+    ASSERT_EQ(matx_coo_sparse_c64_create(&a, &B, 4, 4, 16, NULL, NULL, NULL), MATX_OK);
     
     for (size_t i = 0; i < 16; ++i) {
         B.values[i].real = 0.0;
@@ -389,6 +389,6 @@ TEST(compute_sparse, conj_c64_4x4) {
     auto backend = matx_sparse_default();
     matx_status_t st = matx_conj_coo_c64(&backend, &A, &B);
     ASSERT_EQ(st, MATX_OK);
-    matx_coo_sparse_c64_destroy(&A, &a);
-    matx_coo_sparse_c64_destroy(&B, &a);
+    matx_coo_sparse_c64_destroy(&a, &A);
+    matx_coo_sparse_c64_destroy(&a, &B);
 }

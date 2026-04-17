@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
 extern "C" {
 #include "matx/matx_types.h"
@@ -32,7 +32,7 @@ TEST(solve, sparse_real_4x4_factor_solve) {
 		.handle_mkl = nullptr
 	};
 	auto alloc = matx_alloc_default();
-	matx_csc_sparse_f64_create(&coo_A.handle_csc, 4, 4, nnz, &alloc);
+	matx_csc_sparse_f64_create(&alloc, &coo_A.handle_csc, 4, 4, nnz);
 	double b[4] = { 4.0, 6.0, 8.0, 10.0 };
 	double x[4] = { 0.0, 0.0, 0.0, 0.0 };
 
@@ -55,7 +55,7 @@ TEST(solve, sparse_real_4x4_factor_solve) {
 	EXPECT_NEAR(x[1], 3.0, 1e-10);
 	EXPECT_NEAR(x[2], 4.0, 1e-10);
 	EXPECT_NEAR(x[3], 5.0, 1e-10);
-	matx_coo_sparse_f64_destroy(&coo_A, &alloc);
+	matx_coo_sparse_f64_destroy(&alloc, &coo_A);
 }
 
 TEST(solve, sparse_real_4x4_solve_one_shot) {
@@ -80,7 +80,7 @@ TEST(solve, sparse_real_4x4_solve_one_shot) {
 		.handle_mkl = nullptr
 	};
 	auto alloc = matx_alloc_default();
-	matx_csc_sparse_f64_create(&coo_A.handle_csc, 4, 4, nnz, &alloc);
+	matx_csc_sparse_f64_create(&alloc, &coo_A.handle_csc, 4, 4, nnz);
 
 	double b[4] = { 2.0, 4.0, 6.0, 8.0 };
 	double x[4] = { 0.0, 0.0, 0.0, 0.0 };
@@ -95,13 +95,13 @@ TEST(solve, sparse_real_4x4_solve_one_shot) {
 	EXPECT_NEAR(x[1], 2.0, 1e-10);
 	EXPECT_NEAR(x[2], 3.0, 1e-10);
 	EXPECT_NEAR(x[3], 4.0, 1e-10);
-	matx_coo_sparse_f64_destroy(&coo_A, &alloc);
+	matx_coo_sparse_f64_destroy(&alloc, &coo_A);
 }
 
 TEST(solve, dense_real_4x4_factor_solve) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_dense_f64_t A;
-	ASSERT_EQ(matx_dense_f64_create(&A, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+	ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
 	/* Simple 4x4: identity * 2 */
 	for (size_t i = 0; i < 4; ++i)
 		for (size_t j = 0; j < 4; ++j)
@@ -114,7 +114,7 @@ TEST(solve, dense_real_4x4_factor_solve) {
 	matx_factor_dense_f64_t* F = NULL;
 	matx_status_t st = matx_factor_dense_f64(&ls, &A, &F);
 	if (st == MATX_ERR_NOT_SUPPORTED) {
-		matx_dense_f64_destroy(&A, &a);
+		matx_dense_f64_destroy(&a, &A);
 		return;
 	}
 	ASSERT_EQ(st, MATX_OK);
@@ -122,7 +122,7 @@ TEST(solve, dense_real_4x4_factor_solve) {
 
 	st = matx_solve_dense_f64_factor(&ls, F, b, x);
 	matx_factor_dense_f64_destroy(&ls, F);
-	matx_dense_f64_destroy(&A, &a);
+	matx_dense_f64_destroy(&a, &A);
 	if (st == MATX_ERR_NOT_SUPPORTED) {
 		return;
 	}
@@ -136,7 +136,7 @@ TEST(solve, dense_real_4x4_factor_solve) {
 TEST(solve, dense_real_4x4_solve_one_shot) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_dense_f64_t A;
-	ASSERT_EQ(matx_dense_f64_create(&A, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+	ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
 	for (size_t i = 0; i < 4; ++i)
 		for (size_t j = 0; j < 4; ++j)
 			A.data[i + j * 4] = (i == j) ? 3.0 : 0.0;
@@ -146,7 +146,7 @@ TEST(solve, dense_real_4x4_solve_one_shot) {
 
 	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
 	matx_status_t st = matx_solve_dense_f64(&ls, &A, b, x);
-	matx_dense_f64_destroy(&A, &a);
+	matx_dense_f64_destroy(&a, &A);
 	if (st == MATX_ERR_NOT_SUPPORTED) {
 		return;
 	}
@@ -158,7 +158,7 @@ TEST(solve, dense_real_4x4_solve_one_shot) {
 TEST(solve, dense_complex_4x4_factor_solve) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_dense_c64_t A;
-	ASSERT_EQ(matx_dense_c64_create(&A, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+	ASSERT_EQ(matx_dense_c64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
 	for (size_t i = 0; i < 4; ++i) {
 		for (size_t j = 0; j < 4; ++j) {
 			A.data[i + j * 4].real = (i == j) ? 2.0 : 0.0;
@@ -167,8 +167,8 @@ TEST(solve, dense_complex_4x4_factor_solve) {
 	}
 
 	matx_vec_c64_t b, x;
-	ASSERT_EQ(matx_vec_c64_create(&b, 4, &a), MATX_OK);
-	ASSERT_EQ(matx_vec_c64_create(&x, 4, &a), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&a, &b, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&a, &x, 4), MATX_OK);
 	b.data[0] = {4.0, 0.0};
 	b.data[1] = {6.0, 0.0};
 	b.data[2] = {8.0, 0.0};
@@ -178,9 +178,9 @@ TEST(solve, dense_complex_4x4_factor_solve) {
 	matx_factor_dense_c64_t* F = NULL;
 	matx_status_t st = matx_factor_dense_c64(&ls, &A, &F);
 	if (st == MATX_ERR_NOT_SUPPORTED) {
-		matx_vec_c64_destroy(&b, &a);
-		matx_vec_c64_destroy(&x, &a);
-		matx_dense_c64_destroy(&A, &a);
+		matx_vec_c64_destroy(&a, &b);
+		matx_vec_c64_destroy(&a, &x);
+		matx_dense_c64_destroy(&a, &A);
 		return;
 	}
 	ASSERT_EQ(st, MATX_OK);
@@ -191,9 +191,9 @@ TEST(solve, dense_complex_4x4_factor_solve) {
 	EXPECT_NEAR(x.data[0].real, 2.0, 1e-10);
 	EXPECT_NEAR(x.data[3].real, 5.0, 1e-10);
 
-	matx_vec_c64_destroy(&b, &a);
-	matx_vec_c64_destroy(&x, &a);
-	matx_dense_c64_destroy(&A, &a);
+	matx_vec_c64_destroy(&a, &b);
+	matx_vec_c64_destroy(&a, &x);
+	matx_dense_c64_destroy(&a, &A);
 }
 
 TEST(solve, sparse_complex_4x4_factor_solve) {
@@ -214,11 +214,11 @@ TEST(solve, sparse_complex_4x4_factor_solve) {
 		.handle_mkl = nullptr
 	};
 	auto alloc = matx_alloc_default();
-	matx_csc_sparse_c64_create(&coo_A.handle_csc, 4, 4, nnz, &alloc);
+	matx_csc_sparse_c64_create(&alloc, &coo_A.handle_csc, 4, 4, nnz);
 
 	matx_vec_c64_t b, x;
-	ASSERT_EQ(matx_vec_c64_create(&b, 4, &alloc), MATX_OK);
-	ASSERT_EQ(matx_vec_c64_create(&x, 4, &alloc), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&alloc, &b, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&alloc, &x, 4), MATX_OK);
 	b.data[0] = {4.0, 0.0};
 	b.data[1] = {6.0, 0.0};
 	b.data[2] = {8.0, 0.0};
@@ -228,10 +228,10 @@ TEST(solve, sparse_complex_4x4_factor_solve) {
 	matx_factor_sparse_c64_t* F = NULL;
 	matx_status_t st = matx_factor_csc_c64(&ls, &coo_A, &F);
 	if (st == MATX_ERR_NOT_SUPPORTED) {
-		matx_vec_c64_destroy(&b, &alloc);
-		matx_vec_c64_destroy(&x, &alloc);
+		matx_vec_c64_destroy(&alloc, &b);
+		matx_vec_c64_destroy(&alloc, &x);
 		//matx_csc_sparse_c64_destroy(&coo_A.handle_csc, &alloc);
-		matx_coo_sparse_c64_destroy(&coo_A, &alloc);
+		matx_coo_sparse_c64_destroy(&alloc, &coo_A);
 		return;
 	}
 	ASSERT_EQ(st, MATX_OK);
@@ -242,8 +242,8 @@ TEST(solve, sparse_complex_4x4_factor_solve) {
 	EXPECT_NEAR(x.data[0].real, 2.0, 1e-10);
 	EXPECT_NEAR(x.data[3].real, 5.0, 1e-10);
 
-	matx_vec_c64_destroy(&b, &alloc);
-	matx_vec_c64_destroy(&x, &alloc);
-	matx_coo_sparse_c64_destroy(&coo_A, &alloc);
+	matx_vec_c64_destroy(&alloc, &b);
+	matx_vec_c64_destroy(&alloc, &x);
+	matx_coo_sparse_c64_destroy(&alloc, &coo_A);
 	//matx_csc_sparse_c64_destroy(&coo_A.handle_csc, &alloc);
 }

@@ -2,11 +2,15 @@
 #include "matx/matx_func.h"
 #include <string.h>
 
-matx_status_t matx_coo_sparse_c64_create(matx_coo_c64_t* out,
+matx_status_t matx_coo_sparse_c64_create(
+    const matx_alloc_t* alloc,
+    matx_coo_c64_t* out,
     matx_int64_t nrows,
     matx_int64_t ncols,
     matx_int64_t nnz,
-    const matx_alloc_t* alloc) {
+    matx_int64_t* ap,
+    matx_int64_t* ai,
+    matx_complex_f64* ax) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
         return MATX_ERR_INVALID_ARG;
     }
@@ -18,12 +22,21 @@ matx_status_t matx_coo_sparse_c64_create(matx_coo_c64_t* out,
     matx_complex_f64* values_buf = (matx_complex_f64*)matx_malloc(alloc, nnz * sizeof(matx_complex_f64));
 
     if (!rows || !cols || !values_buf) {
-        if (rows) matx_free(alloc, rows);
-        if (cols) matx_free(alloc, cols);
-        if (values_buf) matx_free(alloc, values_buf);
+        if (rows) 
+            matx_free(alloc, rows);
+        if (cols) 
+            matx_free(alloc, cols);
+        if (values_buf) 
+            matx_free(alloc, values_buf);
         memset(out, 0, sizeof(*out));
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    if(ap != NULL)
+        memcpy(rows, ap, sizeof(matx_int64_t) * nnz);
+    if (ai != NULL)
+        memcpy(cols, ai, sizeof(matx_int64_t) * nnz);
+    if (ax != NULL)
+        memcpy(values_buf, ax, sizeof(matx_complex_f64) * nnz);
 
     out->nrows = nrows;
     out->ncols = ncols;
@@ -36,11 +49,12 @@ matx_status_t matx_coo_sparse_c64_create(matx_coo_c64_t* out,
     return MATX_OK;
 }
 
-matx_status_t matx_csc_sparse_c64_create(matx_csc_c64_t* out,
+matx_status_t matx_csc_sparse_c64_create(
+    const matx_alloc_t* alloc,
+    matx_csc_c64_t* out,
     matx_int64_t nrows,
     matx_int64_t ncols,
-    matx_int64_t nnz,
-    const matx_alloc_t* alloc) {
+    matx_int64_t nnz) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
         return MATX_ERR_INVALID_ARG;
     }
@@ -104,7 +118,7 @@ matx_status_t matx_coo_sparse_c64_wrap(matx_coo_c64_t* out,
     return MATX_OK;
 }
 
-void matx_csc_sparse_c64_destroy(matx_csc_c64_t* m, const matx_alloc_t* alloc) {
+void matx_csc_sparse_c64_destroy(const matx_alloc_t* alloc, matx_csc_c64_t* m) {
     if (!m || !alloc) {
         return;
     }
@@ -118,7 +132,7 @@ void matx_csc_sparse_c64_destroy(matx_csc_c64_t* m, const matx_alloc_t* alloc) {
     memset(m, 0, sizeof(*m));
 }
 
-void matx_coo_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc) {
+void matx_coo_sparse_c64_destroy(const matx_alloc_t* alloc, matx_coo_c64_t* m) {
     if (!m || !alloc) {
         return;
     }
@@ -148,6 +162,6 @@ void matx_coo_sparse_c64_destroy(matx_coo_c64_t* m, const matx_alloc_t* alloc) {
         m->handle_mkl.impl = NULL;
         m->handle_mkl.valid = -1;
     }
-	matx_csc_sparse_c64_destroy(&m->handle_csc, alloc);
+	matx_csc_sparse_c64_destroy(alloc, &m->handle_csc);
     memset(m, 0, sizeof(*m));
 }

@@ -2,11 +2,13 @@
 #include "matx/matx_func.h"
 #include <string.h>
 
-matx_status_t matx_dense_f64_create(matx_dense_f64_t* out,
+matx_status_t matx_dense_f64_create(
+	const matx_alloc_t* alloc,
+	matx_dense_f64_t* out,
+	matx_layout_t layout,
 	matx_int64_t rows,
 	matx_int64_t cols,
-	matx_layout_t layout,
-	const matx_alloc_t* alloc) {
+	matx_double* data) {
 	if (!out || rows == 0 || cols == 0) return MATX_ERR_INVALID_ARG;
 	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
 	if (!alloc) return MATX_ERR_INVALID_ARG;
@@ -23,6 +25,10 @@ matx_status_t matx_dense_f64_create(matx_dense_f64_t* out,
 	if (!out->data) {
 		memset(out, 0, sizeof(*out));
 		return MATX_ERR_OUT_OF_MEMORY;
+	}
+	if (data != NULL)
+	{
+		memcpy(out->data, data, sizeof(matx_double) * out->nrows * out->ncols);
 	}
 	return MATX_OK;
 }
@@ -51,7 +57,7 @@ matx_status_t matx_dense_f64_wrap(matx_dense_f64_t* out,
 	return MATX_OK;
 }
 
-void matx_dense_f64_destroy(matx_dense_f64_t* m, const matx_alloc_t* alloc) {
+void matx_dense_f64_destroy(const matx_alloc_t* alloc, matx_dense_f64_t* m) {
 	if (!m) return;
 	if ((m->flags & 1u) != 0u && m->data) {
 		if (alloc) matx_free(alloc, m->data);

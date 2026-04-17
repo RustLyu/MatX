@@ -2,11 +2,15 @@
 #include "matx/matx_func.h"
 #include <string.h>
 
-matx_status_t matx_coo_sparse_f64_create(matx_coo_f64_t* out,
+matx_status_t matx_coo_sparse_f64_create(
+    const matx_alloc_t* alloc,
+    matx_coo_f64_t* out,
     matx_int64_t nrows,
     matx_int64_t ncols,
     matx_int64_t nnz,
-    const matx_alloc_t* alloc) {
+    matx_int64_t* ap,
+    matx_int64_t* ai,
+    matx_double* ax) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
         return MATX_ERR_INVALID_ARG;
     }
@@ -24,6 +28,12 @@ matx_status_t matx_coo_sparse_f64_create(matx_coo_f64_t* out,
         memset(out, 0, sizeof(*out));
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    if (ap != NULL)
+        memcpy(rows, ap, sizeof(matx_int64_t) * nnz);
+    if (ai != NULL)
+        memcpy(cols, ai, sizeof(matx_int64_t) * nnz);
+    if (ax != NULL)
+        memcpy(values_buf, ax, sizeof(matx_double) * nnz);
 
     out->nrows = nrows;
     out->ncols = ncols;
@@ -36,11 +46,12 @@ matx_status_t matx_coo_sparse_f64_create(matx_coo_f64_t* out,
     return MATX_OK;
 }
 
-matx_status_t matx_csc_sparse_f64_create(matx_csc_f64_t* out,
+matx_status_t matx_csc_sparse_f64_create(
+    const matx_alloc_t* alloc,
+    matx_csc_f64_t* out,
     matx_int64_t nrows,
     matx_int64_t ncols,
-    matx_int64_t nnz,
-    const matx_alloc_t* alloc) {
+    matx_int64_t nnz) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
         return MATX_ERR_INVALID_ARG;
     }
@@ -102,7 +113,7 @@ matx_status_t matx_csc_sparse_f64_wrap(matx_csc_f64_t* out,
 }
 
 
-void matx_csc_sparse_f64_destroy(matx_csc_f64_t* m, const matx_alloc_t* alloc) {
+void matx_csc_sparse_f64_destroy(const matx_alloc_t* alloc, matx_csc_f64_t* m) {
     if (!m || !alloc) {
         return;
     }
@@ -116,7 +127,7 @@ void matx_csc_sparse_f64_destroy(matx_csc_f64_t* m, const matx_alloc_t* alloc) {
     memset(m, 0, sizeof(*m));
 }
 
-void matx_coo_sparse_f64_destroy(matx_coo_f64_t* m, const matx_alloc_t* alloc) {
+void matx_coo_sparse_f64_destroy(const matx_alloc_t* alloc, matx_coo_f64_t* m) {
     if (!m || !alloc) {
         return;
     }
@@ -158,6 +169,6 @@ void matx_coo_sparse_f64_destroy(matx_coo_f64_t* m, const matx_alloc_t* alloc) {
     }
 
     // TODO:DESTORY handle_csc if valid
-    matx_csc_sparse_f64_destroy(&m->handle_csc, alloc);
+    matx_csc_sparse_f64_destroy(alloc, &m->handle_csc);
     memset(m, 0, sizeof(*m));
 }

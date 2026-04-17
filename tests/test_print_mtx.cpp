@@ -65,13 +65,13 @@ TEST(print, sparse_complex_4x4_print) {
 TEST(print, dense_complex_4x4_print) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_dense_c64_t A;
-	ASSERT_EQ(matx_dense_c64_create(&A, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+	ASSERT_EQ(matx_dense_c64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
 	for (size_t i = 0; i < 16; ++i) {
 		A.data[i].real = (double)i;
 		A.data[i].imag = 0.0;
 	}
 	matx_print_dense_mtx_c64(&A, "dense_complex_4x4_print.txt");
-	matx_dense_c64_destroy(&A, &a);
+	matx_dense_c64_destroy(&a, &A);
 }
 
 TEST(print, dense_real_4x4_print) {
@@ -84,28 +84,28 @@ TEST(print, dense_real_4x4_print) {
 
 	matx_alloc_t a = matx_alloc_default();
 	matx_dense_f64_t A;
-	ASSERT_EQ(matx_dense_f64_create(&A, 4, 4, MATX_COL_MAJOR, &a), MATX_OK);
+	ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
 	fill_dense_f64_4x4(&A, 1.0);
 	matx_print_dense_mtx_f64(&A, "dense_real_4x4_print.txt");
-	matx_dense_f64_destroy(&A, &a);
+	matx_dense_f64_destroy(&a, &A);
 }
 
 TEST(print, vec_real_4x4_print) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_vec_f64_t x;
-	ASSERT_EQ(matx_vec_f64_create(&x, 4, &a), MATX_OK);
+	ASSERT_EQ(matx_vec_f64_create(&a, &x, 4), MATX_OK);
 	x.data[0] = 1.0;
 	x.data[1] = 2.0;
 	x.data[2] = 3.0;
 	x.data[3] = 9.0;
 	matx_print_vec_f64(&x, "vec_real_4x4_print.txt");
-	matx_vec_f64_destroy(&x, &a);
+	matx_vec_f64_destroy(&a, &x);
 }
 
 TEST(print, vec_complex_4x4_print) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_vec_c64_t x;
-	ASSERT_EQ(matx_vec_c64_create(&x, 4, &a), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&a, &x, 4), MATX_OK);
 
 	for (matx_int64_t i = 0; i < 4; ++i)
 	{
@@ -113,5 +113,5 @@ TEST(print, vec_complex_4x4_print) {
 		x.data[i].imag = 1.0 * i * 3.0f;
 	}
 	matx_print_vec_c64(&x, "vec_complex_4x4_print.txt");
-	matx_vec_c64_destroy(&x, &a);
+	matx_vec_c64_destroy(&a, &x);
 }

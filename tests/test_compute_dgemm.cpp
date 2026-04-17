@@ -17,9 +17,9 @@ static void fill_col_major(matx_dense_f64_t* M, double base) {
 TEST(compute, dgemm_reference) {
   matx_alloc_t a = matx_alloc_default();
   matx_dense_f64_t A, B, C;
-  ASSERT_EQ(matx_dense_f64_create(&A, 2, 3, MATX_COL_MAJOR, &a), MATX_OK);
-  ASSERT_EQ(matx_dense_f64_create(&B, 3, 4, MATX_COL_MAJOR, &a), MATX_OK);
-  ASSERT_EQ(matx_dense_f64_create(&C, 2, 4, MATX_COL_MAJOR, &a), MATX_OK);
+  ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 2, 3, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_f64_create(&a, &B, MATX_COL_MAJOR, 3, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_f64_create(&a, &C, MATX_COL_MAJOR, 2, 4, NULL), MATX_OK);
 
   fill_col_major(&A, 1.0);
   fill_col_major(&B, 2.0);
@@ -39,8 +39,8 @@ TEST(compute, dgemm_reference) {
   const double expected00 = a00 * b00 + a01 * b10 + a02 * b20;
   EXPECT_NEAR(C.data[0 + 0 * C.stride], expected00, 1e-12);
 
-  matx_dense_f64_destroy(&A, &a);
-  matx_dense_f64_destroy(&B, &a);
-  matx_dense_f64_destroy(&C, &a);
+  matx_dense_f64_destroy(&a, &A);
+  matx_dense_f64_destroy(&a, &B);
+  matx_dense_f64_destroy(&a, &C);
 }
 
