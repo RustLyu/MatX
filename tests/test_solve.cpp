@@ -167,8 +167,8 @@ TEST(solve, dense_complex_4x4_factor_solve) {
 	}
 
 	matx_vec_c64_t b, x;
-	ASSERT_EQ(matx_vec_c64_create(&a, &b, 4), MATX_OK);
-	ASSERT_EQ(matx_vec_c64_create(&a, &x, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&a, &b, NULL, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&a, &x, NULL, 4), MATX_OK);
 	b.data[0] = {4.0, 0.0};
 	b.data[1] = {6.0, 0.0};
 	b.data[2] = {8.0, 0.0};
@@ -217,8 +217,8 @@ TEST(solve, sparse_complex_4x4_factor_solve) {
 	matx_csc_sparse_c64_create(&alloc, &coo_A.handle_csc, 4, 4, nnz);
 
 	matx_vec_c64_t b, x;
-	ASSERT_EQ(matx_vec_c64_create(&alloc, &b, 4), MATX_OK);
-	ASSERT_EQ(matx_vec_c64_create(&alloc, &x, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&alloc, &b, NULL, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&alloc, &x, NULL, 4), MATX_OK);
 	b.data[0] = {4.0, 0.0};
 	b.data[1] = {6.0, 0.0};
 	b.data[2] = {8.0, 0.0};

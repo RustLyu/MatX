@@ -57,8 +57,8 @@ TEST(compute_dense, gemv_f64_4x4) {
   matx_dense_f64_t A;
   matx_vec_f64_t x, y;
   ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, 4), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &y, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_f64_create(&a, &x, NULL, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_f64_create(&a, &y, NULL, 4), MATX_OK);
   fill_dense_f64_4x4(&A, 1.0);
   x.data[0] = 1.0;
   x.data[1] = 0.0;

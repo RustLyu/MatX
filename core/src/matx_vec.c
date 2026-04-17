@@ -5,6 +5,7 @@
 matx_status_t matx_vec_f64_create(
     const matx_alloc_t* alloc,
     matx_vec_f64_t* out,
+    matx_double* data,
     matx_int64_t n) {
   if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
   memset(out, 0, sizeof(*out));
@@ -15,6 +16,10 @@ matx_status_t matx_vec_f64_create(
   if (!out->data) {
     memset(out, 0, sizeof(*out));
     return MATX_ERR_OUT_OF_MEMORY;
+  }
+  if (data != NULL)
+  {
+      memcpy(out->data, data, sizeof(matx_double) * out->n);
   }
   return MATX_OK;
 }
@@ -39,7 +44,9 @@ void matx_vec_f64_destroy(const matx_alloc_t* alloc, matx_vec_f64_t* v) {
   memset(v, 0, sizeof(*v));
 }
 
-matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc, matx_vec_c64_t* out,
+matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc, 
+    matx_vec_c64_t* out,
+    matx_complex_f64* data,
     matx_int64_t n) {
   if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
   memset(out, 0, sizeof(*out));
@@ -51,6 +58,12 @@ matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc, matx_vec_c64_t* out
     memset(out, 0, sizeof(*out));
     return MATX_ERR_OUT_OF_MEMORY;
   }
+
+  if (data != NULL)
+  {
+      memcpy(out->data, data, sizeof(matx_complex_f64) * out->n);
+  }
+
   return MATX_OK;
 }
 

@@ -14,7 +14,9 @@ extern "C" {
 	MATX_API void* matx_malloc(const matx_alloc_t* a, size_t size);
 	MATX_API void matx_free(const matx_alloc_t* a, void* ptr);
 
-	MATX_API matx_status_t matx_vec_f64_create(const matx_alloc_t* alloc, matx_vec_f64_t* out,
+	MATX_API matx_status_t matx_vec_f64_create(const matx_alloc_t* alloc, 
+		matx_vec_f64_t* out, 
+		matx_double* data,
 		matx_int64_t n);
 
 	MATX_API matx_status_t matx_vec_f64_wrap(matx_vec_f64_t* out,
@@ -44,6 +46,7 @@ extern "C" {
 	MATX_API matx_status_t matx_vec_c64_create(
 		const matx_alloc_t* alloc,
 		matx_vec_c64_t* out,
+		matx_complex_f64* data,
 		matx_int64_t n);
 
 	MATX_API matx_status_t matx_vec_c64_wrap(matx_vec_c64_t* out,

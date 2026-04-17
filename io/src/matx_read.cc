@@ -136,7 +136,7 @@ matx_status_t matx_read_vec_f64(const matx_alloc_t* alloc, matx_vec_f64_t* vec, 
     matx_int64_t n = -1;
     is >> n;
 
-    matx_vec_f64_create(alloc, vec, n);
+    matx_vec_f64_create(alloc, vec, NULL, n);
     for (matx_int64_t i = 0; i < n; ++i)
     {
         is >> vec->data[i];
@@ -161,7 +161,7 @@ matx_status_t matx_read_vec_c64(const matx_alloc_t* alloc, matx_vec_c64_t* vec, 
     matx_int64_t n = -1;
     is >> n;
 
-    matx_vec_c64_create(alloc, vec, n);
+    matx_vec_c64_create(alloc, vec, NULL, n);
     for (matx_int64_t i = 0; i < n; ++i)
     {
         is >> vec->data[i].real >> vec->data[i].imag;

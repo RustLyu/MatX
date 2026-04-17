@@ -9,8 +9,8 @@ extern "C" {
 TEST(compute_vec, axpy_f64) {
   matx_alloc_t a = matx_alloc_default();
   matx_vec_f64_t x, y;
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, 4), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &y, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_f64_create(&a, &x, NULL, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_f64_create(&a, &y, NULL, 4), MATX_OK);
   x.data[0] = 1.0;
   x.data[1] = 2.0;
   x.data[2] = 3.0;
@@ -39,8 +39,8 @@ TEST(compute_vec, axpy_f64) {
 TEST(compute_vec, axpy_c64) {
   matx_alloc_t a = matx_alloc_default();
   matx_vec_c64_t x, y;
-  ASSERT_EQ(matx_vec_c64_create(&a, &x, 4), MATX_OK);
-  ASSERT_EQ(matx_vec_c64_create(&a, &y, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_c64_create(&a, &x, NULL, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_c64_create(&a, &y, NULL, 4), MATX_OK);
   x.data[0] = {1.0, 0.0};
   x.data[1] = {0.0, 1.0};
   x.data[2] = {1.0, 1.0};

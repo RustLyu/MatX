@@ -93,7 +93,7 @@ TEST(print, dense_real_4x4_print) {
 TEST(print, vec_real_4x4_print) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_vec_f64_t x;
-	ASSERT_EQ(matx_vec_f64_create(&a, &x, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_f64_create(&a, &x, NULL, 4), MATX_OK);
 	x.data[0] = 1.0;
 	x.data[1] = 2.0;
 	x.data[2] = 3.0;
@@ -105,7 +105,7 @@ TEST(print, vec_real_4x4_print) {
 TEST(print, vec_complex_4x4_print) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_vec_c64_t x;
-	ASSERT_EQ(matx_vec_c64_create(&a, &x, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_c64_create(&a, &x, NULL, 4), MATX_OK);
 
 	for (matx_int64_t i = 0; i < 4; ++i)
 	{

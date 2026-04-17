@@ -31,8 +31,8 @@ TEST(compute_sparse, spmv_csc_f64_4x4) {
   };
 
   matx_vec_f64_t x, y;
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, 4), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &y, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_f64_create(&a, &x, NULL, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_f64_create(&a, &y, NULL, 4), MATX_OK);
   x.data[0] = 1.0;
   x.data[1] = 1.0;
   x.data[2] = 1.0;
@@ -150,8 +150,8 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
         .handle_aocl = {.impl = NULL, .type = MATX_HANDLE_TYPE_AOCL_MATRIX, .valid = -1}
     };
     matx_vec_c64_t x, y;
-    ASSERT_EQ(matx_vec_c64_create(&a, &x, cols), MATX_OK);
-    ASSERT_EQ(matx_vec_c64_create(&a, &y, rows), MATX_OK);
+    ASSERT_EQ(matx_vec_c64_create(&a, &x, NULL, cols), MATX_OK);
+    ASSERT_EQ(matx_vec_c64_create(&a, &y, NULL, rows), MATX_OK);
 
     for (int i = 0; i < cols; ++i) {
         x.data[i].real = 1.0;
