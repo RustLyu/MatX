@@ -7,7 +7,7 @@
 #include <iostream>
 #include <iomanip>
 
-matx_status_t matx_read_dense_mtx_f64(matx_dense_f64_t* mtx, const char* file, const matx_alloc_t* alloc)
+matx_status_t matx_read_dense_mtx_f64(const matx_alloc_t* alloc, matx_dense_f64_t* mtx, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -38,7 +38,7 @@ matx_status_t matx_read_dense_mtx_f64(matx_dense_f64_t* mtx, const char* file, c
     return ret;
 }
 
-MATX_API matx_status_t matx_read_dense_mtx_c64(matx_dense_c64_t* mtx, const char* file, const matx_alloc_t* alloc)
+matx_status_t matx_read_dense_mtx_c64(const matx_alloc_t* alloc, matx_dense_c64_t* mtx, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -69,7 +69,7 @@ MATX_API matx_status_t matx_read_dense_mtx_c64(matx_dense_c64_t* mtx, const char
     return ret;
 }
 
-MATX_API matx_status_t matx_read_sparse_mtx_f64(matx_coo_f64_t* mtx, const char* file, const matx_alloc_t* alloc)
+matx_status_t matx_read_sparse_mtx_f64(const matx_alloc_t* alloc, matx_coo_f64_t* mtx, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -96,7 +96,7 @@ MATX_API matx_status_t matx_read_sparse_mtx_f64(matx_coo_f64_t* mtx, const char*
     return ret;
 }
 
-MATX_API matx_status_t matx_read_sparse_mtx_c64(matx_coo_c64_t* mtx, const char* file, const matx_alloc_t* alloc)
+matx_status_t matx_read_sparse_mtx_c64(const matx_alloc_t* alloc, matx_coo_c64_t* mtx, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -123,7 +123,7 @@ MATX_API matx_status_t matx_read_sparse_mtx_c64(matx_coo_c64_t* mtx, const char*
     return ret;
 }
 
-MATX_API matx_status_t matx_read_vec_f64(matx_vec_f64_t* vec, const char* file, const matx_alloc_t* alloc)
+matx_status_t matx_read_vec_f64(const matx_alloc_t* alloc, matx_vec_f64_t* vec, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -148,7 +148,7 @@ MATX_API matx_status_t matx_read_vec_f64(matx_vec_f64_t* vec, const char* file, 
     return ret;
 }
 
-MATX_API matx_status_t matx_read_vec_c64(matx_vec_c64_t* vec, const char* file, const matx_alloc_t* alloc)
+matx_status_t matx_read_vec_c64(const matx_alloc_t* alloc, matx_vec_c64_t* vec, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
