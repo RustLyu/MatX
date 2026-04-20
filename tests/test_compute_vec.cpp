@@ -21,7 +21,7 @@ TEST(compute_vec, axpy_f64) {
   y->data[2] = 0.3;
   y->data[3] = 0.4;
 
-  matx_dense_backend_t blas = matx_blas_make_reference();
+  matx_dense_backend_t blas = matx_blas_default();
   matx_status_t st = matx_axpy_f64(&blas, 2.0, x, y);
   if (st == MATX_ERR_NOT_SUPPORTED) {
     matx_vec_f64_destroy(&a, x);
@@ -51,7 +51,7 @@ TEST(compute_vec, axpy_c64) {
   y->data[2] = {0.0, 0.0};
   y->data[3] = {1.0, 1.0};
 
-  matx_dense_backend_t blas = matx_blas_make_reference();
+  matx_dense_backend_t blas = matx_blas_default();
   matx_complex_f64 alpha = {2.0, 0.0};
   matx_status_t st = matx_axpy_c64(&blas, alpha, x, y);
   if (st == MATX_ERR_NOT_SUPPORTED) {

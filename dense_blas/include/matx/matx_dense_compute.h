@@ -121,8 +121,6 @@ extern "C" {
 		matx_dense_vtable_t vt;
 	} matx_dense_backend_t;
 
-	MATX_API matx_dense_backend_t matx_blas_make_reference(void);
-
 	// Initialize default backend based on MATX_BLAS_BACKEND (AUTO picks a reasonable default at build time).
 	MATX_API  matx_dense_backend_t matx_blas_default(void);
 	MATX_API  const char* matx_blas_backend_name(matx_dense_backend_kind_t k);

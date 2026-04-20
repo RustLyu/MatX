@@ -19,7 +19,7 @@ TEST(compute_dense, geadd_f64_4x4) {
   ASSERT_EQ(matx_dense_f64_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
   fill_dense_f64_4x4(A, 1.0);
   fill_dense_f64_4x4(B, 2.0);
-  matx_dense_backend_t blas = matx_blas_make_reference();
+  matx_dense_backend_t blas = matx_blas_default();
   matx_status_t st = matx_geadd_f64(&blas, 3.0, A, 0.0, B);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(B->data[0], 3.0 * 1.0, 1e-12);
@@ -41,7 +41,7 @@ TEST(compute_dense, geadd_c64_4x4) {
     B->data[i].imag = 0.0;
   }
 
-  matx_dense_backend_t blas = matx_blas_make_reference();
+  matx_dense_backend_t blas = matx_blas_default();
   matx_complex_f64 alpha = {2.0, 0.0};
   matx_complex_f64 beta = {0.0, 0.0};
   matx_status_t st = matx_geadd_c64(&blas, alpha, A, beta, B);
