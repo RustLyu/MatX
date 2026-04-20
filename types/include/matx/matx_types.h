@@ -11,12 +11,12 @@ extern "C" {
 
 #ifdef MATX_BUILD_SHARED
 	#ifdef MATX_PLATFORM_WINDOWS
-		#ifdef MATX_AOCL_EXPORTS
+		#ifdef matx_types_EXPORTS
 		#define MATX_API __declspec(dllexport)
 		#else
 		#define MATX_API __declspec(dllimport)
 		#endif
-		#else
+	#else
 		#define MATX_API
 	#endif
 #else

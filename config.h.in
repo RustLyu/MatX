@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // auto generate by cmake
 #cmakedefine MATX_ENABLE_OPENBLAS @MATX_ENABLE_OPENBLAS@
@@ -10,3 +10,4 @@
 #cmakedefine MATX_ENABLE_AOCL_SPARSE @MATX_ENABLE_AOCL_SPARSE@
 #cmakedefine BUILD_SHARED_LIBS @BUILD_SHARED_LIBS@
 #cmakedefine CPU_PLATFORM @CPU_PLATFORM@
+#cmakedefine MATX_BUILD_SHARED @MATX_BUILD_SHARED@

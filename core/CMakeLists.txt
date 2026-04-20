@@ -16,7 +16,7 @@ add_library(MatX::core ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
     MatX::types
-    MatX::tools
+    #MatX::tools
 )
 
 target_include_directories(${PROJECT_NAME}

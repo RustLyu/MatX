@@ -2,7 +2,6 @@
 
 add_library(${PROJECT_NAME}
 	src/matx_version.c
-    src/matx_types.c
 )
 
 add_library(MatX::types ALIAS ${PROJECT_NAME})
