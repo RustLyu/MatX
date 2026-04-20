@@ -48,9 +48,17 @@ extern "C" {
 	typedef double matx_double;
 	typedef bool matx_bool;
 #elif __linux__
-    typedef int64_t matx_int64_t;
-    typedef double matx_double;
+	typedef int64_t matx_int64_t;
+	typedef double matx_double;
 	typedef bool matx_bool;
+#endif
+
+#if defined(_MSC_VER)
+	#define MATX_ALIGNED(x) __declspec(align(x))
+#elif defined(__GNUC__) || defined(__clang__)
+	#define MATX_ALIGNED(x) __attribute__((aligned(x)))
+#else
+	#define MATX_ALIGNED(x)
 #endif
 
 	// ---- Alloc ----
@@ -87,7 +95,8 @@ extern "C" {
 	}matx_handle_t;
 
 	// ---- Real/complex scalar ----
-	typedef struct matx_complex_f64_t {
+	#define MATX_COMPLEX_ALIGNMENT 16
+	typedef struct MATX_ALIGNED(MATX_COMPLEX_ALIGNMENT) matx_complex_f64_t {
 		matx_double real;
 		matx_double imag;
 	} matx_complex_f64_t;
