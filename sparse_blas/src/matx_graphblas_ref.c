@@ -1,6 +1,6 @@
 ﻿#include "matx/matx_types.h"
 #include "matx/matx_func.h"
-
+#include "matx/matx_types_internal.h"
 #include "matx/matx_sparse_compute.h"
 
 #include <limits.h>
@@ -18,10 +18,10 @@
 
 matx_status_t ref_spmv_c64_grb(
 	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_vec_c64_t* x,
+	matx_coo_c64_t A,
+	matx_vec_c64_t x,
 	matx_complex_f64 beta,
-	matx_vec_c64_t* y)
+	matx_vec_c64_t y)
 {
 	if (!A || !x || !y)
 		return MATX_ERR_INVALID_ARG;
@@ -86,10 +86,10 @@ matx_status_t ref_spmv_c64_grb(
 
 matx_status_t ref_spmm_c64_grb(
 	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_dense_c64_t* B,
+	matx_coo_c64_t A,
+	matx_dense_c64_t B,
 	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+	matx_dense_c64_t C)
 {
 	if (!A || !B || !C)
 		return MATX_ERR_INVALID_ARG;
@@ -153,10 +153,10 @@ matx_status_t ref_spmm_c64_grb(
 
 matx_status_t ref_spmv_f64_grb(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_vec_f64_t* x,
+	matx_coo_f64_t A,
+	matx_vec_f64_t x,
 	matx_double beta,
-	matx_vec_f64_t* y)
+	matx_vec_f64_t y)
 {
 	if (!A || !x || !y)
 		return MATX_ERR_INVALID_ARG;
@@ -224,10 +224,10 @@ matx_status_t ref_spmv_f64_grb(
 
 matx_status_t ref_spmm_f64_grb(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_dense_f64_t* B,
+	matx_coo_f64_t A,
+	matx_dense_f64_t B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_f64_t C)
 {
 	if (!A || !B || !C)
 		return MATX_ERR_INVALID_ARG;
@@ -284,10 +284,10 @@ matx_status_t ref_spmm_f64_grb(
 
 matx_status_t ref_dsp2md_f64_grb(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_coo_f64_t* B,
+	matx_coo_f64_t A,
+	matx_coo_f64_t B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_f64_t C)
 {
 	if (!A || !B || !C)
 		return MATX_ERR_INVALID_ARG;
@@ -344,10 +344,10 @@ matx_status_t ref_dsp2md_f64_grb(
 
 matx_status_t ref_zsp2md_c64_grb(
 	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_coo_c64_t* B,
+	matx_coo_c64_t A,
+	matx_coo_c64_t B,
 	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+	matx_dense_c64_t C)
 {
 	if (!A || !B || !C)
 		return MATX_ERR_INVALID_ARG;
@@ -404,8 +404,8 @@ matx_status_t ref_zsp2md_c64_grb(
 }
 
 matx_status_t ref_transpose_f64_grb(
-	matx_coo_f64_t* A, 
-	matx_coo_f64_t* out)
+	matx_coo_f64_t A, 
+	matx_coo_f64_t out)
 {
 	if (!A)
 		return MATX_ERR_INVALID_ARG;
@@ -427,8 +427,8 @@ matx_status_t ref_transpose_f64_grb(
 }
 
 matx_status_t ref_transpose_c64_grb(
-	matx_coo_f64_t* A, 
-	matx_coo_f64_t* out)
+	matx_coo_f64_t A, 
+	matx_coo_f64_t out)
 {
 	if (!A || !out)
 		return MATX_ERR_INVALID_ARG;
@@ -452,8 +452,8 @@ matx_status_t ref_transpose_c64_grb(
 	return MATX_OK;
 }
 
-matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t* A,
-	matx_coo_c64_t* out)
+matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t A,
+	matx_coo_c64_t out)
 {
 	if (!A)
 		return MATX_ERR_INVALID_ARG;
@@ -486,8 +486,8 @@ matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t* A,
 }
 
 matx_status_t ref_norm1_grb(
-	matx_vec_f64_t* A,
-	matx_double* out)
+	matx_vec_f64_t A,
+	matx_double out)
 {
 	if (A->handle_grb.valid <= 0)
 	{
@@ -502,7 +502,7 @@ matx_status_t ref_norm1_grb(
 }
 
 matx_status_t ref_norm2_grb(
-	matx_vec_f64_t* A,
+	matx_vec_f64_t A,
 	matx_double* out)
 {
 	if (A->handle_grb.valid <= 0)
@@ -521,7 +521,7 @@ matx_status_t ref_norm2_grb(
 }
 
 matx_status_t ref_norminf_grb(
-	matx_vec_f64_t* A,
+	matx_vec_f64_t A,
 	matx_double* out)
 {
 	if (A->handle_grb.valid <= 0)

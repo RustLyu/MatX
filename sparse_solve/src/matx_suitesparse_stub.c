@@ -1,4 +1,5 @@
 ﻿#include "matx/matx_sparse_solve.h"
+#include "matx/matx_types_internal.h"
 
 #include <limits.h>
 
@@ -20,7 +21,7 @@ struct matx_factor_sparse_c64_t {
 };
 
 // Sparse real: KLU-based ---------------------------------------------------
-static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
+static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 	matx_factor_sparse_f64_t** out_F) {
 	if (!A || !out_F)
 	{
@@ -34,8 +35,7 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 		MATX_ERROR("coo_to_csc_f64 error:%d", st);
 		return st;
 	}
-
-	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->handle_csc.values)
+	if (!A->handle_csc->col_ptr || !A->handle_csc->row_ind || !A->handle_csc->values)
 	{
 		MATX_ERROR("csc pointer is null error");
 		return MATX_ERR_INVALID_ARG;
@@ -65,8 +65,8 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 	klu_l_defaults(&F->common);
 
 	F->S = klu_l_analyze(F->n,
-		A->handle_csc.col_ptr,
-		A->handle_csc.row_ind,
+		A->handle_csc->col_ptr,
+		A->handle_csc->row_ind,
 		&F->common);
 	if (!F->S) {
 		MATX_ERROR("call klu_l_analyze error:%d", F->common.status);
@@ -83,9 +83,9 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t* A,
 		return st;
 	}
 
-	F->N = klu_l_factor(A->handle_csc.col_ptr,
-		A->handle_csc.row_ind,
-		A->handle_csc.values,
+	F->N = klu_l_factor(A->handle_csc->col_ptr,
+		A->handle_csc->row_ind,
+		A->handle_csc->values,
 		F->S,
 		&F->common);
 
@@ -133,7 +133,7 @@ static void ss_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F) {
 
 
 static matx_status_t ss_factor_csc_c64(
-	matx_coo_c64_t* A,
+	matx_coo_c64_t A,
 	matx_factor_sparse_c64_t** out_F)
 {
 	if (!A || !out_F)
@@ -149,7 +149,7 @@ static matx_status_t ss_factor_csc_c64(
 		return st;
 	}
 
-	if (!A->handle_csc.col_ptr || !A->handle_csc.row_ind || !A->handle_csc.values)
+	if (!A->handle_csc->col_ptr || !A->handle_csc->row_ind || !A->handle_csc->values)
 	{
 		MATX_ERROR("csc pointer error");
 		return MATX_ERR_INVALID_ARG;
@@ -179,8 +179,8 @@ static matx_status_t ss_factor_csc_c64(
 
 	F->S = klu_l_analyze(
 		F->n,
-		A->handle_csc.col_ptr,
-		A->handle_csc.row_ind,
+		A->handle_csc->col_ptr,
+		A->handle_csc->row_ind,
 		&F->common);
 
 	if (!F->S)
@@ -197,9 +197,9 @@ static matx_status_t ss_factor_csc_c64(
 	}
 
 	F->N = klu_zl_factor(
-		A->handle_csc.col_ptr,
-		A->handle_csc.row_ind,
-		(double*)A->handle_csc.values,
+		A->handle_csc->col_ptr,
+		A->handle_csc->row_ind,
+		(double*)A->handle_csc->values,
 		F->S,
 		&F->common);
 
@@ -220,8 +220,8 @@ fail:
 
 static matx_status_t ss_solve_csc_c64(
 	matx_factor_sparse_c64_t* F,
-	const matx_vec_c64_t* b,
-	matx_vec_c64_t* x)
+	const matx_vec_c64_t b,
+	matx_vec_c64_t x)
 {
 	if (!F || !b || !x)
 		return MATX_ERR_INVALID_ARG;

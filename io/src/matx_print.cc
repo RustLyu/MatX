@@ -1,10 +1,11 @@
 ﻿#include "matx/matx_print.h"
+#include "matx/matx_types_internal.h"
 
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 
-void matx_print_dense_mtx_f64(const matx_dense_f64_t* mtx, const char* file)
+void matx_print_dense_mtx_f64(const matx_dense_f64_t mtx, const char* file)
 {
     if (!mtx || !mtx->data) 
         return;
@@ -25,7 +26,7 @@ void matx_print_dense_mtx_f64(const matx_dense_f64_t* mtx, const char* file)
     os.close();
 }
 
-void matx_print_dense_mtx_c64(const matx_dense_c64_t* mtx, const char* file)
+void matx_print_dense_mtx_c64(const matx_dense_c64_t mtx, const char* file)
 {
     if (!mtx || !mtx->data)
         return;
@@ -46,7 +47,7 @@ void matx_print_dense_mtx_c64(const matx_dense_c64_t* mtx, const char* file)
     os.close();
 }
 
-void matx_print_sparse_mtx_f64(const matx_coo_f64_t* mtx, const char* file)
+void matx_print_sparse_mtx_f64(const matx_coo_f64_t mtx, const char* file)
 {
     if (!mtx || !mtx->values)
         return;
@@ -62,7 +63,7 @@ void matx_print_sparse_mtx_f64(const matx_coo_f64_t* mtx, const char* file)
     os.close();
 }
 
-void matx_print_sparse_mtx_c64(const matx_coo_c64_t* mtx, const char* file)
+void matx_print_sparse_mtx_c64(const matx_coo_c64_t mtx, const char* file)
 {
     if (!mtx || !mtx->values)
         return;
@@ -78,7 +79,7 @@ void matx_print_sparse_mtx_c64(const matx_coo_c64_t* mtx, const char* file)
     os.close();
 }
 
-void matx_print_vec_f64(const matx_vec_f64_t* vec, const char* file)
+void matx_print_vec_f64(const matx_vec_f64_t vec, const char* file)
 {
     if (!vec || !vec->data)
         return;
@@ -94,7 +95,7 @@ void matx_print_vec_f64(const matx_vec_f64_t* vec, const char* file)
     os.close();
 }
 
-void matx_print_vec_c64(const matx_vec_c64_t* vec, const char* file)
+void matx_print_vec_c64(const matx_vec_c64_t vec, const char* file)
 {
     if (!vec || !vec->data)
         return;

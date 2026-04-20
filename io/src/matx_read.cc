@@ -1,7 +1,7 @@
-﻿
-#include "matx/matx_read.h"
+﻿#include "matx/matx_read.h"
 #include "matx/matx_func.h"
 #include "matx/matx_log.h"
+#include "matx/matx_types_internal.h"
 
 #include <fstream>
 #include <iostream>
@@ -23,13 +23,13 @@ matx_status_t matx_read_dense_mtx_f64(const matx_alloc_t* alloc, matx_dense_f64_
     is >> m >> n >> layout;
 
     matx_dense_f64_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
-    mtx->stride = (mtx->layout == MATX_ROW_MAJOR) ? mtx->ncols : mtx->nrows;
-    for (matx_int64_t i = 0; i < mtx->nrows; ++i) {
-        for (matx_int64_t j = 0; j < mtx->ncols; ++j) {
-            matx_int64_t idx = (mtx->layout == MATX_ROW_MAJOR)
-                ? i * mtx->stride + j
-                : j * mtx->stride + i;
-            is >> mtx->data[idx];
+    (*mtx)->stride = ((*mtx)->layout == MATX_ROW_MAJOR) ? (*mtx)->ncols : (*mtx)->nrows;
+    for (matx_int64_t i = 0; i < (*mtx)->nrows; ++i) {
+        for (matx_int64_t j = 0; j < (*mtx)->ncols; ++j) {
+            matx_int64_t idx = ((*mtx)->layout == MATX_ROW_MAJOR)
+                ? i * (*mtx)->stride + j
+                : j * (*mtx)->stride + i;
+            is >> (*mtx)->data[idx];
         }
     }
 
@@ -54,13 +54,13 @@ matx_status_t matx_read_dense_mtx_c64(const matx_alloc_t* alloc, matx_dense_c64_
     is >> m >> n >> layout;
 
     matx_dense_c64_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
-    mtx->stride = (mtx->layout == MATX_ROW_MAJOR) ? mtx->ncols : mtx->nrows;
-    for (matx_int64_t i = 0; i < mtx->nrows; ++i) {
-        for (matx_int64_t j = 0; j < mtx->ncols; ++j) {
-            matx_int64_t idx = (mtx->layout == MATX_ROW_MAJOR)
-                ? i * mtx->stride + j
-                : j * mtx->stride + i;
-            is >> mtx->data[idx].real >> mtx->data[idx].imag;
+    (*mtx)->stride = ((*mtx)->layout == MATX_ROW_MAJOR) ? (*mtx)->ncols : (*mtx)->nrows;
+    for (matx_int64_t i = 0; i < (*mtx)->nrows; ++i) {
+        for (matx_int64_t j = 0; j < (*mtx)->ncols; ++j) {
+            matx_int64_t idx = ((*mtx)->layout == MATX_ROW_MAJOR)
+                ? i * (*mtx)->stride + j
+                : j * (*mtx)->stride + i;
+            is >> (*mtx)->data[idx].real >> (*mtx)->data[idx].imag;
         }
     }
 
@@ -87,7 +87,7 @@ matx_status_t matx_read_sparse_mtx_f64(const matx_alloc_t* alloc, matx_coo_f64_t
     matx_coo_sparse_f64_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
     for (matx_int64_t i = 0; i < nnz; ++i) 
     {
-        is >> mtx->rows[i] >> mtx->columns[i] >> mtx->values[i];
+        is >> (*mtx)->rows[i] >> (*mtx)->columns[i] >> (*mtx)->values[i];
     }
 
     is.close();
@@ -114,7 +114,7 @@ matx_status_t matx_read_sparse_mtx_c64(const matx_alloc_t* alloc, matx_coo_c64_t
     matx_coo_sparse_c64_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
     for (matx_int64_t i = 0; i < nnz; ++i)
     {
-        is >> mtx->rows[i] >> mtx->columns[i] >> mtx->values[i].real >> mtx->values[i].imag;
+        is >> (*mtx)->rows[i] >> (*mtx)->columns[i] >> (*mtx)->values[i].real >> (*mtx)->values[i].imag;
     }
 
     is.close();
@@ -139,7 +139,7 @@ matx_status_t matx_read_vec_f64(const matx_alloc_t* alloc, matx_vec_f64_t* vec, 
     matx_vec_f64_create(alloc, vec, NULL, n);
     for (matx_int64_t i = 0; i < n; ++i)
     {
-        is >> vec->data[i];
+        is >> (*vec)->data[i];
     }
 
     is.close();
@@ -164,7 +164,7 @@ matx_status_t matx_read_vec_c64(const matx_alloc_t* alloc, matx_vec_c64_t* vec, 
     matx_vec_c64_create(alloc, vec, NULL, n);
     for (matx_int64_t i = 0; i < n; ++i)
     {
-        is >> vec->data[i].real >> vec->data[i].imag;
+        is >> (*vec)->data[i].real >> (*vec)->data[i].imag;
     }
 
     is.close();

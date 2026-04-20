@@ -18,7 +18,7 @@ matx_dense_linsolve_t matx_dense_linsolve_default(void) {
 
 // Dense real
 matx_status_t matx_factor_dense_f64(const matx_dense_linsolve_t* ls,
-                                    const matx_dense_f64_t* A,
+                                    const matx_dense_f64_t A,
                                     matx_factor_dense_f64_t** out_F) {
   if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.factor_dense_f64) return MATX_ERR_NOT_SUPPORTED;
@@ -43,7 +43,7 @@ void matx_factor_dense_f64_destroy(const matx_dense_linsolve_t* ls,
 }
 
 matx_status_t matx_solve_dense_f64(const matx_dense_linsolve_t* ls,
-                                   const matx_dense_f64_t* A,
+                                   const matx_dense_f64_t A,
                                    const matx_double* b,
     matx_double* x) {
   if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
@@ -56,7 +56,7 @@ matx_status_t matx_solve_dense_f64(const matx_dense_linsolve_t* ls,
 }
 
 matx_status_t matx_factor_dense_c64(const matx_dense_linsolve_t* ls,
-                                    const matx_dense_c64_t* A,
+                                    const matx_dense_c64_t A,
                                     matx_factor_dense_c64_t** out_F) {
   if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.factor_dense_c64) return MATX_ERR_NOT_SUPPORTED;
@@ -65,8 +65,8 @@ matx_status_t matx_factor_dense_c64(const matx_dense_linsolve_t* ls,
 
 matx_status_t matx_solve_dense_c64_factor(const matx_dense_linsolve_t* ls,
                                           const matx_factor_dense_c64_t* F,
-                                          const matx_vec_c64_t* b,
-                                          matx_vec_c64_t* x) {
+                                          const matx_vec_c64_t b,
+                                          matx_vec_c64_t x) {
   if (!ls || !F || !b || !x) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.solve_dense_c64) return MATX_ERR_NOT_SUPPORTED;
   return ls->vt.solve_dense_c64(F, b, x);
@@ -81,9 +81,9 @@ void matx_factor_dense_c64_destroy(const matx_dense_linsolve_t* ls,
 }
 
 matx_status_t matx_solve_dense_c64(const matx_dense_linsolve_t* ls,
-                                   const matx_dense_c64_t* A,
-                                   const matx_vec_c64_t* b,
-                                   matx_vec_c64_t* x) {
+                                   const matx_dense_c64_t A,
+                                   const matx_vec_c64_t b,
+                                   matx_vec_c64_t x) {
   if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
   matx_factor_dense_c64_t* F = NULL;
   matx_status_t st = matx_factor_dense_c64(ls, A, &F);

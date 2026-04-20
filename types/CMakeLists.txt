@@ -2,6 +2,7 @@
 
 add_library(${PROJECT_NAME}
 	src/matx_version.c
+    src/matx_types.c
 )
 
 add_library(MatX::types ALIAS ${PROJECT_NAME})
@@ -20,6 +21,7 @@ target_include_directories(${PROJECT_NAME}
 target_sources(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_types.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_types_internal.h>
     $<INSTALL_INTERFACE:include/matx/matx_types.h>
 )
 

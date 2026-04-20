@@ -1,5 +1,6 @@
 ﻿#include "matx/matx_dense_solve.h"
 #include "matx/matx_log.h"
+#include "matx/matx_types_internal.h"
 
 #include <limits.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@ struct matx_factor_dense_c64_t {
 };
 
 // Dense real: LU + solve using LAPACK when available -----------------------
-static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t* A,
+static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t A,
 	matx_factor_dense_f64_t** out_F) {
 	if (!A || !out_F)
 		return MATX_ERR_INVALID_ARG;
@@ -112,7 +113,7 @@ static void ss_factor_dense_f64_destroy(matx_factor_dense_f64_t* F) {
 }
 
 static matx_status_t ss_factor_dense_c64(
-	const matx_dense_c64_t* A,
+	const matx_dense_c64_t A,
 	matx_factor_dense_c64_t** out_F)
 {
 #if !(defined(MATX_HAVE_OPENBLAS) || defined(MATX_HAVE_BLIS))
@@ -171,8 +172,8 @@ static matx_status_t ss_factor_dense_c64(
 
 static matx_status_t ss_solve_dense_c64(
 	const matx_factor_dense_c64_t* F,
-	const matx_vec_c64_t* b,
-	matx_vec_c64_t* x)
+	const matx_vec_c64_t b,
+	matx_vec_c64_t x)
 {
 	if (!F || !b || !x) 
 		return MATX_ERR_INVALID_ARG;

@@ -1,5 +1,6 @@
 ﻿#include "matx/matx_sparse_compute.h"
 #include "matx/matx_log.h"
+#include "matx/matx_types_internal.h"
 
 #include <memory.h>
 #include <limits.h>
@@ -11,10 +12,10 @@
 // y = \alpha \, op(A) \, x + \beta \, y,
 matx_status_t ref_spmv_c64_aocl(
 	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_vec_c64_t* x,
+	matx_coo_c64_t A,
+	matx_vec_c64_t x,
 	matx_complex_f64 beta,
-	matx_vec_c64_t* y)
+	matx_vec_c64_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !x || !y)
@@ -63,10 +64,10 @@ matx_status_t ref_spmv_c64_aocl(
 //    C = \alpha \, op(A) \, B + \beta \, C,
 matx_status_t ref_spmm_c64_aocl(
 	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	const matx_dense_c64_t* B,
+	matx_coo_c64_t A,
+	const matx_dense_c64_t B,
 	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+	matx_dense_c64_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !B || !C)
@@ -113,10 +114,10 @@ matx_status_t ref_spmm_c64_aocl(
 // y = \alpha \, op(A) \, x + \beta \, y
 matx_status_t ref_spmv_f64_aocl(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_vec_f64_t* x,
+	matx_coo_f64_t A,
+	matx_vec_f64_t x,
 	matx_double beta,
-	matx_vec_f64_t* y)
+	matx_vec_f64_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
 
@@ -164,10 +165,10 @@ matx_status_t ref_spmv_f64_aocl(
 //C = α * A * B + β * C
 matx_status_t ref_spmm_f64_aocl(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_dense_f64_t* B,
+	matx_coo_f64_t A,
+	matx_dense_f64_t B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_f64_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !B || !C)
@@ -211,10 +212,10 @@ matx_status_t ref_spmm_f64_aocl(
 // C := α · op(A) · op(B) + β · C
 matx_status_t ref_dsp2md_f64_aocl(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_coo_f64_t* B,
+	matx_coo_f64_t A,
+	matx_coo_f64_t B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_f64_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !B || !C)
@@ -264,10 +265,10 @@ matx_status_t ref_dsp2md_f64_aocl(
 // C := α · op(A) · op(B) + β · C
 matx_status_t ref_zsp2md_c64_aocl(
 	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_coo_c64_t* B,
+	matx_coo_c64_t A,
+	matx_coo_c64_t B,
 	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+	matx_dense_c64_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !B || !C)
@@ -319,8 +320,8 @@ matx_status_t ref_zsp2md_c64_aocl(
 }
 
 matx_status_t ref_transpose_f64_aocl(
-	matx_coo_f64_t* A,
-	matx_coo_f64_t* out)
+	matx_coo_f64_t A,
+	matx_coo_f64_t out)
 {
 	if (!A)
 		return MATX_ERR_INVALID_ARG;
@@ -334,8 +335,8 @@ matx_status_t ref_transpose_f64_aocl(
 }
 
 matx_status_t ref_transpose_c64_aocl(
-	matx_coo_f64_t* A,
-	matx_coo_f64_t* out)
+	matx_coo_f64_t A,
+	matx_coo_f64_t out)
 {
 	if (!A)
 		return MATX_ERR_INVALID_ARG;
@@ -348,8 +349,8 @@ matx_status_t ref_transpose_c64_aocl(
 	return MATX_OK;
 }
 
-matx_status_t ref_conj_trans_c64_aocl(matx_coo_c64_t* A,
-	matx_coo_c64_t* out)
+matx_status_t ref_conj_trans_c64_aocl(matx_coo_c64_t A,
+	matx_coo_c64_t out)
 {
 	if (!A || !out)
 		return MATX_ERR_INVALID_ARG;

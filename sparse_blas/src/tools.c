@@ -2,6 +2,7 @@
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
 #include "matx/matx_log.h"
+#include "matx/matx_types_internal.h"
 
 #include <GraphBLAS.h>
 
@@ -40,7 +41,7 @@ void free_aocl_matrix(void* impl)
 #endif
 }
 
-size_t coo_2_grb_f64(matx_coo_f64_t* A)
+size_t coo_2_grb_f64(matx_coo_f64_t A)
 {
 	GrB_Matrix_free(A->handle_grb.impl);
 	GrB_Info info = GrB_Matrix_import_FP64(&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols, A->rows, A->columns, A->values,
@@ -57,7 +58,7 @@ size_t coo_2_grb_f64(matx_coo_f64_t* A)
 	return 0;
 }
 
-size_t create_empty_grb_f64(matx_coo_f64_t* A)
+size_t create_empty_grb_f64(matx_coo_f64_t A)
 {
 	GrB_Matrix_free(A->handle_grb.impl);
 	GrB_Info info = GrB_Matrix_new(&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols);
@@ -72,7 +73,7 @@ size_t create_empty_grb_f64(matx_coo_f64_t* A)
 	return 0;
 }
 
-size_t create_empty_grb_c64(matx_coo_c64_t* A)
+size_t create_empty_grb_c64(matx_coo_c64_t A)
 {
 	GrB_Matrix_free(A->handle_grb.impl);
 	GrB_Info info = GrB_Matrix_new(&A->handle_grb.impl, GxB_FC64, A->nrows, A->ncols);
@@ -245,7 +246,7 @@ int coo_to_csr_optimized(
 }
 
 
-size_t coo_2_aocl_f64(matx_coo_f64_t* A)
+size_t coo_2_aocl_f64(matx_coo_f64_t A)
 {
 #if MATX_HAVE_AOCL_SPARSE
 
@@ -281,7 +282,7 @@ size_t coo_2_aocl_f64(matx_coo_f64_t* A)
 	return 0;
 }
 
-size_t coo_2_aocl_c64(matx_coo_c64_t* A)
+size_t coo_2_aocl_c64(matx_coo_c64_t A)
 {
 #if MATX_HAVE_AOCL_SPARSE
 
@@ -331,7 +332,7 @@ size_t coo_2_aocl_c64(matx_coo_c64_t* A)
 	return 0;
 }
 
-size_t aocl_2_coo_c64(matx_coo_c64_t* A)
+size_t aocl_2_coo_c64(matx_coo_c64_t A)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	aoclsparse_index_base base;
@@ -353,7 +354,7 @@ size_t aocl_2_coo_c64(matx_coo_c64_t* A)
 	return 0;
 }
 
-size_t coo_2_mkl_f64(matx_coo_f64_t* A)
+size_t coo_2_mkl_f64(matx_coo_f64_t A)
 {
 #if MATX_ENABLE_MKL
 	sparse_matrix_t coo;
@@ -409,7 +410,7 @@ size_t coo_2_mkl_f64(matx_coo_f64_t* A)
 	return 0;
 }
 
-size_t coo_2_mkl_c64(matx_coo_c64_t* A)
+size_t coo_2_mkl_c64(matx_coo_c64_t A)
 {
 #if MATX_ENABLE_MKL
 	sparse_matrix_t coo;
@@ -463,7 +464,7 @@ size_t coo_2_mkl_c64(matx_coo_c64_t* A)
 	return 0;
 }
 
-size_t dense_2_grb_f64(matx_dense_f64_t* A)
+size_t dense_2_grb_f64(matx_dense_f64_t A)
 {
 	GrB_Matrix_free(A->handle_grb.impl);
 	GrB_Info info = GxB_Matrix_import_FullC(&A->handle_grb.impl, GrB_FP64, A->nrows, A->ncols, (void*)&A->data, A->nrows * A->ncols, false, NULL);
@@ -478,7 +479,7 @@ size_t dense_2_grb_f64(matx_dense_f64_t* A)
 	return 0;
 }
 
-size_t grb_2_dense_f64(matx_dense_f64_t* A)
+size_t grb_2_dense_f64(matx_dense_f64_t A)
 {
 	GrB_Type t;
 	matx_int64_t s = 0;
@@ -493,7 +494,7 @@ size_t grb_2_dense_f64(matx_dense_f64_t* A)
 	return 0;
 }
 
-size_t grb_2_coo_f64(matx_coo_f64_t* A)
+size_t grb_2_coo_f64(matx_coo_f64_t A)
 {
 	A->nrows = -1;
 	A->ncols = -1;
@@ -507,7 +508,7 @@ size_t grb_2_coo_f64(matx_coo_f64_t* A)
 	return 0;
 }
 
-size_t vec_2_grb_f64(matx_vec_f64_t* v)
+size_t vec_2_grb_f64(matx_vec_f64_t v)
 {
 	GrB_Info info = GxB_Vector_import_Full(&v->handle_grb.impl, GrB_FP64, v->n, (void*)&v->data, v->n, false, NULL);
 	if (info != GrB_SUCCESS)
@@ -521,7 +522,7 @@ size_t vec_2_grb_f64(matx_vec_f64_t* v)
 	return 0;
 }
 
-size_t grb_2_vec_f64(matx_vec_f64_t* v)
+size_t grb_2_vec_f64(matx_vec_f64_t v)
 {
 	GrB_Type t = GrB_FP64;
 	GrB_Info info = GxB_Vector_export_Full(&v->handle_grb.impl, &t, &v->n, (void*)&v->data, &v->n, false, NULL);
@@ -534,7 +535,7 @@ size_t grb_2_vec_f64(matx_vec_f64_t* v)
 	return 0;
 }
 
-size_t coo_2_grb_c64(matx_coo_c64_t* A)
+size_t coo_2_grb_c64(matx_coo_c64_t A)
 {
 	GrB_Info info = GxB_Matrix_import_FC64(&A->handle_grb.impl, GxB_FC64, A->nrows, A->ncols, A->rows, A->columns, (void*)A->values,
 		A->nnz, A->nnz, A->nnz, GrB_COO_FORMAT);
@@ -549,7 +550,7 @@ size_t coo_2_grb_c64(matx_coo_c64_t* A)
 	return 0;
 }
 
-size_t dense_2_grb_c64(matx_dense_c64_t* A)
+size_t dense_2_grb_c64(matx_dense_c64_t A)
 {
 	GrB_Info info = GxB_Matrix_import_FullC(&A->handle_grb.impl, GxB_FC64, A->nrows, A->ncols, (void*)&A->data, A->nrows * A->ncols, false, NULL);
 	if (info != GrB_SUCCESS)
@@ -563,7 +564,7 @@ size_t dense_2_grb_c64(matx_dense_c64_t* A)
 	return 0;
 }
 
-size_t grb_2_dense_c64(matx_dense_c64_t* A)
+size_t grb_2_dense_c64(matx_dense_c64_t A)
 {
 	GrB_Type t;
 	matx_int64_t s = 0;
@@ -578,7 +579,7 @@ size_t grb_2_dense_c64(matx_dense_c64_t* A)
 	return 0;
 }
 
-size_t grb_2_coo_c64(matx_coo_c64_t* A)
+size_t grb_2_coo_c64(matx_coo_c64_t A)
 {
 	A->ncols = -1;
 	A->nrows = -1;
@@ -594,7 +595,7 @@ size_t grb_2_coo_c64(matx_coo_c64_t* A)
 	return 0;
 }
 
-size_t vec_2_grb_c64(matx_vec_c64_t* v)
+size_t vec_2_grb_c64(matx_vec_c64_t v)
 {
 	GrB_Vector_free(v->handle_grb.impl);
 	GrB_Info info = GxB_Vector_import_Full(&v->handle_grb.impl, GxB_FC64, v->n, (void*)&v->data, v->n, false, NULL);
@@ -609,7 +610,7 @@ size_t vec_2_grb_c64(matx_vec_c64_t* v)
 	return 0;
 }
 
-size_t grb_2_vec_c64(matx_vec_c64_t* v)
+size_t grb_2_vec_c64(matx_vec_c64_t v)
 {
 	GrB_Type t = GxB_FC64;
 	bool iso = false;

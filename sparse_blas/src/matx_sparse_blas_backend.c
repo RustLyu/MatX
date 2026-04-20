@@ -32,94 +32,94 @@ matx_sparse_backend_t matx_sparse_default(void) {
 
 matx_status_t matx_spmv_coo_c64(const matx_sparse_backend_t* backend,
 	matx_complex_f64 alpha,
-        matx_coo_c64_t* A,
-        matx_vec_c64_t* x,
+        matx_coo_c64_t A,
+        matx_vec_c64_t x,
 	matx_complex_f64 beta,
-	matx_vec_c64_t* y)
+	matx_vec_c64_t y)
 {
 	return backend->vt.spmv_c64(alpha, A, x, beta, y);
 }
 
 matx_status_t matx_spmm_coo_c64(const matx_sparse_backend_t* backend,
 	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_dense_c64_t* B,
+	matx_coo_c64_t A,
+	matx_dense_c64_t B,
 	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+	matx_dense_c64_t C)
 {
 	return backend->vt.spmm_c64(alpha, A, B, beta, C);
 }
 
 matx_status_t matx_spmv_coo_f64(const matx_sparse_backend_t* backend,
 	matx_double alpha,
-        matx_coo_f64_t* A,
-        matx_vec_f64_t* x,
+        matx_coo_f64_t A,
+        matx_vec_f64_t x,
 	matx_double beta,
-	matx_vec_f64_t* y)
+	matx_vec_f64_t y)
 {
 	return backend->vt.spmv_f64(alpha, A, x, beta, y);
 }
 
 matx_status_t matx_spmm_coo_f64(const matx_sparse_backend_t* backend,
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_dense_f64_t* B,
+	matx_coo_f64_t A,
+	matx_dense_f64_t B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_f64_t C)
 {
 	return backend->vt.spmm_f64(alpha, A, B, beta, C);
 }
 
 matx_status_t matx_dsp2md_coo_f64(const matx_sparse_backend_t* backend,
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_coo_f64_t* B,
+	matx_coo_f64_t A,
+	matx_coo_f64_t B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_f64_t C)
 {
 	return backend->vt.dsp2md_f64(alpha, A, B, beta, C);
 }
 
 matx_status_t matx_zsp2md_coo_c64(const matx_sparse_backend_t* backend,
 	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_coo_c64_t* B,
+	matx_coo_c64_t A,
+	matx_coo_c64_t B,
 	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+	matx_dense_c64_t C)
 {
 	return backend->vt.zsp2md_c64(alpha, A, B, beta, C);
 }
 
 matx_status_t matx_transpose_coo_f64(const matx_sparse_backend_t* backend,
-	matx_coo_f64_t* A,
-	matx_coo_f64_t* out)
+	matx_coo_f64_t A,
+	matx_coo_f64_t out)
 {
 	return backend->vt.transpose_f64(A, out);
 }
 
 matx_status_t matx_transpose_coo_c64(const matx_sparse_backend_t* backend,
-	matx_coo_c64_t* A,
-	matx_coo_c64_t* out)
+	matx_coo_c64_t A,
+	matx_coo_c64_t out)
 {
 	return backend->vt.transpose_c64(A, out);
 }
 
-MATX_API matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t* A, matx_coo_c64_t* out)
+MATX_API matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_coo_c64_t out)
 {
 	return backend->vt.conj_trans_c64(A, out);
 }
 
-MATX_API matx_status_t matx_norm1_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t* A, matx_double* out)
+MATX_API matx_status_t matx_norm1_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t A, matx_double* out)
 {
 	return backend->vt.norm1_f64(A, out);
 }
 
-MATX_API matx_status_t matx_norm2_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t* A, matx_double* out)
+MATX_API matx_status_t matx_norm2_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t A, matx_double* out)
 {
 	return backend->vt.norm2_f64(A, out);
 }
 
-MATX_API matx_status_t matx_norminf_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t* A, matx_double* out)
+MATX_API matx_status_t matx_norminf_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t A, matx_double* out)
 {
 	return backend->vt.norminf_f64(A, out);
 }

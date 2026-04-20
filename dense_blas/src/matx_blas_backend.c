@@ -1,4 +1,5 @@
 ﻿#include "matx/matx_dense_compute.h"
+#include "matx/matx_types_internal.h"
 
 // Forward decls
 matx_dense_backend_t matx_blas_make_reference(void);
@@ -31,10 +32,10 @@ matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 	matx_int64_t trans_a,
 	matx_int64_t trans_b,
 	matx_double alpha,
-	const matx_dense_f64_t* A,
-	const matx_dense_f64_t* B,
+	const matx_dense_f64_t A,
+	const matx_dense_f64_t B,
 	matx_double beta,
-	matx_dense_f64_t* C) {
+	matx_dense_f64_t C) {
 	if (!blas || !A || !B || !C) return MATX_ERR_INVALID_ARG;
 	if (!blas->vt.dgemm) return MATX_ERR_NOT_SUPPORTED;
 
@@ -75,10 +76,10 @@ matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 	matx_int64_t trans_a,
 	matx_int64_t trans_b,
 	matx_complex_f64 alpha,
-	const matx_dense_c64_t* A,
-	const matx_dense_c64_t* B,
+	const matx_dense_c64_t A,
+	const matx_dense_c64_t B,
 	matx_complex_f64 beta,
-	matx_dense_c64_t* C) {
+	matx_dense_c64_t C) {
 	if (!A || !B || !C || !A->data || !B->data || !C->data)
 		return MATX_ERR_INVALID_ARG;
 	if (A->layout != B->layout || A->layout != C->layout)
@@ -117,10 +118,10 @@ matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 	matx_int64_t trans_a,
 	matx_complex_f64 alpha,
-	const matx_dense_c64_t* A,
-	const matx_vec_c64_t* x,
+	const matx_dense_c64_t A,
+	const matx_vec_c64_t x,
 	matx_complex_f64 beta,
-	matx_vec_c64_t* y) {
+	matx_vec_c64_t y) {
 	(void)blas;
 	if (!A || !x || !y || !A->data || !x->data || !y->data)
 		return MATX_ERR_INVALID_ARG;
@@ -151,10 +152,10 @@ matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
 	matx_int64_t trans_a,
 	matx_double alpha,
-	const matx_dense_f64_t* A,
-	const matx_vec_f64_t* x,
+	const matx_dense_f64_t A,
+	const matx_vec_f64_t x,
 	matx_double beta,
-	matx_vec_f64_t* y) {
+	matx_vec_f64_t y) {
 	(void)blas;
 	if (!A || !x || !y || !A->data || !x->data || !y->data)
 		return MATX_ERR_INVALID_ARG;
@@ -184,9 +185,9 @@ matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
 
 matx_status_t matx_geadd_c64(const matx_dense_backend_t* blas,
 	matx_complex_f64 alpha,
-	const matx_dense_c64_t* A,
+	const matx_dense_c64_t A,
 	matx_complex_f64 beta,
-	matx_dense_c64_t* B)
+	matx_dense_c64_t B)
 {
 	if (!A || !B || !A->data || !B->data)
 		return MATX_ERR_INVALID_ARG;
@@ -214,9 +215,9 @@ matx_status_t matx_geadd_c64(const matx_dense_backend_t* blas,
 
 matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
 	matx_double alpha,
-	const matx_dense_f64_t* A,
+	const matx_dense_f64_t A,
 	matx_double beta,
-	matx_dense_f64_t* B)
+	matx_dense_f64_t B)
 {
 	if (!A || !B || !A->data || !B->data)
 		return MATX_ERR_INVALID_ARG;
@@ -241,8 +242,8 @@ matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
 
 matx_status_t matx_axpy_c64(const matx_dense_backend_t* blas,
 	matx_complex_f64 alpha,
-	const matx_vec_c64_t* x,
-	matx_vec_c64_t* y) {
+	const matx_vec_c64_t x,
+	matx_vec_c64_t y) {
 	if (!x || !y || !x->data || !y->data)
 		return MATX_ERR_INVALID_ARG;
 	if (x->n != y->n)
@@ -255,8 +256,8 @@ matx_status_t matx_axpy_c64(const matx_dense_backend_t* blas,
 
 matx_status_t matx_axpy_f64(const matx_dense_backend_t* blas,
 	matx_double alpha,
-	const matx_vec_f64_t* x,
-	matx_vec_f64_t* y) {
+	const matx_vec_f64_t x,
+	matx_vec_f64_t y) {
 	if (!x || !y || !x->data || !y->data)
 		return MATX_ERR_INVALID_ARG;
 	if (x->n != y->n)
