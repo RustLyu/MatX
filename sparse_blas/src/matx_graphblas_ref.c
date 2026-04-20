@@ -487,7 +487,7 @@ matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t A,
 
 matx_status_t ref_norm1_grb(
 	matx_vec_f64_t A,
-	matx_double out)
+	matx_double* out)
 {
 	if (A->handle_grb.valid <= 0)
 	{
@@ -497,7 +497,7 @@ matx_status_t ref_norm1_grb(
 	// tmp = abs(x)
 	GrB_apply((GrB_Vector)A->handle_grb.impl, NULL, NULL, GrB_ABS_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
 	// sum(tmp)
-	GrB_reduce(&out, NULL, GrB_PLUS_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
+	GrB_reduce(out, NULL, GrB_PLUS_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
 	return MATX_OK;
 }
 
