@@ -7,10 +7,11 @@
 #include <string.h>
 
 #if MATX_ENABLE_OPENBLAS
-#include "cblas.h"
-#include "lapacke.h"
+	#include "cblas.h"
+	#include "lapacke.h"
 #elif MATX_ENABLE_LIBFLAME
-#include "FLAME.h"
+	//#include "FLAME.h"
+	#include "lapacke.h"
 #endif
 
 // Dense factorization (simple LU in C for now)
@@ -66,7 +67,7 @@ static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t A,
 
 	memset(F, 0, sizeof(*F));
 	F->n = n;
-
+	
 	F->lu = (matx_double*)malloc(A->ncols * A->nrows * sizeof(matx_double));
 	matx_int64_t piv_size = (A->nrows < A->ncols ? A->nrows : A->ncols);
 	F->piv = (matx_int64_t*)malloc(piv_size * sizeof(matx_int64_t));
@@ -78,7 +79,10 @@ static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t A,
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 	F->layout = A->layout;
-	cblas_dcopy(A->nrows * A->ncols, A->data, 1, F->lu, 1);
+	//cblas_dcopy(A->nrows * A->ncols, A->data, 1, F->lu, 1);
+
+	memcpy(F->lu, A->data, A->nrows * A->ncols * sizeof(matx_double));
+
 	matx_int64_t info = LAPACKE_dgetrf(
 		A->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
 		A->nrows,
@@ -108,7 +112,8 @@ static matx_status_t ss_solve_dense_f64(const matx_factor_dense_f64_t* F,
 		return MATX_ERR_INVALID_ARG;
 	const matx_int64_t n = F->n;
 	
-	cblas_dcopy(n, b, 1, x, 1);
+	//cblas_dcopy(n, b, 1, x, 1);
+	memcpy(x, b, n * sizeof(matx_double));
 	matx_int64_t N = (int)n;
 	matx_int64_t nrhs = 1;
 	matx_int64_t lda = (int)n;
