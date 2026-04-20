@@ -180,8 +180,8 @@ elseif(MATX_ENABLE_BLIS)
 	  set(amdblis_DIR
 		  "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-blis/cmake")
 	elseif(LINUX)
-	set(amdblis_DIR
-		  "${3Party_path}/aocl-5.2.0/lib_ILP64")
+	    set(amdblis_DIR
+		      "${3Party_path}/aocl-5.2.0/lib_ILP64")
 	endif()
   find_package(amdblis REQUIRED)
 elseif(MATX_ENABLE_MKL)
@@ -205,6 +205,11 @@ if(MATX_ENABLE_LIBFLAME)
 endif()
 
 # ---- Sparse / Graph libraries ----
+if(LINUX)
+    add_compile_options(-pthread)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+endif()
 
 if(MATX_ENABLE_AOCL_SPARSE)
 
