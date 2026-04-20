@@ -33,6 +33,9 @@ extern "C" {
 #define HAVE_LAPACK_CONFIG_H
 #define __EMSCRIPTEN__
 #define LAPACK_ILP64
+#define FLA_ENABLE_ILP64 1
+#define LAPACK_COMPLEX_STRUCTURE
+
 #ifndef INT_MAX
 	#define INT_MAX (2147483657)
 #endif
