@@ -31,7 +31,7 @@ extern "C" {
 	typedef struct matx_vec_c64_opaque_t {
 		matx_int64_t n;
 		matx_int64_t stride;
-		matx_complex_f64* data;
+		matx_complex_f64_t* data;
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 	} matx_vec_c64_opaque_t;
@@ -42,7 +42,7 @@ extern "C" {
 		matx_int64_t ncols;
 		matx_int64_t stride;
 		matx_layout_t layout;
-		matx_complex_f64* data;
+		matx_complex_f64_t* data;
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 	} matx_dense_c64_opaque_t;
@@ -79,10 +79,10 @@ extern "C" {
 		matx_int64_t nrows;
 		matx_int64_t ncols;
 		matx_int64_t nnz;
-		const matx_int64_t* col_ptr;
-		const matx_int64_t* row_ind;
-		const matx_complex_f64* values;
-		const matx_int64_t* coo_csc_index_map;
+		matx_int64_t* col_ptr;
+		matx_int64_t* row_ind;
+		matx_complex_f64_t* values;
+		matx_int64_t* coo_csc_index_map;
 		matx_int64_t struct_update; // coo to csc conversion may involve sorting and duplicate summation, these flags can be used to track whether the structure/values are up to date with the original COO data
 		matx_int64_t only_value_update; // if the structure is up to date, but values have been updated, this flag can be set to indicate that only values need to be updated in the CSC representation without redoing the entire COO to CSC conversion
 		matx_int64_t flags;
@@ -94,7 +94,7 @@ extern "C" {
 		matx_int64_t nnz;
 		matx_int64_t* rows;
 		matx_int64_t* columns;
-		matx_complex_f64* values;
+		matx_complex_f64_t* values;
 		matx_int64_t flags;
 		matx_handle_t handle_grb;
 		matx_handle_t handle_mkl;

@@ -239,7 +239,15 @@ int coo_to_csr_optimized(
 	csr->row_ptr[nrows] = new_nnz;
 	csr->nnz = new_nnz;
 
+	if (csr->col_ind == NULL)
+	{
+		return -1;
+	}
 	csr->col_ind = (matx_int64_t*)realloc(csr->col_ind, new_nnz * sizeof(matx_int64_t));
+	if (csr->val == NULL)
+	{
+		return -1;
+	}
 	csr->val = (matx_double*)realloc(csr->val, new_nnz * sizeof(matx_double));
 
 	return 0;

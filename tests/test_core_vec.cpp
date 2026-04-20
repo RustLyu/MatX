@@ -39,7 +39,7 @@ TEST(core_vec, vec_c64_create_destroy) {
 
 TEST(core_vec, vec_c64_wrap) {
 	matx_alloc_t a = matx_alloc_default();
-	matx_complex_f64 buf[4] = { {1.0, 0.0}, {0.0, 1.0}, {2.0, -1.0}, {0.0, 0.0} };
+	matx_complex_f64_t buf[4] = { {1.0, 0.0}, {0.0, 1.0}, {2.0, -1.0}, {0.0, 0.0} };
 	matx_vec_c64_t v = NULL;
 	ASSERT_EQ(matx_vec_c64_wrap(&a, &v, 4, 1, buf), MATX_OK);
 	EXPECT_EQ(v->data, buf);

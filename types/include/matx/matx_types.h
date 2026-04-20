@@ -90,7 +90,7 @@ extern "C" {
 	typedef struct matx_complex_f64_t {
 		matx_double real;
 		matx_double imag;
-	} matx_complex_f64;
+	} matx_complex_f64_t;
 
 	// ---- Dense vector (double) ----
 	typedef struct matx_vec_f64_opaque_t* matx_vec_f64_t;

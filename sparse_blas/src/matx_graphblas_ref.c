@@ -17,10 +17,10 @@
 
 
 matx_status_t ref_spmv_c64_grb(
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t A,
 	matx_vec_c64_t x,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_vec_c64_t y)
 {
 	if (!A || !x || !y)
@@ -85,10 +85,10 @@ matx_status_t ref_spmv_c64_grb(
 }
 
 matx_status_t ref_spmm_c64_grb(
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t A,
 	matx_dense_c64_t B,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t C)
 {
 	if (!A || !B || !C)
@@ -343,10 +343,10 @@ matx_status_t ref_dsp2md_f64_grb(
 }
 
 matx_status_t ref_zsp2md_c64_grb(
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t A,
 	matx_coo_c64_t B,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t C)
 {
 	if (!A || !B || !C)
@@ -427,8 +427,8 @@ matx_status_t ref_transpose_f64_grb(
 }
 
 matx_status_t ref_transpose_c64_grb(
-	matx_coo_f64_t A, 
-	matx_coo_f64_t out)
+	matx_coo_c64_t A, 
+	matx_coo_c64_t out)
 {
 	if (!A || !out)
 		return MATX_ERR_INVALID_ARG;
@@ -436,19 +436,19 @@ matx_status_t ref_transpose_c64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_c64(A);
+		coo_2_grb_f64(A);
 	}
 	if(!out->handle_grb.impl)
 		return MATX_ERR_INVALID_ARG;
 	if (!out->handle_grb.impl)
-		create_empty_grb_c64(out);
+		create_empty_grb_f64(out);
 	GrB_Info info = GrB_transpose((GrB_Matrix)(out->handle_grb.impl), NULL, NULL, (GrB_Matrix)(A->handle_grb.impl), NULL);
 	if (info != GrB_SUCCESS)
 	{
 		MATX_ERROR("GrB_transpose error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	grb_2_coo_c64(out);
+	grb_2_coo_f64(out);
 	return MATX_OK;
 }
 
@@ -507,7 +507,7 @@ matx_status_t ref_norm2_grb(
 {
 	if (A->handle_grb.valid <= 0)
 	{
-		vec_2_grb_c64(A);
+		vec_2_grb_f64(A);
 	}
 
 	// tmp = x .* x
@@ -526,7 +526,7 @@ matx_status_t ref_norminf_grb(
 {
 	if (A->handle_grb.valid <= 0)
 	{
-		vec_2_grb_c64(A);
+		vec_2_grb_f64(A);
 	}
 	GrB_apply((GrB_Vector)A->handle_grb.impl, NULL, NULL, GrB_ABS_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
 	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);

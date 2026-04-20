@@ -6,10 +6,10 @@
 #endif
 
 matx_status_t ref_spmv_c64_mkl(
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t* A,
 	matx_vec_c64_t* x,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_vec_c64_t* y)
 {
 #if MATX_ENABLE_MKL
@@ -47,10 +47,10 @@ matx_status_t ref_spmv_c64_mkl(
 }
 
 matx_status_t ref_spmm_c64_mkl(
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	const matx_coo_c64_t* A,
 	const matx_dense_c64_t* B,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t* C)
 {
 #if MATX_ENABLE_MKL

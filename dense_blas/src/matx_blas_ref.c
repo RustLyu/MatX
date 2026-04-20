@@ -412,7 +412,7 @@ matx_status_t ref_inv_dense_c64(
 		return MATX_ERR_INVALID_ARG;
 	if (layout != MATX_COL_MAJOR)
 		return MATX_ERR_NOT_SUPPORTED;
-	memcpy(out_Ainv, A, sizeof(matx_complex_f64) * rows * cols);
+	memcpy(out_Ainv, A, sizeof(matx_complex_f64_t) * rows * cols);
 
 	matx_int64_t N = rows;
 	matx_int64_t lda = rows;

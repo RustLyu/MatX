@@ -117,7 +117,7 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
 
     matx_int64_t coo_rows[16];
     matx_int64_t coo_cols[16];
-    matx_complex_f64 coo_values[16];
+    matx_complex_f64_t coo_values[16];
 
     for (matx_int64_t i = 0; i < nnz; ++i) {
         matx_int64_t row = i % 4;
@@ -144,8 +144,8 @@ TEST(compute_sparse, spmv_csc_c64_4x4) {
         y->data[i].imag = 0.0;
     }
 
-    matx_complex_f64 alpha = { 1.0, 0.0 };
-    matx_complex_f64 beta = { 0.0, 0.0 };
+    matx_complex_f64_t alpha = { 1.0, 0.0 };
+    matx_complex_f64_t beta = { 0.0, 0.0 };
     auto backend = matx_sparse_default();
     matx_status_t st = matx_spmv_coo_c64(&backend, alpha, A, x, beta, y);
 
@@ -198,7 +198,7 @@ TEST(compute_sparse, spmm_csc_c64_4x4) {
   matx_int64_t rows[16] = { 0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3 };
   matx_int64_t cols[16] = { 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3 };
 
-  matx_complex_f64 values[16];
+  matx_complex_f64_t values[16];
   for (int i = 0; i < 16; ++i) {
       values[i].real = (i % 4 == i / 4) ? 1.0 : 0.0;
       values[i].imag = 0.0;
@@ -217,8 +217,8 @@ TEST(compute_sparse, spmm_csc_c64_4x4) {
     C->data[i].real = C->data[i].imag = 0.0;
   }
 
-  matx_complex_f64 alpha = {1.0, 0.0};
-  matx_complex_f64 beta = {0.0, 0.0};
+  matx_complex_f64_t alpha = {1.0, 0.0};
+  matx_complex_f64_t beta = {0.0, 0.0};
   auto backend = matx_sparse_default();
   matx_status_t st = matx_spmm_coo_c64(&backend, alpha, A, B, beta, C);
   ASSERT_EQ(st, MATX_OK);
@@ -302,7 +302,7 @@ TEST(compute_sparse, conj_c64_4x4) {
     matx_int64_t rows[16] = { 0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3 };
     matx_int64_t cols[16] = { 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3 };
 
-    matx_complex_f64 values[16];
+    matx_complex_f64_t values[16];
     for (int i = 0; i < 16; ++i) {
         values[i].real = i;
         values[i].imag = i+1;

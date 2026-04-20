@@ -11,10 +11,10 @@
 
 // y = \alpha \, op(A) \, x + \beta \, y,
 matx_status_t ref_spmv_c64_aocl(
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t A,
 	matx_vec_c64_t x,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_vec_c64_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
@@ -63,10 +63,10 @@ matx_status_t ref_spmv_c64_aocl(
 
 //    C = \alpha \, op(A) \, B + \beta \, C,
 matx_status_t ref_spmm_c64_aocl(
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t A,
 	const matx_dense_c64_t B,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
@@ -264,10 +264,10 @@ matx_status_t ref_dsp2md_f64_aocl(
 
 // C := α · op(A) · op(B) + β · C
 matx_status_t ref_zsp2md_c64_aocl(
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t A,
 	matx_coo_c64_t B,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
@@ -345,7 +345,7 @@ matx_status_t ref_transpose_c64_aocl(
 	out->nnz = A->nnz;
 	memcpy(out->rows, A->columns, sizeof(matx_int64_t) * A->nnz);
 	memcpy(out->columns, A->rows, sizeof(matx_int64_t) * A->nnz);
-	memcpy(out->values, A->values, sizeof(matx_complex_f64) * A->nnz);
+	memcpy(out->values, A->values, sizeof(matx_complex_f64_t) * A->nnz);
 	return MATX_OK;
 }
 

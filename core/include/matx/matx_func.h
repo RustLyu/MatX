@@ -64,7 +64,7 @@ extern "C" {
 	MATX_API matx_status_t matx_vec_c64_create(
 		const matx_alloc_t* alloc,
 		matx_vec_c64_t* out,
-		matx_complex_f64* data,
+		matx_complex_f64_t* data,
 		matx_int64_t n);
 
 	MATX_API matx_status_t matx_vec_c64_dup(
@@ -77,7 +77,7 @@ extern "C" {
 		matx_vec_c64_t* out,
 		matx_int64_t n,
 		matx_int64_t stride,
-		matx_complex_f64* data);
+		matx_complex_f64_t* data);
 
 	MATX_API void matx_vec_c64_destroy(const matx_alloc_t* alloc, matx_vec_c64_t v);
 
@@ -87,7 +87,7 @@ extern "C" {
 		matx_layout_t layout,
 		matx_int64_t rows,
 		matx_int64_t cols,
-		matx_complex_f64* data);
+		matx_complex_f64_t* data);
 
 	MATX_API matx_status_t matx_dense_c64_dup(
 		const matx_alloc_t* alloc,
@@ -102,7 +102,7 @@ extern "C" {
 		matx_int64_t cols,
 		matx_int64_t stride,
 		matx_layout_t layout,
-		matx_complex_f64* data);
+		matx_complex_f64_t* data);
 
 	MATX_API void matx_dense_c64_destroy(const matx_alloc_t* alloc, matx_dense_c64_t m);
 
@@ -148,7 +148,7 @@ extern "C" {
 		matx_int64_t nnz,
 		matx_int64_t* ap,
 		matx_int64_t* ai,
-		matx_complex_f64* ax);
+		matx_complex_f64_t* ax);
 
 	MATX_API matx_status_t matx_coo_c64_dup(
 		const matx_alloc_t* alloc,
@@ -163,7 +163,7 @@ extern "C" {
 		matx_int64_t nnz,
 		const matx_int64_t* rows,
 		const matx_int64_t* cols,
-		const matx_complex_f64* values);
+		const matx_complex_f64_t* values);
 
 	MATX_API void matx_coo_sparse_c64_destroy(const matx_alloc_t* alloc, matx_coo_c64_t m);
 

@@ -75,10 +75,10 @@ matx_status_t matx_gemm_f64(const matx_dense_backend_t* blas,
 matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 	matx_int64_t trans_a,
 	matx_int64_t trans_b,
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	const matx_dense_c64_t A,
 	const matx_dense_c64_t B,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t C) {
 	if (!A || !B || !C || !A->data || !B->data || !C->data)
 		return MATX_ERR_INVALID_ARG;
@@ -117,10 +117,10 @@ matx_status_t matx_gemm_c64(const matx_dense_backend_t* blas,
 
 matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 	matx_int64_t trans_a,
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	const matx_dense_c64_t A,
 	const matx_vec_c64_t x,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_vec_c64_t y) {
 	(void)blas;
 	if (!A || !x || !y || !A->data || !x->data || !y->data)
@@ -184,9 +184,9 @@ matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_geadd_c64(const matx_dense_backend_t* blas,
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	const matx_dense_c64_t A,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t B)
 {
 	if (!A || !B || !A->data || !B->data)
@@ -241,7 +241,7 @@ matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_axpy_c64(const matx_dense_backend_t* blas,
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	const matx_vec_c64_t x,
 	matx_vec_c64_t y) {
 	if (!x || !y || !x->data || !y->data)

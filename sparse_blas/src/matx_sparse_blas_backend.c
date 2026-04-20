@@ -31,20 +31,20 @@ matx_sparse_backend_t matx_sparse_default(void) {
 }
 
 matx_status_t matx_spmv_coo_c64(const matx_sparse_backend_t* backend,
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
         matx_coo_c64_t A,
         matx_vec_c64_t x,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_vec_c64_t y)
 {
 	return backend->vt.spmv_c64(alpha, A, x, beta, y);
 }
 
 matx_status_t matx_spmm_coo_c64(const matx_sparse_backend_t* backend,
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t A,
 	matx_dense_c64_t B,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t C)
 {
 	return backend->vt.spmm_c64(alpha, A, B, beta, C);
@@ -81,10 +81,10 @@ matx_status_t matx_dsp2md_coo_f64(const matx_sparse_backend_t* backend,
 }
 
 matx_status_t matx_zsp2md_coo_c64(const matx_sparse_backend_t* backend,
-	matx_complex_f64 alpha,
+	matx_complex_f64_t alpha,
 	matx_coo_c64_t A,
 	matx_coo_c64_t B,
-	matx_complex_f64 beta,
+	matx_complex_f64_t beta,
 	matx_dense_c64_t C)
 {
 	return backend->vt.zsp2md_c64(alpha, A, B, beta, C);

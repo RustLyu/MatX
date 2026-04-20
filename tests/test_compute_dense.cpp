@@ -42,8 +42,8 @@ TEST(compute_dense, geadd_c64_4x4) {
   }
 
   matx_dense_backend_t blas = matx_blas_default();
-  matx_complex_f64 alpha = {2.0, 0.0};
-  matx_complex_f64 beta = {0.0, 0.0};
+  matx_complex_f64_t alpha = {2.0, 0.0};
+  matx_complex_f64_t beta = {0.0, 0.0};
   matx_status_t st = matx_geadd_c64(&blas, alpha, A, beta, B);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(B->data[0].real, 0.0, 1e-12);
@@ -121,8 +121,8 @@ TEST(compute_dense, gemm_c64_4x4) {
   }
 
   matx_dense_backend_t blas = matx_blas_default();
-  matx_complex_f64 alpha = {1.0, 0.0};
-  matx_complex_f64 beta = {0.0, 0.0};
+  matx_complex_f64_t alpha = {1.0, 0.0};
+  matx_complex_f64_t beta = {0.0, 0.0};
   matx_status_t st = matx_gemm_c64(&blas, 0, 0, alpha, A, B, beta, C);
   if (st == MATX_ERR_NOT_SUPPORTED) {
     matx_dense_c64_destroy(&a, A);

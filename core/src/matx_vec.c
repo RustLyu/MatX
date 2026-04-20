@@ -70,7 +70,7 @@ void matx_vec_f64_destroy(const matx_alloc_t* alloc, matx_vec_f64_t v) {
 
 matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc, 
     matx_vec_c64_t* out,
-    matx_complex_f64* data,
+    matx_complex_f64_t* data,
     matx_int64_t n) {
   if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
   matx_vec_c64_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_c64_opaque_t));
@@ -79,7 +79,7 @@ matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc,
   out_value->n = n;
   out_value->stride = 1;
   out_value->flags = 1u;
-  out_value->data = (matx_complex_f64*)matx_malloc(alloc, n * sizeof(matx_complex_f64));
+  out_value->data = (matx_complex_f64_t*)matx_malloc(alloc, n * sizeof(matx_complex_f64_t));
   if (!out_value->data) {
     matx_free(alloc, out_value);
     return MATX_ERR_OUT_OF_MEMORY;
@@ -87,7 +87,7 @@ matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc,
 
   if (data != NULL)
   {
-      memcpy(out_value->data, data, sizeof(matx_complex_f64) * out_value->n);
+      memcpy(out_value->data, data, sizeof(matx_complex_f64_t) * out_value->n);
   }
   if (*out != NULL)
   {
@@ -105,7 +105,7 @@ matx_status_t matx_vec_c64_dup(const matx_alloc_t* alloc, matx_vec_c64_t in, mat
 matx_status_t matx_vec_c64_wrap(const matx_alloc_t* alloc, matx_vec_c64_t* out,
     matx_int64_t n,
     matx_int64_t stride,
-                                matx_complex_f64* data) {
+                                matx_complex_f64_t* data) {
   if (!out || !data || n == 0 || stride == 0) return MATX_ERR_INVALID_ARG;
 
   matx_vec_c64_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_c64_opaque_t));

@@ -230,7 +230,7 @@ static matx_status_t ss_solve_csc_c64(
 
 	matx_int64_t n = F->n;
 
-	memcpy(x->data, b->data, sizeof(matx_complex_f64) * n);
+	memcpy(x->data, b->data, sizeof(matx_complex_f64_t) * n);
 
 	matx_int64_t status = klu_zl_solve(
 		F->S, F->N, n, 1, (matx_double*)x->data, &F->common);

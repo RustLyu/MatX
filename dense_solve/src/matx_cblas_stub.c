@@ -135,7 +135,7 @@ static matx_status_t ss_factor_dense_c64(
 	memset(F, 0, sizeof(*F));
 	F->n = n;
 
-	F->lu = (matx_complex_f64*)malloc(A->ncols * A->nrows * sizeof(matx_complex_f64));
+	F->lu = (matx_double*)malloc(A->ncols * A->nrows * sizeof(matx_complex_f64_t));
 	matx_int64_t piv_size = (A->nrows < A->ncols ? A->nrows : A->ncols);
 	F->piv = (matx_int64_t*)malloc(piv_size * sizeof(matx_int64_t));
 	matx_int64_t lda = A->layout == MATX_COL_MAJOR ? A->nrows : A->ncols;

@@ -10,7 +10,7 @@ matx_status_t matx_dense_c64_create(
 	matx_layout_t layout,
 	matx_int64_t rows,
 	matx_int64_t cols,
-	matx_complex_f64* data) {
+	matx_complex_f64_t* data) {
 	if (!out || !alloc || rows == 0 || cols == 0)
 		return MATX_ERR_INVALID_ARG;
 	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR)
@@ -27,7 +27,7 @@ matx_status_t matx_dense_c64_create(
 	out_value->flags = 1u;
 
 	const size_t n = rows * cols;
-	out_value->data = (matx_complex_f64*)matx_malloc(alloc, n * sizeof(matx_complex_f64));
+	out_value->data = (matx_complex_f64_t*)matx_malloc(alloc, n * sizeof(matx_complex_f64_t));
 	if (!out_value->data) {
 		memset(out_value, 0, sizeof(*out_value));
 		return MATX_ERR_OUT_OF_MEMORY;
@@ -35,7 +35,7 @@ matx_status_t matx_dense_c64_create(
 
 	if (data != NULL)
 	{
-		memcpy(out_value->data, data, sizeof(matx_complex_f64) * out_value->nrows * out_value->ncols);
+		memcpy(out_value->data, data, sizeof(matx_complex_f64_t) * out_value->nrows * out_value->ncols);
 	}
 	if (*out != NULL)
 	{
@@ -57,7 +57,7 @@ matx_status_t matx_dense_c64_wrap(
 	matx_int64_t cols,
 	matx_int64_t stride,
 	matx_layout_t layout,
-	matx_complex_f64* data) {
+	matx_complex_f64_t* data) {
 	if (!out || !data || rows == 0 || cols == 0) return MATX_ERR_INVALID_ARG;
 	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
 	if (layout == MATX_COL_MAJOR) {
