@@ -103,22 +103,21 @@ extern "C" {
 
 	// ---- Dense vector (double) ----
 	typedef struct matx_vec_f64_opaque_t* matx_vec_f64_t;
-	// ---- Dense matrix (double) ----
-	typedef struct matx_dense_f64_opaque_t* matx_dense_f64_t;
+
 	// ---- Dense vector (complex) ----
 	typedef struct matx_vec_c64_opaque_t* matx_vec_c64_t;
 
+	// ---- Dense matrix (double) ----
+	typedef struct matx_dense_f64_opaque_t* matx_dense_f64_t;
 	// ---- Dense matrix (complex) ----
 	typedef struct matx_dense_c64_opaque_t* matx_dense_c64_t;
 
-	// ---- Sparse CSC (real/complex) ----
+	// ---- Sparse CSC/COO (real/complex) ----
 	typedef struct matx_csc_f64_opaque_t* matx_csc_f64_t;
-
 	typedef struct matx_coo_f64_opaque_t* matx_coo_f64_t;
-
 	typedef struct matx_csc_c64_opaque_t* matx_csc_c64_t;
-
 	typedef struct matx_coo_c64_opaque_t* matx_coo_c64_t;
+
 	MATX_API const char* matx_version_string(void);
 #ifdef __cplusplus
 }

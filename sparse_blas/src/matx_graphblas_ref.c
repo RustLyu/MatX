@@ -448,7 +448,7 @@ matx_status_t ref_transpose_c64_grb(
 		MATX_ERROR("GrB_transpose error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	grb_2_coo_f64(out);
+	grb_2_coo_c64(out);
 	return MATX_OK;
 }
 
@@ -533,13 +533,30 @@ matx_status_t ref_norminf_grb(
 	return MATX_OK;
 }
 
+matx_status_t ref_finalize_grb()
+{
+	GrB_finalize();
+}
+
 matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
-	GrB_Info info = GrB_init(GrB_NONBLOCKING);
-	if (info != GrB_SUCCESS)
+	static matx_bool init_grb = false;
+	if (!init_grb)
 	{
-		MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
+		GrB_Info info = GrB_init(GrB_NONBLOCKING);
+		if (info != GrB_SUCCESS)
+		{
+			MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
+		}
+		else
+		{
+			init_grb = true;
+		}
 	}
-	matx_sparse_backend_t b = 
+	if (!init_grb)
+	{
+		MATX_ERROR("GraphBLAS initialization failed");
+	}
+	matx_sparse_backend_t b =
 	{
 		.kind = MATX_SPARSE_BACKEND_GRAPHBLAS,
 		.vt = {
@@ -554,7 +571,8 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 			.conj_trans_c64 = ref_conj_trans_c64_grb,
 			.norm1_f64 = ref_norm1_grb,
 			.norm2_f64 = ref_norm2_grb,
-			.norminf_f64 = ref_norminf_grb
+			.norminf_f64 = ref_norminf_grb,
+			.finalize = ref_finalize_grb
 		}
 	};
 	return b;

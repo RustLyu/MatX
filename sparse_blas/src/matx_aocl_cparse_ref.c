@@ -376,6 +376,10 @@ matx_status_t ref_conj_trans_c64_aocl(matx_coo_c64_t A,
 
 }
 
+matx_status_t ref_finalize_aocl()
+{
+}
+
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 	matx_sparse_backend_t b =
 	{
@@ -389,7 +393,8 @@ matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 			.zsp2md_c64 = ref_zsp2md_c64_aocl,
 			.transpose_f64 = ref_transpose_f64_aocl,
 			.transpose_c64 = ref_transpose_c64_aocl,
-			.conj_trans_c64 = ref_conj_trans_c64_aocl
+			.conj_trans_c64 = ref_conj_trans_c64_aocl,
+			.finalize = ref_finalize_aocl
 		}
 	};
 	MATX_TRACE("AOCL INIT");

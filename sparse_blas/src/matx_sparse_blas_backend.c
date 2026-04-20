@@ -123,3 +123,8 @@ matx_status_t matx_norminf_f64(const matx_sparse_backend_t* backend, matx_vec_f6
 {
 	return backend->vt.norminf_f64(A, out);
 }
+
+MATX_API matx_status_t matx_finalize(const matx_sparse_backend_t* backend)
+{
+	return backend->vt.finalize();
+}

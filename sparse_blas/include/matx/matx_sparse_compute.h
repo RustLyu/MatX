@@ -70,6 +70,8 @@ extern "C" {
 			matx_vec_f64_t A,
 			matx_double* out);
 
+		matx_status_t(*finalize)();
+
 	} matx_sparse_vtable_t;
 
 	typedef struct matx_sparse_backend_t {
@@ -152,6 +154,8 @@ extern "C" {
 	MATX_API matx_status_t matx_norminf_f64(const matx_sparse_backend_t* backend,
 		matx_vec_f64_t A,
 		matx_double* out);
+
+	MATX_API matx_status_t matx_finalize(const matx_sparse_backend_t* backend);
 
 	MATX_API void free_grb_matrix(void* impl);
 	MATX_API void free_grb_vector(void* impl);
