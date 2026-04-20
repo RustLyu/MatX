@@ -25,8 +25,6 @@ target_sources(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_print.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_read.h>
-    $<INSTALL_INTERFACE:include/matx/matx_log.h>
-    $<INSTALL_INTERFACE:include/matx/matx_tm.h>
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_CORE_BUILD=1)
