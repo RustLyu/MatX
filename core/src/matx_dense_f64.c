@@ -41,7 +41,7 @@ matx_status_t matx_dense_f64_create(
 	return MATX_OK;
 }
 
-matx_status_t matx_dense_f64_dup(const matx_alloc_t* alloc, const matx_dense_f64_t const in, matx_dense_f64_t* out)
+matx_status_t matx_dense_f64_dup(const matx_alloc_t* alloc, const matx_dense_f64_t in, matx_dense_f64_t* out)
 {
 	return matx_dense_f64_create(alloc, out, in->layout, in->nrows, in->ncols, in->data);
 }

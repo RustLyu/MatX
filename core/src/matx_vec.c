@@ -34,7 +34,7 @@ matx_status_t matx_vec_f64_create(
   return MATX_OK;
 }
 
-matx_status_t matx_vec_f64_dup(const matx_alloc_t* alloc, const matx_vec_f64_t const in, const matx_vec_f64_t* const out)
+matx_status_t matx_vec_f64_dup(const matx_alloc_t* alloc, const matx_vec_f64_t in, const matx_vec_f64_t* out)
 {
     return matx_vec_f64_create(alloc, out, in->data, in->n);
 }
