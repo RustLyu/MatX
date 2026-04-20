@@ -28,6 +28,22 @@ struct matx_factor_dense_c64_t {
 	matx_layout_t layout;
 };
 
+static void ss_factor_dense_f64_destroy(matx_factor_dense_f64_t* F) {
+	if (!F) return;
+	free(F->lu);
+	free(F->piv);
+	free(F);
+}
+
+static void ss_factor_dense_c64_destroy(
+	matx_factor_dense_c64_t* F)
+{
+	if (!F) return;
+	free(F->lu);
+	free(F->piv);
+	free(F);
+}
+
 // Dense real: LU + solve using LAPACK when available -----------------------
 static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t A,
 	matx_factor_dense_f64_t** out_F) {
@@ -38,6 +54,11 @@ static matx_status_t ss_factor_dense_f64(const matx_dense_f64_t A,
 		return MATX_ERR_INVALID_ARG;
 
 	const size_t n = A->nrows;
+
+	if (*out_F != NULL)
+	{
+		ss_factor_dense_f64_destroy(*out_F);
+	}
 
 	matx_factor_dense_f64_t* F =
 		(matx_factor_dense_f64_t*)malloc(sizeof(*F));
@@ -105,13 +126,6 @@ static matx_status_t ss_solve_dense_f64(const matx_factor_dense_f64_t* F,
 	return MATX_OK;
 }
 
-static void ss_factor_dense_f64_destroy(matx_factor_dense_f64_t* F) {
-	if (!F) return;
-	free(F->lu);
-	free(F->piv);
-	free(F);
-}
-
 static matx_status_t ss_factor_dense_c64(
 	const matx_dense_c64_t A,
 	matx_factor_dense_c64_t** out_F)
@@ -124,6 +138,11 @@ static matx_status_t ss_factor_dense_c64(
 
 	if (A->nrows != A->ncols)
 		return MATX_ERR_INVALID_ARG;
+
+	if (*out_F != NULL)
+	{
+		ss_factor_dense_c64_destroy(*out_F);
+	}
 
 	const size_t n = A->nrows;
 
@@ -196,16 +215,6 @@ static matx_status_t ss_solve_dense_c64(
 
 	return MATX_OK;
 }
-
-static void ss_factor_dense_c64_destroy(
-	matx_factor_dense_c64_t* F)
-{
-	if (!F) return;
-	free(F->lu);
-	free(F->piv);
-	free(F);
-}
-
 
 matx_dense_linsolve_t matx_dense_linsolve_make_cblas(void) {
 	matx_dense_linsolve_t ls = {

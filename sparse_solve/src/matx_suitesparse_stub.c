@@ -20,6 +20,24 @@ struct matx_factor_sparse_c64_t {
 	matx_int64_t n;
 };
 
+static void ss_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F) {
+	if (!F)
+		return;
+	klu_l_free_numeric(&F->N, &F->common);
+	klu_l_free_symbolic(&F->S, &F->common);
+	free(F);
+}
+
+static void ss_factor_csc_c64_destroy(
+	matx_factor_sparse_c64_t* F)
+{
+	if (!F) return;
+
+	klu_zl_free_numeric(&F->N, &F->common);
+	klu_l_free_symbolic(&F->S, &F->common);
+	free(F);
+}
+
 // Sparse real: KLU-based ---------------------------------------------------
 static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 	matx_factor_sparse_f64_t** out_F) {
@@ -28,7 +46,11 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 		MATX_ERROR("input pointer is null error");
 		return MATX_ERR_INVALID_ARG;
 	}
-	
+	if (*out_F != NULL)
+	{
+		ss_factor_csc_f64_destroy(*out_F);
+	}
+
 	matx_status_t st = coo_to_csc_f64(A);
 	if (st != MATX_OK)
 	{
@@ -123,15 +145,6 @@ static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
 	return MATX_OK;
 }
 
-static void ss_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F) {
-	if (!F) 
-		return;
-	klu_l_free_numeric(&F->N, &F->common);
-	klu_l_free_symbolic(&F->S, &F->common);
-	free(F);
-}
-
-
 static matx_status_t ss_factor_csc_c64(
 	matx_coo_c64_t A,
 	matx_factor_sparse_c64_t** out_F)
@@ -140,6 +153,11 @@ static matx_status_t ss_factor_csc_c64(
 	{
 		MATX_ERROR("input pointer is null");
 		return MATX_ERR_INVALID_ARG;
+	}
+
+	if (*out_F != NULL)
+	{
+		ss_factor_csc_c64_destroy(*out_F);
 	}
 
 	matx_status_t st = coo_to_csc_c64(A);
@@ -242,16 +260,6 @@ static matx_status_t ss_solve_csc_c64(
 	}
 
 	return MATX_OK;
-}
-
-static void ss_factor_csc_c64_destroy(
-	matx_factor_sparse_c64_t* F)
-{
-	if (!F) return;
-
-	klu_zl_free_numeric(&F->N, &F->common);
-	klu_l_free_symbolic(&F->S, &F->common);
-	free(F);
 }
 
 matx_sparse_linsolve_t matx_linsolve_make_suitesparse(void) {
