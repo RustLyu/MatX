@@ -8,7 +8,8 @@
 	#include "lapacke.h"
 #elif MATX_ENABLE_BLIS
 	#include "blis.h"
-	#include "FLAME.h"
+	//#include "FLAME.h"
+	#include "lapacke.h"
 #endif
 
 static matx_status_t ref_dgemm(matx_layout_t layout,
