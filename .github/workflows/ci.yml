@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies (Ubuntu 必备)
+      - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake
 
       - name: Configure (CMake, Release)
