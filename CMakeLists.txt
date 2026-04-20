@@ -176,8 +176,13 @@ if(MATX_ENABLE_OPENBLAS)
 	  endif()
   find_package(OpenBLAS REQUIRED)
 elseif(MATX_ENABLE_BLIS)
-  set(amdblis_DIR
-      "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-blis/cmake")
+	if (WIN32)
+	  set(amdblis_DIR
+		  "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-blis/cmake")
+	elseif(LINUX)
+	set(amdblis_DIR
+		  "${3Party_path}/aocl-5.2.0/lib_ILP64")
+	endif()
   find_package(amdblis REQUIRED)
 elseif(MATX_ENABLE_MKL)
   set(mkl_DIR
@@ -187,8 +192,15 @@ endif()
 
 # ---- LAPACK backend ----
 if(MATX_ENABLE_LIBFLAME)
-  set(libflame_DIR
+	if (WIN32)
+	  set(libflame_DIR
       "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-libflame/cmake")
+	elseif(LINUX)
+		set(libflame_DIR
+			  "${3Party_path}/aocl-5.2.0/lib_ILP64")
+	endif()
+
+	  
   find_package(libflame REQUIRED)
 endif()
 
