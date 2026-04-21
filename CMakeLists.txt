@@ -184,6 +184,16 @@ elseif(MATX_ENABLE_BLIS)
 		      "${3Party_path}/aocl-5.2.0/lib_ILP64")
 	endif()
   find_package(amdblis REQUIRED)
+  
+  if (WIN32)
+	  set(aoclutils_DIR
+		  "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-utils/cmake")
+	elseif(LINUX)
+	    set(aoclutils_DIR
+		      "${3Party_path}/aocl-5.2.0/lib_ILP64")
+	endif()
+  find_package(aoclutils REQUIRED)
+  
 elseif(MATX_ENABLE_MKL)
   set(mkl_DIR
       "${3Party_path}/mkl-2025.3.0/cmake")
