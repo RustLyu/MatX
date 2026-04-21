@@ -8,5 +8,5 @@ set_target_properties(amdblis::amdblis PROPERTIES
 
 set_target_properties(amdblis::amdblis PROPERTIES
     IMPORTED_IMPLIB_DEBUG "${amdblis_ROOT}/lib_ILP64/libblis-mt.so.5.2.0"
-    IMPORTED_IMPLIB_RELEASE "${amdblis_ROOT}/lib_ILP64/lib/libblis-mt.so.5.2.0"
+    IMPORTED_IMPLIB_RELEASE "${amdblis_ROOT}/lib_ILP64/libblis-mt.so.5.2.0"
 )
