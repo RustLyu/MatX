@@ -258,22 +258,7 @@
 
 #endif
 
-//------------------------------------------------------------------------------
-// handle the NOTHROW for the BLAS
-//------------------------------------------------------------------------------
-
 #ifdef __cplusplus
-#define NOTHROW noexcept
-#else
-#define NOTHROW
-#endif
-
-//------------------------------------------------------------------------------
-// function definitions
-//------------------------------------------------------------------------------
-
-#ifdef __cplusplus
-#include <complex>
 extern "C"
 {
 #endif
@@ -449,19 +434,19 @@ int SuiteSparse_version     // returns SUITESPARSE_VERSION
 
 #define SUITESPARSE_HAS_VERSION_FUNCTION
 
-#define SUITESPARSE_DATE "Feb 5, 2026"
+#define SUITESPARSE_DATE "July 25, 2025"
 #define SUITESPARSE_MAIN_VERSION    7
-#define SUITESPARSE_SUB_VERSION     12
-#define SUITESPARSE_SUBSUB_VERSION  2
+#define SUITESPARSE_SUB_VERSION     11
+#define SUITESPARSE_SUBSUB_VERSION  0
 
 // version format x.y
 #define SUITESPARSE_VER_CODE(main,sub) ((main) * 1000 + (sub))
-#define SUITESPARSE_VERSION SUITESPARSE_VER_CODE(7, 12)
+#define SUITESPARSE_VERSION SUITESPARSE_VER_CODE(7, 11)
 
 // version format x.y.z
 #define SUITESPARSE__VERCODE(main,sub,patch) \
     (((main)*1000ULL + (sub))*1000ULL + (patch))
-#define SUITESPARSE__VERSION SUITESPARSE__VERCODE(7,12,2)
+#define SUITESPARSE__VERSION SUITESPARSE__VERCODE(7,11,0)
 
 //==============================================================================
 // SuiteSparse interface to the BLAS and LAPACK libraries
@@ -527,31 +512,6 @@ int SuiteSparse_version     // returns SUITESPARSE_VERSION
 #endif
 
 //------------------------------------------------------------------------------
-// complex data types for C and C++ when calling BLAS/LAPACK
-//------------------------------------------------------------------------------
-
-#if defined ( __cplusplus )
-
-    #if defined ( BLAS_Intel10 )
-        #ifndef _MKL_TYPES_H_
-        typedef struct _MKL_Complex8  { float  real ; float  imag ; } MKL_Complex8 ;
-        typedef struct _MKL_Complex16 { double real ; double imag ; } MKL_Complex16 ;
-        #endif
-        #define SUITESPARSE_COMPLEX_FLOAT  _MKL_Complex8
-        #define SUITESPARSE_COMPLEX_DOUBLE _MKL_Complex16
-    #else
-        #define SUITESPARSE_COMPLEX_FLOAT  std::complex<float>
-        #define SUITESPARSE_COMPLEX_DOUBLE std::complex<double>
-    #endif
-
-#else
-
-    #define SUITESPARSE_COMPLEX_FLOAT  void
-    #define SUITESPARSE_COMPLEX_DOUBLE void
-
-#endif
-
-//------------------------------------------------------------------------------
 // SUITESPARSE_BLAS_INT: the BLAS/LAPACK integer (int32_t or int64_t)
 //------------------------------------------------------------------------------
 
@@ -589,7 +549,7 @@ int SuiteSparse_version     // returns SUITESPARSE_VERSION
     ok = ok && ((sizeof (K) >= sizeof (k)) || ((int64_t)(K) == (int64_t)(k))) ;
 
 //------------------------------------------------------------------------------
-// BLAS64_SUFFIX: modify the name of a Fortran BLAS/LAPACK routine
+// SUITESPARSE_BLAS_SUFFIX: modify the name of a Fortran BLAS/LAPACK routine
 //------------------------------------------------------------------------------
 
 // OpenBLAS can be compiled by appending a suffix to each routine, so that the
@@ -605,10 +565,6 @@ int SuiteSparse_version     // returns SUITESPARSE_VERSION
 // following:
 
 //     cd build && cmake -DBLAS64_SUFFIX="_64" ..
-
-// Fedora compiles OpenBLAS with the "64_" suffix and should use:
-
-//     cd build && cmake -DBLAS64_SUFFIX="64_" ..
 
 // This setting could be used by the spack packaging of SuiteSparse when linked
 // with the spack-installed OpenBLAS with 64-bit integers.  See
@@ -767,7 +723,7 @@ void SUITESPARSE_BLAS_DGEMV
     double *Y,
     // input:
     const SUITESPARSE_BLAS_INT *incy
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_SGEMV
 (
@@ -785,7 +741,7 @@ void SUITESPARSE_BLAS_SGEMV
     float *Y,
     // input:
     const SUITESPARSE_BLAS_INT *incy
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_ZGEMV
 (
@@ -793,17 +749,17 @@ void SUITESPARSE_BLAS_ZGEMV
     const char *trans,
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_DOUBLE *alpha,
-    const SUITESPARSE_COMPLEX_DOUBLE *A,
+    const void *alpha,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
-    const SUITESPARSE_COMPLEX_DOUBLE *X,
+    const void *X,
     const SUITESPARSE_BLAS_INT *incx,
-    const SUITESPARSE_COMPLEX_DOUBLE *beta,
+    const void *beta,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *Y,
+    void *Y,
     // input:
     const SUITESPARSE_BLAS_INT *incy
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_CGEMV
 (
@@ -811,17 +767,17 @@ void SUITESPARSE_BLAS_CGEMV
     const char *trans,
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_FLOAT *alpha,
-    const SUITESPARSE_COMPLEX_FLOAT *A,
+    const void *alpha,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
-    const SUITESPARSE_COMPLEX_FLOAT *X,
+    const void *X,
     const SUITESPARSE_BLAS_INT *incx,
-    const SUITESPARSE_COMPLEX_FLOAT *beta,
+    const void *beta,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *Y,
+    void *Y,
     // input:
     const SUITESPARSE_BLAS_INT *incy
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // trsv: solve Lx=b, Ux=b, L'x=b, or U'x=b
@@ -840,7 +796,7 @@ void SUITESPARSE_BLAS_DTRSV
     double *X,
     // input:
     const SUITESPARSE_BLAS_INT *incx
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_STRSV
 (
@@ -855,7 +811,7 @@ void SUITESPARSE_BLAS_STRSV
     float *X,
     // input:
     const SUITESPARSE_BLAS_INT *incx
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_ZTRSV
 (
@@ -864,13 +820,13 @@ void SUITESPARSE_BLAS_ZTRSV
     const char *trans,
     const char *diag,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_DOUBLE *A,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *X,
+    void *X,
     // input:
     const SUITESPARSE_BLAS_INT *incx
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_CTRSV
 (
@@ -879,13 +835,13 @@ void SUITESPARSE_BLAS_CTRSV
     const char *trans,
     const char *diag,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_FLOAT *A,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *X,
+    void *X,
     // input:
     const SUITESPARSE_BLAS_INT *incx
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // trsm: solve LX=B, UX=B, L'X=B, or U'X=B
@@ -907,7 +863,7 @@ void SUITESPARSE_BLAS_DTRSM
     double *B,
     // input:
     const SUITESPARSE_BLAS_INT *ldb
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_STRSM
 (
@@ -925,7 +881,7 @@ void SUITESPARSE_BLAS_STRSM
     float *B,
     // input:
     const SUITESPARSE_BLAS_INT *ldb
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_ZTRSM
 (
@@ -936,14 +892,14 @@ void SUITESPARSE_BLAS_ZTRSM
     const char *diag,
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_DOUBLE *alpha,
-    const SUITESPARSE_COMPLEX_DOUBLE *A,
+    const void *alpha,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *B,
+    void *B,
     // input:
     const SUITESPARSE_BLAS_INT *ldb
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_CTRSM
 (
@@ -954,14 +910,14 @@ void SUITESPARSE_BLAS_CTRSM
     const char *diag,
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_FLOAT *alpha,
-    const SUITESPARSE_COMPLEX_FLOAT *A,
+    const void *alpha,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *B,
+    void *B,
     // input:
     const SUITESPARSE_BLAS_INT *ldb
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // gemm: C = alpha*A*B + beta*C
@@ -985,7 +941,7 @@ void SUITESPARSE_BLAS_DGEMM
     double *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_SGEMM
 (
@@ -1005,7 +961,7 @@ void SUITESPARSE_BLAS_SGEMM
     float *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_ZGEMM
 (
@@ -1015,17 +971,17 @@ void SUITESPARSE_BLAS_ZGEMM
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
     const SUITESPARSE_BLAS_INT *k,
-    const SUITESPARSE_COMPLEX_DOUBLE *alpha,
-    const SUITESPARSE_COMPLEX_DOUBLE *A,
+    const void *alpha,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
-    const SUITESPARSE_COMPLEX_DOUBLE *B,
+    const void *B,
     const SUITESPARSE_BLAS_INT *ldb,
-    const SUITESPARSE_COMPLEX_DOUBLE *beta,
+    const void *beta,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *C,
+    void *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_CGEMM
 (
@@ -1035,17 +991,17 @@ void SUITESPARSE_BLAS_CGEMM
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
     const SUITESPARSE_BLAS_INT *k,
-    const SUITESPARSE_COMPLEX_FLOAT *alpha,
-    const SUITESPARSE_COMPLEX_FLOAT *A,
+    const void *alpha,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
-    const SUITESPARSE_COMPLEX_FLOAT *B,
+    const void *B,
     const SUITESPARSE_BLAS_INT *ldb,
-    const SUITESPARSE_COMPLEX_FLOAT *beta,
+    const void *beta,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *C,
+    void *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // syrk/herk: C = alpha*A*A' + beta*C ; or C = alpha*A'*A + beta*C
@@ -1066,7 +1022,7 @@ void SUITESPARSE_BLAS_DSYRK
     double *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_SSYRK
 (
@@ -1083,7 +1039,7 @@ void SUITESPARSE_BLAS_SSYRK
     float *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_ZHERK
 (
@@ -1092,15 +1048,15 @@ void SUITESPARSE_BLAS_ZHERK
     const char *trans,
     const SUITESPARSE_BLAS_INT *n,
     const SUITESPARSE_BLAS_INT *k,
-    const SUITESPARSE_COMPLEX_DOUBLE *alpha,
-    const SUITESPARSE_COMPLEX_DOUBLE *A,
+    const void *alpha,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
-    const SUITESPARSE_COMPLEX_DOUBLE *beta,
+    const void *beta,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *C,
+    void *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_CHERK
 (
@@ -1109,15 +1065,15 @@ void SUITESPARSE_BLAS_CHERK
     const char *trans,
     const SUITESPARSE_BLAS_INT *n,
     const SUITESPARSE_BLAS_INT *k,
-    const SUITESPARSE_COMPLEX_FLOAT *alpha,
-    const SUITESPARSE_COMPLEX_FLOAT *A,
+    const void *alpha,
+    const void *A,
     const SUITESPARSE_BLAS_INT *lda,
-    const SUITESPARSE_COMPLEX_FLOAT *beta,
+    const void *beta,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *C,
+    void *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // potrf: Cholesky factorization
@@ -1134,7 +1090,7 @@ void SUITESPARSE_LAPACK_DPOTRF
     const SUITESPARSE_BLAS_INT *lda,
     // output:
     SUITESPARSE_BLAS_INT *info
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_SPOTRF
 (
@@ -1147,7 +1103,7 @@ void SUITESPARSE_LAPACK_SPOTRF
     const SUITESPARSE_BLAS_INT *lda,
     // output:
     SUITESPARSE_BLAS_INT *info
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_ZPOTRF
 (
@@ -1155,12 +1111,12 @@ void SUITESPARSE_LAPACK_ZPOTRF
     const char *uplo,
     const SUITESPARSE_BLAS_INT *n,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *A,
+    void *A,
     // input:
     const SUITESPARSE_BLAS_INT *lda,
     // output:
     SUITESPARSE_BLAS_INT *info
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_CPOTRF
 (
@@ -1168,12 +1124,12 @@ void SUITESPARSE_LAPACK_CPOTRF
     const char *uplo,
     const SUITESPARSE_BLAS_INT *n,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *A,
+    void *A,
     // input:
     const SUITESPARSE_BLAS_INT *lda,
     // output:
     SUITESPARSE_BLAS_INT *info
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // scal: Y = alpha*Y
@@ -1188,7 +1144,7 @@ void SUITESPARSE_BLAS_DSCAL
     double *Y,
     // input:
     const SUITESPARSE_BLAS_INT *incy
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_SSCAL
 (
@@ -1199,29 +1155,29 @@ void SUITESPARSE_BLAS_SSCAL
     float *Y,
     // input:
     const SUITESPARSE_BLAS_INT *incy
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_ZSCAL
 (
     // input:
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_DOUBLE *alpha,
+    const void *alpha,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *Y,
+    void *Y,
     // input:
     const SUITESPARSE_BLAS_INT *incy
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_CSCAL
 (
     // input:
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_FLOAT *alpha,
+    const void *alpha,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *Y,
+    void *Y,
     // input:
     const SUITESPARSE_BLAS_INT *incy
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // ger/geru: A = alpha*x*y' + A
@@ -1241,7 +1197,7 @@ void SUITESPARSE_BLAS_DGER
     double *A,
     // input:
     const SUITESPARSE_BLAS_INT *lda
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_SGER
 (
@@ -1257,39 +1213,39 @@ void SUITESPARSE_BLAS_SGER
     float *A,
     // input:
     const SUITESPARSE_BLAS_INT *lda
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_ZGERU
 (
     // input:
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_DOUBLE *alpha,
-    const SUITESPARSE_COMPLEX_DOUBLE *X,
+    const void *alpha,
+    const void *X,
     const SUITESPARSE_BLAS_INT *incx,
-    const SUITESPARSE_COMPLEX_DOUBLE *Y,
+    const void *Y,
     const SUITESPARSE_BLAS_INT *incy,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *A,
+    void *A,
     // input:
     const SUITESPARSE_BLAS_INT *lda
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_BLAS_CGERU
 (
     // input:
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_FLOAT *alpha,
-    const SUITESPARSE_COMPLEX_FLOAT *X,
+    const void *alpha,
+    const void *X,
     const SUITESPARSE_BLAS_INT *incx,
-    const SUITESPARSE_COMPLEX_FLOAT *Y,
+    const void *Y,
     const SUITESPARSE_BLAS_INT *incy,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *A,
+    void *A,
     // input:
     const SUITESPARSE_BLAS_INT *lda
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // larft: T = block Householder factor
@@ -1309,7 +1265,7 @@ void SUITESPARSE_LAPACK_DLARFT
     double *T,
     // input:
     const SUITESPARSE_BLAS_INT *ldt
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_SLARFT
 (
@@ -1325,7 +1281,7 @@ void SUITESPARSE_LAPACK_SLARFT
     float *T,
     // input:
     const SUITESPARSE_BLAS_INT *ldt
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_ZLARFT
 (
@@ -1334,14 +1290,14 @@ void SUITESPARSE_LAPACK_ZLARFT
     const char *storev,
     const SUITESPARSE_BLAS_INT *n,
     const SUITESPARSE_BLAS_INT *k,
-    const SUITESPARSE_COMPLEX_DOUBLE *V,
+    const void *V,
     const SUITESPARSE_BLAS_INT *ldv,
-    const SUITESPARSE_COMPLEX_DOUBLE *Tau,
+    const void *Tau,
     // output:
-    SUITESPARSE_COMPLEX_DOUBLE *T,
+    void *T,
     // input:
     const SUITESPARSE_BLAS_INT *ldt
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_CLARFT
 (
@@ -1350,14 +1306,14 @@ void SUITESPARSE_LAPACK_CLARFT
     const char *storev,
     const SUITESPARSE_BLAS_INT *n,
     const SUITESPARSE_BLAS_INT *k,
-    const SUITESPARSE_COMPLEX_FLOAT *V,
+    const void *V,
     const SUITESPARSE_BLAS_INT *ldv,
-    const SUITESPARSE_COMPLEX_FLOAT *Tau,
+    const void *Tau,
     // output:
-    SUITESPARSE_COMPLEX_FLOAT *T,
+    void *T,
     // input:
     const SUITESPARSE_BLAS_INT *ldt
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // larfb: apply block Householder reflector
@@ -1385,7 +1341,7 @@ void SUITESPARSE_LAPACK_DLARFB
     double *Work,
     // input:
     const SUITESPARSE_BLAS_INT *ldwork
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_SLARFB
 (
@@ -1409,7 +1365,7 @@ void SUITESPARSE_LAPACK_SLARFB
     float *Work,
     // input:
     const SUITESPARSE_BLAS_INT *ldwork
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_ZLARFB
 (
@@ -1421,19 +1377,19 @@ void SUITESPARSE_LAPACK_ZLARFB
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
     const SUITESPARSE_BLAS_INT *k,
-    const SUITESPARSE_COMPLEX_DOUBLE *V,
+    const void *V,
     const SUITESPARSE_BLAS_INT *ldv,
-    const SUITESPARSE_COMPLEX_DOUBLE *T,
+    const void *T,
     const SUITESPARSE_BLAS_INT *ldt,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *C,
+    void *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc,
     // workspace:
-    SUITESPARSE_COMPLEX_DOUBLE *Work,
+    void *Work,
     // input:
     const SUITESPARSE_BLAS_INT *ldwork
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_CLARFB
 (
@@ -1445,19 +1401,19 @@ void SUITESPARSE_LAPACK_CLARFB
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
     const SUITESPARSE_BLAS_INT *k,
-    const SUITESPARSE_COMPLEX_FLOAT *V,
+    const void *V,
     const SUITESPARSE_BLAS_INT *ldv,
-    const SUITESPARSE_COMPLEX_FLOAT *T,
+    const void *T,
     const SUITESPARSE_BLAS_INT *ldt,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *C,
+    void *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc,
     // workspace:
-    SUITESPARSE_COMPLEX_FLOAT *Work,
+    void *Work,
     // input:
     const SUITESPARSE_BLAS_INT *ldwork
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // nrm2: vector 2-norm
@@ -1469,7 +1425,7 @@ double SUITESPARSE_BLAS_DNRM2
     const SUITESPARSE_BLAS_INT *n,
     const double *X,
     const SUITESPARSE_BLAS_INT *incx
-) NOTHROW ;
+) ;
 
 float SUITESPARSE_BLAS_SNRM2
 (
@@ -1477,23 +1433,23 @@ float SUITESPARSE_BLAS_SNRM2
     const SUITESPARSE_BLAS_INT *n,
     const float *X,
     const SUITESPARSE_BLAS_INT *incx
-) NOTHROW ;
+) ;
 
 double SUITESPARSE_BLAS_DZNRM2
 (
     // input:
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_DOUBLE *X,
+    const void *X,
     const SUITESPARSE_BLAS_INT *incx
-) NOTHROW ;
+) ;
 
 float SUITESPARSE_BLAS_SCNRM2
 (
     // input:
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_FLOAT *X,
+    const void *X,
     const SUITESPARSE_BLAS_INT *incx
-) NOTHROW ;
+) ;
 
 //------------------------------------------------------------------------------
 // larfg: generate Householder reflector
@@ -1510,7 +1466,7 @@ void SUITESPARSE_LAPACK_DLARFG
     const SUITESPARSE_BLAS_INT *incx,
     // output:
     double *tau
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_SLARFG
 (
@@ -1523,33 +1479,33 @@ void SUITESPARSE_LAPACK_SLARFG
     const SUITESPARSE_BLAS_INT *incx,
     // output:
     float *tau
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_ZLARFG
 (
     // input:
     const SUITESPARSE_BLAS_INT *n,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *alpha,
-    SUITESPARSE_COMPLEX_DOUBLE *X,
+    void *alpha,
+    void *X,
     // input:
     const SUITESPARSE_BLAS_INT *incx,
     // output:
-    SUITESPARSE_COMPLEX_DOUBLE *tau
-) NOTHROW ;
+    void *tau
+) ;
 
 void SUITESPARSE_LAPACK_CLARFG
 (
     // input:
     const SUITESPARSE_BLAS_INT *n,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *alpha,
-    SUITESPARSE_COMPLEX_FLOAT *X,
+    void *alpha,
+    void *X,
     // input:
     const SUITESPARSE_BLAS_INT *incx,
     // output:
-    SUITESPARSE_COMPLEX_FLOAT *tau
-) NOTHROW ;
+    void *tau
+) ;
 
 //------------------------------------------------------------------------------
 // larf: apply Householder reflector
@@ -1570,7 +1526,7 @@ void SUITESPARSE_LAPACK_DLARF
     const SUITESPARSE_BLAS_INT *ldc,
     // workspace:
     double *Work
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_SLARF
 (
@@ -1587,7 +1543,7 @@ void SUITESPARSE_LAPACK_SLARF
     const SUITESPARSE_BLAS_INT *ldc,
     // workspace:
     float *Work
-) NOTHROW ;
+) ;
 
 void SUITESPARSE_LAPACK_ZLARF
 (
@@ -1595,16 +1551,16 @@ void SUITESPARSE_LAPACK_ZLARF
     const char *side,
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_DOUBLE *V,
+    const void *V,
     const SUITESPARSE_BLAS_INT *incv,
-    const SUITESPARSE_COMPLEX_DOUBLE *tau,
+    const void *tau,
     // input/output:
-    SUITESPARSE_COMPLEX_DOUBLE *C,
+    void *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc,
     // workspace:
-    SUITESPARSE_COMPLEX_DOUBLE *Work
-) NOTHROW ;
+    void *Work
+) ;
 
 void SUITESPARSE_LAPACK_CLARF
 (
@@ -1612,16 +1568,16 @@ void SUITESPARSE_LAPACK_CLARF
     const char *side,
     const SUITESPARSE_BLAS_INT *m,
     const SUITESPARSE_BLAS_INT *n,
-    const SUITESPARSE_COMPLEX_FLOAT *V,
+    const void *V,
     const SUITESPARSE_BLAS_INT *incv,
-    const SUITESPARSE_COMPLEX_FLOAT *tau,
+    const void *tau,
     // input/output:
-    SUITESPARSE_COMPLEX_FLOAT *C,
+    void *C,
     // input:
     const SUITESPARSE_BLAS_INT *ldc,
     // workspace:
-    SUITESPARSE_COMPLEX_FLOAT *Work
-) NOTHROW ;
+    void *Work
+) ;
 
 #endif
 
