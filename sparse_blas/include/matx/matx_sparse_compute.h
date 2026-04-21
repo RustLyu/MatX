@@ -2,6 +2,7 @@
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
+#include "matx/matx_types_internal.h"
 
 #ifdef __cplusplus
 extern "C" {

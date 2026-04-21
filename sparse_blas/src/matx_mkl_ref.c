@@ -1,4 +1,5 @@
 ﻿#include "matx/matx_sparse_compute.h"
+#include "matx/matx_types_internal.h"
 
 #include <limits.h>
 #if MATX_ENABLE_MKL
@@ -7,10 +8,10 @@
 
 matx_status_t ref_spmv_c64_mkl(
 	matx_complex_f64_t alpha,
-	matx_coo_c64_t* A,
-	matx_vec_c64_t* x,
+        matx_coo_c64_t A,
+        matx_vec_c64_t x,
 	matx_complex_f64_t beta,
-	matx_vec_c64_t* y)
+        matx_vec_c64_t y)
 {
 #if MATX_ENABLE_MKL
 	if (!A || !x || !y)
@@ -48,10 +49,10 @@ matx_status_t ref_spmv_c64_mkl(
 
 matx_status_t ref_spmm_c64_mkl(
 	matx_complex_f64_t alpha,
-	const matx_coo_c64_t* A,
-	const matx_dense_c64_t* B,
+        const matx_coo_c64_t A,
+        const matx_dense_c64_t B,
 	matx_complex_f64_t beta,
-	matx_dense_c64_t* C)
+        matx_dense_c64_t C)
 {
 #if MATX_ENABLE_MKL
 	if (!A || !B || !C)
@@ -87,10 +88,10 @@ matx_status_t ref_spmm_c64_mkl(
 
 matx_status_t ref_spmv_f64_mkl(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_vec_f64_t* x,
+        matx_coo_f64_t A,
+        matx_vec_f64_t x,
 	matx_double beta,
-	matx_vec_f64_t* y)
+        matx_vec_f64_t y)
 {
 #if MATX_ENABLE_MKL
 	if (!A || !x || !y)
@@ -121,10 +122,10 @@ matx_status_t ref_spmv_f64_mkl(
 
 matx_status_t ref_spmm_f64_mkl(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_dense_f64_t* B,
+        matx_coo_f64_t A,
+        matx_dense_f64_t B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+        matx_dense_f64_t C)
 {
 #if MATX_ENABLE_MKL
 	if (!A || !B || !C)

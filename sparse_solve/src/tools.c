@@ -4,6 +4,7 @@
 #include "matx/matx_types_internal.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #define COO2CSC_SUCCESS 0
 #define COO2CSC_ERR_OUT_OF_RANGE 1

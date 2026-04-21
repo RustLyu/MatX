@@ -436,12 +436,12 @@ matx_status_t ref_transpose_c64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_f64(A);
+                coo_2_grb_c64(A);
 	}
 	if(!out->handle_grb.impl)
 		return MATX_ERR_INVALID_ARG;
 	if (!out->handle_grb.impl)
-		create_empty_grb_f64(out);
+                create_empty_grb_c64(out);
 	GrB_Info info = GrB_transpose((GrB_Matrix)(out->handle_grb.impl), NULL, NULL, (GrB_Matrix)(A->handle_grb.impl), NULL);
 	if (info != GrB_SUCCESS)
 	{
@@ -491,7 +491,7 @@ matx_status_t ref_norm1_grb(
 {
 	if (A->handle_grb.valid <= 0)
 	{
-		vec_2_grb_c64(A);
+                vec_2_grb_f64(A);
 	}
 
 	// tmp = abs(x)

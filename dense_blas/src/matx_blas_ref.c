@@ -1,4 +1,7 @@
-﻿#include "matx/matx_dense_compute.h"
+﻿    #define _XOPEN_SOURCE 600
+    //#define _POSIX_C_SOURCE 200809L
+    //#include <pthread.h>
+#include "matx/matx_dense_compute.h"
 #include "matx/matx_log.h"
 
 #include <string.h>
