@@ -3,6 +3,7 @@
 #include "matx/matx_types_internal.h"
 
 #include <string.h>
+#include <stdio.h>
 
 matx_status_t matx_dense_f64_create(
 	const matx_alloc_t* alloc,
@@ -11,9 +12,12 @@ matx_status_t matx_dense_f64_create(
 	matx_int64_t rows,
 	matx_int64_t cols,
 	matx_double* data) {
-	if (!out || rows == 0 || cols == 0) return MATX_ERR_INVALID_ARG;
-	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
-	if (!alloc) return MATX_ERR_INVALID_ARG;
+        if (!out || rows == 0 || cols == 0)
+                return MATX_ERR_INVALID_ARG;
+        if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR)
+                return MATX_ERR_INVALID_ARG;
+        if (!alloc)
+                return MATX_ERR_INVALID_ARG;
 	
 	matx_dense_f64_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_dense_f64_opaque_t));
 	memset(out_value, 0, sizeof(matx_dense_f64_opaque_t));
@@ -31,10 +35,11 @@ matx_status_t matx_dense_f64_create(
 	}
 	if (data != NULL)
 	{
-		memcpy(out_value->data, data, sizeof(matx_double) * out_value->nrows * out_value->ncols);
+                memcpy(out_value->data, data, sizeof(matx_double) * n);
 	}
 	if (*out != NULL)
 	{
+                printf("destory out\n");
 		matx_dense_f64_destroy(alloc, *out);
 	}
 	*out = out_value;
@@ -81,10 +86,19 @@ matx_status_t matx_dense_f64_wrap(const matx_alloc_t* alloc,
 }
 
 void matx_dense_f64_destroy(const matx_alloc_t* alloc, matx_dense_f64_t m) {
-	if (!m) return;
+        if (!m)
+                return;
 	if ((m->flags & 1u) != 0u && m->data) {
-		if (alloc) matx_free(alloc, m->data);
+                if (alloc)
+                {
+                        matx_free(alloc, m->data);
+                        m->data = NULL;
+                }
 	}
+        else if(m->flags == 0u)
+        {
+        m->data = NULL;
+        }
 
 	if (m->handle_grb.valid > 0)
 	{
@@ -96,6 +110,6 @@ void matx_dense_f64_destroy(const matx_alloc_t* alloc, matx_dense_f64_t m) {
 		m->handle_grb.valid = -1;
 	}
 	matx_free(alloc, m);
-	memset(m, 0, sizeof(*m));
+        //memset(m, 0, sizeof(*m));
 }
 

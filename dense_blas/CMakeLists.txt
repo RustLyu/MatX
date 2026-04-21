@@ -35,6 +35,7 @@ endif()
 if(MATX_ENABLE_BLIS)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_BLIS=1)
   target_link_libraries(${PROJECT_NAME} PRIVATE amdblis::amdblis)
+  target_link_libraries(${PROJECT_NAME} PRIVATE aoclutils::aoclutils)
 endif()
 
 if(MATX_ENABLE_OPENBLAS)

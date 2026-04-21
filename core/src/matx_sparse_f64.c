@@ -152,11 +152,15 @@ void matx_csc_sparse_f64_destroy(const matx_alloc_t* alloc, matx_csc_f64_t m) {
 
     if ((m->flags & 1u) != 0u) {
         matx_free(alloc, m->col_ptr);
+m->col_ptr = NULL;
         matx_free(alloc, m->row_ind);
+m->row_ind = NULL;
         matx_free(alloc, m->values);
+m->values = NULL;
         matx_free(alloc, m->coo_csc_index_map);
     }
-    memset(m, 0, sizeof(*m));
+    //memset(m, 0, sizeof(*m));
+m->coo_csc_index_map = NULL;
 }
 
 void matx_coo_sparse_f64_destroy(const matx_alloc_t* alloc, matx_coo_f64_t m) {
@@ -166,8 +170,11 @@ void matx_coo_sparse_f64_destroy(const matx_alloc_t* alloc, matx_coo_f64_t m) {
 
     if ((m->flags & 1u) != 0u) {
         matx_free(alloc, (matx_int64_t*)m->rows);
+m->rows = NULL;
         matx_free(alloc, (matx_int64_t*)m->columns);
+m->columns = NULL;
         matx_free(alloc, (matx_double*)m->values);
+m->values = NULL;
     }
 
     if (m->handle_grb.valid > 0)
@@ -205,5 +212,5 @@ void matx_coo_sparse_f64_destroy(const matx_alloc_t* alloc, matx_coo_f64_t m) {
         matx_free(alloc, m->handle_csc);
     }
     matx_free(alloc, m);
-    memset(m, 0, sizeof(*m));
+    //memset(m, 0, sizeof(*m));
 }

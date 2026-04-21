@@ -88,6 +88,7 @@ void matx_dense_c64_destroy(const matx_alloc_t* alloc, matx_dense_c64_t m) {
 	if (!m) return;
 	if ((m->flags & 1u) != 0u && m->data && alloc) {
 		matx_free(alloc, m->data);
+                m->data = NULL;
 	}
 	if (m->handle_grb.valid > 0)
 	{
@@ -99,6 +100,6 @@ void matx_dense_c64_destroy(const matx_alloc_t* alloc, matx_dense_c64_t m) {
 		m->handle_grb.valid = -1;
 	}
 	matx_free(alloc, m);
-	memset(m, 0, sizeof(*m));
+        //memset(m, 0, sizeof(*m));
 }
 

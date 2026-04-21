@@ -25,7 +25,7 @@ TEST(core_dense, wrap_no_ownership) {
   matx_alloc_t a = matx_alloc_default();
   ASSERT_EQ(matx_dense_f64_wrap(&a, &V, 2, 3, 3, MATX_COL_MAJOR, buf), MATX_OK);
   EXPECT_EQ(V->data, buf);
-  matx_dense_f64_destroy(nullptr , V);
+  matx_dense_f64_destroy(&a, V);
   EXPECT_EQ(V->data, nullptr);
 }
 
@@ -64,7 +64,7 @@ TEST(core_dense, dup_f4x4) {
 	matx_dense_f64_destroy(&a, copy);
 }
 
-TEST(core_dense, dmp_c4x4) {
+TEST(core_dense, dup_c4x4) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_dense_c64_t M = NULL;
 	ASSERT_EQ(matx_dense_c64_create(&a, &M, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);

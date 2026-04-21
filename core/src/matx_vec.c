@@ -43,7 +43,8 @@ matx_status_t matx_vec_f64_wrap(const matx_alloc_t* alloc, matx_vec_f64_t* out,
     matx_int64_t n,
     matx_int64_t stride,
     matx_double* data) {
-  if (!out || !data || n == 0 || stride == 0) return MATX_ERR_INVALID_ARG;
+  if (!out || !data || n == 0 || stride == 0)
+return MATX_ERR_INVALID_ARG;
 
   matx_vec_f64_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_f64_opaque_t));
   memset(out_value, 0, sizeof(matx_vec_f64_opaque_t));
@@ -127,6 +128,7 @@ void matx_vec_c64_destroy(const matx_alloc_t* alloc, matx_vec_c64_t v) {
   if (!v) return;
   if ((v->flags & 1u) != 0u && v->data && alloc) {
     matx_free(alloc, v->data);
+v->data = NULL;
   }
 
   if (v->handle_grb.valid > 0)
@@ -139,6 +141,6 @@ void matx_vec_c64_destroy(const matx_alloc_t* alloc, matx_vec_c64_t v) {
       v->handle_grb.valid = -1;
   }
   matx_free(alloc, v);
-  memset(v, 0, sizeof(*v));
+  //memset(v, 0, sizeof(*v));
 }
 

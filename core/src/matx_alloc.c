@@ -5,7 +5,8 @@
 
 static void* matx_std_malloc(size_t size, void* user) {
 	(void)user;
-	return malloc(size);
+        void* ptr = malloc(size);
+        return ptr;
 }
 
 static void matx_std_free(void* ptr, void* user) {
@@ -28,7 +29,8 @@ void* matx_malloc(const matx_alloc_t* a, size_t size) {
 }
 
 void matx_free(const matx_alloc_t* a, void* ptr) {
-	if (!a || !a->free_fn) return;
+        if (!a || !a->free_fn)
+                return;
 	a->free_fn(ptr, a->user);
 }
 

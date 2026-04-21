@@ -169,8 +169,11 @@ void matx_coo_sparse_c64_destroy(const matx_alloc_t* alloc, matx_coo_c64_t m) {
 
     if ((m->flags & 1u) != 0u) {
         matx_free(alloc, (matx_int64_t*)m->rows);
+m->rows = NULL;
         matx_free(alloc, (matx_int64_t*)m->columns);
+m->columns = NULL;
         matx_free(alloc, (matx_complex_f64_t*)m->values);
+m->values = NULL;
     }
 
     if (m->handle_grb.valid > 0)
@@ -198,5 +201,5 @@ void matx_coo_sparse_c64_destroy(const matx_alloc_t* alloc, matx_coo_c64_t m) {
         matx_free(alloc, m->handle_csc);
     }
     matx_free(alloc, m);
-    memset(m, 0, sizeof(*m));
+    //memset(m, 0, sizeof(*m));
 }

@@ -135,7 +135,7 @@ static matx_status_t ss_factor_dense_c64(
 	const matx_dense_c64_t A,
 	matx_factor_dense_c64_t** out_F)
 {
-#if !(defined(MATX_HAVE_OPENBLAS) || defined(MATX_HAVE_BLIS))
+#if !(defined(MATX_HAVE_OPENBLAS) || !defined(MATX_HAVE_BLIS))
 	return MATX_ERR_NOT_SUPPORTED;
 #else
 	if (!A || !out_F)
