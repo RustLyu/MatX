@@ -171,7 +171,7 @@ static matx_status_t ss_factor_dense_c64(
 	}
 	F->layout = A->layout;
         //cblas_zcopy(A->nrows * A->ncols, A->data, 1, F->lu, 1);
-        memcpy(F->lu, A->data, sizeof(matx_complex_f64_t) * n);
+        memcpy(F->lu, A->data, sizeof(matx_complex_f64_t) * A->nrows * A->ncols);
 	matx_int64_t info = LAPACKE_zgetrf(
 		A->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
 		A->nrows,

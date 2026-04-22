@@ -192,7 +192,9 @@ elseif(MATX_ENABLE_BLIS)
 	    set(aoclutils_DIR
 		      "${3Party_path}/aocl-5.2.0/lib_ILP64")
 	endif()
-  find_package(aoclutils REQUIRED)
+  if(LINUX)
+    find_package(aoclutils REQUIRED)
+  endif()
   
 elseif(MATX_ENABLE_MKL)
   set(mkl_DIR

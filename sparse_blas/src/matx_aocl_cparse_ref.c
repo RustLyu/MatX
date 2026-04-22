@@ -5,9 +5,9 @@
 #include <limits.h>
 
 #if MATX_HAVE_AOCL_SPARSE
-	#include <aoclsparse.h>
-        #include <aoclsparse_convert.h>
-        #include <aoclsparse_types.h>
+#include "aoclsparse.h"
+#include "aoclsparse_convert.h"
+#include "aoclsparse_types.h"
 #endif
 
 // y = \alpha \, op(A) \, x + \beta \, y,
@@ -49,7 +49,7 @@ matx_status_t ref_spmv_c64_aocl(
 			(aoclsparse_double_complex*)x->data,
 			&b,
 			(aoclsparse_double_complex*)y->data);
-	
+
 	aoclsparse_destroy_mat_descr(descr);
 
 	if (status != aoclsparse_status_success)
@@ -302,9 +302,9 @@ matx_status_t ref_zsp2md_c64_aocl(
 			(aoclsparse_matrix)A->handle_aocl.impl,
 			aoclsparse_operation_none, descr,
 			(aoclsparse_matrix)B->handle_aocl.impl,
-			a, 
+			a,
 			b,
-                        (void*)C->data,
+			(void*)C->data,
 			aoclsparse_order_row,
 			C->stride
 		);
@@ -336,8 +336,8 @@ matx_status_t ref_transpose_f64_aocl(
 }
 
 matx_status_t ref_transpose_c64_aocl(
-        matx_coo_c64_t A,
-        matx_coo_c64_t out)
+	matx_coo_c64_t A,
+	matx_coo_c64_t out)
 {
 	if (!A)
 		return MATX_ERR_INVALID_ARG;
@@ -375,11 +375,12 @@ matx_status_t ref_conj_trans_c64_aocl(matx_coo_c64_t A,
 	}
 	aocl_2_coo_c64(out);
 #endif
-        return MATX_OK;
+	return MATX_OK;
 }
 
 matx_status_t ref_finalize_aocl()
 {
+	return MATX_OK;
 }
 
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
@@ -394,7 +395,7 @@ matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 			.dsp2md_f64 = ref_dsp2md_f64_aocl,
 			.zsp2md_c64 = ref_zsp2md_c64_aocl,
 			.transpose_f64 = ref_transpose_f64_aocl,
-                        .transpose_c64 = ref_transpose_c64_aocl,
+						.transpose_c64 = ref_transpose_c64_aocl,
 			.conj_trans_c64 = ref_conj_trans_c64_aocl,
 			.finalize = ref_finalize_aocl
 		}
