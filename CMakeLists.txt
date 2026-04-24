@@ -181,7 +181,7 @@ elseif(MATX_ENABLE_BLIS)
 		  "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-blis/cmake")
 	elseif(LINUX)
 	    set(amdblis_DIR
-		      "${3Party_path}/aocl-5.2.0/lib_ILP64")
+		      "${3Party_path}/aocl-5.2.0/cmake")
 	endif()
   find_package(amdblis REQUIRED)
   
@@ -190,7 +190,7 @@ elseif(MATX_ENABLE_BLIS)
 		  "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-utils/cmake")
 	elseif(LINUX)
 	    set(aoclutils_DIR
-		      "${3Party_path}/aocl-5.2.0/lib_ILP64")
+		      "${3Party_path}/aocl-5.2.0/cmake")
 	endif()
   if(LINUX)
     find_package(aoclutils REQUIRED)
@@ -209,7 +209,7 @@ if(MATX_ENABLE_LIBFLAME)
       "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-libflame/cmake")
 	elseif(LINUX)
 		set(libflame_DIR
-			  "${3Party_path}/aocl-5.2.0/lib_ILP64")
+			  "${3Party_path}/aocl-5.2.0/cmake")
 	endif()
 
 	  
@@ -230,7 +230,7 @@ if(MATX_ENABLE_AOCL_SPARSE)
             "${3Party_path}/aocl-5.2.0/AOCL-Windows/amd-sparse/cmake")
     elseif (LINUX)
       set(aoclsparse_DIR
-            "${3Party_path}/aocl-5.2.0/lib_ILP64")
+            "${3Party_path}/aocl-5.2.0/cmake")
     endif()
 
   find_package(aoclsparse REQUIRED)
