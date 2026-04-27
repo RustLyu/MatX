@@ -121,7 +121,8 @@ static matx_status_t ss_solve_dense_f64(const matx_factor_dense_f64_t* F,
 	matx_int64_t info = 0;
 	char trans = 'N';
 
-	info = LAPACKE_dgetrs(F->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR, trans, F->n, nrhs, F->lu, lda, F->piv, x, ldb);
+	info = LAPACKE_dgetrs(F->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR, 
+		trans, F->n, nrhs, F->lu, lda, F->piv, x, ldb);
 	if (info != 0) 
 	{
 		MATX_ERROR("LAPACKE_dgetrs error:%d", info);
@@ -176,7 +177,7 @@ static matx_status_t ss_factor_dense_c64(
 		A->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
 		A->nrows,
 		A->ncols,
-		(_lapack_complex_double*)F->lu,
+		(lapack_complex_double*)F->lu,
 		lda,
 		F->piv
 	);
@@ -215,7 +216,9 @@ static matx_status_t ss_solve_dense_c64(
 	matx_int64_t info = 0;
 	char trans = 'N';
 
-	info = LAPACKE_zgetrs(F->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR, trans, F->n, nrhs, (_lapack_complex_double*)F->lu, lda, F->piv, (_lapack_complex_double*)x->data, ldb);
+	info = LAPACKE_zgetrs(F->layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR, trans, F->n, 
+		nrhs, (lapack_complex_double*)F->lu, lda, F->piv,
+		(lapack_complex_double*)x->data, ldb);
 	if (info != 0)
 	{
 		MATX_ERROR("LAPACKE_dgetrs error:%d", info);
