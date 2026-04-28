@@ -27,17 +27,17 @@ extern "C" {
 #define MATX_VERSION_MAJOR 0
 #define MATX_VERSION_MINOR 1
 #define MATX_VERSION_PATCH 0
-#define MKL_ILP64
-#define OPENBLAS_USE64BITINT
+//#define MKL_ILP64
+//#define OPENBLAS_USE64BITINT
 #define aoclsparse_ILP64
 #define HAVE_LAPACK_CONFIG_H
-#define __EMSCRIPTEN__
+//#define __EMSCRIPTEN__
 #define LAPACK_ILP64
-#define FLA_ENABLE_ILP64 1
+//#define FLA_ENABLE_ILP64 1
 #define LAPACK_COMPLEX_STRUCTURE
 
 #ifndef INT_MAX
-	#define INT_MAX (2147483657)
+	#define INT_MAX (2147483647)
 #endif
 	typedef enum matx_status_t {
 		MATX_OK = 0,
