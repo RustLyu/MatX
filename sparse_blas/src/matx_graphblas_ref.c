@@ -4,15 +4,12 @@
 #include "matx/matx_sparse_compute.h"
 
 #include <limits.h>
+#include <threads.h>
 
 #include <GraphBLAS.h>
 #include "matx/matx_log.h"
 #include "matx/matx_tm.h"
 
-//C(i,j)=k⨁​(A(i,k)⊗B(k,j))
-//C(i,j)=k⨁​(A(i,k)⊗B(k,j))
-//C(i,j)=k⨁​(A(i,k)⊗B(k,j))
-//C(i,j)=k⨁​(A(i,k)⊗B(k,j))
 //C(i,j)=k⨁​(A(i,k)⊗B(k,j))
 
 
@@ -29,57 +26,46 @@ matx_status_t ref_spmv_c64_grb(
 	if (A->ncols != x->n || A->nrows != y->n)
 		return MATX_ERR_INVALID_ARG;
 
-	/* ---------------- build GraphBLAS matrix ---------------- */
-
 	if (A->handle_grb.valid <= 0)
-	{
 		coo_2_grb_c64(A);
-	}
-	/* ---------------- build vectors ---------------- */
 	if (x->handle_grb.valid <= 0)
-	{
 		vec_2_grb_c64(x);
-	}
-
 	if (y->handle_grb.valid <= 0)
-	{
 		vec_2_grb_c64(y);
-	}
-	/* ---------------- gy = alpha*A*x + beta*y ---------------- */
+
 	GxB_FC64_t a = { alpha.real, alpha.imag };
 	GxB_FC64_t b = { beta.real, beta.imag };
 
-	GrB_Vector temp;
-	GrB_Vector_new(&temp, GxB_FC64, y->n);
-	//// temp = A*x
-	GrB_Info info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, (GrB_Matrix)A->handle_grb.impl, (GrB_Vector)x->handle_grb.impl, NULL);
-	if (info != GrB_SUCCESS)
-	{
-		MATX_ERROR("GrB_mxv error: %d", info);
-		return MATX_ERR_INTERNAL;
-	}
-	// temp = alpha*temp
-	info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
-	if (info != GrB_SUCCESS)
-	{
-		MATX_ERROR("GrB_apply alpha*temp error: %d", info);
-		return MATX_ERR_INTERNAL;
-	}
-	// gy = beta*gy
-	info = GrB_apply((GrB_Vector)y->handle_grb.impl, NULL, NULL, GxB_TIMES_FC64, (GrB_Vector)y->handle_grb.impl, b, NULL);
-	if (info != GrB_SUCCESS)
-	{
+	// gy = beta * gy
+	GrB_Info info = GrB_apply((GrB_Vector)y->handle_grb.impl, NULL, NULL,
+		GxB_TIMES_FC64, (GrB_Vector)y->handle_grb.impl, b, NULL);
+	if (info != GrB_SUCCESS) {
 		MATX_ERROR("GrB_apply beta*gy error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	// gy = temp + gy
-	info = GrB_eWiseAdd((GrB_Vector)y->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, (GrB_Vector)y->handle_grb.impl, NULL);
-	if (info != GrB_SUCCESS)
-	{
-		MATX_ERROR("GrB_eWiseAdd temp + gy error: %d", info);
+	// gy += alpha * A * x  (accumulate into gy)
+	GrB_Vector temp;
+	GrB_Vector_new(&temp, GxB_FC64, y->n);
+	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FC64,
+		(GrB_Matrix)A->handle_grb.impl, (GrB_Vector)x->handle_grb.impl, NULL);
+	if (info != GrB_SUCCESS) {
+		GrB_Vector_free(&temp);
+		MATX_ERROR("GrB_mxv error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
+	info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
+	if (info != GrB_SUCCESS) {
+		GrB_Vector_free(&temp);
+		MATX_ERROR("GrB_apply alpha*temp error: %d", info);
+		return MATX_ERR_INTERNAL;
+	}
+	info = GrB_eWiseAdd((GrB_Vector)y->handle_grb.impl, NULL, NULL,
+		GxB_PLUS_FC64, (GrB_Vector)y->handle_grb.impl, temp, NULL);
 	GrB_Vector_free(&temp);
+	if (info != GrB_SUCCESS) {
+		MATX_ERROR("GrB_eWiseAdd error: %d", info);
+		return MATX_ERR_INTERNAL;
+	}
 	grb_2_vec_c64(y);
 	return MATX_OK;
 }
@@ -164,60 +150,46 @@ matx_status_t ref_spmv_f64_grb(
 	if (A->ncols != x->n || A->nrows != y->n)
 		return MATX_ERR_INVALID_ARG;
 
-	/* ---------------- build GraphBLAS matrix ---------------- */
-
 	if (A->handle_grb.valid <= 0)
-	{
 		coo_2_grb_f64(A);
-	}
-	/* ---------------- build vectors ---------------- */
 	if (x->handle_grb.valid <= 0)
-	{
 		vec_2_grb_f64(x);
-	}
-
 	if (y->handle_grb.valid <= 0)
-	{
 		vec_2_grb_f64(y);
-	}
 
-	/* ---------------- gy = alpha*A*x + beta*y ---------------- */
-
-	GrB_Vector temp;
-	matx_int64_t t0 = matx_tm_now(MATX_TM_MICROSECOND);
-	GrB_Info info = GrB_Vector_new(&temp, GrB_FP64, y->n);
-	// temp = A*x
-	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, (GrB_Matrix)A->handle_grb.impl, (GrB_Vector)x->handle_grb.impl, NULL);
-	if (info != GrB_SUCCESS)
-	{
-		MATX_ERROR("GrB_mxv A*x error: %d", info);
-		return MATX_ERR_INTERNAL;
-	}
-	// temp = alpha*temp
-	info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
-	if (info != GrB_SUCCESS)
-	{
-		MATX_ERROR("GrB_apply alpha*temp error: %d", info);
-		return MATX_ERR_INTERNAL;
-	}
-	// gy = beta*gy
-	info = GrB_apply((GrB_Vector)y->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, (GrB_Vector)y->handle_grb.impl, beta, NULL);
-	if (info != GrB_SUCCESS)
-	{
+	// gy = beta * gy
+	GrB_Info info = GrB_apply((GrB_Vector)y->handle_grb.impl, NULL, NULL,
+		GrB_TIMES_FP64, (GrB_Vector)y->handle_grb.impl, beta, NULL);
+	if (info != GrB_SUCCESS) {
 		MATX_ERROR("GrB_apply beta*gy error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	// gy = temp + gy
-	info = GrB_eWiseAdd((GrB_Vector)y->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, (GrB_Vector)y->handle_grb.impl, NULL);
-	if (info != GrB_SUCCESS)
-	{
-		MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
+	// temp = A*x, then gy += alpha*temp
+	matx_int64_t t0 = matx_tm_now(MATX_TM_MICROSECOND);
+	GrB_Vector temp;
+	GrB_Vector_new(&temp, GrB_FP64, y->n);
+	info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FP64,
+		(GrB_Matrix)A->handle_grb.impl, (GrB_Vector)x->handle_grb.impl, NULL);
+	if (info != GrB_SUCCESS) {
+		GrB_Vector_free(&temp);
+		MATX_ERROR("GrB_mxv A*x error: %d", info);
+		return MATX_ERR_INTERNAL;
+	}
+	info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
+	if (info != GrB_SUCCESS) {
+		GrB_Vector_free(&temp);
+		MATX_ERROR("GrB_apply alpha*temp error: %d", info);
+		return MATX_ERR_INTERNAL;
+	}
+	info = GrB_eWiseAdd((GrB_Vector)y->handle_grb.impl, NULL, NULL,
+		GrB_PLUS_FP64, (GrB_Vector)y->handle_grb.impl, temp, NULL);
+	GrB_Vector_free(&temp);
+	if (info != GrB_SUCCESS) {
+		MATX_ERROR("GrB_eWiseAdd temp + gy error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
 	matx_int64_t t1 = matx_tm_now(MATX_TM_MICROSECOND);
-	//printf("GraphBLAS SpMV time: %ld us\n", t1 - t0);
 	MATX_TRACE("GraphBLAS SpMV time: %ld micro.s", t1 - t0);
-	GrB_Vector_free(&temp);
 	grb_2_vec_f64(y);
 	return MATX_OK;
 }
@@ -438,10 +410,8 @@ matx_status_t ref_transpose_c64_grb(
 	{
                 coo_2_grb_c64(A);
 	}
-	if(!out->handle_grb.impl)
-		return MATX_ERR_INVALID_ARG;
 	if (!out->handle_grb.impl)
-                create_empty_grb_c64(out);
+		create_empty_grb_c64(out);
 	GrB_Info info = GrB_transpose((GrB_Matrix)(out->handle_grb.impl), NULL, NULL, (GrB_Matrix)(A->handle_grb.impl), NULL);
 	if (info != GrB_SUCCESS)
 	{
@@ -494,10 +464,11 @@ matx_status_t ref_norm1_grb(
                 vec_2_grb_f64(A);
 	}
 
-	// tmp = abs(x)
-	GrB_apply((GrB_Vector)A->handle_grb.impl, NULL, NULL, GrB_ABS_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
-	// sum(tmp)
-	GrB_reduce(out, NULL, GrB_PLUS_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
+	GrB_Vector tmp;
+	GrB_Vector_dup(&tmp, (GrB_Vector)A->handle_grb.impl);
+	GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
+	GrB_reduce(out, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
+	GrB_Vector_free(&tmp);
 	return MATX_OK;
 }
 
@@ -510,12 +481,12 @@ matx_status_t ref_norm2_grb(
 		vec_2_grb_f64(A);
 	}
 
-	// tmp = x .* x
-	GrB_eWiseMult((GrB_Vector)A->handle_grb.impl, NULL, NULL, GrB_TIMES_FP64, (GrB_Vector)A->handle_grb.impl, (GrB_Vector)A->handle_grb.impl, NULL);
-	// sum
+	GrB_Vector tmp;
+	GrB_Vector_dup(&tmp, (GrB_Vector)A->handle_grb.impl);
+	GrB_eWiseMult(tmp, NULL, NULL, GrB_TIMES_FP64, tmp, tmp, NULL);
 	double sumsq;
-	GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
-
+	GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
+	GrB_Vector_free(&tmp);
 	*out = sqrt(sumsq);
 	return MATX_OK;
 }
@@ -528,32 +499,35 @@ matx_status_t ref_norminf_grb(
 	{
 		vec_2_grb_f64(A);
 	}
-	GrB_apply((GrB_Vector)A->handle_grb.impl, NULL, NULL, GrB_ABS_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
-	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, (GrB_Vector)A->handle_grb.impl, NULL);
+	GrB_Vector tmp;
+	GrB_Vector_dup(&tmp, (GrB_Vector)A->handle_grb.impl);
+	GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
+	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, tmp, NULL);
+	GrB_Vector_free(&tmp);
 	return MATX_OK;
 }
 
 matx_status_t ref_finalize_grb()
 {
 	GrB_finalize();
+	return MATX_OK;
+}
+
+static once_flag grb_init_flag = ONCE_FLAG_INIT;
+static matx_bool grb_init_ok = false;
+
+static void do_grb_init(void) {
+	GrB_Info info = GrB_init(GrB_NONBLOCKING);
+	if (info != GrB_SUCCESS) {
+		MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
+	} else {
+		grb_init_ok = true;
+	}
 }
 
 matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
-	static matx_bool init_grb = false;
-	if (!init_grb)
-	{
-		GrB_Info info = GrB_init(GrB_NONBLOCKING);
-		if (info != GrB_SUCCESS)
-		{
-			MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
-		}
-		else
-		{
-			init_grb = true;
-		}
-	}
-	if (!init_grb)
-	{
+	call_once(&grb_init_flag, do_grb_init);
+	if (!grb_init_ok) {
 		MATX_ERROR("GraphBLAS initialization failed");
 	}
 	matx_sparse_backend_t b =
