@@ -456,7 +456,13 @@ matx_status_t ref_inv_dense_c64(
 
 matx_dense_backend_t matx_blas_make_reference(void) {
 	matx_dense_backend_t b = {
+#if MATX_ENABLE_BLIS
+		.kind = MATX_BLAS_BACKEND_BLIS,
+#elif MATX_ENABLE_OPENBLAS
 		.kind = MATX_BLAS_BACKEND_OPENBLAS,
+#else
+		.kind = MATX_BLAS_BACKEND_REFERENCE,
+#endif
 		.vt = {
 			.dgemm = &ref_dgemm,
 			.zgemm = &ref_zgemm,

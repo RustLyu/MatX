@@ -14,14 +14,7 @@ const char* matx_blas_backend_name(matx_dense_backend_kind_t k) {
 }
 
 static matx_dense_backend_t choose_default_backend(void) {
-	// Build-time selection (simple & portable). Can be extended to runtime CPUID switching later.
-	// If user wants strict control: set -DMATX_BLAS_BACKEND=OPENBLAS/BLIS/REFERENCE
-#if defined(MATX_BLAS_BACKEND_REFERENCE_ONLY)
 	return matx_blas_make_reference();
-#else
-  // If no external backend is wired in, fall back to reference.
-	return matx_blas_make_reference();
-#endif
 }
 
 matx_dense_backend_t matx_blas_default(void) {
@@ -200,17 +193,15 @@ matx_status_t matx_geadd_c64(const matx_dense_backend_t* blas,
 	const size_t n = A->ncols;
 	return blas->vt.zgeadd(
 		A->layout,
-		m, 
+		m,
 		n,
 		&alpha,
-		A->data, 
+		A->data,
 		A->stride,
 		&beta,
-		B->data, 
+		B->data,
 		B->stride
 	);
-
-	return MATX_OK;
 }
 
 matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
@@ -236,8 +227,6 @@ matx_status_t matx_geadd_f64(const matx_dense_backend_t* blas,
 		beta,
 		B->data, B->stride
 	);
-
-	return MATX_OK;
 }
 
 matx_status_t matx_axpy_c64(const matx_dense_backend_t* blas,
