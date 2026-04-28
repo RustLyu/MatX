@@ -30,7 +30,7 @@ matx_status_t matx_dense_f64_create(
 	const size_t n = rows * cols;
 	out_value->data = (matx_double*)matx_malloc(alloc, n * sizeof(matx_double));
 	if (!out_value->data) {
-		memset(out_value, 0, sizeof(*out_value));
+		matx_free(alloc, out_value);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 	if (data != NULL)
@@ -39,7 +39,6 @@ matx_status_t matx_dense_f64_create(
 	}
 	if (*out != NULL)
 	{
-                printf("destory out\n");
 		matx_dense_f64_destroy(alloc, *out);
 	}
 	*out = out_value;
