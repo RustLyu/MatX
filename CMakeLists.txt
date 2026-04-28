@@ -56,6 +56,11 @@ find_package(spdlog REQUIRED)
 
 include(CheckCXXSourceRuns)
 
+# Allow manual override for cross-compilation
+set(MATX_CPU_PLATFORM "" CACHE STRING "Override CPU platform: AMD | INTEL | OTHER (leave empty for auto-detect)")
+
+if(MATX_CPU_PLATFORM STREQUAL "")
+
 set(CPU_DETECT_SOURCE ${CMAKE_BINARY_DIR}/detect_cpu.cpp)
 
 file(WRITE ${CPU_DETECT_SOURCE} "
@@ -104,6 +109,11 @@ elseif(CPU_VENDOR STREQUAL "GenuineIntel")
     set(CPU_PLATFORM "INTEL")
 else()
     set(CPU_PLATFORM "OTHER")
+endif()
+
+else()
+  set(CPU_PLATFORM "${MATX_CPU_PLATFORM}")
+  set(CPU_VENDOR "(manual override)")
 endif()
 
 message(STATUS "CPU vendor detected: ${CPU_VENDOR}")
