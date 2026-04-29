@@ -51,30 +51,145 @@ extern "C" {
 	MATX_API const char* matx_vec_backend_name(matx_vec_backend_kind_t k);
 
 	// ---- Level 1: scale / copy / swap / dot / nrm2 / asum / iamax / axpy ----
+
+	/**
+	 * @brief Scale a real vector by a scalar (DSCAL)
+	 * @formula x[i] := alpha * x[i],  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_scal_f64(const matx_vec_backend_t* blas, matx_double alpha, matx_vec_f64_t x);
+
+	/**
+	 * @brief Scale a complex vector by a scalar (ZSCAL)
+	 * @formula x[i] := alpha * x[i],  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_scal_c64(const matx_vec_backend_t* blas, matx_complex_f64_t alpha, matx_vec_c64_t x);
+
+	/**
+	 * @brief Copy a real vector (DCOPY)
+	 * @formula y[i] := x[i],  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_copy_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, matx_vec_f64_t y);
+
+	/**
+	 * @brief Copy a complex vector (ZCOPY)
+	 * @formula y[i] := x[i],  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_copy_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, matx_vec_c64_t y);
+
+	/**
+	 * @brief Swap two real vectors (DSWAP)
+	 * @formula (x[i], y[i]) := (y[i], x[i]),  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_swap_f64(const matx_vec_backend_t* blas, matx_vec_f64_t x, matx_vec_f64_t y);
+
+	/**
+	 * @brief Swap two complex vectors (ZSWAP)
+	 * @formula (x[i], y[i]) := (y[i], x[i]),  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_swap_c64(const matx_vec_backend_t* blas, matx_vec_c64_t x, matx_vec_c64_t y);
+
+	/**
+	 * @brief Dot product of two real vectors (DDOT)
+	 * @formula result := x^T * y = sum_{i=0}^{n-1} x[i] * y[i]
+	 */
 	MATX_API matx_status_t matx_vec_dot_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, const matx_vec_f64_t y, matx_double* result);
+
+	/**
+	 * @brief Unconjugated dot product of two complex vectors (ZDOTU)
+	 * @formula result := x^T * y = sum_{i=0}^{n-1} x[i] * y[i]  (no conjugation)
+	 */
 	MATX_API matx_status_t matx_vec_dotu_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, const matx_vec_c64_t y, matx_complex_f64_t* result);
+
+	/**
+	 * @brief Conjugated dot product of two complex vectors (ZDOTC)
+	 * @formula result := x^H * y = sum_{i=0}^{n-1} conj(x[i]) * y[i]
+	 */
 	MATX_API matx_status_t matx_vec_dotc_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, const matx_vec_c64_t y, matx_complex_f64_t* result);
+
+	/**
+	 * @brief Euclidean norm of a real vector (DNRM2)
+	 * @formula result := ||x||_2 = sqrt( sum_{i=0}^{n-1} x[i]^2 )
+	 */
 	MATX_API matx_status_t matx_vec_nrm2_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, matx_double* result);
+
+	/**
+	 * @brief Euclidean norm of a complex vector (DZNRM2)
+	 * @formula result := ||x||_2 = sqrt( sum_{i=0}^{n-1} |x[i]|^2 )
+	 */
 	MATX_API matx_status_t matx_vec_nrm2_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, matx_double* result);
+
+	/**
+	 * @brief Sum of absolute values of a real vector (DASUM)
+	 * @formula result := sum_{i=0}^{n-1} |x[i]|
+	 */
 	MATX_API matx_status_t matx_vec_asum_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, matx_double* result);
+
+	/**
+	 * @brief Sum of absolute values of real and imaginary parts of a complex vector (DZASUM)
+	 * @formula result := sum_{i=0}^{n-1} ( |Re(x[i])| + |Im(x[i])| )
+	 */
 	MATX_API matx_status_t matx_vec_asum_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, matx_double* result);
+
+	/**
+	 * @brief Index of element with max absolute value in a real vector (IDAMAX)
+	 * @formula result := argmax_i |x[i]|,  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_iamax_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, matx_int64_t* result);
+
+	/**
+	 * @brief Index of element with max absolute value in a complex vector (IZAMAX)
+	 * @formula result := argmax_i |x[i]|,  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_iamax_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, matx_int64_t* result);
+
+	/**
+	 * @brief Real vector scaled accumulation (DAXPY)
+	 * @formula y[i] := alpha * x[i] + y[i],  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_axpy_f64(const matx_vec_backend_t* blas, matx_double alpha, const matx_vec_f64_t x, matx_vec_f64_t y);
+
+	/**
+	 * @brief Complex vector scaled accumulation (ZAXPY)
+	 * @formula y[i] := alpha * x[i] + y[i],  i = 0, 1, ..., n-1
+	 */
 	MATX_API matx_status_t matx_vec_axpy_c64(const matx_vec_backend_t* blas, matx_complex_f64_t alpha, const matx_vec_c64_t x, matx_vec_c64_t y);
 
 	// ---- Vector norms ----
+
+	/**
+	 * @brief 1-norm of a real vector
+	 * @formula ||v||_1 = sum_{i=0}^{n-1} |v[i]|
+	 */
 	MATX_API matx_status_t matx_vec_norm1_f64(const matx_vec_backend_t* backend, matx_vec_f64_t A, matx_double* out);
+
+	/**
+	 * @brief 1-norm of a complex vector
+	 * @formula ||v||_1 = sum_{i=0}^{n-1} |v[i]|
+	 */
 	MATX_API matx_status_t matx_vec_norm1_c64(const matx_vec_backend_t* backend, matx_vec_c64_t A, matx_double* out);
+
+	/**
+	 * @brief 2-norm (Euclidean norm) of a real vector
+	 * @formula ||v||_2 = sqrt( sum_{i=0}^{n-1} v[i]^2 )
+	 */
 	MATX_API matx_status_t matx_vec_norm2_f64(const matx_vec_backend_t* backend, matx_vec_f64_t A, matx_double* out);
+
+	/**
+	 * @brief 2-norm (Euclidean norm) of a complex vector
+	 * @formula ||v||_2 = sqrt( sum_{i=0}^{n-1} |v[i]|^2 )
+	 */
 	MATX_API matx_status_t matx_vec_norm2_c64(const matx_vec_backend_t* backend, matx_vec_c64_t A, matx_double* out);
+
+	/**
+	 * @brief Infinity-norm of a real vector
+	 * @formula ||v||_inf = max_{i=0,...,n-1} |v[i]|
+	 */
 	MATX_API matx_status_t matx_vec_norminf_f64(const matx_vec_backend_t* backend, matx_vec_f64_t A, matx_double* out);
+
+	/**
+	 * @brief Infinity-norm of a complex vector
+	 * @formula ||v||_inf = max_{i=0,...,n-1} |v[i]|
+	 */
 	MATX_API matx_status_t matx_vec_norminf_c64(const matx_vec_backend_t* backend, matx_vec_c64_t A, matx_double* out);
 
 #ifdef __cplusplus

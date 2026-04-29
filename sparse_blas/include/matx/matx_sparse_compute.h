@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
@@ -87,7 +87,11 @@ extern "C" {
 	MATX_API matx_sparse_backend_t matx_sparse_default(void);
 	MATX_API const char* matx_sparse_backend_name(matx_sparse_backend_kind_t k);
 
-	// C = alpha * A * x + beta * y (A: sparse matrix, x: dense vector, C: dense vector) double version
+	/**
+	 * @brief Sparse matrix-vector multiply for real COO matrix (SpMV)
+	 * @formula y := alpha * A * x + beta * y
+	 *          A is sparse (COO), x and y are dense vectors.
+	 */
 	MATX_API matx_status_t matx_spmv_coo_f64(const matx_sparse_backend_t* backend,
 		matx_double alpha,
 		matx_coo_f64_t A,
@@ -95,7 +99,11 @@ extern "C" {
 		matx_double beta,
 		matx_vec_f64_t y);
 
-	// C = alpha * A * x + beta * y (A: sparse matrix, x: dense vector, C: dense vector) complex version
+	/**
+	 * @brief Sparse matrix-vector multiply for complex COO matrix (SpMV)
+	 * @formula y := alpha * A * x + beta * y
+	 *          A is sparse (COO), x and y are dense vectors.
+	 */
 	MATX_API matx_status_t matx_spmv_coo_c64(const matx_sparse_backend_t* backend,
 		matx_complex_f64_t alpha,
 		matx_coo_c64_t A,
@@ -103,7 +111,11 @@ extern "C" {
 		matx_complex_f64_t beta,
 		matx_vec_c64_t y);
 
-	// C := alpha * A * B + beta * C  (sparse CSC * dense, op() = I for now) double version
+	/**
+	 * @brief Sparse-dense matrix multiply for real COO matrix (SpMM)
+	 * @formula C := alpha * A * B + beta * C
+	 *          A is sparse (COO), B and C are dense matrices.
+	 */
 	MATX_API matx_status_t matx_spmm_coo_f64(const matx_sparse_backend_t* backend,
 		matx_double alpha,
 		matx_coo_f64_t A,
@@ -111,7 +123,11 @@ extern "C" {
 		matx_double beta,
 		matx_dense_f64_t C);
 
-	// C = alpha * A * B + beta * C (A: sparse matrix, B: dense matrix, C: dense matrix) complex version
+	/**
+	 * @brief Sparse-dense matrix multiply for complex COO matrix (SpMM)
+	 * @formula C := alpha * A * B + beta * C
+	 *          A is sparse (COO), B and C are dense matrices.
+	 */
 	MATX_API matx_status_t matx_spmm_coo_c64(const matx_sparse_backend_t* backend,
 		matx_complex_f64_t alpha,
 		matx_coo_c64_t A,
@@ -119,7 +135,11 @@ extern "C" {
 		matx_complex_f64_t beta,
 		matx_dense_c64_t C);
 
-	// C = alpha * A * B + beta * C (A: sparse matrix, B: sparse matrix, C: dense matrix) double version
+	/**
+	 * @brief Sparse-sparse multiply producing dense result, real (SpGEMM -> dense)
+	 * @formula C := alpha * A * B + beta * C
+	 *          A and B are sparse (COO), C is dense matrix.
+	 */
 	MATX_API matx_status_t matx_dsp2md_coo_f64(const matx_sparse_backend_t* backend,
 		matx_double alpha,
 		matx_coo_f64_t A,
@@ -127,7 +147,11 @@ extern "C" {
 		matx_double beta,
 		matx_dense_f64_t C);
 
-	// C = alpha * A * B + beta * C (A: sparse matrix, B: sparse matrix, C: dense matrix) comlex version
+	/**
+	 * @brief Sparse-sparse multiply producing dense result, complex (SpGEMM -> dense)
+	 * @formula C := alpha * A * B + beta * C
+	 *          A and B are sparse (COO), C is dense matrix.
+	 */
 	MATX_API matx_status_t matx_zsp2md_coo_c64(const matx_sparse_backend_t* backend,
 		matx_complex_f64_t alpha,
 		matx_coo_c64_t A,
@@ -135,14 +159,26 @@ extern "C" {
 		matx_complex_f64_t beta,
 		matx_dense_c64_t C);
 
+	/**
+	 * @brief Transpose a real sparse COO matrix
+	 * @formula out[i][j] = A[j][i]  (swap row and column indices)
+	 */
 	MATX_API matx_status_t matx_transpose_coo_f64(const matx_sparse_backend_t* backend,
 		matx_coo_f64_t A,
 		matx_coo_f64_t out);
 
+	/**
+	 * @brief Transpose a complex sparse COO matrix (no conjugation)
+	 * @formula out[i][j] = A[j][i]  (swap row and column indices)
+	 */
 	MATX_API matx_status_t matx_transpose_coo_c64(const matx_sparse_backend_t* backend,
 		matx_coo_c64_t A,
 		matx_coo_c64_t out);
 
+	/**
+	 * @brief Conjugate transpose of a complex sparse COO matrix
+	 * @formula out[i][j] = conj(A[j][i])
+	 */
 	MATX_API matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend,
 		matx_coo_c64_t A,
 		matx_coo_c64_t out);
@@ -151,18 +187,58 @@ extern "C" {
 	MATX_API matx_status_t matx_finalize(const matx_sparse_backend_t* backend);
 
 	// ---- Sparse matrix norms (f64) ----
+
+	/**
+	 * @brief 1-norm of a real sparse COO matrix (max column sum)
+	 * @formula ||A||_1 = max_{j=0,...,n-1} sum_{i=0}^{m-1} |A[i][j]|
+	 */
 	MATX_API matx_status_t matx_norm1_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
+
+	/**
+	 * @brief Infinity-norm of a real sparse COO matrix (max row sum)
+	 * @formula ||A||_inf = max_{i=0,...,m-1} sum_{j=0}^{n-1} |A[i][j]|
+	 */
 	MATX_API matx_status_t matx_norminf_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
+
+	/**
+	 * @brief Frobenius norm of a real sparse COO matrix
+	 * @formula ||A||_F = sqrt( sum_{(i,j) in nnz} A[i][j]^2 )
+	 */
 	MATX_API matx_status_t matx_normfro_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
 
 	// ---- Sparse matrix norms (c64) ----
+
+	/**
+	 * @brief 1-norm of a complex sparse COO matrix (max column sum)
+	 * @formula ||A||_1 = max_{j=0,...,n-1} sum_{i=0}^{m-1} |A[i][j]|
+	 */
 	MATX_API matx_status_t matx_norm1_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
+
+	/**
+	 * @brief Infinity-norm of a complex sparse COO matrix (max row sum)
+	 * @formula ||A||_inf = max_{i=0,...,m-1} sum_{j=0}^{n-1} |A[i][j]|
+	 */
 	MATX_API matx_status_t matx_norminf_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
+
+	/**
+	 * @brief Frobenius norm of a complex sparse COO matrix
+	 * @formula ||A||_F = sqrt( sum_{(i,j) in nnz} |A[i][j]|^2 )
+	 */
 	MATX_API matx_status_t matx_normfro_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
 
 	// ---- Sparse-sparse addition: out = alpha*A + beta*B (COO) ----
+
+	/**
+	 * @brief Sparse matrix addition for real COO matrices
+	 * @formula out := alpha * A + beta * B
+	 */
 	MATX_API matx_status_t matx_spadd_coo_f64(const matx_sparse_backend_t* backend,
 		matx_double alpha, matx_coo_f64_t A, matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out);
+
+	/**
+	 * @brief Sparse matrix addition for complex COO matrices
+	 * @formula out := alpha * A + beta * B
+	 */
 	MATX_API matx_status_t matx_spadd_coo_c64(const matx_sparse_backend_t* backend,
 		matx_complex_f64_t alpha, matx_coo_c64_t A, matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out);
 
@@ -193,4 +269,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-

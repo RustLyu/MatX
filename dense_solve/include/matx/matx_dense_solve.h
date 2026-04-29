@@ -1,4 +1,4 @@
-﻿#ifndef MATX_DENSE_SOLVE_H
+#ifndef MATX_DENSE_SOLVE_H
 #define MATX_DENSE_SOLVE_H
 
 #include "matx/matx_types.h"
@@ -61,12 +61,22 @@ extern "C" {
 
 	// High-level API (thin wrappers over vtable) -------------------------------
 
-	// Dense real
+	// ---- Dense real LU ----
+
+	/**
+	 * @brief LU factorization of a real dense matrix with partial pivoting (DGETRF)
+	 * @formula P * A = L * U
+	 *          where P is a permutation matrix, L is lower triangular with unit diagonal,
+	 *          U is upper triangular.
+	 */
 	MATX_API matx_status_t matx_factor_dense_f64(const matx_dense_linsolve_t* ls,
 		const matx_dense_f64_t A,
 		matx_factor_dense_f64_t** out_F);
 
-
+	/**
+	 * @brief Solve a real linear system using pre-computed LU factorization (DGETRS)
+	 * @formula A * x = b  =>  x = A^{-1} * b
+	 */
 	MATX_API matx_status_t matx_solve_dense_f64_factor(const matx_dense_linsolve_t* ls,
 		const matx_factor_dense_f64_t* F,
 		const matx_double* b,
@@ -75,16 +85,32 @@ extern "C" {
 	MATX_API void matx_factor_dense_f64_destroy(const matx_dense_linsolve_t* ls,
 		matx_factor_dense_f64_t* F);
 
+	/**
+	 * @brief Solve a real linear system directly via LU factorization (DGETRF + DGETRS)
+	 * @formula A * x = b  =>  x = A^{-1} * b
+	 *          Factorizes A internally, solves for x, and discards the factorization.
+	 */
 	MATX_API matx_status_t matx_solve_dense_f64(const matx_dense_linsolve_t* ls,
 		const matx_dense_f64_t A,
 		const matx_double* b,
 		matx_double* x);
 
+	// ---- Dense complex LU ----
 
+	/**
+	 * @brief LU factorization of a complex dense matrix with partial pivoting (ZGETRF)
+	 * @formula P * A = L * U
+	 *          where P is a permutation matrix, L is lower triangular with unit diagonal,
+	 *          U is upper triangular.
+	 */
 	MATX_API matx_status_t matx_factor_dense_c64(const matx_dense_linsolve_t* ls,
 		const matx_dense_c64_t A,
 		matx_factor_dense_c64_t** out_F);
 
+	/**
+	 * @brief Solve a complex linear system using pre-computed LU factorization (ZGETRS)
+	 * @formula A * x = b  =>  x = A^{-1} * b
+	 */
 	MATX_API matx_status_t matx_solve_dense_c64_factor(const matx_dense_linsolve_t* ls,
 		const matx_factor_dense_c64_t* F,
 		const matx_vec_c64_t b,
@@ -93,38 +119,105 @@ extern "C" {
 	MATX_API void matx_factor_dense_c64_destroy(const matx_dense_linsolve_t* ls,
 		matx_factor_dense_c64_t* F);
 
+	/**
+	 * @brief Solve a complex linear system directly via LU factorization (ZGETRF + ZGETRS)
+	 * @formula A * x = b  =>  x = A^{-1} * b
+	 *          Factorizes A internally, solves for x, and discards the factorization.
+	 */
 	MATX_API matx_status_t matx_solve_dense_c64(const matx_dense_linsolve_t* ls,
 		const matx_dense_c64_t A,
 		const matx_vec_c64_t b,
 		matx_vec_c64_t x);
 
 	// ---- Cholesky ----
+
+	/**
+	 * @brief Cholesky factorization of a real SPD matrix (DPOTRF)
+	 * @formula A = L * L^T  (uplo=L)  or  A = U^T * U  (uplo=U)
+	 *          where L is lower triangular, U is upper triangular.
+	 *          A must be symmetric positive-definite.
+	 */
 	MATX_API matx_status_t matx_factor_chol_f64(const matx_dense_linsolve_t* ls,
 		const matx_dense_f64_t A, int uplo, matx_factor_dense_f64_t** out_F);
+
+	/**
+	 * @brief Solve a real SPD system using Cholesky factorization (DPOTRS)
+	 * @formula A * x = b  =>  x = A^{-1} * b
+	 */
 	MATX_API matx_status_t matx_solve_chol_f64(const matx_dense_linsolve_t* ls,
 		const matx_factor_dense_f64_t* F, const matx_double* b, matx_double* x);
+
+	/**
+	 * @brief Solve a real SPD system in one shot (DPOTRF + DPOTRS)
+	 * @formula A * x = b  =>  x = A^{-1} * b
+	 */
 	MATX_API matx_status_t matx_solve_chol_f64_oneshot(const matx_dense_linsolve_t* ls,
 		const matx_dense_f64_t A, int uplo, const matx_double* b, matx_double* x);
+
+	/**
+	 * @brief Cholesky factorization of a complex HPD matrix (ZPOTRF)
+	 * @formula A = L * L^H  (uplo=L)  or  A = U^H * U  (uplo=U)
+	 *          where L is lower triangular, U is upper triangular.
+	 *          A must be Hermitian positive-definite.
+	 */
 	MATX_API matx_status_t matx_factor_chol_c64(const matx_dense_linsolve_t* ls,
 		const matx_dense_c64_t A, int uplo, matx_factor_dense_c64_t** out_F);
+
+	/**
+	 * @brief Solve a complex HPD system using Cholesky factorization (ZPOTRS)
+	 * @formula A * x = b  =>  x = A^{-1} * b
+	 */
 	MATX_API matx_status_t matx_solve_chol_c64(const matx_dense_linsolve_t* ls,
 		const matx_factor_dense_c64_t* F, const matx_vec_c64_t b, matx_vec_c64_t x);
 
 	// ---- Least squares (GELS) ----
+
+	/**
+	 * @brief Solve a real linear least-squares problem via QR/LQ (DGELS)
+	 * @formula min ||b - A * x||_2  (overdetermined, m >= n)
+	 *          or  min ||x||_2 s.t. A * x = b  (underdetermined, m < n)
+	 */
 	MATX_API matx_status_t matx_gels_f64(const matx_dense_linsolve_t* ls,
 		const matx_dense_f64_t A, const matx_double* b, matx_double* x);
+
+	/**
+	 * @brief Solve a complex linear least-squares problem via QR/LQ (ZGELS)
+	 * @formula min ||b - A * x||_2  (overdetermined, m >= n)
+	 *          or  min ||x||_2 s.t. A * x = b  (underdetermined, m < n)
+	 */
 	MATX_API matx_status_t matx_gels_c64(const matx_dense_linsolve_t* ls,
 		const matx_dense_c64_t A, const matx_vec_c64_t b, matx_vec_c64_t x);
 
 	// ---- Symmetric eigenvalue (SYEV) ----
-	// eigenvalues must be pre-allocated (size n); eigenvectors allocated by callee (or NULL to skip)
+
+	/**
+	 * @brief Eigenvalue decomposition of a real symmetric matrix (DSYEV)
+	 * @formula A = Q * diag(W) * Q^T
+	 *          where Q is orthogonal, W is the vector of eigenvalues in ascending order.
+	 *          eigenvalues must be pre-allocated (size n); eigenvectors allocated by callee (or NULL to skip)
+	 */
 	MATX_API matx_status_t matx_syev_f64(const matx_dense_linsolve_t* ls,
 		const matx_dense_f64_t A, matx_vec_f64_t eigenvalues, matx_dense_f64_t* eigenvectors);
 
 	// ---- SVD (GESVD) ----
-	// S must be pre-allocated (size min(m,n)); U and Vt allocated by callee (or NULL to skip)
+
+	/**
+	 * @brief Singular value decomposition of a real matrix (DGESVD)
+	 * @formula A = U * diag(S) * V^T
+	 *          where U is m-by-min(m,n), S contains singular values in descending order,
+	 *          V^T is min(m,n)-by-n. A is m-by-n, overwritten.
+	 *          S must be pre-allocated (size min(m,n)); U and Vt allocated by callee (or NULL to skip)
+	 */
 	MATX_API matx_status_t matx_gesvd_f64(const matx_dense_linsolve_t* ls,
 		const matx_dense_f64_t A, matx_vec_f64_t S, matx_dense_f64_t* U, matx_dense_f64_t* Vt);
+
+	/**
+	 * @brief Singular value decomposition of a complex matrix (ZGESVD)
+	 * @formula A = U * diag(S) * V^H
+	 *          where U is m-by-min(m,n), S contains singular values in descending order,
+	 *          V^H is min(m,n)-by-n. A is m-by-n, overwritten.
+	 *          S must be pre-allocated (size min(m,n)); U and Vt allocated by callee (or NULL to skip)
+	 */
 	MATX_API matx_status_t matx_gesvd_c64(const matx_dense_linsolve_t* ls,
 		const matx_dense_c64_t A, matx_vec_f64_t S, matx_dense_c64_t* U, matx_dense_c64_t* Vt);
 
