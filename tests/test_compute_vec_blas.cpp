@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
 extern "C" {
 #include "matx/matx_types.h"
@@ -6,6 +6,7 @@ extern "C" {
 #include "matx/matx_vec_compute.h"
 #include "matx/matx_types_internal.h"
 }
+#include <math.h>
 
 // ---- scal ----
 
