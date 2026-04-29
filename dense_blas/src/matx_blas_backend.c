@@ -1,4 +1,4 @@
-﻿#include "matx/matx_dense_compute.h"
+#include "matx/matx_dense_compute.h"
 #include "matx/matx_types_internal.h"
 
 // Forward decls
@@ -129,15 +129,15 @@ matx_status_t matx_gemv_c64(const matx_dense_backend_t* blas,
 
 	return blas->vt.zgemv(
 		A->layout,
-		trans_a, 
-		m, 
-		n, 
+		trans_a,
+		m,
+		n,
 		&alpha,
-		A->data, 
-		A->stride, 
+		A->data,
+		A->stride,
 		x->data,
-		x->stride, 
-		&beta, 
+		x->stride,
+		&beta,
 		y->data,
 		y->stride);
 }
@@ -162,16 +162,16 @@ matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
 		return MATX_ERR_INVALID_ARG;
 
 	return blas->vt.dgemv(
-		A->layout, 
-		trans_a, 
-		m, 
-		n, 
+		A->layout,
+		trans_a,
+		m,
+		n,
 		alpha,
-		A->data, 
-		A->stride, 
+		A->data,
+		A->stride,
 		x->data,
-		x->stride, 
-		beta, 
+		x->stride,
+		beta,
 		y->data,
 		y->stride);
 }
@@ -259,4 +259,254 @@ matx_status_t matx_axpy_f64(const matx_dense_backend_t* blas,
 		x->stride,
 		y->data,
 		y->stride);
+}
+
+// ---- Level 1 wrappers ----
+
+matx_status_t matx_scal_f64(const matx_dense_backend_t* blas, matx_double alpha, matx_vec_f64_t x) {
+	if (!blas || !x || !x->data) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dscal) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dscal(x->n, alpha, x->data, x->stride);
+}
+
+matx_status_t matx_scal_c64(const matx_dense_backend_t* blas, matx_complex_f64_t alpha, matx_vec_c64_t x) {
+	if (!blas || !x || !x->data) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.zscal) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.zscal(x->n, &alpha, x->data, x->stride);
+}
+
+matx_status_t matx_copy_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, matx_vec_f64_t y) {
+	if (!blas || !x || !y || !x->data || !y->data) return MATX_ERR_INVALID_ARG;
+	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dcopy) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dcopy(x->n, x->data, x->stride, y->data, y->stride);
+}
+
+matx_status_t matx_copy_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, matx_vec_c64_t y) {
+	if (!blas || !x || !y || !x->data || !y->data) return MATX_ERR_INVALID_ARG;
+	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.zcopy) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.zcopy(x->n, x->data, x->stride, y->data, y->stride);
+}
+
+matx_status_t matx_swap_f64(const matx_dense_backend_t* blas, matx_vec_f64_t x, matx_vec_f64_t y) {
+	if (!blas || !x || !y || !x->data || !y->data) return MATX_ERR_INVALID_ARG;
+	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dswap) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dswap(x->n, x->data, x->stride, y->data, y->stride);
+}
+
+matx_status_t matx_swap_c64(const matx_dense_backend_t* blas, matx_vec_c64_t x, matx_vec_c64_t y) {
+	if (!blas || !x || !y || !x->data || !y->data) return MATX_ERR_INVALID_ARG;
+	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.zswap) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.zswap(x->n, x->data, x->stride, y->data, y->stride);
+}
+
+matx_status_t matx_dot_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, const matx_vec_f64_t y, matx_double* result) {
+	if (!blas || !x || !y || !x->data || !y->data || !result) return MATX_ERR_INVALID_ARG;
+	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.ddot) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.ddot(x->n, x->data, x->stride, y->data, y->stride, result);
+}
+
+matx_status_t matx_dotu_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, const matx_vec_c64_t y, matx_complex_f64_t* result) {
+	if (!blas || !x || !y || !x->data || !y->data || !result) return MATX_ERR_INVALID_ARG;
+	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.zdotu) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.zdotu(x->n, x->data, x->stride, y->data, y->stride, result);
+}
+
+matx_status_t matx_dotc_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, const matx_vec_c64_t y, matx_complex_f64_t* result) {
+	if (!blas || !x || !y || !x->data || !y->data || !result) return MATX_ERR_INVALID_ARG;
+	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.zdotc) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.zdotc(x->n, x->data, x->stride, y->data, y->stride, result);
+}
+
+matx_status_t matx_nrm2_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, matx_double* result) {
+	if (!blas || !x || !x->data || !result) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dnrm2) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dnrm2(x->n, x->data, x->stride, result);
+}
+
+matx_status_t matx_nrm2_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, matx_double* result) {
+	if (!blas || !x || !x->data || !result) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dznrm2) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dznrm2(x->n, x->data, x->stride, result);
+}
+
+matx_status_t matx_asum_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, matx_double* result) {
+	if (!blas || !x || !x->data || !result) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dasum) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dasum(x->n, x->data, x->stride, result);
+}
+
+matx_status_t matx_asum_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, matx_double* result) {
+	if (!blas || !x || !x->data || !result) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dzasum) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dzasum(x->n, x->data, x->stride, result);
+}
+
+matx_status_t matx_iamax_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, matx_int64_t* result) {
+	if (!blas || !x || !x->data || !result) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.idamax) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.idamax(x->n, x->data, x->stride, result);
+}
+
+matx_status_t matx_iamax_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, matx_int64_t* result) {
+	if (!blas || !x || !x->data || !result) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.izamax) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.izamax(x->n, x->data, x->stride, result);
+}
+
+// ---- Level 2 wrappers ----
+
+matx_status_t matx_ger_f64(const matx_dense_backend_t* blas, matx_double alpha,
+	const matx_vec_f64_t x, const matx_vec_f64_t y, matx_dense_f64_t A) {
+	if (!blas || !x || !y || !A || !x->data || !y->data || !A->data) return MATX_ERR_INVALID_ARG;
+	if (A->nrows != x->n || A->ncols != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dger) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dger(A->layout, A->nrows, A->ncols, alpha,
+		x->data, x->stride, y->data, y->stride, A->data, A->stride);
+}
+
+matx_status_t matx_geru_c64(const matx_dense_backend_t* blas, matx_complex_f64_t alpha,
+	const matx_vec_c64_t x, const matx_vec_c64_t y, matx_dense_c64_t A) {
+	if (!blas || !x || !y || !A || !x->data || !y->data || !A->data) return MATX_ERR_INVALID_ARG;
+	if (A->nrows != x->n || A->ncols != y->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.zgeru) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.zgeru(A->layout, A->nrows, A->ncols, &alpha,
+		x->data, x->stride, y->data, y->stride, A->data, A->stride);
+}
+
+matx_status_t matx_trsv_f64(const matx_dense_backend_t* blas, int uplo, int trans, int diag,
+	const matx_dense_f64_t A, matx_vec_f64_t x) {
+	if (!blas || !A || !x || !A->data || !x->data) return MATX_ERR_INVALID_ARG;
+	if (A->nrows != A->ncols || A->ncols != x->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dtrsv) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dtrsv(A->layout, uplo, trans, diag, A->nrows, A->data, A->stride, x->data, x->stride);
+}
+
+matx_status_t matx_trsv_c64(const matx_dense_backend_t* blas, int uplo, int trans, int diag,
+	const matx_dense_c64_t A, matx_vec_c64_t x) {
+	if (!blas || !A || !x || !A->data || !x->data) return MATX_ERR_INVALID_ARG;
+	if (A->nrows != A->ncols || A->ncols != x->n) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.ztrsv) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.ztrsv(A->layout, uplo, trans, diag, A->nrows, A->data, A->stride, x->data, x->stride);
+}
+
+// ---- Level 3 wrappers ----
+
+matx_status_t matx_trsm_f64(const matx_dense_backend_t* blas, int side, int uplo, int trans, int diag,
+	matx_double alpha, const matx_dense_f64_t A, matx_dense_f64_t B) {
+	if (!blas || !A || !B || !A->data || !B->data) return MATX_ERR_INVALID_ARG;
+	if (A->layout != B->layout) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dtrsm) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.dtrsm(A->layout, side, uplo, trans, diag,
+		B->nrows, B->ncols, alpha, A->data, A->stride, B->data, B->stride);
+}
+
+matx_status_t matx_trsm_c64(const matx_dense_backend_t* blas, int side, int uplo, int trans, int diag,
+	matx_complex_f64_t alpha, const matx_dense_c64_t A, matx_dense_c64_t B) {
+	if (!blas || !A || !B || !A->data || !B->data) return MATX_ERR_INVALID_ARG;
+	if (A->layout != B->layout) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.ztrsm) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.ztrsm(A->layout, side, uplo, trans, diag,
+		B->nrows, B->ncols, &alpha, A->data, A->stride, B->data, B->stride);
+}
+
+matx_status_t matx_syrk_f64(const matx_dense_backend_t* blas, int uplo, int trans,
+	matx_double alpha, const matx_dense_f64_t A, matx_double beta, matx_dense_f64_t C) {
+	if (!blas || !A || !C || !A->data || !C->data) return MATX_ERR_INVALID_ARG;
+	if (A->layout != C->layout) return MATX_ERR_INVALID_ARG;
+	if (C->nrows != C->ncols) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.dsyrk) return MATX_ERR_NOT_SUPPORTED;
+	const matx_int64_t n = C->nrows;
+	const matx_int64_t k = trans ? A->nrows : A->ncols;
+	return blas->vt.dsyrk(A->layout, uplo, trans, n, k, alpha, A->data, A->stride, beta, C->data, C->stride);
+}
+
+matx_status_t matx_herk_c64(const matx_dense_backend_t* blas, int uplo, int trans,
+	matx_double alpha, const matx_dense_c64_t A, matx_double beta, matx_dense_c64_t C) {
+	if (!blas || !A || !C || !A->data || !C->data) return MATX_ERR_INVALID_ARG;
+	if (A->layout != C->layout) return MATX_ERR_INVALID_ARG;
+	if (C->nrows != C->ncols) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.zherk) return MATX_ERR_NOT_SUPPORTED;
+	const matx_int64_t n = C->nrows;
+	const matx_int64_t k = trans ? A->nrows : A->ncols;
+	return blas->vt.zherk(A->layout, uplo, trans, n, k, alpha, A->data, A->stride, beta, C->data, C->stride);
+}
+
+// ---- Transpose wrappers ----
+
+matx_status_t matx_transpose_f64(const matx_dense_backend_t* blas,
+	const matx_dense_f64_t A, matx_dense_f64_t out) {
+	if (!blas || !A || !out || !A->data || !out->data) return MATX_ERR_INVALID_ARG;
+	if (out->nrows != A->ncols || out->ncols != A->nrows) return MATX_ERR_INVALID_ARG;
+	if (A->layout != out->layout) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.transpose_f64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.transpose_f64(A->layout, A->nrows, A->ncols, A->data, A->stride, out->data, out->stride);
+}
+
+matx_status_t matx_transpose_c64(const matx_dense_backend_t* blas,
+	const matx_dense_c64_t A, matx_dense_c64_t out) {
+	if (!blas || !A || !out || !A->data || !out->data) return MATX_ERR_INVALID_ARG;
+	if (out->nrows != A->ncols || out->ncols != A->nrows) return MATX_ERR_INVALID_ARG;
+	if (A->layout != out->layout) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.transpose_c64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.transpose_c64(A->layout, A->nrows, A->ncols, A->data, A->stride, out->data, out->stride);
+}
+
+matx_status_t matx_conj_transpose_c64(const matx_dense_backend_t* blas,
+	const matx_dense_c64_t A, matx_dense_c64_t out) {
+	if (!blas || !A || !out || !A->data || !out->data) return MATX_ERR_INVALID_ARG;
+	if (out->nrows != A->ncols || out->ncols != A->nrows) return MATX_ERR_INVALID_ARG;
+	if (A->layout != out->layout) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.conj_transpose_c64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.conj_transpose_c64(A->layout, A->nrows, A->ncols, A->data, A->stride, out->data, out->stride);
+}
+
+// ---- Norm wrappers ----
+
+matx_status_t matx_mat_norm1_f64(const matx_dense_backend_t* blas,
+	const matx_dense_f64_t A, matx_double* out) {
+	if (!blas || !A || !A->data || !out) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.norm1_f64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.norm1_f64(A->layout, A->nrows, A->ncols, A->data, A->stride, out);
+}
+
+matx_status_t matx_mat_norminf_f64(const matx_dense_backend_t* blas,
+	const matx_dense_f64_t A, matx_double* out) {
+	if (!blas || !A || !A->data || !out) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.norminf_f64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.norminf_f64(A->layout, A->nrows, A->ncols, A->data, A->stride, out);
+}
+
+matx_status_t matx_mat_normfro_f64(const matx_dense_backend_t* blas,
+	const matx_dense_f64_t A, matx_double* out) {
+	if (!blas || !A || !A->data || !out) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.normfro_f64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.normfro_f64(A->layout, A->nrows, A->ncols, A->data, A->stride, out);
+}
+
+matx_status_t matx_mat_norm1_c64(const matx_dense_backend_t* blas,
+	const matx_dense_c64_t A, matx_double* out) {
+	if (!blas || !A || !A->data || !out) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.norm1_c64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.norm1_c64(A->layout, A->nrows, A->ncols, A->data, A->stride, out);
+}
+
+matx_status_t matx_mat_norminf_c64(const matx_dense_backend_t* blas,
+	const matx_dense_c64_t A, matx_double* out) {
+	if (!blas || !A || !A->data || !out) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.norminf_c64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.norminf_c64(A->layout, A->nrows, A->ncols, A->data, A->stride, out);
+}
+
+matx_status_t matx_mat_normfro_c64(const matx_dense_backend_t* blas,
+	const matx_dense_c64_t A, matx_double* out) {
+	if (!blas || !A || !A->data || !out) return MATX_ERR_INVALID_ARG;
+	if (!blas->vt.normfro_c64) return MATX_ERR_NOT_SUPPORTED;
+	return blas->vt.normfro_c64(A->layout, A->nrows, A->ncols, A->data, A->stride, out);
 }

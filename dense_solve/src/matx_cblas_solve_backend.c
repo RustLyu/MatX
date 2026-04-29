@@ -93,3 +93,115 @@ matx_status_t matx_solve_dense_c64(const matx_dense_linsolve_t* ls,
   return st;
 }
 
+// ---- Cholesky wrappers ----
+
+matx_status_t matx_factor_chol_f64(const matx_dense_linsolve_t* ls,
+	const matx_dense_f64_t A, int uplo, matx_factor_dense_f64_t** out_F)
+{
+	if (!ls || !A || !out_F)
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.potrf_f64) 
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.potrf_f64(A, uplo, out_F);
+}
+
+matx_status_t matx_solve_chol_f64(const matx_dense_linsolve_t* ls,
+	const matx_factor_dense_f64_t* F, const matx_double* b, matx_double* x)
+{
+	if (!ls || !F || !b || !x) 
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.potrs_f64) 
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.potrs_f64(F, b, x);
+}
+
+matx_status_t matx_solve_chol_f64_oneshot(const matx_dense_linsolve_t* ls,
+	const matx_dense_f64_t A, int uplo, const matx_double* b, matx_double* x) 
+{
+	if (!ls || !A || !b || !x)
+		return MATX_ERR_INVALID_ARG;
+	matx_factor_dense_f64_t* F = NULL;
+	matx_status_t st = matx_factor_chol_f64(ls, A, uplo, &F);
+	if (st != MATX_OK) 
+		return st;
+	st = matx_solve_chol_f64(ls, F, b, x);
+	matx_factor_dense_f64_destroy(ls, F);
+	return st;
+}
+
+matx_status_t matx_factor_chol_c64(const matx_dense_linsolve_t* ls,
+	const matx_dense_c64_t A, int uplo, matx_factor_dense_c64_t** out_F) 
+{
+	if (!ls || !A || !out_F) 
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.potrf_c64)
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.potrf_c64(A, uplo, out_F);
+}
+
+matx_status_t matx_solve_chol_c64(const matx_dense_linsolve_t* ls,
+	const matx_factor_dense_c64_t* F, const matx_vec_c64_t b, matx_vec_c64_t x) 
+{
+	if (!ls || !F || !b || !x) 
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.potrs_c64) 
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.potrs_c64(F, b, x);
+}
+
+// ---- GELS wrappers ----
+
+matx_status_t matx_gels_f64(const matx_dense_linsolve_t* ls,
+	const matx_dense_f64_t A, const matx_double* b, matx_double* x) 
+{
+	if (!ls || !A || !b || !x) 
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.gels_f64) 
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.gels_f64(A, b, x);
+}
+
+matx_status_t matx_gels_c64(const matx_dense_linsolve_t* ls,
+	const matx_dense_c64_t A, const matx_vec_c64_t b, matx_vec_c64_t x) 
+{
+	if (!ls || !A || !b || !x) 
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.gels_c64) 
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.gels_c64(A, b, x);
+}
+
+// ---- SYEV wrapper ----
+
+matx_status_t matx_syev_f64(const matx_dense_linsolve_t* ls,
+	const matx_dense_f64_t A, matx_vec_f64_t eigenvalues, matx_dense_f64_t* eigenvectors) 
+{
+	if (!ls || !A || !eigenvalues) 
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.syev_f64) 
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.syev_f64(A, eigenvalues, eigenvectors);
+}
+
+// ---- GESVD wrappers ----
+
+matx_status_t matx_gesvd_f64(const matx_dense_linsolve_t* ls,
+	const matx_dense_f64_t A, matx_vec_f64_t S, matx_dense_f64_t* U, matx_dense_f64_t* Vt) 
+{
+	if (!ls || !A || !S) 
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.gesvd_f64) 
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.gesvd_f64(A, S, U, Vt);
+}
+
+matx_status_t matx_gesvd_c64(const matx_dense_linsolve_t* ls,
+	const matx_dense_c64_t A, matx_vec_f64_t S, matx_dense_c64_t* U, matx_dense_c64_t* Vt) 
+{
+	if (!ls || !A || !S) 
+		return MATX_ERR_INVALID_ARG;
+	if (!ls->vt.gesvd_c64) 
+		return MATX_ERR_NOT_SUPPORTED;
+	return ls->vt.gesvd_c64(A, S, U, Vt);
+}
+
