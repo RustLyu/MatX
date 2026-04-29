@@ -1,4 +1,4 @@
-#ifndef MATX_FUNC_H
+﻿#ifndef MATX_FUNC_H
 #define MATX_FUNC_H
 
 #include <stddef.h>
@@ -56,7 +56,7 @@ extern "C" {
 		const matx_alloc_t* alloc,
 		const matx_dense_f64_t in,
 		matx_dense_f64_t* out
-		);
+	);
 
 	MATX_API matx_status_t matx_dense_f64_wrap(
 		const matx_alloc_t* alloc,
@@ -109,7 +109,7 @@ extern "C" {
 		const matx_alloc_t* alloc,
 		const matx_dense_c64_t in,
 		matx_dense_c64_t* out
-		);
+	);
 
 	MATX_API matx_status_t matx_dense_c64_wrap(
 		const matx_alloc_t* alloc,
@@ -140,7 +140,7 @@ extern "C" {
 		const matx_alloc_t* alloc,
 		const matx_coo_f64_t in,
 		matx_coo_f64_t* out
-		);
+	);
 
 	MATX_API matx_status_t matx_csc_sparse_f64_create(
 		const matx_alloc_t* alloc,
@@ -178,7 +178,7 @@ extern "C" {
 		const matx_alloc_t* alloc,
 		const matx_coo_c64_t in,
 		matx_coo_c64_t* out
-		);
+	);
 
 	MATX_API matx_status_t matx_coo_sparse_c64_wrap(const matx_alloc_t* alloc,
 		matx_coo_c64_t* out,

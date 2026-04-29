@@ -109,8 +109,7 @@ matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c
 	return backend->vt.conj_trans_c64(A, out);
 }
 
-
-MATX_API matx_status_t matx_finalize(const matx_sparse_backend_t* backend)
+matx_status_t matx_finalize(const matx_sparse_backend_t* backend)
 {
 	return backend->vt.finalize();
 }

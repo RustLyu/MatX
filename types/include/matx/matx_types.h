@@ -10,20 +10,20 @@ extern "C" {
 #endif
 
 #ifdef MATX_BUILD_SHARED
-	#ifdef MATX_PLATFORM_WINDOWS
-		#ifdef matx_types_EXPORTS
-		#define MATX_API __declspec(dllexport)
-		#else
-		#define MATX_API __declspec(dllimport)
-		#endif
-	#else
-		#define MATX_API
-	#endif
+#ifdef MATX_PLATFORM_WINDOWS
+#ifdef matx_types_EXPORTS
+#define MATX_API __declspec(dllexport)
 #else
-	#define MATX_API
+#define MATX_API __declspec(dllimport)
+#endif
+#else
+#define MATX_API
+#endif
+#else
+#define MATX_API
 #endif
 
-// ---- Version ----
+	// ---- Version ----
 #define MATX_VERSION_MAJOR 0
 #define MATX_VERSION_MINOR 1
 #define MATX_VERSION_PATCH 0
@@ -37,7 +37,7 @@ extern "C" {
 #define LAPACK_COMPLEX_STRUCTURE
 
 #ifndef INT_MAX
-	#define INT_MAX (2147483647)
+#define INT_MAX (2147483647)
 #endif
 	typedef enum matx_status_t {
 		MATX_OK = 0,
@@ -57,11 +57,11 @@ extern "C" {
 #endif
 
 #if defined(_MSC_VER)
-	#define MATX_ALIGNED(x) __declspec(align(x))
+#define MATX_ALIGNED(x) __declspec(align(x))
 #elif defined(__GNUC__) || defined(__clang__)
-	#define MATX_ALIGNED(x) __attribute__((aligned(x)))
+#define MATX_ALIGNED(x) __attribute__((aligned(x)))
 #else
-	#define MATX_ALIGNED(x)
+#define MATX_ALIGNED(x)
 #endif
 
 	// ---- Alloc ----
@@ -98,7 +98,7 @@ extern "C" {
 	}matx_handle_t;
 
 	// ---- Real/complex scalar ----
-	#define MATX_COMPLEX_ALIGNMENT 16
+#define MATX_COMPLEX_ALIGNMENT 16
 	typedef struct MATX_ALIGNED(MATX_COMPLEX_ALIGNMENT) matx_complex_f64_t {
 		matx_double real;
 		matx_double imag;

@@ -1,4 +1,4 @@
-#ifndef MATX_LOG_H
+﻿#ifndef MATX_LOG_H
 #define MATX_LOG_H
 
 #include "matx/matx_types.h"
@@ -7,26 +7,26 @@
 extern "C" {
 #endif
 
-    typedef enum
-    {
-        MATX_LOG_TRACE = 0,
-        MATX_LOG_DEBUG,
-        MATX_LOG_INFO,
-        MATX_LOG_WARN,
-        MATX_LOG_ERROR,
-        MATX_LOG_FATAL
-    } matx_log_level;
+	typedef enum
+	{
+		MATX_LOG_TRACE = 0,
+		MATX_LOG_DEBUG,
+		MATX_LOG_INFO,
+		MATX_LOG_WARN,
+		MATX_LOG_ERROR,
+		MATX_LOG_FATAL
+	} matx_log_level;
 
-    MATX_API void matx_log_init(const char* log_dir);
+	MATX_API void matx_log_init(const char* log_dir);
 
-    MATX_API void matx_log_set_level(matx_log_level level);
+	MATX_API void matx_log_set_level(matx_log_level level);
 
-    MATX_API void matx_log_trace(const char* file, int line, const char* fmt, ...);
-    MATX_API void matx_log_debug(const char* file, int line, const char* fmt, ...);
-    MATX_API void matx_log_info(const char* file, int line, const char* fmt, ...);
-    MATX_API void matx_log_warn(const char* file, int line, const char* fmt, ...);
-    MATX_API void matx_log_error(const char* file, int line, const char* fmt, ...);
-    MATX_API void matx_log_fatal(const char* file, int line, const char* fmt, ...);
+	MATX_API void matx_log_trace(const char* file, int line, const char* fmt, ...);
+	MATX_API void matx_log_debug(const char* file, int line, const char* fmt, ...);
+	MATX_API void matx_log_info(const char* file, int line, const char* fmt, ...);
+	MATX_API void matx_log_warn(const char* file, int line, const char* fmt, ...);
+	MATX_API void matx_log_error(const char* file, int line, const char* fmt, ...);
+	MATX_API void matx_log_fatal(const char* file, int line, const char* fmt, ...);
 
 #define MATX_TRACE(fmt, ...) matx_log_trace(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define MATX_DEBUG(fmt, ...) matx_log_debug(__FILE__, __LINE__, fmt, ##__VA_ARGS__)

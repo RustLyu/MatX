@@ -1,4 +1,4 @@
-#ifndef MATX_DENSE_SOLVE_H
+﻿#ifndef MATX_DENSE_SOLVE_H
 #define MATX_DENSE_SOLVE_H
 
 #include "matx/matx_types.h"

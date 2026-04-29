@@ -1,4 +1,5 @@
-#pragma once
+﻿#ifndef MATX_SPARSE_SOLVE_H
+#define MATX_SPARSE_SOLVE_H
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
@@ -144,4 +145,5 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
 #endif

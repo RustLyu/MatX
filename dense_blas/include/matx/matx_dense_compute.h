@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
@@ -15,8 +15,8 @@ extern "C" {
 
 	typedef struct matx_blas_vtable_t {
 		matx_status_t(*dgemm)(matx_layout_t layout,
-            matx_int64_t trans_a,
-            matx_int64_t trans_b,
+			matx_int64_t trans_a,
+			matx_int64_t trans_b,
 			matx_int64_t m,
 			matx_int64_t n,
 			matx_int64_t k,
@@ -29,8 +29,8 @@ extern "C" {
 			matx_double* c,
 			matx_int64_t ldc);
 		matx_status_t(*zgemm)(matx_layout_t layout,
-            matx_int64_t trans_a,
-            matx_int64_t trans_b,
+			matx_int64_t trans_a,
+			matx_int64_t trans_b,
 			matx_int64_t m,
 			matx_int64_t n,
 			matx_int64_t k,
@@ -43,7 +43,7 @@ extern "C" {
 			void* C,
 			matx_int64_t ldc);
 		matx_status_t(*zgemv)(matx_layout_t layout,
-            matx_int64_t trans_a,
+			matx_int64_t trans_a,
 			matx_int64_t m,
 			matx_int64_t n,
 			const void* alpha,
@@ -56,7 +56,7 @@ extern "C" {
 			matx_int64_t ldc);
 
 		matx_status_t(*dgemv)(matx_layout_t layout,
-            matx_int64_t trans_a,
+			matx_int64_t trans_a,
 			matx_int64_t m,
 			matx_int64_t n,
 			matx_double alpha,
@@ -88,7 +88,7 @@ extern "C" {
 			void* B,
 			matx_int64_t ldb);
 
-		matx_status_t (*inv_dense_f64)(
+		matx_status_t(*inv_dense_f64)(
 			matx_layout_t layout,
 			matx_int64_t rows,
 			matx_int64_t cols,
@@ -127,27 +127,27 @@ extern "C" {
 			matx_int64_t n, matx_int64_t k, matx_double alpha,
 			const void* A, matx_int64_t lda, matx_double beta, void* C, matx_int64_t ldc);
 
-			// ---- Transpose ----
-			matx_status_t(*transpose_f64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const matx_double* A, matx_int64_t lda, matx_double* out, matx_int64_t ldc);
-			matx_status_t(*transpose_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const void* A, matx_int64_t lda, void* out, matx_int64_t ldc);
-			matx_status_t(*conj_transpose_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const void* A, matx_int64_t lda, void* out, matx_int64_t ldc);
+		// ---- Transpose ----
+		matx_status_t(*transpose_f64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const matx_double* A, matx_int64_t lda, matx_double* out, matx_int64_t ldc);
+		matx_status_t(*transpose_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const void* A, matx_int64_t lda, void* out, matx_int64_t ldc);
+		matx_status_t(*conj_transpose_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const void* A, matx_int64_t lda, void* out, matx_int64_t ldc);
 
-			// ---- Norms ----
-			matx_status_t(*norm1_f64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const matx_double* A, matx_int64_t lda, matx_double* out);
-			matx_status_t(*norminf_f64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const matx_double* A, matx_int64_t lda, matx_double* out);
-			matx_status_t(*normfro_f64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const matx_double* A, matx_int64_t lda, matx_double* out);
-			matx_status_t(*norm1_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const void* A, matx_int64_t lda, matx_double* out);
-			matx_status_t(*norminf_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const void* A, matx_int64_t lda, matx_double* out);
-			matx_status_t(*normfro_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-				const void* A, matx_int64_t lda, matx_double* out);
+		// ---- Norms ----
+		matx_status_t(*norm1_f64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const matx_double* A, matx_int64_t lda, matx_double* out);
+		matx_status_t(*norminf_f64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const matx_double* A, matx_int64_t lda, matx_double* out);
+		matx_status_t(*normfro_f64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const matx_double* A, matx_int64_t lda, matx_double* out);
+		matx_status_t(*norm1_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const void* A, matx_int64_t lda, matx_double* out);
+		matx_status_t(*norminf_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const void* A, matx_int64_t lda, matx_double* out);
+		matx_status_t(*normfro_c64)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const void* A, matx_int64_t lda, matx_double* out);
 
 	} matx_dense_vtable_t;
 
