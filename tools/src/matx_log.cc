@@ -1,4 +1,4 @@
-#include "matx/matx_log.h"
+﻿#include "matx/matx_log.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/async.h>
@@ -18,6 +18,8 @@ static void log_impl(spdlog::level::level_enum level,
     const char* fmt,
     va_list args)
 {
+    if (g_logger == NULL)
+        return;
     char buffer[2048];
 
     vsnprintf(buffer, sizeof(buffer), fmt, args);

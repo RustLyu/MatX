@@ -13,7 +13,7 @@ matx_status_t matx_read_dense_mtx_f64(const matx_alloc_t* alloc, matx_dense_f64_
     std::ifstream is(file);
     if (!is.is_open())
     {
-        MATX_ERROR("open file error. path:%f", file);
+        MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
 
@@ -22,7 +22,12 @@ matx_status_t matx_read_dense_mtx_f64(const matx_alloc_t* alloc, matx_dense_f64_
     matx_int64_t layout = -1;
     is >> m >> n >> layout;
 
-    matx_dense_f64_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
+    auto status = matx_dense_f64_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
+    if (status != MATX_OK)
+    {
+        MATX_ERROR("create dense mtx failed code:%d", status);
+        return ret;
+    }
     (*mtx)->stride = ((*mtx)->layout == MATX_ROW_MAJOR) ? (*mtx)->ncols : (*mtx)->nrows;
     for (matx_int64_t i = 0; i < (*mtx)->nrows; ++i) {
         for (matx_int64_t j = 0; j < (*mtx)->ncols; ++j) {
@@ -44,7 +49,7 @@ matx_status_t matx_read_dense_mtx_c64(const matx_alloc_t* alloc, matx_dense_c64_
     std::ifstream is(file);
     if (!is.is_open())
     {
-        MATX_ERROR("open file error. path:%f", file);
+        MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
 
@@ -53,7 +58,12 @@ matx_status_t matx_read_dense_mtx_c64(const matx_alloc_t* alloc, matx_dense_c64_
     matx_int64_t layout = -1;
     is >> m >> n >> layout;
 
-    matx_dense_c64_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
+    auto status = matx_dense_c64_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
+    if (status != MATX_OK)
+    {
+        MATX_ERROR("create dense mtx failed code:%d", status);
+        return ret;
+    }
     (*mtx)->stride = ((*mtx)->layout == MATX_ROW_MAJOR) ? (*mtx)->ncols : (*mtx)->nrows;
     for (matx_int64_t i = 0; i < (*mtx)->nrows; ++i) {
         for (matx_int64_t j = 0; j < (*mtx)->ncols; ++j) {
@@ -75,7 +85,7 @@ matx_status_t matx_read_sparse_mtx_f64(const matx_alloc_t* alloc, matx_coo_f64_t
     std::ifstream is(file);
     if (!is.is_open())
     {
-        MATX_ERROR("open file error. path:%f", file);
+        MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
 
@@ -84,7 +94,12 @@ matx_status_t matx_read_sparse_mtx_f64(const matx_alloc_t* alloc, matx_coo_f64_t
     matx_int64_t nnz = -1;
     is >> m >> n >> nnz;
 
-    matx_coo_sparse_f64_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
+    auto status = matx_coo_sparse_f64_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
+    if (status != MATX_OK)
+    {
+        MATX_ERROR("create coo sparse mtx failed code:%d", status);
+        return ret;
+    }
     for (matx_int64_t i = 0; i < nnz; ++i) 
     {
         is >> (*mtx)->rows[i] >> (*mtx)->columns[i] >> (*mtx)->values[i];
@@ -102,7 +117,7 @@ matx_status_t matx_read_sparse_mtx_c64(const matx_alloc_t* alloc, matx_coo_c64_t
     std::ifstream is(file);
     if (!is.is_open())
     {
-        MATX_ERROR("open file error. path:%f", file);
+        MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
 
@@ -111,7 +126,12 @@ matx_status_t matx_read_sparse_mtx_c64(const matx_alloc_t* alloc, matx_coo_c64_t
     matx_int64_t nnz = -1;
     is >> m >> n >> nnz;
 
-    matx_coo_sparse_c64_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
+    auto status = matx_coo_sparse_c64_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
+    if (status != MATX_OK)
+    {
+        MATX_ERROR("create coo sparse mtx failed code:%d", status);
+        return ret;
+    }
     for (matx_int64_t i = 0; i < nnz; ++i)
     {
         is >> (*mtx)->rows[i] >> (*mtx)->columns[i] >> (*mtx)->values[i].real >> (*mtx)->values[i].imag;
@@ -129,14 +149,19 @@ matx_status_t matx_read_vec_f64(const matx_alloc_t* alloc, matx_vec_f64_t* vec, 
     std::ifstream is(file);
     if (!is.is_open())
     {
-        MATX_ERROR("open file error. path:%f", file);
+        MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
 
     matx_int64_t n = -1;
     is >> n;
 
-    matx_vec_f64_create(alloc, vec, NULL, n);
+    auto status = matx_vec_f64_create(alloc, vec, NULL, n);
+    if (status != MATX_OK)
+    {
+        MATX_ERROR("create vec failed code:%d", status);
+        return ret;
+    }
     for (matx_int64_t i = 0; i < n; ++i)
     {
         is >> (*vec)->data[i];
@@ -154,14 +179,19 @@ matx_status_t matx_read_vec_c64(const matx_alloc_t* alloc, matx_vec_c64_t* vec, 
     std::ifstream is(file);
     if (!is.is_open())
     {
-        MATX_ERROR("open file error. path:%f", file);
+        MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
 
     matx_int64_t n = -1;
     is >> n;
 
-    matx_vec_c64_create(alloc, vec, NULL, n);
+    auto status = matx_vec_c64_create(alloc, vec, NULL, n);
+    if (status != MATX_OK)
+    {
+        MATX_ERROR("create vec failed code:%d", status);
+        return ret;
+    }
     for (matx_int64_t i = 0; i < n; ++i)
     {
         is >> (*vec)->data[i].real >> (*vec)->data[i].imag;

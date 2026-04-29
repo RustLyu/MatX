@@ -85,6 +85,7 @@ extern "C" {
 
 	// Initialize default backend based on MATX_BLAS_BACKEND (AUTO picks a reasonable default at build time).
 	MATX_API matx_sparse_backend_t matx_sparse_default(void);
+	MATX_API matx_sparse_backend_t matx_sparse_by_type(matx_sparse_backend_kind_t t);
 	MATX_API const char* matx_sparse_backend_name(matx_sparse_backend_kind_t k);
 
 	/**
