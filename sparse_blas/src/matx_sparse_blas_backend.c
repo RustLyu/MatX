@@ -128,3 +128,35 @@ MATX_API matx_status_t matx_finalize(const matx_sparse_backend_t* backend)
 {
 	return backend->vt.finalize();
 }
+
+matx_status_t matx_norm1_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out) {
+	if (!backend || !A || !out) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.norm1_mat_f64) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.norm1_mat_f64(A, out);
+}
+
+matx_status_t matx_norminf_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out) {
+	if (!backend || !A || !out) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.norminf_mat_f64) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.norminf_mat_f64(A, out);
+}
+
+matx_status_t matx_normfro_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out) {
+	if (!backend || !A || !out) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.normfro_mat_f64) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.normfro_mat_f64(A, out);
+}
+
+matx_status_t matx_spadd_coo_f64(const matx_sparse_backend_t* backend,
+	matx_double alpha, matx_coo_f64_t A, matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out) {
+	if (!backend || !A || !B || !out) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spadd_f64) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spadd_f64(alpha, A, beta, B, out);
+}
+
+matx_status_t matx_spadd_coo_c64(const matx_sparse_backend_t* backend,
+	matx_complex_f64_t alpha, matx_coo_c64_t A, matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out) {
+	if (!backend || !A || !B || !out) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spadd_c64) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spadd_c64(alpha, A, beta, B, out);
+}

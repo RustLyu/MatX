@@ -4,6 +4,7 @@
 #include "matx/matx_sparse_compute.h"
 
 #include <limits.h>
+#include <math.h>
 #include <threads.h>
 
 #include <GraphBLAS.h>
@@ -513,6 +514,112 @@ matx_status_t ref_finalize_grb()
 	return MATX_OK;
 }
 
+// ---- Sparse matrix norms ----
+
+matx_status_t ref_norm1_mat_grb(matx_coo_f64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (A->handle_grb.valid <= 0) coo_2_grb_f64(A);
+
+	GrB_Matrix tmp;
+	GrB_Matrix_dup(&tmp, (GrB_Matrix)A->handle_grb.impl);
+	GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
+	GrB_Vector col_sums;
+	GrB_Vector_new(&col_sums, GrB_FP64, A->ncols);
+	GrB_reduce(col_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
+	GrB_Matrix_free(&tmp);
+	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, col_sums, NULL);
+	GrB_Vector_free(&col_sums);
+	return MATX_OK;
+}
+
+matx_status_t ref_norminf_mat_grb(matx_coo_f64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (A->handle_grb.valid <= 0) coo_2_grb_f64(A);
+
+	GrB_Matrix tmp;
+	GrB_Matrix_dup(&tmp, (GrB_Matrix)A->handle_grb.impl);
+	GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
+	GrB_Vector row_sums;
+	GrB_Vector_new(&row_sums, GrB_FP64, A->nrows);
+	GrB_reduce(row_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, tmp, GrB_DESC_T0);
+	GrB_Matrix_free(&tmp);
+	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, row_sums, NULL);
+	GrB_Vector_free(&row_sums);
+	return MATX_OK;
+}
+
+matx_status_t ref_normfro_mat_grb(matx_coo_f64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (A->handle_grb.valid <= 0) coo_2_grb_f64(A);
+
+	GrB_Matrix tmp;
+	GrB_Matrix_dup(&tmp, (GrB_Matrix)A->handle_grb.impl);
+	GrB_eWiseMult(tmp, NULL, NULL, GrB_TIMES_FP64, tmp, tmp, NULL);
+	double sumsq = 0.0;
+	GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
+	GrB_Matrix_free(&tmp);
+	*out = sqrt(sumsq);
+	return MATX_OK;
+}
+
+// ---- Sparse-sparse addition ----
+
+matx_status_t ref_spadd_f64_grb(matx_double alpha, matx_coo_f64_t A,
+	matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out) {
+	if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
+	if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
+	if (A->handle_grb.valid <= 0) coo_2_grb_f64(A);
+	if (B->handle_grb.valid <= 0) coo_2_grb_f64(B);
+
+	GrB_Matrix temp_a;
+	GrB_Matrix_dup(&temp_a, (GrB_Matrix)A->handle_grb.impl);
+	GrB_apply(temp_a, NULL, NULL, GrB_TIMES_FP64, temp_a, alpha, NULL);
+	GrB_Matrix temp_b;
+	GrB_Matrix_dup(&temp_b, (GrB_Matrix)B->handle_grb.impl);
+	GrB_apply(temp_b, NULL, NULL, GrB_TIMES_FP64, temp_b, beta, NULL);
+
+	create_empty_grb_f64(out);
+	GrB_Info info = GrB_eWiseAdd((GrB_Matrix)out->handle_grb.impl, NULL, NULL,
+		GrB_PLUS_FP64, temp_a, temp_b, NULL);
+	GrB_Matrix_free(&temp_a);
+	GrB_Matrix_free(&temp_b);
+	if (info != GrB_SUCCESS) {
+		MATX_ERROR("GrB_eWiseAdd spadd_f64 error: %d", info);
+		return MATX_ERR_INTERNAL;
+	}
+	grb_2_coo_f64(out);
+	return MATX_OK;
+}
+
+matx_status_t ref_spadd_c64_grb(matx_complex_f64_t alpha, matx_coo_c64_t A,
+	matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out) {
+	if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
+	if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
+	if (A->handle_grb.valid <= 0) coo_2_grb_c64(A);
+	if (B->handle_grb.valid <= 0) coo_2_grb_c64(B);
+
+	GxB_FC64_t a = { alpha.real, alpha.imag };
+	GxB_FC64_t b = { beta.real, beta.imag };
+	GrB_Matrix temp_a;
+	GrB_Matrix_dup(&temp_a, (GrB_Matrix)A->handle_grb.impl);
+	GrB_apply(temp_a, NULL, NULL, GxB_TIMES_FC64, temp_a, a, NULL);
+	GrB_Matrix temp_b;
+	GrB_Matrix_dup(&temp_b, (GrB_Matrix)B->handle_grb.impl);
+	GrB_apply(temp_b, NULL, NULL, GxB_TIMES_FC64, temp_b, b, NULL);
+
+	create_empty_grb_c64(out);
+	GrB_Info info = GrB_eWiseAdd((GrB_Matrix)out->handle_grb.impl, NULL, NULL,
+		GxB_PLUS_FC64, temp_a, temp_b, NULL);
+	GrB_Matrix_free(&temp_a);
+	GrB_Matrix_free(&temp_b);
+	if (info != GrB_SUCCESS) {
+		MATX_ERROR("GrB_eWiseAdd spadd_c64 error: %d", info);
+		return MATX_ERR_INTERNAL;
+	}
+	grb_2_coo_c64(out);
+	return MATX_OK;
+}
+
 static once_flag grb_init_flag = ONCE_FLAG_INIT;
 static matx_bool grb_init_ok = false;
 
@@ -546,7 +653,12 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 			.norm1_f64 = ref_norm1_grb,
 			.norm2_f64 = ref_norm2_grb,
 			.norminf_f64 = ref_norminf_grb,
-			.finalize = ref_finalize_grb
+			.finalize = ref_finalize_grb,
+			.norm1_mat_f64 = ref_norm1_mat_grb,
+			.norminf_mat_f64 = ref_norminf_mat_grb,
+			.normfro_mat_f64 = ref_normfro_mat_grb,
+			.spadd_f64 = ref_spadd_f64_grb,
+			.spadd_c64 = ref_spadd_c64_grb,
 		}
 	};
 	return b;
