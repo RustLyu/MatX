@@ -1,4 +1,4 @@
-﻿#ifndef MATX_FUNC_H
+#ifndef MATX_FUNC_H
 #define MATX_FUNC_H
 
 #include <stddef.h>
@@ -16,8 +16,8 @@ extern "C" {
 	MATX_API void matx_free(const matx_alloc_t* a, void* ptr);
 
 	MATX_API matx_status_t matx_vec_f64_create(
-		const matx_alloc_t* alloc, 
-		matx_vec_f64_t* out, 
+		const matx_alloc_t* alloc,
+		matx_vec_f64_t* out,
 		matx_double* data,
 		matx_int64_t n);
 
@@ -26,14 +26,14 @@ extern "C" {
 		matx_vec_f64_t* out);
 
 	MATX_API matx_status_t matx_vec_f64_wrap(
-		const matx_alloc_t* alloc, 
+		const matx_alloc_t* alloc,
 		matx_vec_f64_t* out,
 		matx_int64_t n,
 		matx_int64_t stride,
 		matx_double* data);
 
 	MATX_API void matx_vec_f64_destroy(
-		const matx_alloc_t* alloc, 
+		const matx_alloc_t* alloc,
 		matx_vec_f64_t v);
 
 	MATX_API matx_status_t matx_dense_f64_create(
@@ -51,7 +51,7 @@ extern "C" {
 		);
 
 	MATX_API matx_status_t matx_dense_f64_wrap(
-		const matx_alloc_t* alloc, 
+		const matx_alloc_t* alloc,
 		matx_dense_f64_t* out,
 		matx_int64_t rows,
 		matx_int64_t cols,
@@ -93,7 +93,7 @@ extern "C" {
 		const matx_alloc_t* alloc,
 		const matx_dense_c64_t in,
 		matx_dense_c64_t* out
-	);
+		);
 
 	MATX_API matx_status_t matx_dense_c64_wrap(
 		const matx_alloc_t* alloc,
@@ -120,7 +120,7 @@ extern "C" {
 		const matx_alloc_t* alloc,
 		const matx_coo_f64_t in,
 		matx_coo_f64_t* out
-	);
+		);
 
 	MATX_API matx_status_t matx_csc_sparse_f64_create(
 		const matx_alloc_t* alloc,
@@ -129,7 +129,7 @@ extern "C" {
 		matx_int64_t ncols,
 		matx_int64_t nnz);
 
-	MATX_API matx_status_t matx_csc_sparse_f64_wrap(const matx_alloc_t* alloc, 
+	MATX_API matx_status_t matx_csc_sparse_f64_wrap(const matx_alloc_t* alloc,
 		matx_csc_f64_t* out,
 		matx_int64_t nrows,
 		matx_int64_t ncols,
@@ -154,7 +154,7 @@ extern "C" {
 		const matx_alloc_t* alloc,
 		const matx_coo_c64_t in,
 		matx_coo_c64_t* out
-	);
+		);
 
 	MATX_API matx_status_t matx_coo_sparse_c64_wrap(const matx_alloc_t* alloc,
 		matx_coo_c64_t* out,
@@ -175,6 +175,28 @@ extern "C" {
 		matx_int64_t nnz);
 	MATX_API void matx_csc_sparse_c64_destroy(const matx_alloc_t* alloc, matx_csc_c64_t m);
 	MATX_API void matx_csc_sparse_f64_destroy(const matx_alloc_t* alloc, matx_csc_f64_t m);
+
+	// ---- Vector fill / init ----
+	MATX_API matx_status_t matx_vec_f64_fill(matx_vec_f64_t v, matx_double val);
+	MATX_API matx_status_t matx_vec_c64_fill(matx_vec_c64_t v, matx_complex_f64_t val);
+	MATX_API matx_status_t matx_vec_f64_zeros(matx_vec_f64_t v);
+	MATX_API matx_status_t matx_vec_c64_zeros(matx_vec_c64_t v);
+	MATX_API matx_status_t matx_vec_f64_ones(matx_vec_f64_t v);
+
+	// ---- Dense matrix fill / init ----
+	MATX_API matx_status_t matx_dense_f64_fill(matx_dense_f64_t m, matx_double val);
+	MATX_API matx_status_t matx_dense_c64_fill(matx_dense_c64_t m, matx_complex_f64_t val);
+	MATX_API matx_status_t matx_dense_f64_zeros(matx_dense_f64_t m);
+	MATX_API matx_status_t matx_dense_c64_zeros(matx_dense_c64_t m);
+	MATX_API matx_status_t matx_dense_f64_ones(matx_dense_f64_t m);
+
+	// ---- Dense matrix trace ----
+	MATX_API matx_status_t matx_dense_f64_trace(const matx_dense_f64_t A, matx_double* out);
+	MATX_API matx_status_t matx_dense_c64_trace(const matx_dense_c64_t A, matx_complex_f64_t* out);
+
+	// ---- Type conversion ----
+	MATX_API matx_status_t matx_dense_f64_to_c64(const matx_alloc_t* alloc, const matx_dense_f64_t A, matx_dense_c64_t* out);
+	MATX_API matx_status_t matx_vec_f64_to_c64(const matx_alloc_t* alloc, const matx_vec_f64_t v, matx_vec_c64_t* out);
 
 #ifdef __cplusplus
 }

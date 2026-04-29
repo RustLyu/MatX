@@ -212,5 +212,4 @@ m->values = NULL;
         matx_free(alloc, m->handle_csc);
     }
     matx_free(alloc, m);
-    //memset(m, 0, sizeof(*m));
 }

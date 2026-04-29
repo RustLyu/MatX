@@ -1,8 +1,9 @@
-﻿#include "matx/matx_types.h"
+#include "matx/matx_types.h"
 #include "matx/matx_func.h"
 #include "matx/matx_types_internal.h"
 
 #include <string.h>
+#include <math.h>
 
 matx_status_t matx_dense_c64_create(
 	const matx_alloc_t* alloc,
@@ -17,8 +18,7 @@ matx_status_t matx_dense_c64_create(
 		return MATX_ERR_INVALID_ARG;
 
 	matx_dense_c64_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_dense_c64_opaque_t));
-	memset(out_value, 0, sizeof(matx_dense_c64_opaque_t));
-
+	if (!out_value) return MATX_ERR_OUT_OF_MEMORY;
 	memset(out_value, 0, sizeof(*out_value));
 	out_value->nrows = rows;
 	out_value->ncols = cols;
@@ -29,7 +29,7 @@ matx_status_t matx_dense_c64_create(
 	const size_t n = rows * cols;
 	out_value->data = (matx_complex_f64_t*)matx_malloc(alloc, n * sizeof(matx_complex_f64_t));
 	if (!out_value->data) {
-		memset(out_value, 0, sizeof(*out_value));
+		matx_free(alloc, out_value);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -68,7 +68,8 @@ matx_status_t matx_dense_c64_wrap(
 	}
 
 	matx_dense_c64_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_dense_c64_opaque_t));
-	memset(out_value, 0, sizeof(matx_dense_c64_opaque_t));
+	if (!out_value) return MATX_ERR_OUT_OF_MEMORY;
+	memset(out_value, 0, sizeof(*out_value));
 
 	out_value->nrows = rows;
 	out_value->ncols = cols;
@@ -100,6 +101,42 @@ void matx_dense_c64_destroy(const matx_alloc_t* alloc, matx_dense_c64_t m) {
 		m->handle_grb.valid = -1;
 	}
 	matx_free(alloc, m);
-        //memset(m, 0, sizeof(*m));
 }
 
+matx_status_t matx_dense_c64_fill(matx_dense_c64_t m, matx_complex_f64_t val) {
+    if (!m || !m->data) return MATX_ERR_INVALID_ARG;
+    const matx_int64_t total = m->nrows * m->ncols;
+    for (matx_int64_t i = 0; i < total; ++i)
+        m->data[i] = val;
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_c64_zeros(matx_dense_c64_t m) {
+    if (!m || !m->data) return MATX_ERR_INVALID_ARG;
+    memset(m->data, 0, (size_t)(m->nrows * m->ncols) * sizeof(matx_complex_f64_t));
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_c64_trace(const matx_dense_c64_t A, matx_complex_f64_t* out) {
+    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (A->nrows != A->ncols) return MATX_ERR_INVALID_ARG;
+    matx_complex_f64_t sum = {0.0, 0.0};
+    for (matx_int64_t i = 0; i < A->nrows; ++i) {
+        matx_int64_t idx = (A->layout == MATX_COL_MAJOR) ? i + i * A->stride : i * A->stride + i;
+        sum.real += A->data[idx].real;
+        sum.imag += A->data[idx].imag;
+    }
+    *out = sum;
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_f64_to_c64(const matx_alloc_t* alloc, const matx_vec_f64_t v, matx_vec_c64_t* out) {
+    if (!alloc || !v || !out) return MATX_ERR_INVALID_ARG;
+    matx_status_t st = matx_vec_c64_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK) return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        (*out)->data[i].real = v->data[i * v->stride];
+        (*out)->data[i].imag = 0.0;
+    }
+    return MATX_OK;
+}

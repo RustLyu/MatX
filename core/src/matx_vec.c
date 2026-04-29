@@ -66,7 +66,16 @@ void matx_vec_f64_destroy(const matx_alloc_t* alloc, matx_vec_f64_t v) {
   if ((v->flags & 1u) != 0u && v->data && alloc) {
     matx_free(alloc, v->data);
   }
-  memset(v, 0, sizeof(*v));
+  if (v->handle_grb.valid > 0)
+  {
+      if (v->handle_grb.custom_free_func && v->handle_grb.impl)
+      {
+          v->handle_grb.custom_free_func(v->handle_grb.impl);
+      }
+      v->handle_grb.impl = NULL;
+      v->handle_grb.valid = -1;
+  }
+  matx_free(alloc, v);
 }
 
 matx_status_t matx_vec_c64_create(const matx_alloc_t* alloc, 
@@ -142,5 +151,45 @@ v->data = NULL;
   }
   matx_free(alloc, v);
   //memset(v, 0, sizeof(*v));
+}
+
+matx_status_t matx_vec_f64_fill(matx_vec_f64_t v, matx_double val) {
+    if (!v || !v->data) return MATX_ERR_INVALID_ARG;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        v->data[i * v->stride] = val;
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_c64_fill(matx_vec_c64_t v, matx_complex_f64_t val) {
+    if (!v || !v->data) return MATX_ERR_INVALID_ARG;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        v->data[i * v->stride] = val;
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_f64_zeros(matx_vec_f64_t v) {
+    if (!v || !v->data) return MATX_ERR_INVALID_ARG;
+    if (v->stride == 1)
+        memset(v->data, 0, v->n * sizeof(matx_double));
+    else
+        for (matx_int64_t i = 0; i < v->n; ++i)
+            v->data[i * v->stride] = 0.0;
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_c64_zeros(matx_vec_c64_t v) {
+    if (!v || !v->data) return MATX_ERR_INVALID_ARG;
+    if (v->stride == 1)
+        memset(v->data, 0, v->n * sizeof(matx_complex_f64_t));
+    else {
+        matx_complex_f64_t zero = {0.0, 0.0};
+        for (matx_int64_t i = 0; i < v->n; ++i)
+            v->data[i * v->stride] = zero;
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_f64_ones(matx_vec_f64_t v) {
+    return matx_vec_f64_fill(v, 1.0);
 }
 
