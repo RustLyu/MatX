@@ -1,0 +1,82 @@
+#pragma once
+
+#include "matx/matx_types.h"
+#include "matx/matx_func.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+	typedef enum matx_vec_backend_kind_t {
+		MATX_VEC_BACKEND_REFERENCE = 0,
+		MATX_VEC_BACKEND_OPENBLAS = 1,
+		MATX_VEC_BACKEND_BLIS = 2,
+	} matx_vec_backend_kind_t;
+
+	typedef struct matx_vec_vtable_t {
+		// ---- Level 1: vector ops ----
+		matx_status_t(*dscal)(matx_int64_t n, matx_double alpha, matx_double* x, matx_int64_t incx);
+		matx_status_t(*zscal)(matx_int64_t n, const void* alpha, void* x, matx_int64_t incx);
+		matx_status_t(*dcopy)(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy);
+		matx_status_t(*zcopy)(matx_int64_t n, const void* x, matx_int64_t incx, void* y, matx_int64_t incy);
+		matx_status_t(*dswap)(matx_int64_t n, matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy);
+		matx_status_t(*zswap)(matx_int64_t n, void* x, matx_int64_t incx, void* y, matx_int64_t incy);
+		matx_status_t(*ddot)(matx_int64_t n, const matx_double* x, matx_int64_t incx, const matx_double* y, matx_int64_t incy, matx_double* result);
+		matx_status_t(*zdotu)(matx_int64_t n, const void* x, matx_int64_t incx, const void* y, matx_int64_t incy, void* result);
+		matx_status_t(*zdotc)(matx_int64_t n, const void* x, matx_int64_t incx, const void* y, matx_int64_t incy, void* result);
+		matx_status_t(*dnrm2)(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* result);
+		matx_status_t(*dznrm2)(matx_int64_t n, const void* x, matx_int64_t incx, matx_double* result);
+		matx_status_t(*dasum)(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* result);
+		matx_status_t(*dzasum)(matx_int64_t n, const void* x, matx_int64_t incx, matx_double* result);
+		matx_status_t(*idamax)(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_int64_t* result);
+		matx_status_t(*izamax)(matx_int64_t n, const void* x, matx_int64_t incx, matx_int64_t* result);
+		matx_status_t(*daxpy)(matx_int64_t n, matx_double alpha, const matx_double* x, matx_int64_t lda, void* y, matx_int64_t ldy);
+		matx_status_t(*zaxpy)(matx_int64_t n, const void* alpha, const void* x, matx_int64_t lda, void* y, matx_int64_t ldy);
+
+		// ---- Vector norms ----
+		matx_status_t(*norm1_f64)(matx_vec_f64_t A, matx_double* out);
+		matx_status_t(*norm1_c64)(matx_vec_c64_t A, matx_double* out);
+		matx_status_t(*norm2_f64)(matx_vec_f64_t A, matx_double* out);
+		matx_status_t(*norm2_c64)(matx_vec_c64_t A, matx_double* out);
+		matx_status_t(*norminf_f64)(matx_vec_f64_t A, matx_double* out);
+		matx_status_t(*norminf_c64)(matx_vec_c64_t A, matx_double* out);
+	} matx_vec_vtable_t;
+
+	typedef struct matx_vec_backend_t {
+		matx_vec_backend_kind_t kind;
+		matx_vec_vtable_t vt;
+	} matx_vec_backend_t;
+
+	MATX_API matx_vec_backend_t matx_vec_default(void);
+	MATX_API const char* matx_vec_backend_name(matx_vec_backend_kind_t k);
+
+	// ---- Level 1: scale / copy / swap / dot / nrm2 / asum / iamax / axpy ----
+	MATX_API matx_status_t matx_vec_scal_f64(const matx_vec_backend_t* blas, matx_double alpha, matx_vec_f64_t x);
+	MATX_API matx_status_t matx_vec_scal_c64(const matx_vec_backend_t* blas, matx_complex_f64_t alpha, matx_vec_c64_t x);
+	MATX_API matx_status_t matx_vec_copy_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, matx_vec_f64_t y);
+	MATX_API matx_status_t matx_vec_copy_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, matx_vec_c64_t y);
+	MATX_API matx_status_t matx_vec_swap_f64(const matx_vec_backend_t* blas, matx_vec_f64_t x, matx_vec_f64_t y);
+	MATX_API matx_status_t matx_vec_swap_c64(const matx_vec_backend_t* blas, matx_vec_c64_t x, matx_vec_c64_t y);
+	MATX_API matx_status_t matx_vec_dot_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, const matx_vec_f64_t y, matx_double* result);
+	MATX_API matx_status_t matx_vec_dotu_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, const matx_vec_c64_t y, matx_complex_f64_t* result);
+	MATX_API matx_status_t matx_vec_dotc_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, const matx_vec_c64_t y, matx_complex_f64_t* result);
+	MATX_API matx_status_t matx_vec_nrm2_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, matx_double* result);
+	MATX_API matx_status_t matx_vec_nrm2_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, matx_double* result);
+	MATX_API matx_status_t matx_vec_asum_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, matx_double* result);
+	MATX_API matx_status_t matx_vec_asum_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, matx_double* result);
+	MATX_API matx_status_t matx_vec_iamax_f64(const matx_vec_backend_t* blas, const matx_vec_f64_t x, matx_int64_t* result);
+	MATX_API matx_status_t matx_vec_iamax_c64(const matx_vec_backend_t* blas, const matx_vec_c64_t x, matx_int64_t* result);
+	MATX_API matx_status_t matx_vec_axpy_f64(const matx_vec_backend_t* blas, matx_double alpha, const matx_vec_f64_t x, matx_vec_f64_t y);
+	MATX_API matx_status_t matx_vec_axpy_c64(const matx_vec_backend_t* blas, matx_complex_f64_t alpha, const matx_vec_c64_t x, matx_vec_c64_t y);
+
+	// ---- Vector norms ----
+	MATX_API matx_status_t matx_vec_norm1_f64(const matx_vec_backend_t* backend, matx_vec_f64_t A, matx_double* out);
+	MATX_API matx_status_t matx_vec_norm1_c64(const matx_vec_backend_t* backend, matx_vec_c64_t A, matx_double* out);
+	MATX_API matx_status_t matx_vec_norm2_f64(const matx_vec_backend_t* backend, matx_vec_f64_t A, matx_double* out);
+	MATX_API matx_status_t matx_vec_norm2_c64(const matx_vec_backend_t* backend, matx_vec_c64_t A, matx_double* out);
+	MATX_API matx_status_t matx_vec_norminf_f64(const matx_vec_backend_t* backend, matx_vec_f64_t A, matx_double* out);
+	MATX_API matx_status_t matx_vec_norminf_c64(const matx_vec_backend_t* backend, matx_vec_c64_t A, matx_double* out);
+
+#ifdef __cplusplus
+}
+#endif

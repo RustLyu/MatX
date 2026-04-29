@@ -138,40 +138,6 @@ static matx_status_t ref_zgemv(matx_layout_t layout,
 	return MATX_OK;
 }
 
-static matx_status_t ref_daxpy(
-	matx_int64_t n,
-	matx_double alpha,
-	const matx_double* x,
-	matx_int64_t lda,
-	void* y,
-	matx_int64_t ldy) {
-	if (!x || !y)
-		return MATX_ERR_INVALID_ARG;
-	if (lda != ldy)
-		return MATX_ERR_INVALID_ARG;
-
-	cblas_daxpy(n, alpha, x, lda, y,
-		ldy);
-	return MATX_OK;
-}
-
-static matx_status_t ref_zaxpy(
-	matx_int64_t n,
-	const void* alpha,
-	const void* x,
-	matx_int64_t lda,
-	void* y,
-	matx_int64_t ldy) {
-	if (!x || !y)
-		return MATX_ERR_INVALID_ARG;
-	if (lda != ldy)
-		return MATX_ERR_INVALID_ARG;
-
-	cblas_zaxpy(n, alpha, x, lda, y,
-		ldy);
-	return MATX_OK;
-}
-
 static matx_status_t ref_dgemv(matx_layout_t layout,
 	matx_int64_t trans_a,
 	matx_int64_t m,
@@ -452,101 +418,6 @@ matx_status_t ref_inv_dense_c64(
 	return MATX_OK;
 }
 
-// ---- Level 1 implementations ----
-
-static matx_status_t ref_dscal(matx_int64_t n, matx_double alpha, matx_double* x, matx_int64_t incx) {
-	if (!x) return MATX_ERR_INVALID_ARG;
-	cblas_dscal(n, alpha, x, incx);
-	return MATX_OK;
-}
-
-static matx_status_t ref_zscal(matx_int64_t n, const void* alpha, void* x, matx_int64_t incx) {
-	if (!x || !alpha) return MATX_ERR_INVALID_ARG;
-	cblas_zscal(n, alpha, x, incx);
-	return MATX_OK;
-}
-
-static matx_status_t ref_dcopy(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
-	cblas_dcopy(n, x, incx, y, incy);
-	return MATX_OK;
-}
-
-static matx_status_t ref_zcopy(matx_int64_t n, const void* x, matx_int64_t incx, void* y, matx_int64_t incy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
-	cblas_zcopy(n, x, incx, y, incy);
-	return MATX_OK;
-}
-
-static matx_status_t ref_dswap(matx_int64_t n, matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
-	cblas_dswap(n, x, incx, y, incy);
-	return MATX_OK;
-}
-
-static matx_status_t ref_zswap(matx_int64_t n, void* x, matx_int64_t incx, void* y, matx_int64_t incy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
-	cblas_zswap(n, x, incx, y, incy);
-	return MATX_OK;
-}
-
-static matx_status_t ref_ddot(matx_int64_t n, const matx_double* x, matx_int64_t incx,
-	const matx_double* y, matx_int64_t incy, matx_double* result) {
-	if (!x || !y || !result) return MATX_ERR_INVALID_ARG;
-	*result = cblas_ddot(n, x, incx, y, incy);
-	return MATX_OK;
-}
-
-static matx_status_t ref_zdotu(matx_int64_t n, const void* x, matx_int64_t incx,
-	const void* y, matx_int64_t incy, void* result) {
-	if (!x || !y || !result) return MATX_ERR_INVALID_ARG;
-	cblas_zdotu_sub(n, x, incx, y, incy, result);
-	return MATX_OK;
-}
-
-static matx_status_t ref_zdotc(matx_int64_t n, const void* x, matx_int64_t incx,
-	const void* y, matx_int64_t incy, void* result) {
-	if (!x || !y || !result) return MATX_ERR_INVALID_ARG;
-	cblas_zdotc_sub(n, x, incx, y, incy, result);
-	return MATX_OK;
-}
-
-static matx_status_t ref_dnrm2(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
-	*result = cblas_dnrm2(n, x, incx);
-	return MATX_OK;
-}
-
-static matx_status_t ref_dznrm2(matx_int64_t n, const void* x, matx_int64_t incx, matx_double* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
-	*result = cblas_dznrm2(n, x, incx);
-	return MATX_OK;
-}
-
-static matx_status_t ref_dasum(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
-	*result = cblas_dasum(n, x, incx);
-	return MATX_OK;
-}
-
-static matx_status_t ref_dzasum(matx_int64_t n, const void* x, matx_int64_t incx, matx_double* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
-	*result = cblas_dzasum(n, x, incx);
-	return MATX_OK;
-}
-
-static matx_status_t ref_idamax(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_int64_t* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
-	*result = (matx_int64_t)cblas_idamax(n, x, incx);
-	return MATX_OK;
-}
-
-static matx_status_t ref_izamax(matx_int64_t n, const void* x, matx_int64_t incx, matx_int64_t* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
-	*result = (matx_int64_t)cblas_izamax(n, x, incx);
-	return MATX_OK;
-}
-
 // ---- Level 2 implementations ----
 
 static matx_status_t ref_dger(matx_layout_t layout, matx_int64_t m, matx_int64_t n, matx_double alpha,
@@ -795,29 +666,12 @@ matx_dense_backend_t matx_blas_make_reference(void) {
 			.zgemm = &ref_zgemm,
 			.dgemv = &ref_dgemv,
 			.zgemv = &ref_zgemv,
-			.daxpy = &ref_daxpy,
-			.zaxpy = &ref_zaxpy,
 			.dgeadd = &ref_dgeadd,
 			.zgeadd = &ref_zgeadd,
 			.inv_dense_f64 = &ref_inv_dense_f64,
 			.inv_dense_c64 = &ref_inv_dense_c64,
-			.dscal = &ref_dscal,
-			.zscal = &ref_zscal,
-			.dcopy = &ref_dcopy,
-			.zcopy = &ref_zcopy,
-			.dswap = &ref_dswap,
-			.zswap = &ref_zswap,
-			.ddot = &ref_ddot,
-			.zdotu = &ref_zdotu,
-			.zdotc = &ref_zdotc,
-			.dnrm2 = &ref_dnrm2,
-			.dznrm2 = &ref_dznrm2,
-			.dasum = &ref_dasum,
-			.dzasum = &ref_dzasum,
-			.idamax = &ref_idamax,
-			.izamax = &ref_izamax,
-			.dger = &ref_dger,
-			.zgeru = &ref_zgeru,
+				.dger = &ref_dger,
+				.zgeru = &ref_zgeru,
 			.dtrsv = &ref_dtrsv,
 			.ztrsv = &ref_ztrsv,
 			.dtrsm = &ref_dtrsm,

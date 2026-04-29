@@ -372,12 +372,12 @@ matx_status_t ref_zsp2md_c64_grb(
 		return MATX_ERR_INTERNAL;
 	}
 	GrB_Matrix_free(&temp);
-    grb_2_dense_c64(C);
+	grb_2_dense_c64(C);
 	return MATX_OK;
 }
 
 matx_status_t ref_transpose_f64_grb(
-	matx_coo_f64_t A, 
+	matx_coo_f64_t A,
 	matx_coo_f64_t out)
 {
 	if (!A)
@@ -400,7 +400,7 @@ matx_status_t ref_transpose_f64_grb(
 }
 
 matx_status_t ref_transpose_c64_grb(
-	matx_coo_c64_t A, 
+	matx_coo_c64_t A,
 	matx_coo_c64_t out)
 {
 	if (!A || !out)
@@ -409,7 +409,7 @@ matx_status_t ref_transpose_c64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-                coo_2_grb_c64(A);
+		coo_2_grb_c64(A);
 	}
 	if (!out->handle_grb.impl)
 		create_empty_grb_c64(out);
@@ -434,7 +434,7 @@ matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t A,
 	{
 		coo_2_grb_c64(A);
 	}
-	if(!out->handle_grb.impl)
+	if (!out->handle_grb.impl)
 		create_empty_grb_c64(out);
 	//1. transpose
 	matx_status_t trans_status = ref_transpose_c64_grb(A, out);
@@ -456,57 +456,6 @@ matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t A,
 
 }
 
-matx_status_t ref_norm1_grb(
-	matx_vec_f64_t A,
-	matx_double* out)
-{
-	if (A->handle_grb.valid <= 0)
-	{
-                vec_2_grb_f64(A);
-	}
-
-	GrB_Vector tmp;
-	GrB_Vector_dup(&tmp, (GrB_Vector)A->handle_grb.impl);
-	GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
-	GrB_reduce(out, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
-	GrB_Vector_free(&tmp);
-	return MATX_OK;
-}
-
-matx_status_t ref_norm2_grb(
-	matx_vec_f64_t A,
-	matx_double* out)
-{
-	if (A->handle_grb.valid <= 0)
-	{
-		vec_2_grb_f64(A);
-	}
-
-	GrB_Vector tmp;
-	GrB_Vector_dup(&tmp, (GrB_Vector)A->handle_grb.impl);
-	GrB_eWiseMult(tmp, NULL, NULL, GrB_TIMES_FP64, tmp, tmp, NULL);
-	double sumsq;
-	GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
-	GrB_Vector_free(&tmp);
-	*out = sqrt(sumsq);
-	return MATX_OK;
-}
-
-matx_status_t ref_norminf_grb(
-	matx_vec_f64_t A,
-	matx_double* out)
-{
-	if (A->handle_grb.valid <= 0)
-	{
-		vec_2_grb_f64(A);
-	}
-	GrB_Vector tmp;
-	GrB_Vector_dup(&tmp, (GrB_Vector)A->handle_grb.impl);
-	GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
-	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, tmp, NULL);
-	GrB_Vector_free(&tmp);
-	return MATX_OK;
-}
 
 matx_status_t ref_finalize_grb()
 {
@@ -558,6 +507,55 @@ matx_status_t ref_normfro_mat_grb(matx_coo_f64_t A, matx_double* out) {
 	double sumsq = 0.0;
 	GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
 	GrB_Matrix_free(&tmp);
+	*out = sqrt(sumsq);
+	return MATX_OK;
+}
+
+// ---- Sparse matrix norms (c64) ----
+
+matx_status_t ref_norm1_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (A->handle_grb.valid <= 0) coo_2_grb_c64(A);
+
+	GrB_Matrix abs_mat;
+	GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
+	GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix)A->handle_grb.impl, NULL);
+	GrB_Vector col_sums;
+	GrB_Vector_new(&col_sums, GrB_FP64, A->ncols);
+	GrB_reduce(col_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, abs_mat, NULL);
+	GrB_Matrix_free(&abs_mat);
+	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, col_sums, NULL);
+	GrB_Vector_free(&col_sums);
+	return MATX_OK;
+}
+
+matx_status_t ref_norminf_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (A->handle_grb.valid <= 0) coo_2_grb_c64(A);
+
+	GrB_Matrix abs_mat;
+	GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
+	GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix)A->handle_grb.impl, NULL);
+	GrB_Vector row_sums;
+	GrB_Vector_new(&row_sums, GrB_FP64, A->nrows);
+	GrB_reduce(row_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, abs_mat, GrB_DESC_T0);
+	GrB_Matrix_free(&abs_mat);
+	GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, row_sums, NULL);
+	GrB_Vector_free(&row_sums);
+	return MATX_OK;
+}
+
+matx_status_t ref_normfro_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (A->handle_grb.valid <= 0) coo_2_grb_c64(A);
+
+	GrB_Matrix abs_mat;
+	GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
+	GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix)A->handle_grb.impl, NULL);
+	GrB_eWiseMult(abs_mat, NULL, NULL, GrB_TIMES_FP64, abs_mat, abs_mat, NULL);
+	double sumsq = 0.0;
+	GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, abs_mat, NULL);
+	GrB_Matrix_free(&abs_mat);
 	*out = sqrt(sumsq);
 	return MATX_OK;
 }
@@ -627,7 +625,8 @@ static void do_grb_init(void) {
 	GrB_Info info = GrB_init(GrB_NONBLOCKING);
 	if (info != GrB_SUCCESS) {
 		MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
-	} else {
+	}
+	else {
 		grb_init_ok = true;
 	}
 }
@@ -650,13 +649,13 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 			.transpose_f64 = ref_transpose_f64_grb,
 			.transpose_c64 = ref_transpose_c64_grb,
 			.conj_trans_c64 = ref_conj_trans_c64_grb,
-			.norm1_f64 = ref_norm1_grb,
-			.norm2_f64 = ref_norm2_grb,
-			.norminf_f64 = ref_norminf_grb,
 			.finalize = ref_finalize_grb,
 			.norm1_mat_f64 = ref_norm1_mat_grb,
 			.norminf_mat_f64 = ref_norminf_mat_grb,
 			.normfro_mat_f64 = ref_normfro_mat_grb,
+			.norm1_mat_c64 = ref_norm1_mat_c64_grb,
+			.norminf_mat_c64 = ref_norminf_mat_c64_grb,
+			.normfro_mat_c64 = ref_normfro_mat_c64_grb,
 			.spadd_f64 = ref_spadd_f64_grb,
 			.spadd_c64 = ref_spadd_c64_grb,
 		}

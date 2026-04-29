@@ -53,7 +53,7 @@ extern "C" {
 			matx_double beta,
 			matx_vec_f64_t y);
 		matx_status_t(*transpose_f64)(
-			matx_coo_f64_t A, 
+			matx_coo_f64_t A,
 			matx_coo_f64_t out);
 		matx_status_t(*transpose_c64)(
 			matx_coo_c64_t A,
@@ -61,15 +61,6 @@ extern "C" {
 		matx_status_t(*conj_trans_c64)(
 			matx_coo_c64_t A,
 			matx_coo_c64_t out);
-		matx_status_t(*norm1_f64)(
-			matx_vec_f64_t A,
-			matx_double* out);
-		matx_status_t(*norm2_f64)(
-			matx_vec_f64_t A,
-			matx_double* out);
-		matx_status_t(*norminf_f64)(
-			matx_vec_f64_t A,
-			matx_double* out);
 
 		matx_status_t(*finalize)();
 
@@ -77,6 +68,9 @@ extern "C" {
 		matx_status_t(*norm1_mat_f64)(matx_coo_f64_t A, matx_double* out);
 		matx_status_t(*norminf_mat_f64)(matx_coo_f64_t A, matx_double* out);
 		matx_status_t(*normfro_mat_f64)(matx_coo_f64_t A, matx_double* out);
+		matx_status_t(*norm1_mat_c64)(matx_coo_c64_t A, matx_double* out);
+		matx_status_t(*norminf_mat_c64)(matx_coo_c64_t A, matx_double* out);
+		matx_status_t(*normfro_mat_c64)(matx_coo_c64_t A, matx_double* out);
 
 		// ---- Sparse-sparse addition: C = alpha*A + beta*B ----
 		matx_status_t(*spadd_f64)(matx_double alpha, matx_coo_f64_t A, matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out);
@@ -153,24 +147,18 @@ extern "C" {
 		matx_coo_c64_t A,
 		matx_coo_c64_t out);
 
-	MATX_API matx_status_t matx_norm1_f64(const matx_sparse_backend_t* backend,
-		matx_vec_f64_t A,
-		matx_double* out);
-
-	MATX_API matx_status_t matx_norm2_f64(const matx_sparse_backend_t* backend,
-		matx_vec_f64_t A,
-		matx_double* out);
-
-	MATX_API matx_status_t matx_norminf_f64(const matx_sparse_backend_t* backend,
-		matx_vec_f64_t A,
-		matx_double* out);
 
 	MATX_API matx_status_t matx_finalize(const matx_sparse_backend_t* backend);
 
-	// ---- Sparse matrix norms ----
+	// ---- Sparse matrix norms (f64) ----
 	MATX_API matx_status_t matx_norm1_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
 	MATX_API matx_status_t matx_norminf_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
 	MATX_API matx_status_t matx_normfro_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
+
+	// ---- Sparse matrix norms (c64) ----
+	MATX_API matx_status_t matx_norm1_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
+	MATX_API matx_status_t matx_norminf_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
+	MATX_API matx_status_t matx_normfro_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
 
 	// ---- Sparse-sparse addition: out = alpha*A + beta*B (COO) ----
 	MATX_API matx_status_t matx_spadd_coo_f64(const matx_sparse_backend_t* backend,

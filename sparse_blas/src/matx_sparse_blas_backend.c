@@ -109,20 +109,6 @@ matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c
 	return backend->vt.conj_trans_c64(A, out);
 }
 
-matx_status_t matx_norm1_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t A, matx_double* out)
-{
-	return backend->vt.norm1_f64(A, out);
-}
-
-matx_status_t matx_norm2_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t A, matx_double* out)
-{
-	return backend->vt.norm2_f64(A, out);
-}
-
-matx_status_t matx_norminf_f64(const matx_sparse_backend_t* backend, matx_vec_f64_t A, matx_double* out)
-{
-	return backend->vt.norminf_f64(A, out);
-}
 
 MATX_API matx_status_t matx_finalize(const matx_sparse_backend_t* backend)
 {
@@ -145,6 +131,24 @@ matx_status_t matx_normfro_mat_coo_f64(const matx_sparse_backend_t* backend, mat
 	if (!backend || !A || !out) return MATX_ERR_INVALID_ARG;
 	if (!backend->vt.normfro_mat_f64) return MATX_ERR_NOT_SUPPORTED;
 	return backend->vt.normfro_mat_f64(A, out);
+}
+
+matx_status_t matx_norm1_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out) {
+	if (!backend || !A || !out) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.norm1_mat_c64) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.norm1_mat_c64(A, out);
+}
+
+matx_status_t matx_norminf_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out) {
+	if (!backend || !A || !out) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.norminf_mat_c64) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.norminf_mat_c64(A, out);
+}
+
+matx_status_t matx_normfro_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out) {
+	if (!backend || !A || !out) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.normfro_mat_c64) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.normfro_mat_c64(A, out);
 }
 
 matx_status_t matx_spadd_coo_f64(const matx_sparse_backend_t* backend,

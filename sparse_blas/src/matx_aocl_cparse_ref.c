@@ -1,8 +1,9 @@
-﻿#include "matx/matx_sparse_compute.h"
+#include "matx/matx_sparse_compute.h"
 #include "matx/matx_log.h"
 
 #include <memory.h>
 #include <limits.h>
+#include <math.h>
 
 #if MATX_HAVE_AOCL_SPARSE
 #include "aoclsparse.h"
@@ -383,6 +384,138 @@ matx_status_t ref_finalize_aocl()
 	return MATX_OK;
 }
 
+// ---- Sparse matrix norms ----
+
+matx_status_t ref_norm1_mat_aocl(matx_coo_f64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	matx_double* col_sums = (matx_double*)calloc((size_t)A->ncols, sizeof(matx_double));
+	if (!col_sums) return MATX_ERR_OUT_OF_MEMORY;
+	for (matx_int64_t i = 0; i < A->nnz; ++i)
+		col_sums[A->columns[i]] += fabs(A->values[i]);
+	matx_double max_col = 0.0;
+	for (matx_int64_t j = 0; j < A->ncols; ++j)
+		if (col_sums[j] > max_col) max_col = col_sums[j];
+	free(col_sums);
+	*out = max_col;
+	return MATX_OK;
+}
+
+matx_status_t ref_norminf_mat_aocl(matx_coo_f64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	matx_double* row_sums = (matx_double*)calloc((size_t)A->nrows, sizeof(matx_double));
+	if (!row_sums) return MATX_ERR_OUT_OF_MEMORY;
+	for (matx_int64_t i = 0; i < A->nnz; ++i)
+		row_sums[A->rows[i]] += fabs(A->values[i]);
+	matx_double max_row = 0.0;
+	for (matx_int64_t i = 0; i < A->nrows; ++i)
+		if (row_sums[i] > max_row) max_row = row_sums[i];
+	free(row_sums);
+	*out = max_row;
+	return MATX_OK;
+}
+
+matx_status_t ref_normfro_mat_aocl(matx_coo_f64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	matx_double sum = 0.0;
+	for (matx_int64_t i = 0; i < A->nnz; ++i)
+		sum += A->values[i] * A->values[i];
+	*out = sqrt(sum);
+	return MATX_OK;
+}
+
+
+
+// ---- Sparse matrix norms (c64) ----
+
+matx_status_t ref_norm1_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	matx_double* col_sums = (matx_double*)calloc((size_t)A->ncols, sizeof(matx_double));
+	if (!col_sums) return MATX_ERR_OUT_OF_MEMORY;
+	for (matx_int64_t i = 0; i < A->nnz; ++i) {
+		matx_double re = A->values[i].real;
+		matx_double im = A->values[i].imag;
+		col_sums[A->columns[i]] += sqrt(re * re + im * im);
+	}
+	matx_double max_col = 0.0;
+	for (matx_int64_t j = 0; j < A->ncols; ++j)
+		if (col_sums[j] > max_col) max_col = col_sums[j];
+	free(col_sums);
+	*out = max_col;
+	return MATX_OK;
+}
+
+matx_status_t ref_norminf_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	matx_double* row_sums = (matx_double*)calloc((size_t)A->nrows, sizeof(matx_double));
+	if (!row_sums) return MATX_ERR_OUT_OF_MEMORY;
+	for (matx_int64_t i = 0; i < A->nnz; ++i) {
+		matx_double re = A->values[i].real;
+		matx_double im = A->values[i].imag;
+		row_sums[A->rows[i]] += sqrt(re * re + im * im);
+	}
+	matx_double max_row = 0.0;
+	for (matx_int64_t i = 0; i < A->nrows; ++i)
+		if (row_sums[i] > max_row) max_row = row_sums[i];
+	free(row_sums);
+	*out = max_row;
+	return MATX_OK;
+}
+
+matx_status_t ref_normfro_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
+	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	matx_double sum = 0.0;
+	for (matx_int64_t i = 0; i < A->nnz; ++i) {
+		matx_double re = A->values[i].real;
+		matx_double im = A->values[i].imag;
+		sum += re * re + im * im;
+	}
+	*out = sqrt(sum);
+	return MATX_OK;
+}
+// ---- Sparse-sparse addition ----
+
+matx_status_t ref_spadd_f64_aocl(matx_double alpha, matx_coo_f64_t A,
+	matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out) {
+	if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
+	if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
+
+	out->nrows = A->nrows;
+	out->ncols = A->ncols;
+	out->nnz = A->nnz + B->nnz;
+	memcpy(out->rows, A->rows, sizeof(matx_int64_t) * A->nnz);
+	memcpy(out->rows + A->nnz, B->rows, sizeof(matx_int64_t) * B->nnz);
+	memcpy(out->columns, A->columns, sizeof(matx_int64_t) * A->nnz);
+	memcpy(out->columns + A->nnz, B->columns, sizeof(matx_int64_t) * B->nnz);
+	for (matx_int64_t i = 0; i < A->nnz; ++i)
+		out->values[i] = alpha * A->values[i];
+	for (matx_int64_t i = 0; i < B->nnz; ++i)
+		out->values[A->nnz + i] = beta * B->values[i];
+	return MATX_OK;
+}
+
+matx_status_t ref_spadd_c64_aocl(matx_complex_f64_t alpha, matx_coo_c64_t A,
+	matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out) {
+	if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
+	if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
+
+	out->nrows = A->nrows;
+	out->ncols = A->ncols;
+	out->nnz = A->nnz + B->nnz;
+	memcpy(out->rows, A->rows, sizeof(matx_int64_t) * A->nnz);
+	memcpy(out->rows + A->nnz, B->rows, sizeof(matx_int64_t) * B->nnz);
+	memcpy(out->columns, A->columns, sizeof(matx_int64_t) * A->nnz);
+	memcpy(out->columns + A->nnz, B->columns, sizeof(matx_int64_t) * B->nnz);
+	for (matx_int64_t i = 0; i < A->nnz; ++i) {
+		out->values[i].real = alpha.real * A->values[i].real - alpha.imag * A->values[i].imag;
+		out->values[i].imag = alpha.real * A->values[i].imag + alpha.imag * A->values[i].real;
+	}
+	for (matx_int64_t i = 0; i < B->nnz; ++i) {
+		out->values[A->nnz + i].real = beta.real * B->values[i].real - beta.imag * B->values[i].imag;
+		out->values[A->nnz + i].imag = beta.real * B->values[i].imag + beta.imag * B->values[i].real;
+	}
+	return MATX_OK;
+}
+
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 	matx_sparse_backend_t b =
 	{
@@ -395,12 +528,19 @@ matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 			.dsp2md_f64 = ref_dsp2md_f64_aocl,
 			.zsp2md_c64 = ref_zsp2md_c64_aocl,
 			.transpose_f64 = ref_transpose_f64_aocl,
-						.transpose_c64 = ref_transpose_c64_aocl,
+			.transpose_c64 = ref_transpose_c64_aocl,
 			.conj_trans_c64 = ref_conj_trans_c64_aocl,
-			.finalize = ref_finalize_aocl
+			.finalize = ref_finalize_aocl,
+			.norm1_mat_f64 = ref_norm1_mat_aocl,
+			.norminf_mat_f64 = ref_norminf_mat_aocl,
+			.normfro_mat_f64 = ref_normfro_mat_aocl,
+			.norm1_mat_c64 = ref_norm1_mat_c64_aocl,
+			.norminf_mat_c64 = ref_norminf_mat_c64_aocl,
+			.normfro_mat_c64 = ref_normfro_mat_c64_aocl,
+			.spadd_f64 = ref_spadd_f64_aocl,
+			.spadd_c64 = ref_spadd_c64_aocl,
 		}
 	};
 	MATX_TRACE("AOCL INIT");
 	return b;
 }
-

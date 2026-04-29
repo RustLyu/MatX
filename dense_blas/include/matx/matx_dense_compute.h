@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
@@ -68,19 +68,6 @@ extern "C" {
 			matx_double* C,
 			matx_int64_t ldc);
 
-		matx_status_t(*daxpy)(matx_int64_t n,
-			matx_double alpha,
-			const matx_double* x,
-			matx_int64_t lda,
-			void* y,
-			matx_int64_t ldy);
-		matx_status_t(*zaxpy)(matx_int64_t n,
-			const void* alpha,
-			const void* x,
-			matx_int64_t lda,
-			void* y,
-			matx_int64_t ldy);
-
 		matx_status_t(*dgeadd)(matx_layout_t layout,
 			matx_int64_t rows,
 			matx_int64_t cols,
@@ -113,23 +100,6 @@ extern "C" {
 			matx_int64_t cols,
 			const void* A,
 			void* out_Ainv);
-
-		// ---- Level 1 additions ----
-		matx_status_t(*dscal)(matx_int64_t n, matx_double alpha, matx_double* x, matx_int64_t incx);
-		matx_status_t(*zscal)(matx_int64_t n, const void* alpha, void* x, matx_int64_t incx);
-		matx_status_t(*dcopy)(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy);
-		matx_status_t(*zcopy)(matx_int64_t n, const void* x, matx_int64_t incx, void* y, matx_int64_t incy);
-		matx_status_t(*dswap)(matx_int64_t n, matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy);
-		matx_status_t(*zswap)(matx_int64_t n, void* x, matx_int64_t incx, void* y, matx_int64_t incy);
-		matx_status_t(*ddot)(matx_int64_t n, const matx_double* x, matx_int64_t incx, const matx_double* y, matx_int64_t incy, matx_double* result);
-		matx_status_t(*zdotu)(matx_int64_t n, const void* x, matx_int64_t incx, const void* y, matx_int64_t incy, void* result);
-		matx_status_t(*zdotc)(matx_int64_t n, const void* x, matx_int64_t incx, const void* y, matx_int64_t incy, void* result);
-		matx_status_t(*dnrm2)(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* result);
-		matx_status_t(*dznrm2)(matx_int64_t n, const void* x, matx_int64_t incx, matx_double* result);
-		matx_status_t(*dasum)(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* result);
-		matx_status_t(*dzasum)(matx_int64_t n, const void* x, matx_int64_t incx, matx_double* result);
-		matx_status_t(*idamax)(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_int64_t* result);
-		matx_status_t(*izamax)(matx_int64_t n, const void* x, matx_int64_t incx, matx_int64_t* result);
 
 		// ---- Level 2 additions ----
 		matx_status_t(*dger)(matx_layout_t layout, matx_int64_t m, matx_int64_t n, matx_double alpha,
@@ -209,19 +179,6 @@ extern "C" {
 		matx_complex_f64_t beta,
 		matx_dense_c64_t C);
 
-	// ---- Level 1: vector ops ----
-	// y := alpha * x + y
-	MATX_API matx_status_t matx_axpy_f64(const matx_dense_backend_t* blas,
-		matx_double alpha,
-		const matx_vec_f64_t x,
-		matx_vec_f64_t y);
-
-	MATX_API matx_status_t matx_axpy_c64(
-		const matx_dense_backend_t* blas,
-		matx_complex_f64_t alpha,
-		const matx_vec_c64_t x,
-		matx_vec_c64_t y);
-
 	// ---- Level 2: matrix-vector ----
 	// y := alpha * op(A) * x + beta * y  (dense)
 	MATX_API matx_status_t matx_gemv_f64(const matx_dense_backend_t* blas,
@@ -264,23 +221,6 @@ extern "C" {
 		const matx_dense_f64_t A,
 		matx_double beta,
 		matx_dense_f64_t B);
-
-	// ---- Level 1: scale / copy / swap / dot / nrm2 / asum / iamax ----
-	MATX_API matx_status_t matx_scal_f64(const matx_dense_backend_t* blas, matx_double alpha, matx_vec_f64_t x);
-	MATX_API matx_status_t matx_scal_c64(const matx_dense_backend_t* blas, matx_complex_f64_t alpha, matx_vec_c64_t x);
-	MATX_API matx_status_t matx_copy_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, matx_vec_f64_t y);
-	MATX_API matx_status_t matx_copy_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, matx_vec_c64_t y);
-	MATX_API matx_status_t matx_swap_f64(const matx_dense_backend_t* blas, matx_vec_f64_t x, matx_vec_f64_t y);
-	MATX_API matx_status_t matx_swap_c64(const matx_dense_backend_t* blas, matx_vec_c64_t x, matx_vec_c64_t y);
-	MATX_API matx_status_t matx_dot_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, const matx_vec_f64_t y, matx_double* result);
-	MATX_API matx_status_t matx_dotu_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, const matx_vec_c64_t y, matx_complex_f64_t* result);
-	MATX_API matx_status_t matx_dotc_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, const matx_vec_c64_t y, matx_complex_f64_t* result);
-	MATX_API matx_status_t matx_nrm2_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, matx_double* result);
-	MATX_API matx_status_t matx_nrm2_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, matx_double* result);
-	MATX_API matx_status_t matx_asum_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, matx_double* result);
-	MATX_API matx_status_t matx_asum_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, matx_double* result);
-	MATX_API matx_status_t matx_iamax_f64(const matx_dense_backend_t* blas, const matx_vec_f64_t x, matx_int64_t* result);
-	MATX_API matx_status_t matx_iamax_c64(const matx_dense_backend_t* blas, const matx_vec_c64_t x, matx_int64_t* result);
 
 	// ---- Level 2: rank-1 update / triangular solve ----
 	MATX_API matx_status_t matx_ger_f64(const matx_dense_backend_t* blas, matx_double alpha,
@@ -327,4 +267,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
