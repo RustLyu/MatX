@@ -221,5 +221,102 @@ TEST(solve, sparse_complex_4x4_factor_solve) {
 	matx_vec_c64_destroy(&alloc, b);
 	matx_vec_c64_destroy(&alloc, x);
 	matx_coo_sparse_c64_destroy(&alloc, coo_A);
-	//matx_csc_sparse_c64_destroy(coo_A->handle_csc, &alloc);
+}
+
+// ---- Cholesky tests ----
+TEST(solve, chol_f64_3x3) {
+	// A = [[4,2,0],[2,5,2],[0,2,5]] — symmetric positive definite
+	matx_alloc_t a = matx_alloc_default();
+	double Adata[9] = {4,2,0, 2,5,2, 0,2,5};
+	matx_dense_f64_t A = NULL;
+	ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_ROW_MAJOR, 3, 3, Adata), MATX_OK);
+	double b[3] = {8.0, 16.0, 14.0};
+	double x[3] = {0.0, 0.0, 0.0};
+	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+	matx_status_t st = matx_solve_chol_f64_oneshot(&ls, A, 'U', b, x);
+	if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_f64_destroy(&a, A); return; }
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(x[0], 1.0, 1e-9);
+	EXPECT_NEAR(x[1], 2.0, 1e-9);
+	EXPECT_NEAR(x[2], 2.0, 1e-9);
+	matx_dense_f64_destroy(&a, A);
+}
+
+// ---- GELS tests ----
+
+TEST(solve, gels_f64_overdetermined) {
+	// 3x2 overdetermined system: A*x = b, least squares
+	matx_alloc_t a = matx_alloc_default();
+	// A = [[1,1],[1,2],[1,3]], b = [6,5,7] => x ~ [5, 0.5]
+	double Adata[6] = {1,1, 1,2, 1,3};
+	matx_dense_f64_t A = NULL;
+	ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_ROW_MAJOR, 3, 2, Adata), MATX_OK);
+	double b[3] = {6.0, 5.0, 7.0};
+	double x[2] = {0.0, 0.0};
+	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+	matx_status_t st = matx_gels_f64(&ls, A, b, x);
+	if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_f64_destroy(&a, A); return; }
+	ASSERT_EQ(st, MATX_OK);
+	// least squares solution: x[0]=5, x[1]=0.5
+	EXPECT_NEAR(x[0], 5.0, 1e-8);
+	EXPECT_NEAR(x[1], 0.5, 1e-8);
+	matx_dense_f64_destroy(&a, A);
+}
+
+// ---- SYEV tests ----
+
+TEST(solve, syev_f64_2x2) {
+	// A = [[2,1],[1,2]], eigenvalues = {1, 3}
+	matx_alloc_t a = matx_alloc_default();
+	double Adata[4] = {2,1, 1,2};
+	matx_dense_f64_t A = NULL;
+	ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_ROW_MAJOR, 2, 2, Adata), MATX_OK);
+	matx_vec_f64_t evals = NULL;
+	ASSERT_EQ(matx_vec_f64_create(&a, &evals, NULL, 2), MATX_OK);
+	matx_dense_f64_t evecs = NULL;
+	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+	matx_status_t st = matx_syev_f64(&ls, A, evals, &evecs);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_dense_f64_destroy(&a, A);
+		matx_vec_f64_destroy(&a, evals);
+		return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(evals->data[0], 1.0, 1e-9);
+	EXPECT_NEAR(evals->data[1], 3.0, 1e-9);
+	ASSERT_NE(evecs, nullptr);
+	// free evecs with default alloc (allocated with malloc)
+	free(evecs->data);
+	free(evecs);
+	matx_dense_f64_destroy(&a, A);
+	matx_vec_f64_destroy(&a, evals);
+}
+
+// ---- GESVD tests ----
+
+TEST(solve, gesvd_f64_2x2) {
+	// A = [[3,0],[0,2]], singular values = {3, 2}
+	matx_alloc_t a = matx_alloc_default();
+	double Adata[4] = {3,0, 0,2};
+	matx_dense_f64_t A = NULL;
+	ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_ROW_MAJOR, 2, 2, Adata), MATX_OK);
+	matx_vec_f64_t S = NULL;
+	ASSERT_EQ(matx_vec_f64_create(&a, &S, NULL, 2), MATX_OK);
+	matx_dense_f64_t U = NULL, Vt = NULL;
+	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+	matx_status_t st = matx_gesvd_f64(&ls, A, S, &U, &Vt);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_dense_f64_destroy(&a, A);
+		matx_vec_f64_destroy(&a, S);
+		return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(S->data[0], 3.0, 1e-9);
+	EXPECT_NEAR(S->data[1], 2.0, 1e-9);
+	ASSERT_NE(U, nullptr);
+	ASSERT_NE(Vt, nullptr);
+	free(U->data); free(U);
+	free(Vt->data); free(Vt);
+	matx_dense_f64_destroy(&a, A);
+	matx_vec_f64_destroy(&a, S);
 }

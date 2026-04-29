@@ -331,3 +331,73 @@ TEST(compute_sparse, conj_c64_4x4) {
 	matx_coo_sparse_c64_destroy(&a, B);
 	matx_finalize(&backend);
 }
+
+// ---- Sparse matrix norm tests ----
+
+TEST(compute_sparse, norm1_mat_coo_f64) {
+	// 2x2 diagonal: A = diag(3, 4) => 1-norm = max col sum = 4
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t rows[2] = {0, 1}, cols[2] = {0, 1};
+	matx_double vals[2] = {3.0, 4.0};
+	matx_coo_f64_t A = NULL;
+	ASSERT_EQ(matx_coo_sparse_f64_create(&a, &A, 2, 2, 2, rows, cols, vals), MATX_OK);
+	auto backend = matx_sparse_default();
+	matx_double out = 0.0;
+	matx_status_t st = matx_norm1_mat_coo_f64(&backend, A, &out);
+	if (st == MATX_ERR_NOT_SUPPORTED) { matx_coo_sparse_f64_destroy(&a, A); return; }
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(out, 4.0, 1e-12);
+	matx_coo_sparse_f64_destroy(&a, A);
+	matx_finalize(&backend);
+}
+
+TEST(compute_sparse, normfro_mat_coo_f64) {
+	// A = diag(3, 4) => Frobenius = sqrt(9+16) = 5
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t rows[2] = {0, 1}, cols[2] = {0, 1};
+	matx_double vals[2] = {3.0, 4.0};
+	matx_coo_f64_t A = NULL;
+	ASSERT_EQ(matx_coo_sparse_f64_create(&a, &A, 2, 2, 2, rows, cols, vals), MATX_OK);
+	auto backend = matx_sparse_default();
+	matx_double out = 0.0;
+	matx_status_t st = matx_normfro_mat_coo_f64(&backend, A, &out);
+	if (st == MATX_ERR_NOT_SUPPORTED) { matx_coo_sparse_f64_destroy(&a, A); return; }
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(out, 5.0, 1e-12);
+	matx_coo_sparse_f64_destroy(&a, A);
+	matx_finalize(&backend);
+}
+
+TEST(compute_sparse, spadd_coo_f64) {
+	// A = diag(1,2), B = diag(3,4), C = 2*A + 1*B = diag(5,8)
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t rows[2] = {0, 1}, cols[2] = {0, 1};
+	matx_double valsA[2] = {1.0, 2.0}, valsB[2] = {3.0, 4.0};
+	matx_coo_f64_t A = NULL, B = NULL, C = NULL;
+	ASSERT_EQ(matx_coo_sparse_f64_create(&a, &A, 2, 2, 2, rows, cols, valsA), MATX_OK);
+	ASSERT_EQ(matx_coo_sparse_f64_create(&a, &B, 2, 2, 2, rows, cols, valsB), MATX_OK);
+	ASSERT_EQ(matx_coo_sparse_f64_create(&a, &C, 2, 2, 2, NULL, NULL, NULL), MATX_OK);
+	auto backend = matx_sparse_default();
+	matx_status_t st = matx_spadd_coo_f64(&backend, 2.0, A, 1.0, B, C);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_coo_sparse_f64_destroy(&a, A);
+		matx_coo_sparse_f64_destroy(&a, B);
+		matx_coo_sparse_f64_destroy(&a, C);
+		return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	// C should have 2 entries: (0,0)=5, (1,1)=8
+	ASSERT_EQ(C->nnz, 2);
+	// find values (order may vary)
+	bool found5 = false, found8 = false;
+	for (int i = 0; i < C->nnz; ++i) {
+		if (C->rows[i] == 0 && C->columns[i] == 0) { EXPECT_NEAR(C->values[i], 5.0, 1e-12); found5 = true; }
+		if (C->rows[i] == 1 && C->columns[i] == 1) { EXPECT_NEAR(C->values[i], 8.0, 1e-12); found8 = true; }
+	}
+	EXPECT_TRUE(found5);
+	EXPECT_TRUE(found8);
+	matx_coo_sparse_f64_destroy(&a, A);
+	matx_coo_sparse_f64_destroy(&a, B);
+	matx_coo_sparse_f64_destroy(&a, C);
+	matx_finalize(&backend);
+}

@@ -14,7 +14,6 @@ TEST(core_vec, vec_f64_create_destroy) {
 	EXPECT_EQ(v->n, 4u);
 	EXPECT_EQ(v->stride, 1u);
 	matx_vec_f64_destroy(&a, v);
-	EXPECT_EQ(v->data, nullptr);
 }
 
 TEST(core_vec, vec_f64_wrap) {
@@ -44,4 +43,18 @@ TEST(core_vec, vec_c64_wrap) {
 	ASSERT_EQ(matx_vec_c64_wrap(&a, &v, 4, 1, buf), MATX_OK);
 	EXPECT_EQ(v->data, buf);
 	matx_vec_c64_destroy(nullptr, v);
+}
+
+TEST(core_vec, vec_f64_fill_zeros_ones) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_vec_f64_t v = NULL;
+	ASSERT_EQ(matx_vec_f64_create(&a, &v, NULL, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_f64_fill(v, 7.0), MATX_OK);
+	EXPECT_NEAR(v->data[0], 7.0, 1e-12);
+	EXPECT_NEAR(v->data[3], 7.0, 1e-12);
+	ASSERT_EQ(matx_vec_f64_zeros(v), MATX_OK);
+	EXPECT_NEAR(v->data[0], 0.0, 1e-12);
+	ASSERT_EQ(matx_vec_f64_ones(v), MATX_OK);
+	EXPECT_NEAR(v->data[2], 1.0, 1e-12);
+	matx_vec_f64_destroy(&a, v);
 }

@@ -1,4 +1,5 @@
-﻿#include <gtest/gtest.h>
+#include <gtest/gtest.h>
+#include <math.h>
 
 extern "C" {
 #include "matx/matx_types.h"
@@ -16,7 +17,6 @@ TEST(core_dense, create_destroy) {
   EXPECT_EQ(M->ncols, 4u);
   EXPECT_EQ(M->stride, 3u);
   matx_dense_f64_destroy(&a, M);
-  //EXPECT_EQ(M->data, nullptr);
 }
 
 TEST(core_dense, wrap_no_ownership) {
@@ -26,7 +26,6 @@ TEST(core_dense, wrap_no_ownership) {
   ASSERT_EQ(matx_dense_f64_wrap(&a, &V, 2, 3, 3, MATX_COL_MAJOR, buf), MATX_OK);
   EXPECT_EQ(V->data, buf);
   matx_dense_f64_destroy(&a, V);
-  //EXPECT_EQ(V->data, nullptr);
 }
 
 TEST(core_dense, create_4x4) {
@@ -77,3 +76,26 @@ TEST(core_dense, dup_c4x4) {
 	matx_dense_c64_destroy(&a, copy);
 }
 
+TEST(core_dense, f64_fill_zeros_ones) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_f64_t M = NULL;
+	ASSERT_EQ(matx_dense_f64_create(&a, &M, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+	ASSERT_EQ(matx_dense_f64_fill(M, 5.0), MATX_OK);
+	EXPECT_NEAR(M->data[0], 5.0, 1e-12);
+	ASSERT_EQ(matx_dense_f64_zeros(M), MATX_OK);
+	EXPECT_NEAR(M->data[4], 0.0, 1e-12);
+	ASSERT_EQ(matx_dense_f64_ones(M), MATX_OK);
+	EXPECT_NEAR(M->data[8], 1.0, 1e-12);
+	matx_dense_f64_destroy(&a, M);
+}
+
+TEST(core_dense, f64_trace) {
+	matx_alloc_t a = matx_alloc_default();
+	double data[4] = {1,0,0,4}; // 2x2 col-major: diag = {1,4}
+	matx_dense_f64_t A = NULL;
+	ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 2, 2, data), MATX_OK);
+	double tr = 0.0;
+	ASSERT_EQ(matx_dense_f64_trace(A, &tr), MATX_OK);
+	EXPECT_NEAR(tr, 5.0, 1e-12);
+	matx_dense_f64_destroy(&a, A);
+}
