@@ -10,8 +10,9 @@ This README is aligned with the current codebase structure (`master`, Apr 2026 s
 - `tools`: logging/time utilities (`spdlog` based).
 - `core`: allocators, dense/sparse/vector containers, status/error helpers.
 - `io`: matrix/vector print and read helpers.
-- `dense_blas`: dense compute wrappers (`gemm/gemv/axpy/geadd` etc.) with backend dispatch.
-- `sparse_blas`: sparse compute wrappers (`spmv/spmm/transpose/conj/norm`) with backend dispatch.
+- `vec_blas`: vector compute wrappers (`scal/copy/swap/dot/nrm2/asum/iamax/axpy/norm`) with backend dispatch.
+- `dense_blas`: dense compute wrappers (`gemm/gemv/geadd/ger/trsv/trsm/syrk/herk/transpose/norm`) with backend dispatch.
+- `sparse_blas`: sparse compute wrappers (`spmv/spmm/dsp2md/transpose/conj/mat_norm/spadd`) with backend dispatch.
 - `dense_solve`: dense linear solve/factor APIs.
 - `sparse_solve`: sparse linear solve/factor APIs (SuiteSparse KLU path).
 - `tests`: GoogleTest-based unit tests.
@@ -73,8 +74,9 @@ ctest --test-dir build --output-on-failure
 
 ## Public capability snapshot
 
-- Dense compute APIs: `matx_gemm_*`, `matx_gemv_*`, `matx_axpy_*`, `matx_geadd_*`.
-- Sparse compute APIs: `matx_spmv_*`, `matx_spmm_*`, sparse-sparse to dense, transpose/conjugate, norms.
+- Dense compute APIs: `matx_gemm_*`, `matx_gemv_*`, `matx_geadd_*`, `matx_ger_*`, `matx_trsv_*`, `matx_trsm_*`, `matx_syrk_*`, `matx_herk_*`, `matx_transpose_*`, `matx_conj_transpose_*`, `matx_mat_norm*`.
+- Vector compute APIs: `matx_vec_scal_*`, `matx_vec_copy_*`, `matx_vec_swap_*`, `matx_vec_dot_*`, `matx_vec_nrm2_*`, `matx_vec_asum_*`, `matx_vec_iamax_*`, `matx_vec_axpy_*`, `matx_vec_norm1_*`, `matx_vec_norm2_*`, `matx_vec_norminf_*`.
+- Sparse compute APIs: `matx_spmv_*`, `matx_spmm_*`, `matx_dsp2md_*`, sparse-sparse to dense, transpose/conjugate, sparse matrix norms, sparse addition.
 - Dense solve APIs: factor + solve and one-shot solve for `f64/c64`.
 - Sparse solve APIs: factor + solve and one-shot solve for COO/CSC pathways.
 - IO APIs: print/read dense, sparse, and vectors to/from text files.
@@ -85,6 +87,7 @@ The `tests` target includes:
 
 - core object create/destroy and basic behavior
 - dense compute (real + complex)
+- vector compute (real + complex)
 - sparse compute (real + complex)
 - dense/sparse solve paths
 - print/read roundtrip style checks
