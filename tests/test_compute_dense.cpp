@@ -5,6 +5,7 @@ extern "C" {
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
 #include "matx/matx_dense_compute.h"
+#include "matx/matx_vec_compute.h"
 #include "matx/matx_types_internal.h"
 }
 static void fill_dense_f64_4x4(matx_dense_f64_t M, double base) {
@@ -146,8 +147,8 @@ TEST(compute_dense, scal_f64) {
   matx_vec_f64_t x = NULL;
   double data[4] = {1.0, 2.0, 3.0, 4.0};
   ASSERT_EQ(matx_vec_f64_create(&a, &x, data, 4), MATX_OK);
-  matx_dense_backend_t blas = matx_blas_default();
-  ASSERT_EQ(matx_scal_f64(&blas, 2.0, x), MATX_OK);
+  matx_vec_backend_t vblas = matx_vec_default();
+  ASSERT_EQ(matx_vec_scal_f64(&vblas, 2.0, x), MATX_OK);
   EXPECT_NEAR(x->data[0], 2.0, 1e-12);
   EXPECT_NEAR(x->data[3], 8.0, 1e-12);
   matx_vec_f64_destroy(&a, x);
@@ -159,8 +160,8 @@ TEST(compute_dense, copy_f64) {
   double data[3] = {1.0, 2.0, 3.0};
   ASSERT_EQ(matx_vec_f64_create(&a, &x, data, 3), MATX_OK);
   ASSERT_EQ(matx_vec_f64_create(&a, &y, NULL, 3), MATX_OK);
-  matx_dense_backend_t blas = matx_blas_default();
-  ASSERT_EQ(matx_copy_f64(&blas, x, y), MATX_OK);
+  matx_vec_backend_t vblas = matx_vec_default();
+  ASSERT_EQ(matx_vec_copy_f64(&vblas, x, y), MATX_OK);
   EXPECT_NEAR(y->data[0], 1.0, 1e-12);
   EXPECT_NEAR(y->data[2], 3.0, 1e-12);
   matx_vec_f64_destroy(&a, x);
@@ -173,9 +174,9 @@ TEST(compute_dense, dot_f64) {
   double xd[3] = {1.0, 2.0, 3.0}, yd[3] = {4.0, 5.0, 6.0};
   ASSERT_EQ(matx_vec_f64_create(&a, &x, xd, 3), MATX_OK);
   ASSERT_EQ(matx_vec_f64_create(&a, &y, yd, 3), MATX_OK);
-  matx_dense_backend_t blas = matx_blas_default();
+  matx_vec_backend_t vblas = matx_vec_default();
   double result = 0.0;
-  ASSERT_EQ(matx_dot_f64(&blas, x, y, &result), MATX_OK);
+  ASSERT_EQ(matx_vec_dot_f64(&vblas, x, y, &result), MATX_OK);
   EXPECT_NEAR(result, 32.0, 1e-12); // 1*4+2*5+3*6=32
   matx_vec_f64_destroy(&a, x);
   matx_vec_f64_destroy(&a, y);
@@ -186,9 +187,9 @@ TEST(compute_dense, nrm2_f64) {
   matx_vec_f64_t x = NULL;
   double data[3] = {3.0, 4.0, 0.0};
   ASSERT_EQ(matx_vec_f64_create(&a, &x, data, 3), MATX_OK);
-  matx_dense_backend_t blas = matx_blas_default();
+  matx_vec_backend_t vblas = matx_vec_default();
   double result = 0.0;
-  ASSERT_EQ(matx_nrm2_f64(&blas, x, &result), MATX_OK);
+  ASSERT_EQ(matx_vec_nrm2_f64(&vblas, x, &result), MATX_OK);
   EXPECT_NEAR(result, 5.0, 1e-12);
   matx_vec_f64_destroy(&a, x);
 }
@@ -198,9 +199,9 @@ TEST(compute_dense, iamax_f64) {
   matx_vec_f64_t x = NULL;
   double data[4] = {1.0, -9.0, 3.0, 2.0};
   ASSERT_EQ(matx_vec_f64_create(&a, &x, data, 4), MATX_OK);
-  matx_dense_backend_t blas = matx_blas_default();
+  matx_vec_backend_t vblas = matx_vec_default();
   matx_int64_t idx = -1;
-  ASSERT_EQ(matx_iamax_f64(&blas, x, &idx), MATX_OK);
+  ASSERT_EQ(matx_vec_iamax_f64(&vblas, x, &idx), MATX_OK);
   EXPECT_EQ(idx, 1); // index of max abs value (-9)
   matx_vec_f64_destroy(&a, x);
 }

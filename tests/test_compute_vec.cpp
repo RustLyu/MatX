@@ -3,7 +3,7 @@
 extern "C" {
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
-#include "matx/matx_dense_compute.h"
+#include "matx/matx_vec_compute.h"
 #include "matx/matx_types_internal.h"
 }
 
@@ -21,8 +21,8 @@ TEST(compute_vec, axpy_f64) {
   y->data[2] = 0.3;
   y->data[3] = 0.4;
 
-  matx_dense_backend_t blas = matx_blas_default();
-  matx_status_t st = matx_axpy_f64(&blas, 2.0, x, y);
+  matx_vec_backend_t vblas = matx_vec_default();
+  matx_status_t st = matx_vec_axpy_f64(&vblas, 2.0, x, y);
   if (st == MATX_ERR_NOT_SUPPORTED) {
     matx_vec_f64_destroy(&a, x);
     matx_vec_f64_destroy(&a, y);
@@ -51,9 +51,9 @@ TEST(compute_vec, axpy_c64) {
   y->data[2] = {0.0, 0.0};
   y->data[3] = {1.0, 1.0};
 
-  matx_dense_backend_t blas = matx_blas_default();
+  matx_vec_backend_t vblas = matx_vec_default();
   matx_complex_f64_t alpha = {2.0, 0.0};
-  matx_status_t st = matx_axpy_c64(&blas, alpha, x, y);
+  matx_status_t st = matx_vec_axpy_c64(&vblas, alpha, x, y);
   if (st == MATX_ERR_NOT_SUPPORTED) {
     matx_vec_c64_destroy(&a, x);
     matx_vec_c64_destroy(&a, y);

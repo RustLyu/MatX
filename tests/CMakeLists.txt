@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
   test_core_vec.cpp
   test_compute_dgemm.cpp
   test_compute_vec.cpp
+  test_compute_vec_blas.cpp
   test_compute_dense.cpp
   test_compute_sparse.cpp
   test_solve.cpp
@@ -34,6 +35,7 @@ target_link_libraries(${PROJECT_NAME}
     GTest::gtest_main
     MatX::types
     MatX::core
+    MatX::vec_blas
     MatX::dense_blas
     MatX::sparse_blas
     MatX::dense_solve
