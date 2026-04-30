@@ -9,7 +9,11 @@ extern "C" {
 #endif
 
 	typedef enum matx_linsolve_backend_kind_t {
-		MATX_LINSOLVE_BACKEND_SUITESPARSE = 0
+		MATX_LINSOLVE_BACKEND_SUITESPARSE = 0,
+		MATX_LINSOLVE_BACKEND_UMFPACK = 1,
+		MATX_LINSOLVE_BACKEND_CXSPARSE = 2,
+		MATX_LINSOLVE_BACKEND_SUPERLU = 3,
+		MATX_LINSOLVE_BACKEND_MUMPS = 4
 	} matx_sparse_linsolve_backend_kind_t;
 
 	// Opaque factorization handles
@@ -41,6 +45,7 @@ extern "C" {
 	} matx_sparse_linsolve_t;
 
 	MATX_API matx_sparse_linsolve_t matx_sparse_linsolve_default(void);
+	MATX_API matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend_kind_t k);
 	MATX_API const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_t k);
 
 	// High-level API (thin wrappers over vtable) -------------------------------

@@ -2,16 +2,45 @@
 
 // Forward decls
 matx_sparse_linsolve_t matx_linsolve_make_suitesparse(void);
+matx_sparse_linsolve_t matx_linsolve_make_umfpack(void);
+matx_sparse_linsolve_t matx_linsolve_make_cxsparse(void);
+matx_sparse_linsolve_t matx_linsolve_make_superlu(void);
+matx_sparse_linsolve_t matx_linsolve_make_mumps(void);
 
 const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_t k) {
   switch (k) {
     case MATX_LINSOLVE_BACKEND_SUITESPARSE: return "SUITESPARSE";
+    case MATX_LINSOLVE_BACKEND_UMFPACK: return "UMFPACK";
+    case MATX_LINSOLVE_BACKEND_CXSPARSE: return "CXSPARSE";
+    case MATX_LINSOLVE_BACKEND_SUPERLU: return "SUPERLU";
+    case MATX_LINSOLVE_BACKEND_MUMPS: return "MUMPS";
     default: return "UNKNOWN";
   }
 }
 
 matx_sparse_linsolve_t matx_sparse_linsolve_default(void) {
+#if MATX_HAVE_UMFPACK
+  return matx_linsolve_make_umfpack();
+#elif MATX_HAVE_CXSPARSE
+  return matx_linsolve_make_cxsparse();
+#elif MATX_HAVE_SUPERLU
+  return matx_linsolve_make_superlu();
+#elif MATX_HAVE_MUMPS
+  return matx_linsolve_make_mumps();
+#else
   return matx_linsolve_make_suitesparse();
+#endif
+}
+
+matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend_kind_t k) {
+  switch (k) {
+    case MATX_LINSOLVE_BACKEND_UMFPACK: return matx_linsolve_make_umfpack();
+    case MATX_LINSOLVE_BACKEND_CXSPARSE: return matx_linsolve_make_cxsparse();
+    case MATX_LINSOLVE_BACKEND_SUPERLU: return matx_linsolve_make_superlu();
+    case MATX_LINSOLVE_BACKEND_MUMPS: return matx_linsolve_make_mumps();
+    case MATX_LINSOLVE_BACKEND_SUITESPARSE:
+    default: return matx_linsolve_make_suitesparse();
+  }
 }
 
 // High-level wrappers ------------------------------------------------------
