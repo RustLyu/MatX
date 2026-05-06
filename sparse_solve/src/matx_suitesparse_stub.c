@@ -267,7 +267,7 @@ static matx_status_t ss_solve_csc_c64(
 matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void) {
 	matx_sparse_linsolve_t ls =
 	{
-		.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE,
+		.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU,
 		.vt = {
 			.factor_csc_f64 = &ss_factor_csc_f64,
 			.solve_csc_f64 = &ss_solve_csc_f64,

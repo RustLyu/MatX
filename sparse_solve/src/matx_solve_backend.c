@@ -9,7 +9,7 @@ matx_sparse_linsolve_t matx_linsolve_make_mumps(void);
 
 const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_t k) {
   switch (k) {
-    case MATX_LINSOLVE_BACKEND_SUITESPARSE: return "SUITESPARSE";
+    case MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU: return "SUITESPARSE";
     case MATX_LINSOLVE_BACKEND_UMFPACK: return "UMFPACK";
     case MATX_LINSOLVE_BACKEND_CXSPARSE: return "CXSPARSE";
     case MATX_LINSOLVE_BACKEND_SUPERLU: return "SUPERLU";
@@ -38,7 +38,7 @@ matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend
     case MATX_LINSOLVE_BACKEND_CXSPARSE: return matx_linsolve_make_cxsparse();
     case MATX_LINSOLVE_BACKEND_SUPERLU: return matx_linsolve_make_superlu();
     case MATX_LINSOLVE_BACKEND_MUMPS: return matx_linsolve_make_mumps();
-    case MATX_LINSOLVE_BACKEND_SUITESPARSE:
+    case MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU:
     default: return matx_linsolve_make_suitesparse_klu();
   }
 }
