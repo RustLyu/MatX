@@ -29,16 +29,17 @@ TEST(solve, sparse_real_4x4_factor_solve) {
 	double x[4] = { 0.0, 0.0, 0.0, 0.0 };
 
 	matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
-	matx_factor_sparse_f64_t* F = NULL;
+	matx_factor_sparse_f64_t F;// = NULL;
+	F.reserved = NULL;
 	matx_status_t st = matx_factor_csc_f64(&ls, coo_A, &F);
 	if (st == MATX_ERR_NOT_SUPPORTED) {
 		return;
 	}
 	ASSERT_EQ(st, MATX_OK);
-	ASSERT_NE(F, nullptr);
+	//ASSERT_NE(F, nullptr);
 
-	st = matx_solve_csc_f64_factor(&ls, F, b, x);
-	matx_factor_csc_f64_destroy(&ls, F);
+	st = matx_solve_csc_f64_factor(&ls, &F, b, x);
+	matx_factor_csc_f64_destroy(&ls, &F);
 	if (st == MATX_ERR_NOT_SUPPORTED) {
 		return;
 	}
@@ -201,7 +202,8 @@ TEST(solve, sparse_complex_4x4_factor_solve) {
 	b->data[3] = {10.0, 0.0};
 
 	matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
-	matx_factor_sparse_c64_t* F = NULL;
+	matx_factor_sparse_c64_t F;
+	F.reserved = NULL;
 	matx_status_t st = matx_factor_csc_c64(&ls, coo_A, &F);
 	if (st == MATX_ERR_NOT_SUPPORTED) {
 		matx_vec_c64_destroy(&alloc, b);
@@ -212,8 +214,8 @@ TEST(solve, sparse_complex_4x4_factor_solve) {
 	}
 	ASSERT_EQ(st, MATX_OK);
 
-	st = matx_solve_csc_c64_factor(&ls, F, b, x);
-	matx_factor_csc_c64_destroy(&ls, F);
+	st = matx_solve_csc_c64_factor(&ls, &F, b, x);
+	matx_factor_csc_c64_destroy(&ls, &F);
 	ASSERT_EQ(st, MATX_OK);
 	EXPECT_NEAR(x->data[0].real, 2.0, 1e-10);
 	EXPECT_NEAR(x->data[3].real, 5.0, 1e-10);

@@ -1,7 +1,7 @@
 ﻿#include "matx/matx_sparse_solve.h"
 
 // Forward decls
-matx_sparse_linsolve_t matx_linsolve_make_suitesparse(void);
+matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void);
 matx_sparse_linsolve_t matx_linsolve_make_umfpack(void);
 matx_sparse_linsolve_t matx_linsolve_make_cxsparse(void);
 matx_sparse_linsolve_t matx_linsolve_make_superlu(void);
@@ -39,7 +39,7 @@ matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend
     case MATX_LINSOLVE_BACKEND_SUPERLU: return matx_linsolve_make_superlu();
     case MATX_LINSOLVE_BACKEND_MUMPS: return matx_linsolve_make_mumps();
     case MATX_LINSOLVE_BACKEND_SUITESPARSE:
-    default: return matx_linsolve_make_suitesparse();
+    default: return matx_linsolve_make_suitesparse_klu();
   }
 }
 
@@ -48,7 +48,7 @@ matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend
 // Sparse real
 matx_status_t matx_factor_csc_f64(const matx_sparse_linsolve_t* ls,
                                   matx_coo_f64_t A,
-                                  matx_factor_sparse_f64_t** out_F) {
+                                  matx_factor_sparse_f64_t* out_F) {
   if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.factor_csc_f64) return MATX_ERR_NOT_SUPPORTED;
   return ls->vt.factor_csc_f64(A, out_F);
@@ -76,12 +76,13 @@ matx_status_t matx_solve_csc_f64(const matx_sparse_linsolve_t* ls,
                                  const matx_double* b,
     matx_double* x) {
   if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
-  matx_factor_sparse_f64_t* F = NULL;
+  matx_factor_sparse_f64_t F;
+  F.reserved = NULL;
   matx_status_t st = matx_factor_csc_f64(ls, A, &F);
   if (st != MATX_OK) 
       return st;
-  st = matx_solve_csc_f64_factor(ls, F, b, x);
-  matx_factor_csc_f64_destroy(ls, F);
+  st = matx_solve_csc_f64_factor(ls, &F, b, x);
+  matx_factor_csc_f64_destroy(ls, &F);
   return st;
 }
 
@@ -89,7 +90,7 @@ matx_status_t matx_solve_csc_f64(const matx_sparse_linsolve_t* ls,
 // Complex variants (default to NOT_SUPPORTED until backend provides them)
 matx_status_t matx_factor_csc_c64(const matx_sparse_linsolve_t* ls,
                                   matx_coo_c64_t A,
-                                  matx_factor_sparse_c64_t** out_F) {
+                                  matx_factor_sparse_c64_t* out_F) {
   if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
   if (!ls->vt.factor_csc_c64) return MATX_ERR_NOT_SUPPORTED;
   return ls->vt.factor_csc_c64(A, out_F);
@@ -119,12 +120,12 @@ matx_status_t matx_solve_csc_c64(const matx_sparse_linsolve_t* ls,
                                  matx_vec_c64_t x) {
   if (!ls || !A || !b || !x) 
       return MATX_ERR_INVALID_ARG;
-  matx_factor_sparse_c64_t* F = NULL;
+  matx_factor_sparse_c64_t F;
   matx_status_t st = matx_factor_csc_c64(ls, A, &F);
   if (st != MATX_OK) 
       return st;
-  st = matx_solve_csc_c64_factor(ls, F, b, x);
-  matx_factor_csc_c64_destroy(ls, F);
+  st = matx_solve_csc_c64_factor(ls, &F, b, x);
+  matx_factor_csc_c64_destroy(ls, &F);
   return st;
 }
 

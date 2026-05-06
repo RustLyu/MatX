@@ -6,49 +6,51 @@
 #include "klu.h"
 #include "matx/matx_log.h"
 
-struct matx_factor_sparse_f64_t {
+typedef struct matx_factor_sparse_f64_klu{
 	klu_l_symbolic* S;
 	klu_l_numeric* N;
 	klu_l_common common;
 	matx_int64_t n;
-};
+} matx_factor_sparse_f64_klu_t;
 
-struct matx_factor_sparse_c64_t {
+typedef struct matx_factor_sparse_c64_klu {
 	klu_l_symbolic* S;
 	klu_l_numeric* N;
 	klu_l_common common;
 	matx_int64_t n;
-};
+} matx_factor_sparse_c64_klu_t;
 
 static void ss_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F) {
-	if (!F)
+	if (!F || !F->reserved)
 		return;
-	klu_l_free_numeric(&F->N, &F->common);
-	klu_l_free_symbolic(&F->S, &F->common);
-	free(F);
+	matx_factor_sparse_f64_klu_t* ptr = (matx_factor_sparse_f64_klu_t*)F->reserved;
+	klu_l_free_numeric(&ptr->N, &ptr->common);
+	klu_l_free_symbolic(&ptr->S, &ptr->common);
+	free(ptr);
 }
 
 static void ss_factor_csc_c64_destroy(
 	matx_factor_sparse_c64_t* F)
 {
-	if (!F) return;
-
-	klu_zl_free_numeric(&F->N, &F->common);
-	klu_l_free_symbolic(&F->S, &F->common);
-	free(F);
+	if (!F || !F->reserved)
+		return;
+	matx_factor_sparse_c64_klu_t* ptr = (matx_factor_sparse_c64_klu_t*)F->reserved;
+	klu_zl_free_numeric(&ptr->N, &ptr->common);
+	klu_l_free_symbolic(&ptr->S, &ptr->common);
+	free(ptr);
 }
 
 // Sparse real: KLU-based ---------------------------------------------------
 static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
-	matx_factor_sparse_f64_t** out_F) {
+	matx_factor_sparse_f64_t* out_F) {
 	if (!A || !out_F)
 	{
 		MATX_ERROR("input pointer is null error");
 		return MATX_ERR_INVALID_ARG;
 	}
-	if (*out_F != NULL)
+	if (out_F != NULL)
 	{
-		ss_factor_csc_f64_destroy(*out_F);
+		ss_factor_csc_f64_destroy(out_F);
 	}
 
 	matx_status_t st = coo_to_csc_f64(A);
@@ -74,8 +76,8 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 		return MATX_ERR_NOT_SUPPORTED;
 	}
 
-	matx_factor_sparse_f64_t* F =
-		(matx_factor_sparse_f64_t*)malloc(sizeof(*F));
+	matx_factor_sparse_f64_klu_t* F =
+		(matx_factor_sparse_f64_klu_t*)malloc(sizeof(*F));
 	if (!F)
 	{
 		MATX_ERROR("malloc Factor handle error");
@@ -118,25 +120,25 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 		return MATX_ERR_INTERNAL;
 	}
 
-	*out_F = F;
+	out_F->reserved = F;
 	return MATX_OK;
 }
 
 static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
 	const matx_double* b,
 	matx_double* x) {
-	if (!F || !b || !x)
+	if (!F || !F->reserved || !b || !x)
 	{
 		MATX_ERROR("input pointer is null");
 		return MATX_ERR_INVALID_ARG;
 	}
-
-	const matx_int64_t n = F->n;
+	matx_factor_sparse_f64_klu_t* ptr = (matx_factor_sparse_f64_klu_t*)F->reserved;
+	const matx_int64_t n = ptr->n;
 	for (matx_int64_t i = 0; i < n; ++i) {
 		x[i] = b[i];
 	}
 
-	const int status = klu_l_solve(F->S, F->N, n, 1, x, &F->common);
+	const int status = klu_l_solve(ptr->S, ptr->N, n, 1, x, &ptr->common);
 	if (!status)
 	{
 		MATX_ERROR("KLU solve failed with status %d", status);
@@ -147,7 +149,7 @@ static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
 
 static matx_status_t ss_factor_csc_c64(
 	matx_coo_c64_t A,
-	matx_factor_sparse_c64_t** out_F)
+	matx_factor_sparse_c64_t* out_F)
 {
 	if (!A || !out_F)
 	{
@@ -155,9 +157,9 @@ static matx_status_t ss_factor_csc_c64(
 		return MATX_ERR_INVALID_ARG;
 	}
 
-	if (*out_F != NULL)
+	if (out_F != NULL)
 	{
-		ss_factor_csc_c64_destroy(*out_F);
+		ss_factor_csc_c64_destroy(out_F);
 	}
 
 	matx_status_t st = coo_to_csc_c64(A);
@@ -182,8 +184,8 @@ static matx_status_t ss_factor_csc_c64(
 		return MATX_ERR_NOT_SUPPORTED;
 	}
 
-	matx_factor_sparse_c64_t* F =
-		(matx_factor_sparse_c64_t*)malloc(sizeof(*F));
+	matx_factor_sparse_c64_klu_t* F =
+		(matx_factor_sparse_c64_klu_t*)malloc(sizeof(*F));
 	if (!F)
 	{
 		MATX_ERROR("malloc F failed");
@@ -227,7 +229,7 @@ static matx_status_t ss_factor_csc_c64(
 		goto fail;
 	}
 
-	*out_F = F;
+	out_F->reserved = F;
 	return MATX_OK;
 
 fail:
@@ -245,13 +247,13 @@ static matx_status_t ss_solve_csc_c64(
 		return MATX_ERR_INVALID_ARG;
 	if (b->stride != 1 || x->stride != 1)
 		return MATX_ERR_NOT_SUPPORTED;
-
-	matx_int64_t n = F->n;
+	matx_factor_sparse_c64_klu_t* ptr = (matx_factor_sparse_c64_klu_t*)F->reserved;
+	matx_int64_t n = ptr->n;
 
 	memcpy(x->data, b->data, sizeof(matx_complex_f64_t) * n);
 
 	matx_int64_t status = klu_zl_solve(
-		F->S, F->N, n, 1, (matx_double*)x->data, &F->common);
+		ptr->S, ptr->N, n, 1, (matx_double*)x->data, &ptr->common);
 
 	if (!status)
 	{
@@ -262,7 +264,7 @@ static matx_status_t ss_solve_csc_c64(
 	return MATX_OK;
 }
 
-matx_sparse_linsolve_t matx_linsolve_make_suitesparse(void) {
+matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void) {
 	matx_sparse_linsolve_t ls =
 	{
 		.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE,

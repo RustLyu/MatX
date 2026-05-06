@@ -17,13 +17,18 @@ extern "C" {
 	} matx_sparse_linsolve_backend_kind_t;
 
 	// Opaque factorization handles
-	typedef struct matx_factor_sparse_f64_t matx_factor_sparse_f64_t;
-	typedef struct matx_factor_sparse_c64_t matx_factor_sparse_c64_t;
+	typedef struct matx_factor_sparse_f64_t {
+		void* reserved;
+	} matx_factor_sparse_f64_t;
+
+	typedef struct matx_factor_sparse_c64_t {
+		void* reserved;
+	} matx_factor_sparse_c64_t;
 
 	typedef struct matx_sparse_linsolve_vtable_t {
 		// Sparse real
 		matx_status_t(*factor_csc_f64)(matx_coo_f64_t A,
-			matx_factor_sparse_f64_t** out_F);
+			matx_factor_sparse_f64_t* out_F);
 		matx_status_t(*solve_csc_f64)(matx_factor_sparse_f64_t* F,
 			const matx_double* b,
 			matx_double* x);
@@ -31,7 +36,7 @@ extern "C" {
 
 		// Sparse complex
 		matx_status_t(*factor_csc_c64)(matx_coo_c64_t A,
-			matx_factor_sparse_c64_t** out_F);
+			matx_factor_sparse_c64_t* out_F);
 		matx_status_t(*solve_csc_c64)(matx_factor_sparse_c64_t* F,
 			const matx_vec_c64_t b,
 			matx_vec_c64_t x);
@@ -60,7 +65,7 @@ extern "C" {
 	 */
 	MATX_API matx_status_t matx_factor_csc_f64(const matx_sparse_linsolve_t* ls,
 		matx_coo_f64_t A,
-		matx_factor_sparse_f64_t** out_F);
+		matx_factor_sparse_f64_t* out_F);
 
 	/**
 	 * @brief Solve a real sparse linear system using pre-computed LU factorization
@@ -95,7 +100,7 @@ extern "C" {
 	 */
 	MATX_API matx_status_t matx_factor_csc_c64(const matx_sparse_linsolve_t* ls,
 		matx_coo_c64_t A,
-		matx_factor_sparse_c64_t** out_F);
+		matx_factor_sparse_c64_t* out_F);
 
 	/**
 	 * @brief Solve a complex sparse linear system using pre-computed LU factorization

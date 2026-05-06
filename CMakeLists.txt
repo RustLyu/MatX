@@ -297,17 +297,8 @@ if(MATX_ENABLE_CXSPARSE)
 endif()
 
 if(MATX_ENABLE_SUPERLU)
-  find_package(SUPERLU QUIET)
-  if(TARGET superlu OR TARGET SUPERLU::SUPERLU)
-    message(STATUS "SuperLU found from system/package manager")
-  else()
-    FetchContent_Declare(
-      superlu
-      GIT_REPOSITORY https://github.com/xiaoyeli/superlu.git
-      GIT_TAG v7.0.0
-    )
-    FetchContent_MakeAvailable(superlu)
-  endif()
+    set(superlu_DIR "${3Party_path}/SuperLU/lib/cmake/superlu")
+    find_package(superlu REQUIRED)
 endif()
 
 if(MATX_ENABLE_MUMPS)
