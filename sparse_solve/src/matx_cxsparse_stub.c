@@ -13,10 +13,17 @@ typedef struct matx_factor_sparse_f64_cxsparse {
 	cs_dln* N;
 	matx_int64_t n;
 #endif
+    matx_int64_t unused;
 } matx_factor_sparse_f64_cxsparse_t;
 
 typedef struct matx_factor_sparse_c64_cxsparse {
-	int unused;
+#if MATX_HAVE_CXSPARSE
+    cs_cl A;
+    cs_cls* S;
+    cs_cln* N;
+    matx_int64_t n;
+#endif
+    matx_int64_t unused;
 } matx_factor_sparse_c64_cxsparse_t;
 
 static void cxs_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
@@ -33,14 +40,29 @@ static void cxs_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
 	free(ptr);
 }
 
+static void cxs_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
+{
+    if (!F)
+        return;
+    matx_factor_sparse_c64_cxsparse_t* ptr = (matx_factor_sparse_c64_cxsparse_t*)F->reserved;
+#if MATX_HAVE_CXSPARSE
+    if (ptr->N)
+        cs_cl_nfree(ptr->N);
+    if (ptr->S)
+        cs_cl_sfree(ptr->S);
+#endif
+    free(ptr);
+}
+
 static matx_status_t cxs_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64_t* out_F)
 {
-	if (!A || !out_F) return MATX_ERR_INVALID_ARG;
+    if (!A || !out_F)
+        return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_CXSPARSE
 	(void)A; (void)out_F;
 	return MATX_ERR_NOT_SUPPORTED;
 #else
-	if (out_F) 
+    if (out_F && out_F->reserved)
 		cxs_factor_csc_f64_destroy(out_F);
 	if (A->nrows != A->ncols || A->nrows <= 0) 
 		return MATX_ERR_INVALID_ARG;
@@ -51,7 +73,9 @@ static matx_status_t cxs_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
 	if (st != MATX_OK) return st;
 
 	matx_factor_sparse_f64_cxsparse_t* F = (matx_factor_sparse_f64_cxsparse_t*)calloc(1, sizeof(*F));
-	if (!F) return MATX_ERR_OUT_OF_MEMORY;
+    if (!F)
+        return MATX_ERR_OUT_OF_MEMORY;
+    out_F->reserved = F;
 	F->n = A->nrows;
 
 	F->A.nzmax = A->nnz;
@@ -65,25 +89,24 @@ static matx_status_t cxs_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
 	F->S = cs_dl_sqr(2, &F->A, 0);
 	if (!F->S) {
 		MATX_ERROR("cs_dl_sqr failed");
-		cxs_factor_csc_f64_destroy(F);
+        cxs_factor_csc_f64_destroy(out_F);
 		return MATX_ERR_INTERNAL;
 	}
 
 	F->N = cs_dl_lu(&F->A, F->S, 1e-12);
 	if (!F->N) {
 		MATX_ERROR("cs_dl_lu failed");
-		cxs_factor_csc_f64_destroy(F);
+        cxs_factor_csc_f64_destroy(out_F);
 		return MATX_ERR_INTERNAL;
 	}
-
-	out_F->reserved = F;
 	return MATX_OK;
 #endif
 }
 
 static matx_status_t cxs_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx_double* b, matx_double* x)
 {
-	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+    if (!F || !b || !x)
+        return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_CXSPARSE
 	(void)F; (void)b; (void)x;
 	return MATX_ERR_NOT_SUPPORTED;
@@ -103,21 +126,77 @@ static matx_status_t cxs_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx_d
 #endif
 }
 
-static matx_status_t cxs_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64_t** out_F)
+static matx_status_t cxs_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64_t* out_F)
 {
-	(void)A; (void)out_F;
-	return MATX_ERR_NOT_SUPPORTED;
+    if (!A || !out_F)
+        return MATX_ERR_INVALID_ARG;
+#if !MATX_HAVE_CXSPARSE
+    (void)A; (void)out_F;
+    return MATX_ERR_NOT_SUPPORTED;
+#else
+    if (out_F && out_F->reserved)
+        cxs_factor_csc_c64_destroy(out_F);
+    if (A->nrows != A->ncols || A->nrows <= 0)
+        return MATX_ERR_INVALID_ARG;
+
+    matx_status_t st = coo_to_csc_c64(A);
+    if (st != MATX_OK)
+        return st;
+    st = coo_to_csc_c64_value_remap(A);
+    if (st != MATX_OK)
+        return st;
+
+    matx_factor_sparse_c64_cxsparse_t* F = (matx_factor_sparse_c64_cxsparse_t*)calloc(1, sizeof(*F));
+    if (!F)
+        return MATX_ERR_OUT_OF_MEMORY;
+    out_F->reserved = F;
+    F->n = A->nrows;
+
+    F->A.nzmax = A->nnz;
+    F->A.m = A->nrows;
+    F->A.n = A->ncols;
+    F->A.p = A->handle_csc->col_ptr;
+    F->A.i = A->handle_csc->row_ind;
+    F->A.x = (cs_complex_t*)A->handle_csc->values;
+    F->A.nz = -1;
+
+    F->S = cs_cl_sqr(2, &F->A, 0);
+    if (!F->S) {
+        MATX_ERROR("cs_cl_sqr failed");
+        cxs_factor_csc_c64_destroy(out_F);
+        return MATX_ERR_INTERNAL;
+    }
+
+    F->N = cs_cl_lu(&F->A, F->S, 1e-12);
+    if (!F->N) {
+        MATX_ERROR("cs_cl_lu failed");
+        cxs_factor_csc_c64_destroy(out_F);
+        return MATX_ERR_INTERNAL;
+    }
+    return MATX_OK;
+#endif
 }
 
 static matx_status_t cxs_solve_csc_c64(matx_factor_sparse_c64_t* F, const matx_vec_c64_t b, matx_vec_c64_t x)
 {
-	(void)F; (void)b; (void)x;
-	return MATX_ERR_NOT_SUPPORTED;
-}
+    if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+#if !MATX_HAVE_CXSPARSE
+    (void)F; (void)b; (void)x;
+    return MATX_ERR_NOT_SUPPORTED;
+#else
+    matx_factor_sparse_c64_cxsparse_t* ptr = (matx_factor_sparse_c64_cxsparse_t*)F->reserved;
+    cs_complex_t* y = (cs_complex_t*)malloc(sizeof(cs_complex_t) * (size_t)ptr->n);
+    if (!y)
+        return MATX_ERR_OUT_OF_MEMORY;
 
-static void cxs_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
-{
-	free(F);
+    cs_cl_ipvec(ptr->N->pinv, (cs_complex_t*)b->data, y, ptr->n);
+    cs_cl_lsolve(ptr->N->L, y);
+    cs_cl_usolve(ptr->N->U, y);
+    cs_cl_ipvec(ptr->S->q, y, (cs_complex_t*)x->data, ptr->n);
+
+    free(y);
+    return MATX_OK;
+#endif
 }
 
 matx_sparse_linsolve_t matx_linsolve_make_cxsparse(void)

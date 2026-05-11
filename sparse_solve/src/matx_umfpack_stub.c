@@ -79,7 +79,10 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
     if (st != MATX_OK) return st;
 
     matx_factor_sparse_f64_umfpack_t* F = (matx_factor_sparse_f64_umfpack_t*)calloc(1, sizeof(*F));
-    if (!F) return MATX_ERR_OUT_OF_MEMORY;
+    if (!F)
+        return MATX_ERR_OUT_OF_MEMORY;
+
+    out_F->reserved = F;
     F->n = A->nrows;
     F->nnz = A->nnz;
 
@@ -87,7 +90,7 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
     F->Ai = (matx_int64_t*)malloc(sizeof(matx_int64_t) * (size_t)F->nnz);
     F->Ax = (matx_double*)malloc(sizeof(matx_double) * (size_t)F->nnz);
     if (!F->Ap || !F->Ai || !F->Ax) {
-        umf_factor_csc_f64_destroy(F);
+        umf_factor_csc_f64_destroy(out_F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -101,7 +104,7 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
         &F->symbolic, NULL, NULL);
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_dl_symbolic failed status=%d", status);
-        umf_factor_csc_f64_destroy(F);
+        umf_factor_csc_f64_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -110,11 +113,10 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
         F->symbolic, &F->numeric, NULL, NULL);
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_dl_numeric failed status=%d", status);
-        umf_factor_csc_f64_destroy(F);
+        umf_factor_csc_f64_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
-    out_F->reserved = F;
     return MATX_OK;
 #endif
 }
@@ -197,16 +199,16 @@ static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
     matx_factor_sparse_c64_umfpack_t* F = (matx_factor_sparse_c64_umfpack_t*)calloc(1, sizeof(*F));
     if (!F)
         return MATX_ERR_OUT_OF_MEMORY;
+    out_F->reserved = F;
     F->n = A->nrows;
     F->nnz = A->nnz;
-
     // Allocate CSC arrays
     F->Ap = (matx_int64_t*)malloc(sizeof(matx_int64_t) * (size_t)(F->nnz + 1));
     F->Ai = (matx_int64_t*)malloc(sizeof(matx_int64_t) * (size_t)F->nnz);
     F->Ax = (matx_double*)malloc(sizeof(matx_double) * (size_t)F->nnz);
     F->Az = (matx_double*)malloc(sizeof(matx_double) * (size_t)F->nnz);
     if (!F->Ap || !F->Ai || !F->Az || !F->Ax) {
-        umf_factor_csc_c64_destroy(F);
+        umf_factor_csc_c64_destroy(out_F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -227,7 +229,7 @@ static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
         (const double*)F->Az, &F->symbolic, NULL, NULL);
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_zl_symbolic failed status=%d", status);
-        umf_factor_csc_c64_destroy(F);
+        umf_factor_csc_c64_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -237,11 +239,10 @@ static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
         (const double*)F->Az, F->symbolic, &F->numeric, NULL, NULL);
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_zl_numeric failed status=%d", status);
-        umf_factor_csc_c64_destroy(F);
+        umf_factor_csc_c64_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
-    out_F->reserved = F;
     return MATX_OK;
 #endif
 }

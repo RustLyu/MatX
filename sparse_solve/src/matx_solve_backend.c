@@ -20,7 +20,8 @@ const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_
 
 matx_sparse_linsolve_t matx_sparse_linsolve_default(void) {
 #if MATX_HAVE_UMFPACK
-  return matx_linsolve_make_umfpack();
+    return matx_linsolve_make_mumps();
+    //return matx_linsolve_make_umfpack();
 #elif MATX_HAVE_CXSPARSE
   return matx_linsolve_make_cxsparse();
 #elif MATX_HAVE_SUPERLU

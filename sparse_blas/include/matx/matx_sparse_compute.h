@@ -11,7 +11,6 @@ extern "C" {
 	typedef enum matx_sparse_backend_kind_t {
 		MATX_SPARSE_BACKEND_REFERENCE = 0,
 		MATX_SPARSE_BACKEND_GRAPHBLAS = 1,
-		MATX_SPARSE_BACKEND_MKL = 2,
 		MATX_SPARSE_BACKEND_AOCL_CPARSE = 3,
 	} matx_sparse_backend_kind_t;
 

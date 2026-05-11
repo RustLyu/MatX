@@ -11,7 +11,6 @@
 
 #include <limits.h>
 #include <math.h>
-#include <threads.h>
 
 //C(i,j)=k⨁​(A(i,k)⊗B(k,j))
 
@@ -656,23 +655,37 @@ matx_status_t ref_spadd_c64_grb(matx_complex_f64_t alpha, matx_coo_c64_t A,
 	return MATX_OK;
 }
 
-static once_flag grb_init_flag = ONCE_FLAG_INIT;
 static matx_bool grb_init_ok = false;
 
 static void do_grb_init(void) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-	GrB_Info info = GrB_init(GrB_NONBLOCKING);
-	if (info != GrB_SUCCESS) {
-		MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
-	}
-	else {
-		grb_init_ok = true;
-	}
+    GrB_Info info = GrB_init(GrB_NONBLOCKING);
+    if (info != GrB_SUCCESS) {
+        MATX_ERROR("GraphBLAS initialization failed with error code %d", info);
+    }
+    else {
+        grb_init_ok = true;
+    }
 #endif
 }
 
+#ifdef _WIN32
+#include <windows.h>
+static INIT_ONCE grb_init_flag = INIT_ONCE_STATIC_INIT;
+static BOOL CALLBACK do_grb_init_win(PINIT_ONCE InitOnce, PVOID Parameter, PVOID* Context) {
+    (void)InitOnce; (void)Parameter; (void)Context;
+    do_grb_init();
+    return TRUE;
+}
+#define matx_call_once(flag, func) \
+InitOnceExecuteOnce(flag, do_grb_init_win, NULL, NULL)
+#else
+#include <threads.h>
+#define matx_call_once(flag, func) call_once(flag, func)
+#endif
+
 matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
-	call_once(&grb_init_flag, do_grb_init);
+    matx_call_once(&grb_init_flag, do_grb_init);
 	if (!grb_init_ok) {
 		MATX_ERROR("GraphBLAS initialization failed");
 	}

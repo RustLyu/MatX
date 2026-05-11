@@ -2,6 +2,8 @@
 #include "matx/matx_types_internal.h"
 #include "matx/matx_log.h"
 
+#include <stdlib.h>
+
 #if MATX_HAVE_MUMPS
 #include <dmumps_c.h>
 #include <zmumps_c.h>
@@ -64,7 +66,7 @@ static void mumps_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
  * @param out_F Output factorization handle
  * @return matx_status_t
  */
-static matx_status_t mumps_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64_t** out_F)
+static matx_status_t mumps_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64_t* out_F)
 {
     if (!A || !out_F) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_MUMPS
@@ -201,7 +203,7 @@ static void mumps_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
  * @param out_F Output complex factorization handle
  * @return matx_status_t
  */
-static matx_status_t mumps_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64_t** out_F)
+static matx_status_t mumps_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64_t* out_F)
 {
     if (!A || !out_F) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_MUMPS

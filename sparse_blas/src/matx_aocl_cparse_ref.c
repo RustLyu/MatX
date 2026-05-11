@@ -1,9 +1,10 @@
-#include "matx/matx_sparse_compute.h"
+﻿#include "matx/matx_sparse_compute.h"
 #include "matx/matx_log.h"
 
 #include <memory.h>
 #include <limits.h>
 #include <math.h>
+#include <stdlib.h>
 
 #if MATX_HAVE_AOCL_SPARSE
 #include "aoclsparse.h"
