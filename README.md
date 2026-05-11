@@ -38,7 +38,7 @@ Top-level `CMakeLists.txt` detects CPU vendor using a generated `try_run` progra
   - `MATX_ENABLE_OPENBLAS=ON`
   - `MATX_ENABLE_GRAPHBLAS=OFF`
 
-Also, build configuration enforces exactly one dense BLAS provider enabled among OpenBLAS/BLIS/MKL.
+Also, build configuration enforces exactly one dense BLAS provider enabled among OpenBLAS/BLIS
 
 ## Main CMake options
 
@@ -46,7 +46,6 @@ Also, build configuration enforces exactly one dense BLAS provider enabled among
 - `-DMATX_ENABLE_OPENBLAS=ON|OFF`
 - `-DMATX_ENABLE_BLIS=ON|OFF`
 - `-DMATX_ENABLE_LIBFLAME=ON|OFF`
-- `-DMATX_ENABLE_MKL=ON|OFF`
 - `-DMATX_ENABLE_SUITESPARSE=ON|OFF` (default `ON`)
 - `-DMATX_ENABLE_GRAPHBLAS=ON|OFF`
 - `-DMATX_ENABLE_AOCL_SPARSE=ON|OFF`
