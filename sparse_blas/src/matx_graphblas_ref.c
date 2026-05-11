@@ -668,7 +668,6 @@ static void do_grb_init(void) {
     }
 #endif
 }
-
 #ifdef _WIN32
 #include <windows.h>
 static INIT_ONCE grb_init_flag = INIT_ONCE_STATIC_INIT;
@@ -681,6 +680,7 @@ static BOOL CALLBACK do_grb_init_win(PINIT_ONCE InitOnce, PVOID Parameter, PVOID
 InitOnceExecuteOnce(flag, do_grb_init_win, NULL, NULL)
 #else
 #include <threads.h>
+static once_flag grb_init_flag = ONCE_FLAG_INIT;
 #define matx_call_once(flag, func) call_once(flag, func)
 #endif
 
