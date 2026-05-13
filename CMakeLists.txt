@@ -48,17 +48,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ---- spdlog ----
-if (WIN32)
-	set(spdlog_DIR "${3Party_path}/spdlog/lib/cmake/spdlog")
-elseif (LINUX)
-	set(spdlog_DIR "${3Party_path}/spdlog/lib64/cmake/spdlog")
-endif()
-message(STATUS "spdlog found at ${spdlog_DIR}")
-find_package(spdlog REQUIRED)
-
-include(CheckCXXSourceRuns)
 include(FetchContent)
+
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.13.0
+)
+
+FetchContent_Populate(spdlog)
 
 # Allow manual override for cross-compilation
 set(MATX_CPU_PLATFORM "" CACHE STRING "Override CPU platform: AMD | INTEL | OTHER (leave empty for auto-detect)")

@@ -7,12 +7,16 @@ add_library(${PROJECT_NAME}
 
 add_library(MatX::tools ALIAS ${PROJECT_NAME})
 
+add_library(spdlog::spdlog INTERFACE IMPORTED GLOBAL)
+target_include_directories(spdlog::spdlog INTERFACE
+    ${spdlog_SOURCE_DIR}/include
+)
+
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
     MatX::types
     spdlog::spdlog
 )
-
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -41,4 +45,12 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
 
 install(TARGETS ${PROJECT_NAME}
   EXPORT MatXConfig
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(EXPORT MatXConfig
+  NAMESPACE MatX::
+  DESTINATION lib/cmake/MatX
 )
