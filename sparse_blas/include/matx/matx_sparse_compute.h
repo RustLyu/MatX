@@ -242,8 +242,6 @@ extern "C" {
 	MATX_API matx_status_t matx_spadd_coo_c64(const matx_sparse_backend_t* backend,
 		matx_complex_f64_t alpha, matx_coo_c64_t A, matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out);
 
-	MATX_API void free_grb_matrix(void* impl);
-	MATX_API void free_grb_vector(void* impl);
 	MATX_API size_t coo_2_grb_f64(matx_coo_f64_t A);
 	MATX_API size_t create_empty_grb_f64(matx_coo_f64_t A);
 	MATX_API size_t create_empty_grb_c64(matx_coo_c64_t A);
