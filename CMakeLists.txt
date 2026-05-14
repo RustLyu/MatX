@@ -170,50 +170,87 @@ endif()
 
 # ---- BLAS backend ----
 if(MATX_ENABLE_OPENBLAS)
-   if (WIN32)
-	  set(OpenBLAS_DIR
-		  "${3Party_path}/openblas/lib/cmake/OpenBLAS")
-		  message(STATUS "Looking for OpenBLAS in ${OpenBLAS_DIR}")
-	  elseif (LINUX)
-	  	  set(OpenBLAS_DIR
-		  "${3Party_path}/openblas/lib64/cmake/OpenBLAS")
-		  message(STATUS "Looking for OpenBLAS in ${OpenBLAS_DIR}")
-	  endif()
-  find_package(OpenBLAS REQUIRED)
+  #  if (WIN32)
+         #  set(OpenBLAS_DIR
+                #   "${3Party_path}/openblas/lib/cmake/OpenBLAS")
+                #   message(STATUS "Looking for OpenBLAS in ${OpenBLAS_DIR}")
+         #  elseif (LINUX)
+         #  	  set(OpenBLAS_DIR
+                #   "${3Party_path}/openblas/lib64/cmake/OpenBLAS")
+                #   message(STATUS "Looking for OpenBLAS in ${OpenBLAS_DIR}")
+         #  endif()
+  # find_package(OpenBLAS REQUIRED)
+  include(FetchContent)
+
+  FetchContent_Declare(
+    OpenBLAS
+    GIT_REPOSITORY https://github.com/OpenMathLib/OpenBLAS.git
+    GIT_TAG v0.3.33
+  )
+
+  FetchContent_Populate(OpenBLAS)
 elseif(MATX_ENABLE_BLIS)
-	if (WIN32)
-	  set(amdblis_DIR
-		  "${3Party_path}/aocl/AOCL-Windows/amd-blis/cmake")
-	elseif(LINUX)
-	    set(amdblis_DIR
-		      "${3Party_path}/aocl/cmake")
-	endif()
-  find_package(amdblis REQUIRED)
+        # if (WIN32)
+        #   set(amdblis_DIR
+        # 	  "${3Party_path}/aocl/AOCL-Windows/amd-blis/cmake")
+        # elseif(LINUX)
+        #     set(amdblis_DIR
+        # 	      "${3Party_path}/aocl/cmake")
+        # endif()
+ #  find_package(amdblis REQUIRED)
   
-  if (WIN32)
-	  set(aoclutils_DIR
-		  "${3Party_path}/aocl/AOCL-Windows/amd-utils/cmake")
-	elseif(LINUX)
-	    set(aoclutils_DIR
-		      "${3Party_path}/aocl/cmake")
-	endif()
-  if(LINUX)
-    find_package(aoclutils REQUIRED)
-  endif()
+ #  if (WIN32)
+        #   set(aoclutils_DIR
+        # 	  "${3Party_path}/aocl/AOCL-Windows/amd-utils/cmake")
+        # elseif(LINUX)
+        #     set(aoclutils_DIR
+        # 	      "${3Party_path}/aocl/cmake")
+        # endif()
+ #  if(LINUX)
+ #    find_package(aoclutils REQUIRED)
+ #  endif()
+ include(FetchContent)
+
+ FetchContent_Declare(
+   aocl-utils
+   GIT_REPOSITORY https://github.com/amd/aocl-utils.git
+   GIT_TAG 5.2.2
+ )
+
+ FetchContent_Populate(aocl-utils)
+ include(FetchContent)
+
+ FetchContent_Declare(
+   blis
+   GIT_REPOSITORY https://github.com/amd/blis.git
+   GIT_TAG 5.2.2
+ )
+
+ FetchContent_Populate(blis)
 endif()
 
 # ---- LAPACK backend ----
 if(MATX_ENABLE_LIBFLAME)
-	if (WIN32)
-	  set(libflame_DIR
-      "${3Party_path}/aocl/AOCL-Windows/amd-libflame/cmake")
-	elseif(LINUX)
-		set(libflame_DIR
-			  "${3Party_path}/aocl/cmake")
-	endif()
+        # if (WIN32)
+        #   set(libflame_DIR
+ #      "${3Party_path}/aocl/AOCL-Windows/amd-libflame/cmake")
+        # elseif(LINUX)
+        # 	set(libflame_DIR
+        # 		  "${3Party_path}/aocl/cmake")
+        # endif()
 
 	  
-  find_package(libflame REQUIRED)
+ #  find_package(libflame REQUIRED)
+ # FetchContent_Populate(aocl-utils)
+ include(FetchContent)
+
+ FetchContent_Declare(
+   libflame
+   GIT_REPOSITORY https://github.com/flame/libflame.git
+   GIT_TAG 5.2.2
+ )
+
+ FetchContent_Populate(libflame)
 endif()
 
 # ---- Sparse / Graph libraries ----
@@ -225,60 +262,110 @@ endif()
 
 if(MATX_ENABLE_AOCL_SPARSE)
 
-    if (WIN32)
-      set(aoclsparse_DIR
-            "${3Party_path}/aocl/AOCL-Windows/amd-sparse/cmake")
-    elseif (LINUX)
-      set(aoclsparse_DIR
-            "${3Party_path}/aocl/cmake")
-    endif()
+  #   if (WIN32)
+  #     set(aoclsparse_DIR
+  #           "${3Party_path}/aocl/AOCL-Windows/amd-sparse/cmake")
+  #   elseif (LINUX)
+  #     set(aoclsparse_DIR
+  #           "${3Party_path}/aocl/cmake")
+  #   endif()
 
-  find_package(aoclsparse REQUIRED)
+  # find_package(aoclsparse REQUIRED)
+
+  include(FetchContent)
+
+  FetchContent_Declare(
+    aocl-sparse
+    GIT_REPOSITORY https://github.com/amd/aocl-sparse.git
+    GIT_TAG 5.2.2
+  )
+
+  FetchContent_Populate(aocl-sparse)
+
 endif()
 
 if(MATX_ENABLE_SUITESPARSE)
 
-  if (WIN32)
-			set(SuiteSparse_config_DIR "${3Party_path}/suitesparse/lib/cmake/SuiteSparse_config")
-			set(BTF_DIR "${3Party_path}/suitesparse/lib/cmake/BTF")
-			set(AMD_DIR "${3Party_path}/suitesparse/lib/cmake/AMD")
-			set(COLAMD_DIR "${3Party_path}/suitesparse/lib/cmake/COLAMD")
-			set(KLU_DIR "${3Party_path}/suitesparse/lib/cmake/KLU")
-  elseif (LINUX)
-			set(SuiteSparse_config_DIR "${3Party_path}/suitesparse/lib64/cmake/SuiteSparse_config")
-			set(BTF_DIR "${3Party_path}/suitesparse/lib64/cmake/BTF")
-			set(AMD_DIR "${3Party_path}/suitesparse/lib64/cmake/AMD")
-			set(COLAMD_DIR "${3Party_path}/suitesparse/lib64/cmake/COLAMD")
-			set(KLU_DIR "${3Party_path}/suitesparse/lib64/cmake/KLU")
-	  endif()
+  # if (WIN32)
+                # 	set(SuiteSparse_config_DIR "${3Party_path}/suitesparse/lib/cmake/SuiteSparse_config")
+                # 	set(BTF_DIR "${3Party_path}/suitesparse/lib/cmake/BTF")
+                # 	set(AMD_DIR "${3Party_path}/suitesparse/lib/cmake/AMD")
+                # 	set(COLAMD_DIR "${3Party_path}/suitesparse/lib/cmake/COLAMD")
+                # 	set(KLU_DIR "${3Party_path}/suitesparse/lib/cmake/KLU")
+  # elseif (LINUX)
+                # 	set(SuiteSparse_config_DIR "${3Party_path}/suitesparse/lib64/cmake/SuiteSparse_config")
+                # 	set(BTF_DIR "${3Party_path}/suitesparse/lib64/cmake/BTF")
+                # 	set(AMD_DIR "${3Party_path}/suitesparse/lib64/cmake/AMD")
+                # 	set(COLAMD_DIR "${3Party_path}/suitesparse/lib64/cmake/COLAMD")
+                # 	set(KLU_DIR "${3Party_path}/suitesparse/lib64/cmake/KLU")
+         #  endif()
   
-  find_package(KLU REQUIRED)
+  # find_package(KLU REQUIRED)
+  include(FetchContent)
+
+  FetchContent_Declare(
+    SuiteSparse
+    GIT_REPOSITORY https://github.com/DrTimothyAldenDavis/SuiteSparse.git
+    GIT_TAG v7.12.2
+  )
+
+  FetchContent_Populate(SuiteSparse)
 endif()
 
 if(MATX_ENABLE_UMFPACK)
-  if (WIN32)
-    set(CAMD_DIR "${3Party_path}/suitesparse/lib/cmake/CAMD")
-    set(CCOLAMD_DIR "${3Party_path}/suitesparse/lib/cmake/CCOLAMD")
-    set(CHOLMOD_DIR "${3Party_path}/suitesparse/lib/cmake/CHOLMOD")
-    set(SuiteSparse_DIR "${3Party_path}/suitesparse/lib/cmake/SuiteSparse")
-    set(UMFPACK_DIR "${3Party_path}/suitesparse/lib/cmake/UMFPACK")
-  elseif (LINUX)
-    set(CAMD_DIR "${3Party_path}/suitesparse/lib64/cmake/CAMD")
-    set(CCOLAMD_DIR "${3Party_path}/suitesparse/lib64/cmake/CCOLAMD")
-    set(CHOLMOD_DIR "${3Party_path}/suitesparse/lib64/cmake/CHOLMOD")
-    set(SuiteSparse_DIR "${3Party_path}/suitesparse/lib64/cmake/SuiteSparse")
-    set(UMFPACK_DIR "${3Party_path}/suitesparse/lib64/cmake/UMFPACK")
-  endif()
-  find_package(UMFPACK REQUIRED)
+  # if (WIN32)
+  #   set(CAMD_DIR "${3Party_path}/suitesparse/lib/cmake/CAMD")
+  #   set(CCOLAMD_DIR "${3Party_path}/suitesparse/lib/cmake/CCOLAMD")
+  #   set(CHOLMOD_DIR "${3Party_path}/suitesparse/lib/cmake/CHOLMOD")
+  #   set(SuiteSparse_DIR "${3Party_path}/suitesparse/lib/cmake/SuiteSparse")
+  #   set(UMFPACK_DIR "${3Party_path}/suitesparse/lib/cmake/UMFPACK")
+  # elseif (LINUX)
+  #   set(CAMD_DIR "${3Party_path}/suitesparse/lib64/cmake/CAMD")
+  #   set(CCOLAMD_DIR "${3Party_path}/suitesparse/lib64/cmake/CCOLAMD")
+  #   set(CHOLMOD_DIR "${3Party_path}/suitesparse/lib64/cmake/CHOLMOD")
+  #   set(SuiteSparse_DIR "${3Party_path}/suitesparse/lib64/cmake/SuiteSparse")
+  #   set(UMFPACK_DIR "${3Party_path}/suitesparse/lib64/cmake/UMFPACK")
+  # endif()
+  # find_package(UMFPACK REQUIRED)
+  include(FetchContent)
+
+  FetchContent_Declare(
+    SuiteSparse
+    GIT_REPOSITORY https://github.com/DrTimothyAldenDavis/SuiteSparse.git
+    GIT_TAG v7.12.2
+  )
+
+  FetchContent_Populate(SuiteSparse)
 endif()
 
 if(MATX_ENABLE_CXSPARSE)
-  if (WIN32)
-    set(CXSparse_DIR "${3Party_path}/suitesparse/lib/cmake/CXSparse")
-  elseif (LINUX)
-    set(CXSparse_DIR "${3Party_path}/suitesparse/lib64/cmake/CXSparse")
-  endif()
-  find_package(CXSparse REQUIRED)
+  include(FetchContent)
+
+  FetchContent_Declare(
+    SuiteSparse
+    GIT_REPOSITORY https://github.com/DrTimothyAldenDavis/SuiteSparse.git
+    GIT_TAG v7.12.2
+  )
+
+  FetchContent_Populate(SuiteSparse)
+endif()
+
+if(MATX_ENABLE_GRAPHBLAS)
+        # if (WIN32)
+        #   set(GraphBLAS_DIR "${3Party_path}/suitesparse/lib/cmake/GraphBLAS")
+        # elseif (LINUX)
+        #   set(GraphBLAS_DIR "${3Party_path}/suitesparse/lib64/cmake/GraphBLAS")
+        # endif()
+        # find_package(GraphBLAS REQUIRED)
+        include(FetchContent)
+
+        FetchContent_Declare(
+          SuiteSparse
+          GIT_REPOSITORY https://github.com/DrTimothyAldenDavis/SuiteSparse.git
+          GIT_TAG v7.12.2
+        )
+
+        FetchContent_Populate(SuiteSparse)
 endif()
 
 if(MATX_ENABLE_BLIS)
@@ -288,26 +375,35 @@ elseif(MATX_ENABLE_OPENBLAS)
 endif()
 
 if(MATX_ENABLE_SUPERLU)
-    set(superlu_DIR "${3Party_path}/SuperLU/lib/cmake/superlu")
-    find_package(superlu REQUIRED)
+    # set(superlu_DIR "${3Party_path}/SuperLU/lib/cmake/superlu")
+    # find_package(superlu REQUIRED)
+    include(FetchContent)
+
+    FetchContent_Declare(
+      superlu
+      GIT_REPOSITORY https://github.com/xiaoyeli/superlu.git
+      GIT_TAG v7.0.1
+    )
+
+    FetchContent_Populate(superlu)
 endif()
 
 if(MATX_ENABLE_MUMPS)
-  find_package(MUMPS QUIET)
-  if(TARGET MUMPS::MUMPS OR TARGET dmumps OR TARGET mumps_common)
-    message(STATUS "MUMPS found from system/package manager")
-  else()
-    message(WARNING "MATX_ENABLE_MUMPS=ON but MUMPS is not found; build will continue without MUMPS backend.")
-  endif()
-endif()
+  # find_package(MUMPS QUIET)
+  # if(TARGET MUMPS::MUMPS OR TARGET dmumps OR TARGET mumps_common)
+  #   message(STATUS "MUMPS found from system/package manager")
+  # else()
+  #   message(WARNING "MATX_ENABLE_MUMPS=ON but MUMPS is not found; build will continue without MUMPS backend.")
+  # endif()
+  include(FetchContent)
 
-if(MATX_ENABLE_GRAPHBLAS)
-	if (WIN32)
-	  set(GraphBLAS_DIR "${3Party_path}/suitesparse/lib/cmake/GraphBLAS")
-	elseif (LINUX)
-	  set(GraphBLAS_DIR "${3Party_path}/suitesparse/lib64/cmake/GraphBLAS")
-	endif()
-	find_package(GraphBLAS REQUIRED)
+  FetchContent_Declare(
+    mumps
+    GIT_REPOSITORY https://github.com/scivision/mumps-superbuild.git
+    GIT_TAG v5.9.0.0
+  )
+
+  FetchContent_Populate(mumps)
 endif()
 
 # ---- Include MatX submodules ----
