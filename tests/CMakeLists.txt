@@ -29,10 +29,14 @@ add_executable(${PROJECT_NAME}
   test_print_mtx.cpp
   test_read_mtx.cpp
 )
-
+find_package(OpenMP REQUIRED)
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
+
+    "-Wl,--start-group"
+
     GTest::gtest_main
+
     MatX::types
     MatX::core
     MatX::vec_blas
@@ -42,6 +46,24 @@ target_link_libraries(${PROJECT_NAME}
     MatX::sparse_solve
     MatX::tools
     MatX::io
+
+    SuiteSparse::UMFPACK
+    SuiteSparse::CHOLMOD
+    SuiteSparse::KLU
+    SuiteSparse::AMD
+    SuiteSparse::CAMD
+    SuiteSparse::COLAMD
+    SuiteSparse::CCOLAMD
+    SuiteSparse::BTF
+    SuiteSparse::CXSparse
+    SuiteSparse::SuiteSparse_config
+
+    OpenBLAS::OpenBLAS
+
+    pthread
+    OpenMP::OpenMP_C
+
+    "-Wl,--end-group"
 )
 
 include(GoogleTest)

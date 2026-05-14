@@ -10,7 +10,7 @@
 #include <math.h>
 
 #if MATX_ENABLE_OPENBLAS
-	#include "cblas.h"
+    #include "openblas/cblas.h"
 #elif MATX_ENABLE_BLIS
 	#include "blis.h"
 #endif

@@ -40,12 +40,19 @@ target_compile_definitions(${PROJECT_NAME}
 
 if(MATX_ENABLE_SUITESPARSE)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_SUITESPARSE=1)
-  target_link_libraries(${PROJECT_NAME} PRIVATE SuiteSparse::KLU)
+  target_link_libraries(${PROJECT_NAME} PRIVATE SuiteSparse::KLU
+    SuiteSparse::AMD
+    SuiteSparse::COLAMD
+    SuiteSparse::BTF
+    SuiteSparse::SuiteSparse_config)
 endif()
 
 if(MATX_ENABLE_UMFPACK)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_UMFPACK=1)
-  target_link_libraries(${PROJECT_NAME} PRIVATE SuiteSparse::UMFPACK)
+
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+      SuiteSparse::UMFPACK
+  )
 endif()
 
 if(MATX_ENABLE_CXSPARSE)
