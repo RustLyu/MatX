@@ -26,11 +26,26 @@ include(FetchContent)
 
 option(MATX_BUILD_TESTS "Build tests" ON)
 
-option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS" ON)
-option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse" ON)
-option(MATX_ENABLE_AOCL_SPARSE "Enable AOCL Sparse" OFF)
+option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS backend if found/provided" OFF)
+option(MATX_ENABLE_BLIS "Enable BLIS backend if found/provided" OFF)
+option(MATX_ENABLE_LIBFLAME "Enable LIBFLAME backend if found/provided" OFF)
+option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse backend if found/provided" ON)
+option(MATX_ENABLE_UMFPACK "Enable SuiteSparse UMFPACK sparse solver backend if found/provided" ON)
+option(MATX_ENABLE_CXSPARSE "Enable SuiteSparse CXSparse sparse solver backend if found/provided" ON)
+option(MATX_ENABLE_SUPERLU "Enable SuperLU sparse solver backend (auto-fetch)" OFF)
+option(MATX_ENABLE_MUMPS "Enable MUMPS sparse solver backend if found/provided" OFF)
+option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" OFF)
+option(MATX_ENABLE_AOCL_SPARSE "Enable amd AOCL SPARSE for sparse numerical ops if found" OFF)
 
-set(BUILD_SHARED_LIBS OFF)
+option(BUILD_SHARED_LIBS "Build shared library (ON) or static (OFF)" OFF)
+
+set(MATX_DENSE_BLAS_BACKEND "AUTO" CACHE STRING "DENSE BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
+set(MATX_SPARSE_BLAS_BACKEND "AUTO" CACHE STRING "SPARSE BLAS backend: AUTO|OPENBLAS|BLIS|REFERENCE")
+
+# ---- Build type ----
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
 
 # =========================================================
 # C / C++
@@ -41,6 +56,118 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(MATX_BLAS_AUTO_SELECTED ON)
+
+
+# Allow manual override for cross-compilation
+set(MATX_CPU_PLATFORM "" CACHE STRING "Override CPU platform: AMD | INTEL | OTHER (leave empty for auto-detect)")
+
+if(MATX_CPU_PLATFORM STREQUAL "")
+
+set(CPU_DETECT_SOURCE ${CMAKE_BINARY_DIR}/detect_cpu.cpp)
+
+file(WRITE ${CPU_DETECT_SOURCE} "
+#include <iostream>
+#if defined(_MSC_VER)
+#include <intrin.h>
+#else
+#include <cpuid.h>
+#endif
+
+int main() {
+    char vendor[13] = {0};
+
+#if defined(_MSC_VER)
+    int regs[4];
+    __cpuid(regs, 0);
+    ((int*)vendor)[0] = regs[1];
+    ((int*)vendor)[1] = regs[3];
+    ((int*)vendor)[2] = regs[2];
+#else
+    unsigned int eax, ebx, ecx, edx;
+    __get_cpuid(0, &eax, &ebx, &ecx, &edx);
+    ((unsigned int*)vendor)[0] = ebx;
+    ((unsigned int*)vendor)[1] = edx;
+    ((unsigned int*)vendor)[2] = ecx;
+#endif
+
+    std::cout << vendor;
+    return 0;
+}
+")
+
+try_run(
+    RUN_RESULT
+    COMPILE_RESULT
+    ${CMAKE_BINARY_DIR}
+    ${CPU_DETECT_SOURCE}
+    RUN_OUTPUT_VARIABLE CPU_VENDOR
+)
+
+string(STRIP "${CPU_VENDOR}" CPU_VENDOR)
+
+if(CPU_VENDOR STREQUAL "AuthenticAMD")
+    set(CPU_PLATFORM "AMD")
+elseif(CPU_VENDOR STREQUAL "GenuineIntel")
+    set(CPU_PLATFORM "INTEL")
+else()
+    set(CPU_PLATFORM "OTHER")
+endif()
+
+else()
+  set(CPU_PLATFORM "${MATX_CPU_PLATFORM}")
+  set(CPU_VENDOR "(manual override)")
+endif()
+
+set(CPU_PLATFORM "AMD")
+message(STATUS "CPU vendor detected: ${CPU_VENDOR}")
+message(STATUS "CPU platform: ${CPU_PLATFORM}")
+# ---- auto detect cpu BLAS/LAPACK & Sparse ----
+if(NOT DEFINED MATX_BLAS_AUTO_SELECTED)
+
+  if(CPU_PLATFORM STREQUAL "AMD")
+    set(MATX_ENABLE_BLIS ON CACHE BOOL "Enable BLIS backend" FORCE)
+    set(MATX_ENABLE_LIBFLAME ON CACHE BOOL "Enable libFLAME LAPACK" FORCE)
+    set(MATX_ENABLE_OPENBLAS OFF CACHE BOOL "" FORCE)
+    set(MATX_ENABLE_GRAPHBLAS ON CACHE BOOL "" FORCE)
+    set(MATX_ENABLE_AOCL_SPARSE ON CACHE BOOL "" FORCE)
+  elseif(CPU_PLATFORM STREQUAL "INTEL")
+    set(MATX_ENABLE_OPENBLAS ON CACHE BOOL "Enable OpenBLAS backend" FORCE)
+    set(MATX_ENABLE_GRAPHBLAS ON CACHE BOOL "Enable GraphBLAS" FORCE)
+    set(MATX_ENABLE_BLIS OFF CACHE BOOL "" FORCE)
+    set(MATX_ENABLE_LIBFLAME OFF CACHE BOOL "" FORCE)
+    set(MATX_ENABLE_AOCL_SPARSE OFF CACHE BOOL "" FORCE)
+  else()
+    set(MATX_ENABLE_OPENBLAS ON CACHE BOOL "Enable OpenBLAS backend" FORCE)
+    set(MATX_ENABLE_BLIS OFF CACHE BOOL "" FORCE)
+    set(MATX_ENABLE_LIBFLAME OFF CACHE BOOL "" FORCE)
+    set(MATX_ENABLE_GRAPHBLAS OFF CACHE BOOL "" FORCE)
+  endif()
+
+  set(MATX_BLAS_AUTO_SELECTED ON CACHE BOOL "" FORCE)
+
+endif()
+
+# ---- Validate BLAS/LAPACK choices ----
+set(BLAS_LIST "")
+
+if(MATX_ENABLE_OPENBLAS)
+  list(APPEND BLAS_LIST "OpenBLAS")
+endif()
+
+if(MATX_ENABLE_BLIS)
+  list(APPEND BLAS_LIST "BLIS")
+endif()
+
+list(LENGTH BLAS_LIST BLAS_COUNT)
+
+if(BLAS_COUNT EQUAL 0)
+  message(FATAL_ERROR
+    "No BLAS backend enabled. Enable one of: OpenBLAS, BLIS, MKL.")
+elseif(BLAS_COUNT GREATER 1)
+  message(FATAL_ERROR
+    "Multiple BLAS backends enabled (${BLAS_LIST}). Only one BLAS backend is allowed.")
+endif()
 
 # =========================================================
 # OpenBLAS source build
@@ -146,8 +273,73 @@ function(matx_add_openblas)
 
 endfunction()
 
+
+if(CPU_PLATFORM STREQUAL "AMD")
+  include(FetchContent)
+
+  FetchContent_Declare(
+    aocl-utils
+    GIT_REPOSITORY https://github.com/amd/aocl-utils.git
+    GIT_TAG 5.2.2
+  )
+
+  FetchContent_GetProperties(aocl-utils)
+
+  if(NOT aocl-utils_POPULATED)
+    FetchContent_Populate(aocl-utils)
+
+    execute_process(
+      COMMAND ${CMAKE_COMMAND}
+              -S ${aocl-utils_SOURCE_DIR}
+              -B ${aocl-utils_BINARY_DIR}
+              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+              -DCMAKE_INSTALL_PREFIX=${aocl-utils_BINARY_DIR}/install
+    )
+
+    message(STATUS "Building AOCL Utils...")
+
+    execute_process(
+      COMMAND ${CMAKE_COMMAND}
+              --build ${aocl-utils_BINARY_DIR}
+              --parallel
+      RESULT_VARIABLE AOCL_UTILS_BUILD_RESULT
+    )
+
+    if(NOT AOCL_UTILS_BUILD_RESULT EQUAL 0)
+      message(FATAL_ERROR "AOCL Utils build failed")
+    endif()
+
+    message(STATUS "Installing AOCL Utils...")
+
+    execute_process(
+      COMMAND ${CMAKE_COMMAND}
+              --install ${aocl-utils_BINARY_DIR}
+      RESULT_VARIABLE AOCL_UTILS_INSTALL_RESULT
+    )
+
+    if(NOT AOCL_UTILS_INSTALL_RESULT EQUAL 0)
+      message(FATAL_ERROR "AOCL Utils install failed")
+    endif()
+
+    # 可选：导出路径
+    set(AOCL_UTILS_ROOT
+        ${aocl-utils_BINARY_DIR}/install
+        CACHE PATH "AOCL Utils install path")
+
+    message(STATUS "AOCL Utils installed to: ${AOCL_UTILS_ROOT}")
+  endif()
+endif()
+
 if(MATX_ENABLE_OPENBLAS)
   matx_add_openblas()
+elseif(MATX_ENABLE_BLIS)
+  include(FetchContent)
+  FetchContent_Declare(
+    blis
+    GIT_REPOSITORY https://github.com/amd/blis.git
+    GIT_TAG 5.2.2
+  )
+  FetchContent_Populate(blis)
 endif()
 # =========================================================
 # SuiteSparse
@@ -175,16 +367,6 @@ if(MATX_ENABLE_SUITESPARSE)
 
     file(MAKE_DIRECTORY
         ${SUITESPARSE_BUILD_DIR})
-
-    #
-    # OpenBLAS paths
-    #
-
-    # get_filename_component(
-    #     OPENBLAS_LIB_DIR
-    #     "${OPENBLAS_LIB}"
-    #     DIRECTORY
-    # )
 
     set(OPENBLAS_INCLUDE_DIR
         ${OPENBLAS_BUILD_DIR}/include)
@@ -258,41 +440,41 @@ if(MATX_ENABLE_SUITESPARSE)
       "${suitesparse_SOURCE_DIR}/COLAMD/Include"
   )
 
-add_library(SuiteSparse::CHOLMOD STATIC IMPORTED GLOBAL)
+  add_library(SuiteSparse::CHOLMOD STATIC IMPORTED GLOBAL)
 
-set_target_properties(SuiteSparse::CHOLMOD PROPERTIES
-    IMPORTED_LOCATION
-    "${SUITESPARSE_BUILD_DIR}/CHOLMOD/libcholmod.a"
-    INTERFACE_INCLUDE_DIRECTORIES
-    "${suitesparse_SOURCE_DIR}/CHOLMOD/Include"
-)
+  set_target_properties(SuiteSparse::CHOLMOD PROPERTIES
+      IMPORTED_LOCATION
+      "${SUITESPARSE_BUILD_DIR}/CHOLMOD/libcholmod.a"
+      INTERFACE_INCLUDE_DIRECTORIES
+      "${suitesparse_SOURCE_DIR}/CHOLMOD/Include"
+  )
 
-add_library(SuiteSparse::BTF STATIC IMPORTED GLOBAL)
+  add_library(SuiteSparse::BTF STATIC IMPORTED GLOBAL)
 
-set_target_properties(SuiteSparse::BTF PROPERTIES
-    IMPORTED_LOCATION
-    "${SUITESPARSE_BUILD_DIR}/BTF/libbtf.a"
-    INTERFACE_INCLUDE_DIRECTORIES
-    "${suitesparse_SOURCE_DIR}/BTF/Include"
-)
+  set_target_properties(SuiteSparse::BTF PROPERTIES
+      IMPORTED_LOCATION
+      "${SUITESPARSE_BUILD_DIR}/BTF/libbtf.a"
+      INTERFACE_INCLUDE_DIRECTORIES
+      "${suitesparse_SOURCE_DIR}/BTF/Include"
+  )
 
-add_library(SuiteSparse::CAMD STATIC IMPORTED GLOBAL)
+  add_library(SuiteSparse::CAMD STATIC IMPORTED GLOBAL)
 
-set_target_properties(SuiteSparse::CAMD PROPERTIES
-    IMPORTED_LOCATION
-    "${SUITESPARSE_BUILD_DIR}/CAMD/libcamd.a"
-    INTERFACE_INCLUDE_DIRECTORIES
-    "${suitesparse_SOURCE_DIR}/CAMD/Include"
-)
+  set_target_properties(SuiteSparse::CAMD PROPERTIES
+      IMPORTED_LOCATION
+      "${SUITESPARSE_BUILD_DIR}/CAMD/libcamd.a"
+      INTERFACE_INCLUDE_DIRECTORIES
+      "${suitesparse_SOURCE_DIR}/CAMD/Include"
+  )
 
-add_library(SuiteSparse::CCOLAMD STATIC IMPORTED GLOBAL)
+  add_library(SuiteSparse::CCOLAMD STATIC IMPORTED GLOBAL)
 
-set_target_properties(SuiteSparse::CCOLAMD PROPERTIES
-    IMPORTED_LOCATION
-    "${SUITESPARSE_BUILD_DIR}/CCOLAMD/libccolamd.a"
-    INTERFACE_INCLUDE_DIRECTORIES
-    "${suitesparse_SOURCE_DIR}/CCOLAMD/Include"
-)
+  set_target_properties(SuiteSparse::CCOLAMD PROPERTIES
+      IMPORTED_LOCATION
+      "${SUITESPARSE_BUILD_DIR}/CCOLAMD/libccolamd.a"
+      INTERFACE_INCLUDE_DIRECTORIES
+      "${suitesparse_SOURCE_DIR}/CCOLAMD/Include"
+  )
 
   add_library(SuiteSparse::KLU STATIC IMPORTED GLOBAL)
 
@@ -343,19 +525,18 @@ set_target_properties(SuiteSparse::SuiteSparse_config PROPERTIES
 endif()
 
 # =========================================================
-# AOCL Utils
+# AOCL libflame
 # =========================================================
+if(MATX_ENABLE_LIBFLAME)
+ include(FetchContent)
 
-if(MATX_ENABLE_AOCL_SPARSE)
+ FetchContent_Declare(
+   libflame
+   GIT_REPOSITORY https://github.com/flame/libflame.git
+   GIT_TAG 5.2.2
+ )
 
-  FetchContent_Declare(
-    aocl-utils
-    GIT_REPOSITORY https://github.com/amd/aocl-utils.git
-    GIT_TAG 5.2.2
-  )
-
-  FetchContent_MakeAvailable(aocl-utils)
-
+ FetchContent_Populate(libflame)
 endif()
 
 # =========================================================
@@ -363,14 +544,6 @@ endif()
 # =========================================================
 
 if(MATX_ENABLE_AOCL_SPARSE)
-
-  if(TARGET OpenBLAS::OpenBLAS)
-
-    message(STATUS "Using source-built OpenBLAS")
-
-    set(BLAS_LIBRARIES OpenBLAS::OpenBLAS)
-    set(LAPACK_LIBRARIES OpenBLAS::OpenBLAS)
-  endif()
 
   FetchContent_Declare(
     aocl-sparse
