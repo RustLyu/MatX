@@ -56,10 +56,10 @@ target_link_libraries(${PROJECT_NAME}
     SuiteSparse::CCOLAMD
     SuiteSparse::BTF
     SuiteSparse::CXSparse
-    SuiteSparse::SuiteSparse_config
+    SuiteSparse::SuiteSparseConfig
 
-    OpenBLAS::OpenBLAS
-
+    #OpenBLAS::OpenBLAS
+    ${mumps_lib}
     pthread
     OpenMP::OpenMP_C
 

@@ -6,11 +6,11 @@ add_library(${PROJECT_NAME}
 )
 
 add_library(MatX::tools ALIAS ${PROJECT_NAME})
-
-add_library(spdlog::spdlog INTERFACE IMPORTED GLOBAL)
-target_include_directories(spdlog::spdlog INTERFACE
-    ${spdlog_SOURCE_DIR}/include
-)
+#
+#add_library(spdlog::spdlog INTERFACE IMPORTED GLOBAL)
+#target_include_directories(spdlog::spdlog INTERFACE
+#    ${spdlog_SOURCE_DIR}/include
+#)
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE

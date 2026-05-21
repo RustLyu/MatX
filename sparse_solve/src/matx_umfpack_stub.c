@@ -70,8 +70,10 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
     (void)A; (void)out_F;
     return MATX_ERR_NOT_SUPPORTED;
 #else
-    if (out_F->reserved) umf_factor_csc_f64_destroy(out_F);
-    if (A->nrows != A->ncols || A->nrows <= 0) return MATX_ERR_INVALID_ARG;
+    if (out_F->reserved)
+        umf_factor_csc_f64_destroy(out_F);
+    if (A->nrows != A->ncols || A->nrows <= 0)
+        return MATX_ERR_INVALID_ARG;
 
     matx_status_t st = coo_to_csc_f64(A);
     if (st != MATX_OK) return st;

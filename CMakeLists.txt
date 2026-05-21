@@ -18,7 +18,8 @@ endif ()
 
 #message(STATUS "current 3Party path ${3Party_path}")
 
-include(FetchContent)
+
+
 
 # =========================================================
 # Build options
@@ -44,7 +45,7 @@ set(MATX_SPARSE_BLAS_BACKEND "AUTO" CACHE STRING "SPARSE BLAS backend: AUTO|OPEN
 
 # ---- Build type ----
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+    #set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
 # =========================================================
@@ -56,7 +57,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(MATX_BLAS_AUTO_SELECTED ON)
+# set(MATX_BLAS_AUTO_SELECTED ON)
 
 
 # Allow manual override for cross-compilation
@@ -64,59 +65,59 @@ set(MATX_CPU_PLATFORM "" CACHE STRING "Override CPU platform: AMD | INTEL | OTHE
 
 if(MATX_CPU_PLATFORM STREQUAL "")
 
-set(CPU_DETECT_SOURCE ${CMAKE_BINARY_DIR}/detect_cpu.cpp)
+    set(CPU_DETECT_SOURCE ${CMAKE_BINARY_DIR}/detect_cpu.cpp)
 
-file(WRITE ${CPU_DETECT_SOURCE} "
-#include <iostream>
-#if defined(_MSC_VER)
-#include <intrin.h>
-#else
-#include <cpuid.h>
-#endif
+    file(WRITE ${CPU_DETECT_SOURCE} "
+    #include <iostream>
+    #if defined(_MSC_VER)
+    #include <intrin.h>
+    #else
+    #include <cpuid.h>
+    #endif
 
-int main() {
+    int main() {
     char vendor[13] = {0};
 
-#if defined(_MSC_VER)
+    #if defined(_MSC_VER)
     int regs[4];
     __cpuid(regs, 0);
     ((int*)vendor)[0] = regs[1];
     ((int*)vendor)[1] = regs[3];
     ((int*)vendor)[2] = regs[2];
-#else
+    #else
     unsigned int eax, ebx, ecx, edx;
     __get_cpuid(0, &eax, &ebx, &ecx, &edx);
     ((unsigned int*)vendor)[0] = ebx;
     ((unsigned int*)vendor)[1] = edx;
     ((unsigned int*)vendor)[2] = ecx;
-#endif
+    #endif
 
     std::cout << vendor;
     return 0;
-}
-")
+    }
+    ")
 
-try_run(
-    RUN_RESULT
-    COMPILE_RESULT
-    ${CMAKE_BINARY_DIR}
-    ${CPU_DETECT_SOURCE}
-    RUN_OUTPUT_VARIABLE CPU_VENDOR
-)
+    try_run(
+        RUN_RESULT
+        COMPILE_RESULT
+        ${CMAKE_BINARY_DIR}
+        ${CPU_DETECT_SOURCE}
+        RUN_OUTPUT_VARIABLE CPU_VENDOR
+    )
 
-string(STRIP "${CPU_VENDOR}" CPU_VENDOR)
+    string(STRIP "${CPU_VENDOR}" CPU_VENDOR)
 
-if(CPU_VENDOR STREQUAL "AuthenticAMD")
-    set(CPU_PLATFORM "AMD")
-elseif(CPU_VENDOR STREQUAL "GenuineIntel")
-    set(CPU_PLATFORM "INTEL")
+    if(CPU_VENDOR STREQUAL "AuthenticAMD")
+        set(CPU_PLATFORM "AMD")
+    elseif(CPU_VENDOR STREQUAL "GenuineIntel")
+        set(CPU_PLATFORM "INTEL")
+    else()
+        set(CPU_PLATFORM "OTHER")
+    endif()
+
 else()
-    set(CPU_PLATFORM "OTHER")
-endif()
-
-else()
-  set(CPU_PLATFORM "${MATX_CPU_PLATFORM}")
-  set(CPU_VENDOR "(manual override)")
+    set(CPU_PLATFORM "${MATX_CPU_PLATFORM}")
+    set(CPU_VENDOR "(manual override)")
 endif()
 
 set(CPU_PLATFORM "AMD")
@@ -125,26 +126,26 @@ message(STATUS "CPU platform: ${CPU_PLATFORM}")
 # ---- auto detect cpu BLAS/LAPACK & Sparse ----
 if(NOT DEFINED MATX_BLAS_AUTO_SELECTED)
 
-  if(CPU_PLATFORM STREQUAL "AMD")
-    set(MATX_ENABLE_BLIS ON CACHE BOOL "Enable BLIS backend" FORCE)
-    set(MATX_ENABLE_LIBFLAME ON CACHE BOOL "Enable libFLAME LAPACK" FORCE)
-    set(MATX_ENABLE_OPENBLAS OFF CACHE BOOL "" FORCE)
-    set(MATX_ENABLE_GRAPHBLAS ON CACHE BOOL "" FORCE)
-    set(MATX_ENABLE_AOCL_SPARSE ON CACHE BOOL "" FORCE)
-  elseif(CPU_PLATFORM STREQUAL "INTEL")
-    set(MATX_ENABLE_OPENBLAS ON CACHE BOOL "Enable OpenBLAS backend" FORCE)
-    set(MATX_ENABLE_GRAPHBLAS ON CACHE BOOL "Enable GraphBLAS" FORCE)
-    set(MATX_ENABLE_BLIS OFF CACHE BOOL "" FORCE)
-    set(MATX_ENABLE_LIBFLAME OFF CACHE BOOL "" FORCE)
-    set(MATX_ENABLE_AOCL_SPARSE OFF CACHE BOOL "" FORCE)
-  else()
-    set(MATX_ENABLE_OPENBLAS ON CACHE BOOL "Enable OpenBLAS backend" FORCE)
-    set(MATX_ENABLE_BLIS OFF CACHE BOOL "" FORCE)
-    set(MATX_ENABLE_LIBFLAME OFF CACHE BOOL "" FORCE)
-    set(MATX_ENABLE_GRAPHBLAS OFF CACHE BOOL "" FORCE)
-  endif()
+    if(CPU_PLATFORM STREQUAL "AMD")
+        set(MATX_ENABLE_BLIS ON CACHE BOOL "Enable BLIS backend" FORCE)
+        set(MATX_ENABLE_LIBFLAME ON CACHE BOOL "Enable libFLAME LAPACK" FORCE)
+        set(MATX_ENABLE_OPENBLAS OFF CACHE BOOL "" FORCE)
+        set(MATX_ENABLE_GRAPHBLAS ON CACHE BOOL "" FORCE)
+        set(MATX_ENABLE_AOCL_SPARSE ON CACHE BOOL "" FORCE)
+    elseif(CPU_PLATFORM STREQUAL "INTEL")
+        set(MATX_ENABLE_OPENBLAS ON CACHE BOOL "Enable OpenBLAS backend" FORCE)
+        set(MATX_ENABLE_GRAPHBLAS ON CACHE BOOL "Enable GraphBLAS" FORCE)
+        set(MATX_ENABLE_BLIS OFF CACHE BOOL "" FORCE)
+        set(MATX_ENABLE_LIBFLAME OFF CACHE BOOL "" FORCE)
+        set(MATX_ENABLE_AOCL_SPARSE OFF CACHE BOOL "" FORCE)
+    else()
+        set(MATX_ENABLE_OPENBLAS ON CACHE BOOL "Enable OpenBLAS backend" FORCE)
+        set(MATX_ENABLE_BLIS OFF CACHE BOOL "" FORCE)
+        set(MATX_ENABLE_LIBFLAME OFF CACHE BOOL "" FORCE)
+        set(MATX_ENABLE_GRAPHBLAS OFF CACHE BOOL "" FORCE)
+    endif()
 
-  set(MATX_BLAS_AUTO_SELECTED ON CACHE BOOL "" FORCE)
+    set(MATX_BLAS_AUTO_SELECTED ON CACHE BOOL "" FORCE)
 
 endif()
 
@@ -152,210 +153,471 @@ endif()
 set(BLAS_LIST "")
 
 if(MATX_ENABLE_OPENBLAS)
-  list(APPEND BLAS_LIST "OpenBLAS")
+    list(APPEND BLAS_LIST "OpenBLAS")
 endif()
 
+message(STATUS "44444444")
 if(MATX_ENABLE_BLIS)
-  list(APPEND BLAS_LIST "BLIS")
+    message(STATUS "3333333333333333")
+    list(APPEND BLAS_LIST "BLIS")
 endif()
 
 list(LENGTH BLAS_LIST BLAS_COUNT)
 
 if(BLAS_COUNT EQUAL 0)
-  message(FATAL_ERROR
-    "No BLAS backend enabled. Enable one of: OpenBLAS, BLIS, MKL.")
+    message(FATAL_ERROR
+        "No BLAS backend enabled. Enable one of: OpenBLAS, BLIS, MKL.")
 elseif(BLAS_COUNT GREATER 1)
-  message(FATAL_ERROR
-    "Multiple BLAS backends enabled (${BLAS_LIST}). Only one BLAS backend is allowed.")
+    message(FATAL_ERROR
+        "Multiple BLAS backends enabled (${BLAS_LIST}). Only one BLAS backend is allowed.")
 endif()
 
+set(DEPEND_LIB_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/deps_output")
+
+function(matx_spdlog)
+    include(FetchContent)
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.13.0
+    )
+
+    FetchContent_GetProperties(spdlog)
+
+    if(NOT blis_POPULATED)
+        FetchContent_Populate(spdlog)
+    endif()
+
+    # =========================================================
+    # spdlog build dirs
+    # =========================================================
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        -S ${spdlog_SOURCE_DIR}
+        -B ${spdlog_BINARY_DIR}
+        -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/spdlog
+    )
+
+    # =========================================================
+    # build spdlog
+    # =========================================================
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --build ${spdlog_BINARY_DIR}
+        --parallel
+        RESULT_VARIABLE BLIS_BUILD_RESULT
+    )
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --install ${spdlog_BINARY_DIR}
+        RESULT_VARIABLE spdlog_INSTALL_RESULT
+    )
+endfunction()
+matx_spdlog()
+
+set(spdlog_DIR ${DEPEND_LIB_OUTPUT}/spdlog/lib/cmake/spdlog)
+find_package(spdlog REQUIRED)
 # =========================================================
 # OpenBLAS source build
 # =========================================================
-
 function(matx_add_openblas)
 
-  include(FetchContent)
+    include(FetchContent)
 
-  FetchContent_Declare(
-      OpenBLAS
-      GIT_REPOSITORY https://github.com/OpenMathLib/OpenBLAS.git
-      GIT_TAG v0.3.33
-  )
+    FetchContent_Declare(
+        OpenBLAS
+        GIT_REPOSITORY https://github.com/OpenMathLib/OpenBLAS.git
+        GIT_TAG v0.3.33
+    )
 
-  FetchContent_GetProperties(OpenBLAS)
+    FetchContent_GetProperties(OpenBLAS)
 
-  if(NOT OpenBLAS_POPULATED)
-      FetchContent_Populate(OpenBLAS)
-  endif()
-  set(OPENBLAS_BUILD_DIR
-      ${CMAKE_BINARY_DIR}/openblas-build)
+    if(NOT OpenBLAS_POPULATED)
+        FetchContent_Populate(OpenBLAS)
+    endif()
+    set(OPENBLAS_BUILD_DIR
+        ${CMAKE_BINARY_DIR}/openblas-build)
 
-  file(MAKE_DIRECTORY ${OPENBLAS_BUILD_DIR})
+    file(MAKE_DIRECTORY ${OPENBLAS_BUILD_DIR})
 
-  execute_process(
-      COMMAND
-          ${CMAKE_COMMAND}
-          -S ${openblas_SOURCE_DIR}
-          -B ${OPENBLAS_BUILD_DIR}
-          -DBUILD_SHARED_LIBS=OFF
+    execute_process(
+        COMMAND
+        ${CMAKE_COMMAND}
+        -S ${openblas_SOURCE_DIR}
+        -B ${OPENBLAS_BUILD_DIR}
+        -DBUILD_SHARED_LIBS=ON
+        -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/openblas
 
-      RESULT_VARIABLE OPENBLAS_CONFIG_RESULT
-  )
+        RESULT_VARIABLE OPENBLAS_CONFIG_RESULT
+    )
 
-  execute_process(
+    #execute_process(
 
-      COMMAND
-          ${CMAKE_COMMAND}
-          --install ${OPENBLAS_BUILD_DIR}
+    #    COMMAND
+    #        ${CMAKE_COMMAND}
+    #        --install ${OPENBLAS_BUILD_DIR}
 
-          --prefix ${OPENBLAS_BUILD_DIR}/install
+    #        --prefix ${OPENBLAS_BUILD_DIR}/install
 
-      RESULT_VARIABLE OPENBLAS_INSTALL_RESULT
-  )
+    #    RESULT_VARIABLE OPENBLAS_INSTALL_RESULT
+    #)
 
-  if(NOT OPENBLAS_CONFIG_RESULT EQUAL 0)
-      message(FATAL_ERROR "OpenBLAS configure failed")
-  endif()
+    if(NOT OPENBLAS_CONFIG_RESULT EQUAL 0)
+        message(FATAL_ERROR "OpenBLAS configure failed")
+    endif()
 
-  execute_process(
-      COMMAND
-          ${CMAKE_COMMAND}
-          --build ${OPENBLAS_BUILD_DIR}
-          --parallel
+    execute_process(
+        COMMAND
+        ${CMAKE_COMMAND}
+        --build ${OPENBLAS_BUILD_DIR}
+        --parallel
 
-      RESULT_VARIABLE OPENBLAS_BUILD_RESULT
-  )
+        RESULT_VARIABLE OPENBLAS_BUILD_RESULT
+    )
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --install ${OPENBLAS_BUILD_DIR}
+        RESULT_VARIABLE MUMPS_INSTALL_RESULT
+    )
 
-  if(NOT OPENBLAS_BUILD_RESULT EQUAL 0)
-      message(FATAL_ERROR "OpenBLAS build failed")
-  endif()
-  if(WIN32)
+    if(NOT OPENBLAS_BUILD_RESULT EQUAL 0)
+        message(FATAL_ERROR "OpenBLAS build failed")
+    endif()
+    if(WIN32)
 
-      if(EXISTS ${OPENBLAS_BUILD_DIR}/lib/libopenblas.dll.a)
-          set(OPENBLAS_LIB
-              ${OPENBLAS_BUILD_DIR}/lib/libopenblas.dll.a)
+        if(EXISTS ${OPENBLAS_BUILD_DIR}/lib/libopenblas.dll.a)
+            set(OPENBLAS_LIB
+                ${OPENBLAS_BUILD_DIR}/lib/libopenblas.dll.a)
 
-      elseif(EXISTS ${OPENBLAS_BUILD_DIR}/lib/libopenblas.a)
-          set(OPENBLAS_LIB
-              ${OPENBLAS_BUILD_DIR}/lib/libopenblas.a)
+        elseif(EXISTS ${OPENBLAS_BUILD_DIR}/lib/libopenblas.a)
+            set(OPENBLAS_LIB
+                ${OPENBLAS_BUILD_DIR}/lib/libopenblas.a)
 
-      else()
-          message(FATAL_ERROR
-              "Cannot find built OpenBLAS library")
-      endif()
+        else()
+            message(FATAL_ERROR
+                "Cannot find built OpenBLAS library")
+        endif()
 
-  else()
+    else()
 
-      set(OPENBLAS_LIB
-          ${OPENBLAS_BUILD_DIR}/libopenblas.a)
+        set(OPENBLAS_LIB
+            ${OPENBLAS_BUILD_DIR}/libopenblas.a)
 
-  endif()
-  add_library(openblas STATIC IMPORTED GLOBAL)
+    endif()
+    add_library(openblas STATIC IMPORTED GLOBAL)
 
-  set_target_properties(openblas PROPERTIES
-      IMPORTED_LOCATION ${OPENBLAS_LIB}
+    set_target_properties(openblas PROPERTIES
+        IMPORTED_LOCATION ${OPENBLAS_LIB}
 
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${OPENBLAS_BUILD_DIR}/install/include"
-  )
+        INTERFACE_INCLUDE_DIRECTORIES
+        "${OPENBLAS_BUILD_DIR}/install/include"
+    )
 
-  add_library(OpenBLAS::OpenBLAS ALIAS openblas)
-  set(BLAS_LIBRARIES
-      ${OPENBLAS_LIB}
-      PARENT_SCOPE)
+    add_library(OpenBLAS::OpenBLAS ALIAS openblas)
+    set(BLAS_LIBRARIES
+        ${OPENBLAS_LIB}
+        PARENT_SCOPE)
 
-  set(LAPACK_LIBRARIES
-      ${OPENBLAS_LIB}
-      PARENT_SCOPE)
+    set(LAPACK_LIBRARIES
+        ${OPENBLAS_LIB}
+        PARENT_SCOPE)
 
-  message(STATUS "OpenBLAS lib: ${OPENBLAS_LIB}")
+    message(STATUS "OpenBLAS lib: ${OPENBLAS_LIB}")
 
 endfunction()
 
-
+set(AOCL_ROOT ${DEPEND_LIB_OUTPUT}/aocl_root)
 if(CPU_PLATFORM STREQUAL "AMD")
-  include(FetchContent)
+    include(FetchContent)
 
-  FetchContent_Declare(
-    aocl-utils
-    GIT_REPOSITORY https://github.com/amd/aocl-utils.git
-    GIT_TAG 5.2.2
-  )
-
-  FetchContent_GetProperties(aocl-utils)
-
-  if(NOT aocl-utils_POPULATED)
-    FetchContent_Populate(aocl-utils)
-
-    execute_process(
-      COMMAND ${CMAKE_COMMAND}
-              -S ${aocl-utils_SOURCE_DIR}
-              -B ${aocl-utils_BINARY_DIR}
-              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-              -DCMAKE_INSTALL_PREFIX=${aocl-utils_BINARY_DIR}/install
+    FetchContent_Declare(
+        aocl-utils
+        GIT_REPOSITORY https://github.com/amd/aocl-utils.git
+        GIT_TAG 5.2.2
     )
 
-    message(STATUS "Building AOCL Utils...")
+    FetchContent_GetProperties(aocl-utils)
 
-    execute_process(
-      COMMAND ${CMAKE_COMMAND}
-              --build ${aocl-utils_BINARY_DIR}
-              --parallel
-      RESULT_VARIABLE AOCL_UTILS_BUILD_RESULT
-    )
+    if(NOT aocl-utils_POPULATED)
+        FetchContent_Populate(aocl-utils)
 
-    if(NOT AOCL_UTILS_BUILD_RESULT EQUAL 0)
-      message(FATAL_ERROR "AOCL Utils build failed")
+        execute_process(
+            COMMAND ${CMAKE_COMMAND}
+            -S ${aocl-utils_SOURCE_DIR}
+            -B ${aocl-utils_BINARY_DIR}
+            -DENABLE_ILP64=ON
+            -DCMAKE_BUILD_TYPE=RELEASE
+            -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+        )
+
+        message(STATUS "Building AOCL Utils...")
+
+        execute_process(
+            COMMAND ${CMAKE_COMMAND}
+            --build ${aocl-utils_BINARY_DIR}
+            --parallel
+            RESULT_VARIABLE AOCL_UTILS_BUILD_RESULT
+        )
+
+        if(NOT AOCL_UTILS_BUILD_RESULT EQUAL 0)
+            message(FATAL_ERROR "AOCL Utils build failed")
+        endif()
+
+        message(STATUS "Installing AOCL Utils...")
+
+        execute_process(
+            COMMAND ${CMAKE_COMMAND}
+            --install ${aocl-utils_BINARY_DIR}
+            RESULT_VARIABLE AOCL_UTILS_INSTALL_RESULT
+        )
+
+        if(NOT AOCL_UTILS_INSTALL_RESULT EQUAL 0)
+            message(FATAL_ERROR "AOCL Utils install failed")
+        endif()
+
+        # 可选：导出路径
+        set(AOCL_UTILS_ROOT
+            ${aocl-utils_BINARY_DIR}/install
+            CACHE PATH "AOCL Utils install path")
+
+        message(STATUS "AOCL Utils installed to: ${AOCL_UTILS_ROOT}")
+        set(AOCL_UTILS_LIBRARY ${AOCL_ROOT}/lib/libaoclutils.so)
+        set(AOCL_UTILS_INCLUDE_DIR ${AOCL_ROOT}/include)
     endif()
-
-    message(STATUS "Installing AOCL Utils...")
-
-    execute_process(
-      COMMAND ${CMAKE_COMMAND}
-              --install ${aocl-utils_BINARY_DIR}
-      RESULT_VARIABLE AOCL_UTILS_INSTALL_RESULT
-    )
-
-    if(NOT AOCL_UTILS_INSTALL_RESULT EQUAL 0)
-      message(FATAL_ERROR "AOCL Utils install failed")
-    endif()
-
-    # 可选：导出路径
-    set(AOCL_UTILS_ROOT
-        ${aocl-utils_BINARY_DIR}/install
-        CACHE PATH "AOCL Utils install path")
-
-    message(STATUS "AOCL Utils installed to: ${AOCL_UTILS_ROOT}")
-  endif()
 endif()
+
+#message(STATUS "88888888888888+${aocl-utils_DIR}")
+#find_package(aocl-utils REQUIRED)
+#message(STATUS "88888888888888+${LIBAOCLUTILS_INCLUDE_PATH}")
+#message(STATUS "88888888888888+${LIBAOCLUTILS_LIBRARY_PATH}")
 
 if(MATX_ENABLE_OPENBLAS)
-  matx_add_openblas()
+    matx_add_openblas()
 elseif(MATX_ENABLE_BLIS)
-  include(FetchContent)
-  FetchContent_Declare(
-    blis
-    GIT_REPOSITORY https://github.com/amd/blis.git
-    GIT_TAG 5.2.2
-  )
-  FetchContent_Populate(blis)
+
+    # set(BLIS_CONFIG_FAMILY auto)
+    include(FetchContent)
+
+    FetchContent_Declare(
+        blis
+        GIT_REPOSITORY https://github.com/amd/blis.git
+        GIT_TAG 5.2.2
+    )
+
+    FetchContent_GetProperties(blis)
+
+    if(NOT blis_POPULATED)
+        FetchContent_Populate(blis)
+    endif()
+
+    # =========================================================
+    # BLIS build dirs
+    # =========================================================
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        -S ${blis_SOURCE_DIR}
+        -B ${blis_BINARY_DIR}
+        -DBLAS_INT_SIZE=64
+        -DBLIS_CONFIG_FAMILY=auto
+        -DBLIS_DISABLE_F77_TYPES=ON
+        -DBLIS_ENABLE_NOFORTRAN=ON
+        -DBLIS_ENABLE_OPENMP=ON
+        -DENABLE_THREADING=openmp
+        -DENABLE_CBLAS=ON
+        -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+    )
+
+    # =========================================================
+    # build BLIS
+    # =========================================================
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --build ${blis_BINARY_DIR}
+        --parallel
+        RESULT_VARIABLE BLIS_BUILD_RESULT
+    )
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --install ${blis_BINARY_DIR}
+        RESULT_VARIABLE BLIS_INSTALL_RESULT
+    )
+    # =========================================================
+    # imported target
+    # =========================================================
+
+    #   add_library(blis STATIC IMPORTED GLOBAL)
+    #   set_target_properties(blis PROPERTIES
+    #       IMPORTED_LOCATION
+    #       ${blis_BINARY_DIR}/install/lib/libblis.so
+
+    #       INTERFACE_INCLUDE_DIRECTORIES
+    #       "${BLIS_INSTALL_DIR}/include"
+    #   )
+
+    set(BLAS_LIBRARY ${AOCL_ROOT}/lib/libblis-mt.so)
+    set(BLAS_LIBRARIES ${BLAS_LIBRARY})
+    set(AOCL_BLAS_INCLUDE_DIR ${AOCL_ROOT}/include)
+    set(amdblis_DIR "${CMAKE_CURRENT_BINARY_DIR}/aocl_cmake/")
+    find_package(amdblis REQUIRED)
+
 endif()
+
+# =========================================================
+# AOCL libflame
+# =========================================================
+if(0)
+    if(MATX_ENABLE_LIBFLAME)
+        include(FetchContent)
+
+        FetchContent_Declare(
+            libflame
+            GIT_REPOSITORY https://github.com/amd/libflame.git
+            GIT_TAG 5.2.2
+            BINARY_DIR ${CMAKE_BINARY_DIR}/libflame-build
+        )
+
+        FetchContent_GetProperties(libflame)
+        if(NOT libflame_POPULATED)
+            FetchContent_Populate(libflame)
+
+            file(MAKE_DIRECTORY ${libflame_BINARY_DIR})
+            execute_process(
+                COMMAND ${CMAKE_COMMAND}
+                -S ${libflame_SOURCE_DIR}
+                -B ${libflame_BINARY_DIR}
+                -DCMAKE_BUILD_TYPE=RELEASE
+                -DBLIS_CONFIG_FAMILY=auto
+                -DAOCL_ROOT=${AOCL_ROOT}
+                -DENABLE_ILP64=ON
+                -DCMAKE_C_STANDARD_LIBRARIES="-lm"
+                -DCMAKE_SHARED_LINKER_FLAGS="-lm"
+                -DBLAS_LIBRARY=${BLAS_LIBRARY}
+                -DENABLE_AMD_FLAGS=ON
+                -DENABLE_AOCL_BLAS=ON
+                -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+                -DBUILD_SHARED_LIBS=ON
+            )
+
+            # =========================================================
+            # build BLIS
+            # =========================================================
+
+            execute_process(
+                COMMAND ${CMAKE_COMMAND}
+                --build ${libflame_BINARY_DIR}
+                --parallel
+                RESULT_VARIABLE libflame_BUILD_RESULT
+            )
+
+            execute_process(
+                COMMAND ${CMAKE_COMMAND}
+                --install ${libflame_BINARY_DIR}
+                RESULT_VARIABLE LIBFLAME_INSTALL_RESULT
+            )
+
+            set(LIBFLAME_INCLUDE_DIR ${AOCL_ROOT}/include)
+            set(LIBFLAME_LIBRARY ${AOCL_ROOT}/lib/libflame.so)
+
+            add_library(libflame::libflame STATIC IMPORTED GLOBAL)
+            set_target_properties(libflame::libflame PROPERTIES
+                IMPORTED_LOCATION ${LIBFLAME_LIBRARY}
+                INTERFACE_INCLUDE_DIRECTORIES ${LIBFLAME_INCLUDE_DIR}
+            )
+            set(LAPACK_LIBRARIES ${LIBFLAME_LIBRARY})
+        endif()
+    endif()
+endif()
+
+if(MATX_ENABLE_LIBFLAME)
+    set(LIBFLAME_LIBRARY_PATH "${AOCL_ROOT}/lib/libflame.so")
+    set(LIBFLAME_HEADER_PATH "${AOCL_ROOT}/include/FLAME.h")
+
+    if(EXISTS ${LIBFLAME_LIBRARY_PATH} AND EXISTS ${LIBFLAME_HEADER_PATH})
+        message(STATUS "✅ libflame exists，do not compile: ${LIBFLAME_LIBRARY_PATH}")
+
+        #add_library(libflame::libflame SHARED IMPORTED GLOBAL)
+        #set_target_properties(libflame::libflame PROPERTIES
+        #    IMPORTED_LOCATION ${LIBFLAME_LIBRARY_PATH}
+        #    INTERFACE_INCLUDE_DIRECTORIES ${AOCL_ROOT}/include
+        #)
+        set(LAPACK_LIBRARIES ${LIBFLAME_LIBRARY_PATH})
+    else()
+        message(STATUS "🔨 libflame do not exist，start compile and install...")
+
+        include(FetchContent)
+        FetchContent_Declare(
+            libflame
+            GIT_REPOSITORY https://github.com/amd/libflame.git
+            GIT_TAG 5.2.2
+            BINARY_DIR ${CMAKE_BINARY_DIR}/libflame-build
+        )
+
+        FetchContent_GetProperties(libflame)
+        if(NOT libflame_POPULATED)
+            FetchContent_Populate(libflame)
+
+            file(MAKE_DIRECTORY ${libflame_BINARY_DIR})
+            execute_process(
+                COMMAND ${CMAKE_COMMAND}
+                -S ${libflame_SOURCE_DIR}
+                -B ${libflame_BINARY_DIR}
+                -DCMAKE_BUILD_TYPE=RELEASE
+                -DBLIS_CONFIG_FAMILY=auto
+                -DAOCL_ROOT=${AOCL_ROOT}
+                -DENABLE_ILP64=ON
+                -DCMAKE_C_STANDARD_LIBRARIES="-lm"
+                -DCMAKE_SHARED_LINKER_FLAGS="-lm"
+                -DBLAS_LIBRARY=${BLAS_LIBRARY}
+                -DENABLE_AMD_FLAGS=ON
+                -DENABLE_AOCL_BLAS=ON
+                -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+                -DBUILD_SHARED_LIBS=ON
+            )
+
+            execute_process(
+                COMMAND ${CMAKE_COMMAND}
+                --build ${libflame_BINARY_DIR}
+                --parallel
+                RESULT_VARIABLE libflame_BUILD_RESULT
+            )
+
+            execute_process(
+                COMMAND ${CMAKE_COMMAND}
+                --install ${libflame_BINARY_DIR}
+                RESULT_VARIABLE LIBFLAME_INSTALL_RESULT
+            )
+
+            set(LAPACK_LIBRARIES ${AOCL_ROOT}/lib/libflame.so)
+        endif()
+    endif()
+    set(libflame_DIR "${CMAKE_CURRENT_BINARY_DIR}/aocl_cmake/")
+    find_package(libflame REQUIRED)
+
+    set(aoclutils_DIR "${CMAKE_CURRENT_BINARY_DIR}/aocl_cmake/")
+    find_package(aoclutils REQUIRED)
+endif()
+
 # =========================================================
 # SuiteSparse
 # =========================================================
 if(MATX_ENABLE_SUITESPARSE)
 
-  FetchContent_Declare(
-      SuiteSparse
-      GIT_REPOSITORY https://github.com/DrTimothyAldenDavis/SuiteSparse.git
-      GIT_TAG v7.12.2
+    FetchContent_Declare(
+        SuiteSparse
+        GIT_REPOSITORY https://github.com/DrTimothyAldenDavis/SuiteSparse.git
+        GIT_TAG v7.12.2
     )
 
     FetchContent_GetProperties(SuiteSparse)
 
     if(NOT SuiteSparse_POPULATED)
-      FetchContent_Populate(SuiteSparse)
+        FetchContent_Populate(SuiteSparse)
     endif()
 
     #
@@ -374,23 +636,24 @@ if(MATX_ENABLE_SUITESPARSE)
     #
     # Configure SuiteSparse
     #
+    message(STATUS "SU333 ${BLAS_LIBRARIES}")
+    message(STATUS "SU222 ${LAPACK_LIBRARIES}")
+    message(STATUS "SU222 ${aocl_root}")
     execute_process(
-
         COMMAND
-            ${CMAKE_COMMAND}
-
-            -S ${suitesparse_SOURCE_DIR}
-            -B ${SUITESPARSE_BUILD_DIR}
-
-            -DBLA_VENDOR=OpenBLAS
-
-            -DBLAS_LIBRARIES=${BLAS_LIBRARIES}
-            -DLAPACK_LIBRARIES=${LAPACK_LIBRARIES}
-            -DSUITESPARSE_USE_64BIT_BLAS=ON
-            -DCMAKE_INCLUDE_PATH=${OPENBLAS_INCLUDE_DIR}
-            -DCMAKE_LIBRARY_PATH=${OPENBLAS_LIB_DIR}
-
-            -DBUILD_SHARED_LIBS=OFF
+        ${CMAKE_COMMAND}
+        -S ${suitesparse_SOURCE_DIR}
+        -B ${SUITESPARSE_BUILD_DIR}
+        -DBLA_VENDOR=FLAME
+        -DBLAS_LIBRARIES=${BLAS_LIBRARIES}\;${AOCL_ROOT}/lib/libaoclutils.so
+        -DLAPACK_LIBRARIES=${LAPACK_LIBRARIES}
+        -DSUITESPARSE_USE_64BIT_BLAS=ON
+        -DCMAKE_INCLUDE_PATH=${OPENBLAS_INCLUDE_DIR}
+        -DCMAKE_LIBRARY_PATH=${OPENBLAS_LIB_DIR}\;${AOCL_ROOT}/lib
+        -DCMAKE_INSTALL_RPATH=${AOCL_ROOT}/lib
+        -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+        -DBUILD_SHARED_LIBS=ON
+        -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/suitesparse
 
         RESULT_VARIABLE SUITESPARSE_CONFIG_RESULT
     )
@@ -404,11 +667,16 @@ if(MATX_ENABLE_SUITESPARSE)
     execute_process(
 
         COMMAND
-            ${CMAKE_COMMAND}
-            --build ${SUITESPARSE_BUILD_DIR}
-            --parallel
+        ${CMAKE_COMMAND}
+        --build ${SUITESPARSE_BUILD_DIR}
+        --parallel
 
         RESULT_VARIABLE SUITESPARSE_BUILD_RESULT
+    )
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --install ${SUITESPARSE_BUILD_DIR}
+        RESULT_VARIABLE SUITESPARSE_INSTALL_RESULT
     )
 
     if(NOT SUITESPARSE_BUILD_RESULT EQUAL 0)
@@ -421,122 +689,122 @@ if(MATX_ENABLE_SUITESPARSE)
     #
     # Example imported target
     #
+    set(SuiteSparse_config_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/SuiteSparse_config")
+    set(BTF_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/BTF")
+    set(AMD_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/AMD")
+    set(COLAMD_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/COLAMD")
+    set(CCOLAMD_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/CCOLAMD")
+    set(CHOLMOD_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/CHOLMOD")
+    set(CAMD_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/CAMD")
+    set(KLU_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/KLU")
+    set(GraphBLAS_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/GraphBLAS")
+    set(UMFPACK_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/UMFPACK")
+    set(CXSparse_DIR "${DEPEND_LIB_OUTPUT}/suitesparse/lib/cmake/CXSparse")
+    find_package(SuiteSparse_config REQUIRED)
+    find_package(KLU REQUIRED)
+    find_package(GraphBLAS REQUIRED)
+    find_package(UMFPACK REQUIRED)
+    find_package(CXSparse REQUIRED)
+    #add_library(SuiteSparse::AMD STATIC IMPORTED GLOBAL)
 
-    add_library(SuiteSparse::AMD STATIC IMPORTED GLOBAL)
+    #set_target_properties(SuiteSparse::AMD PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/AMD/libamd.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/AMD/Include"
+    #)
 
-    set_target_properties(SuiteSparse::AMD PROPERTIES
-        IMPORTED_LOCATION
-        "${SUITESPARSE_BUILD_DIR}/AMD/libamd.a"
-        INTERFACE_INCLUDE_DIRECTORIES
-        "${suitesparse_SOURCE_DIR}/AMD/Include"
-    )
+    #add_library(SuiteSparse::COLAMD STATIC IMPORTED GLOBAL)
 
-  add_library(SuiteSparse::COLAMD STATIC IMPORTED GLOBAL)
+    #set_target_properties(SuiteSparse::COLAMD PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/COLAMD/libcolamd.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/COLAMD/Include"
+    #)
 
-  set_target_properties(SuiteSparse::COLAMD PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/COLAMD/libcolamd.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/COLAMD/Include"
-  )
+    #add_library(SuiteSparse::CHOLMOD STATIC IMPORTED GLOBAL)
 
-  add_library(SuiteSparse::CHOLMOD STATIC IMPORTED GLOBAL)
+    #set_target_properties(SuiteSparse::CHOLMOD PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/CHOLMOD/libcholmod.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/CHOLMOD/Include"
+    #)
 
-  set_target_properties(SuiteSparse::CHOLMOD PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/CHOLMOD/libcholmod.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/CHOLMOD/Include"
-  )
+    #add_library(SuiteSparse::BTF STATIC IMPORTED GLOBAL)
 
-  add_library(SuiteSparse::BTF STATIC IMPORTED GLOBAL)
+    #set_target_properties(SuiteSparse::BTF PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/BTF/libbtf.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/BTF/Include"
+    #)
 
-  set_target_properties(SuiteSparse::BTF PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/BTF/libbtf.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/BTF/Include"
-  )
+    #add_library(SuiteSparse::CAMD STATIC IMPORTED GLOBAL)
 
-  add_library(SuiteSparse::CAMD STATIC IMPORTED GLOBAL)
+    #set_target_properties(SuiteSparse::CAMD PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/CAMD/libcamd.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/CAMD/Include"
+    #)
 
-  set_target_properties(SuiteSparse::CAMD PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/CAMD/libcamd.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/CAMD/Include"
-  )
+    #add_library(SuiteSparse::CCOLAMD STATIC IMPORTED GLOBAL)
 
-  add_library(SuiteSparse::CCOLAMD STATIC IMPORTED GLOBAL)
+    #set_target_properties(SuiteSparse::CCOLAMD PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/CCOLAMD/libccolamd.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/CCOLAMD/Include"
+    #)
 
-  set_target_properties(SuiteSparse::CCOLAMD PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/CCOLAMD/libccolamd.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/CCOLAMD/Include"
-  )
+    #add_library(SuiteSparse::KLU STATIC IMPORTED GLOBAL)
 
-  add_library(SuiteSparse::KLU STATIC IMPORTED GLOBAL)
+    #set_target_properties(SuiteSparse::KLU PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/KLU/libklu.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/KLU/Include"
+    #)
 
-  set_target_properties(SuiteSparse::KLU PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/KLU/libklu.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/KLU/Include"
-  )
+    #add_library(SuiteSparse::UMFPACK STATIC IMPORTED GLOBAL)
 
-  add_library(SuiteSparse::UMFPACK STATIC IMPORTED GLOBAL)
+    #set_target_properties(SuiteSparse::UMFPACK PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/UMFPACK/libumfpack.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/UMFPACK/Include"
+    #)
 
-  set_target_properties(SuiteSparse::UMFPACK PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/UMFPACK/libumfpack.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/UMFPACK/Include"
-  )
+    #add_library(SuiteSparse::GraphBLAS STATIC IMPORTED GLOBAL)
 
-  add_library(SuiteSparse::GraphBLAS STATIC IMPORTED GLOBAL)
-
-  set_target_properties(SuiteSparse::GraphBLAS PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/GraphBLAS/libgraphblas.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/GraphBLAS/Include"
-  )
+    #set_target_properties(SuiteSparse::GraphBLAS PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/GraphBLAS/libgraphblas.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/GraphBLAS/Include"
+    #)
 
 
-  add_library(SuiteSparse::CXSparse STATIC IMPORTED GLOBAL)
+    #add_library(SuiteSparse::CXSparse STATIC IMPORTED GLOBAL)
 
-  set_target_properties(SuiteSparse::CXSparse PROPERTIES
-      IMPORTED_LOCATION
-      "${SUITESPARSE_BUILD_DIR}/CXSparse/libcxsparse.a"
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${suitesparse_SOURCE_DIR}/CXSparse/Include"
-  )
+    #set_target_properties(SuiteSparse::CXSparse PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/CXSparse/libcxsparse.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/CXSparse/Include"
+    #)
 
-add_library(SuiteSparse::SuiteSparse_config STATIC IMPORTED GLOBAL)
+    #add_library(SuiteSparse::SuiteSparse_config STATIC IMPORTED GLOBAL)
 
-set_target_properties(SuiteSparse::SuiteSparse_config PROPERTIES
-    IMPORTED_LOCATION
-    "${SUITESPARSE_BUILD_DIR}/SuiteSparse_config/libsuitesparseconfig.a"
-    INTERFACE_INCLUDE_DIRECTORIES
-    "${suitesparse_SOURCE_DIR}/SuiteSparse_config"
-)
+    #set_target_properties(SuiteSparse::SuiteSparse_config PROPERTIES
+    #    IMPORTED_LOCATION
+    #    "${SUITESPARSE_BUILD_DIR}/SuiteSparse_config/libsuitesparseconfig.a"
+    #    INTERFACE_INCLUDE_DIRECTORIES
+    #    "${suitesparse_SOURCE_DIR}/SuiteSparse_config"
+    #)
 
-endif()
-
-# =========================================================
-# AOCL libflame
-# =========================================================
-if(MATX_ENABLE_LIBFLAME)
- include(FetchContent)
-
- FetchContent_Declare(
-   libflame
-   GIT_REPOSITORY https://github.com/flame/libflame.git
-   GIT_TAG 5.2.2
- )
-
- FetchContent_Populate(libflame)
 endif()
 
 # =========================================================
@@ -545,177 +813,254 @@ endif()
 
 if(MATX_ENABLE_AOCL_SPARSE)
 
-  FetchContent_Declare(
-    aocl-sparse
-    GIT_REPOSITORY https://github.com/amd/aocl-sparse.git
-    GIT_TAG 5.2.2
-  )
+    FetchContent_Declare(
+        aocl-sparse
+        GIT_REPOSITORY https://github.com/amd/aocl-sparse.git
+        GIT_TAG 5.2.2
+    )
+    FetchContent_GetProperties(aocl-sparse)
 
-  FetchContent_MakeAvailable(aocl-sparse)
+    if(NOT aocl-sparse_POPULATED)
+        FetchContent_Populate(aocl-sparse)
+    endif()
 
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        -S ${aocl-sparse_SOURCE_DIR}
+        -B ${aocl-sparse_BINARY_DIR}
+        -DCMAKE_BUILD_TYPE=RELEASE
+        -DBLIS_CONFIG_FAMILY=auto
+        -DCMAKE_AOCL_ROOT=${AOCL_ROOT}
+        -DSUPPORT_OMP=ON
+        -DBUILD_ILP64=ON
+        #-DCMAKE_C_STANDARD_LIBRARIES="-lm"
+        #-DCMAKE_SHARED_LINKER_FLAGS="-lm"
+        #-DBLAS_LIBRARY=${BLAS_LIBRARY}
+        #-DENABLE_AMD_FLAGS=ON
+        #-DENABLE_AOCL_BLAS=ON
+        -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+        -DBUILD_SHARED_LIBS=ON
+    )
+
+    # =========================================================
+    # build aocl-sparse
+    # =========================================================
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --build ${aocl-sparse_BINARY_DIR}
+        --parallel
+        RESULT_VARIABLE libflame_BUILD_RESULT
+    )
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --install ${aocl-sparse_BINARY_DIR}
+        RESULT_VARIABLE LIBFLAME_INSTALL_RESULT
+    )
+
+    set(AOCLSPARSE_INCLUDE_DIR ${AOCL_ROOT}/include)
+    set(AOCLSPARSE_LIBRARY ${AOCL_ROOT}/lib/libflame.so)
+
+    add_library(AOCLSPARSE::AOCLSPARSE STATIC IMPORTED GLOBAL)
+    set_target_properties(AOCLSPARSE::AOCLSPARSE PROPERTIES
+        IMPORTED_LOCATION ${AOCLSPARSE_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${AOCLSPARSE_INCLUDE_DIR}
+    )
+    set(aoclsparse_DIR "${CMAKE_CURRENT_BINARY_DIR}/aocl_cmake/")
+    find_package(aoclsparse REQUIRED)
 endif()
 
 if(MATX_ENABLE_SUPERLU)
 
-  FetchContent_Declare(
-    superlu
-    GIT_REPOSITORY https://github.com/xiaoyeli/superlu.git
-    GIT_TAG v7.0.1
-  )
+    FetchContent_Declare(
+        superlu
+        GIT_REPOSITORY https://github.com/xiaoyeli/superlu.git
+        GIT_TAG v7.0.1
+    )
 
-  FetchContent_GetProperties(superlu)
+    FetchContent_GetProperties(superlu)
 
-  if(NOT superlu_POPULATED)
-    FetchContent_Populate(superlu)
-  endif()
+    if(NOT superlu_POPULATED)
+        FetchContent_Populate(superlu)
+    endif()
 
-  set(SUPERLU_BUILD_DIR
-      ${CMAKE_BINARY_DIR}/superlu-build)
+    set(SUPERLU_BUILD_DIR
+        ${CMAKE_BINARY_DIR}/superlu-build)
 
-  file(MAKE_DIRECTORY
-      ${SUPERLU_BUILD_DIR})
+    file(MAKE_DIRECTORY
+        ${SUPERLU_BUILD_DIR})
 
-  #
-  # Configure
-  #
+    #
+    # Configure
+    #
 
-  execute_process(
+    execute_process(
+        COMMAND
+        ${CMAKE_COMMAND}
+        -S ${superlu_SOURCE_DIR}
+        -B ${SUPERLU_BUILD_DIR}
+        -DTPL_BLAS_LIBRARIES=${OPENBLAS_LIB}
+        -Denable_tests=OFF
+        -Denable_examples=OFF
+        -DBUILD_SHARED_LIBS=OFF
+        -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/superlu_lib
 
-      COMMAND
-          ${CMAKE_COMMAND}
+        RESULT_VARIABLE SUPERLU_CONFIG_RESULT
+    )
 
-          -S ${superlu_SOURCE_DIR}
-          -B ${SUPERLU_BUILD_DIR}
+    if(NOT SUPERLU_CONFIG_RESULT EQUAL 0)
 
-          -DTPL_BLAS_LIBRARIES=${OPENBLAS_LIB}
+        message(FATAL_ERROR
+            "SuperLU configure failed")
 
-          -Denable_tests=OFF
-          -Denable_examples=OFF
+    endif()
 
-          -DBUILD_SHARED_LIBS=OFF
+    #
+    # Build
+    #
 
-      RESULT_VARIABLE SUPERLU_CONFIG_RESULT
-  )
+    execute_process(
 
-  if(NOT SUPERLU_CONFIG_RESULT EQUAL 0)
+        COMMAND
+        ${CMAKE_COMMAND}
+        --build ${SUPERLU_BUILD_DIR}
+        --parallel
 
-      message(FATAL_ERROR
-          "SuperLU configure failed")
+        RESULT_VARIABLE SUPERLU_BUILD_RESULT
+    )
 
-  endif()
+    if(NOT SUPERLU_BUILD_RESULT EQUAL 0)
 
-  #
-  # Build
-  #
+        message(FATAL_ERROR
+            "SuperLU build failed")
 
-  execute_process(
+    endif()
 
-      COMMAND
-          ${CMAKE_COMMAND}
-          --build ${SUPERLU_BUILD_DIR}
-          --parallel
+    #
+    # Imported target
+    #
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --install ${SUPERLU_BUILD_DIR}
+        RESULT_VARIABLE MUMPS_INSTALL_RESULT
+    )
 
-      RESULT_VARIABLE SUPERLU_BUILD_RESULT
-  )
+    add_library(SUPERLU::SUPERLU STATIC IMPORTED GLOBAL)
 
-  if(NOT SUPERLU_BUILD_RESULT EQUAL 0)
+    set_target_properties(SUPERLU::SUPERLU PROPERTIES
+        IMPORTED_LOCATION
+        "${DEPEND_LIB_OUTPUT}/superlu_lib/lib/libsuperlu.a"
 
-      message(FATAL_ERROR
-          "SuperLU build failed")
-
-  endif()
-
-  #
-  # Imported target
-  #
-
-  add_library(SUPERLU::SUPERLU STATIC IMPORTED GLOBAL)
-
-  set_target_properties(SUPERLU::SUPERLU PROPERTIES
-      IMPORTED_LOCATION
-      "${SUPERLU_BUILD_DIR}/lib/libsuperlu.a"
-
-      INTERFACE_INCLUDE_DIRECTORIES
-      "${superlu_SOURCE_DIR}/SRC"
-  )
+        INTERFACE_INCLUDE_DIRECTORIES
+        "${DEPEND_LIB_OUTPUT}/superlu_lib/include"
+    )
 
 endif()
 
 if(MATX_ENABLE_MUMPS)
 
-  FetchContent_Declare(
-    mumps
-    GIT_REPOSITORY https://github.com/scivision/mumps-superbuild.git
-    GIT_TAG v5.9.0.0
-  )
+    FetchContent_Declare(
+        mumps
+        GIT_REPOSITORY https://github.com/scivision/mumps-superbuild.git
+        GIT_TAG v5.9.0.0
+    )
 
-  FetchContent_GetProperties(mumps)
+    FetchContent_GetProperties(mumps)
 
-  if(NOT mumps_POPULATED)
-    FetchContent_Populate(mumps)
-  endif()
+    if(NOT mumps_POPULATED)
+        FetchContent_Populate(mumps)
+    endif()
 
-  set(MUMPS_BUILD_DIR
-      ${CMAKE_BINARY_DIR}/mumps-build)
+    set(MUMPS_BUILD_DIR
+        ${CMAKE_BINARY_DIR}/mumps-build)
 
-  file(MAKE_DIRECTORY
-      ${MUMPS_BUILD_DIR})
+    file(MAKE_DIRECTORY
+        ${MUMPS_BUILD_DIR})
 
-  #
-  # Configure
-  #
-  message(STATUS "000000000000000000+${LAPACK_LIBRARIES}")
-  execute_process(
+    #
+    # Configure
+    #
+    message(STATUS "000000000000000000+${LAPACK_LIBRARIES}")
+    message(STATUS "000000000000000000+${BLAS_LIBRARIES}")
+    execute_process(
 
-      COMMAND
-          ${CMAKE_COMMAND}
+        COMMAND
+        ${CMAKE_COMMAND}
 
-          -S ${mumps_SOURCE_DIR}
-          -B ${MUMPS_BUILD_DIR}
+        -S ${mumps_SOURCE_DIR}
+        -B ${MUMPS_BUILD_DIR}
 
-          -DBUILD_SHARED_LIBS=OFF
+        -DBUILD_SHARED_LIBS=OFF
 
-          -DBLA_VENDOR=OpenBLAS
+        #-DBLA_VENDOR=OpenBLAS
 
-           -G Ninja
-          -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe
-          -DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe
-          -DCMAKE_Fortran_COMPILER=C:/msys64/ucrt64/bin/gfortran.exe
-          -DMUMPS_parallel=OFF
-          -DBLAS_LIBRARIES=${LAPACK_LIBRARIES}
+        #-G Ninja
+        #-DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe
+        #-DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe
+        #-DCMAKE_Fortran_COMPILER=C:/msys64/ucrt64/bin/gfortran.exe
+        -DMUMPS_parallel=OFF
+        -DBLAS_LIBRARIES=${BLAS_LIBRARIES}
+        #-DCMAKE_MAKE_PROGRAM=ON
+        -DMUMPS_intsize64=ON
+        -DBUILD_COMPLEX16=ON
+        -DBUILD_COMPLEX=ON
+        -DLAPACK_LIBRARY=${LAPACK_LIBRARIES}\;${BLAS_LIBRARIES}
+        -DBUILD_SHARED_LIBS=ON
+        -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/mumps
 
-          -DLAPACK_LIBRARY=${LAPACK_LIBRARIES}
+        RESULT_VARIABLE MUMPS_CONFIG_RESULT
+    )
 
-      RESULT_VARIABLE MUMPS_CONFIG_RESULT
-  )
+    if(NOT MUMPS_CONFIG_RESULT EQUAL 0)
 
-  if(NOT MUMPS_CONFIG_RESULT EQUAL 0)
+        message(FATAL_ERROR
+            "MUMPS configure failed")
 
-      message(FATAL_ERROR
-          "MUMPS configure failed")
+    endif()
 
-  endif()
+    #
+    # Build
+    #
 
-  #
-  # Build
-  #
+    execute_process(
 
-  execute_process(
+        COMMAND
+        ${CMAKE_COMMAND}
+        --build ${MUMPS_BUILD_DIR}
+        --parallel
 
-      COMMAND
-          ${CMAKE_COMMAND}
-          --build ${MUMPS_BUILD_DIR}
-          --parallel
+        RESULT_VARIABLE MUMPS_BUILD_RESULT
+    )
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        --install ${MUMPS_BUILD_DIR}
+        RESULT_VARIABLE MUMPS_INSTALL_RESULT
+    )
 
-      RESULT_VARIABLE MUMPS_BUILD_RESULT
-  )
+    if(NOT MUMPS_BUILD_RESULT EQUAL 0)
 
-  if(NOT MUMPS_BUILD_RESULT EQUAL 0)
+        message(FATAL_ERROR
+            "MUMPS build failed")
 
-      message(FATAL_ERROR
-          "MUMPS build failed")
+    endif()
+    add_library(MUMPS::MUMPS STATIC IMPORTED GLOBAL)
 
-  endif()
+    set_target_properties(MUMPS::MUMPS PROPERTIES
+        IMPORTED_LOCATION
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libdmumps.so"
+
+        INTERFACE_INCLUDE_DIRECTORIES
+        "${DEPEND_LIB_OUTPUT}/mumps/include"
+    )
+
+    set(mumps_lib 
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libdmumps.so"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libzmumps.so"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libmumps_common.so"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libmpiseq_fortran.so"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libmpiseq_c.so"
+    )
 
 endif()
 
@@ -729,4 +1074,21 @@ add_subdirectory(dense_blas)
 add_subdirectory(sparse_blas)
 add_subdirectory(dense_solve)
 add_subdirectory(sparse_solve)
-add_subdirectory(tests)
+#add_subdirectory(tests)
+
+if(MATX_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
+
+# ---- Export targets ----
+install(EXPORT MatXConfig
+  NAMESPACE MatX::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MatX
+)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generate_dir/include/config.h
+    @ONLY
+)
