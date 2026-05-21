@@ -16,10 +16,11 @@ else ()
     message(WARNING "UNKNOWN OS！")
 endif ()
 
-#message(STATUS "current 3Party path ${3Party_path}")
-
-
-
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    message(STATUS "ADD DEBUG MSG")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+    set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
+endif()
 
 # =========================================================
 # Build options
@@ -256,15 +257,6 @@ function(matx_add_openblas)
 
     #execute_process(
 
-    #    COMMAND
-    #        ${CMAKE_COMMAND}
-    #        --install ${OPENBLAS_BUILD_DIR}
-
-    #        --prefix ${OPENBLAS_BUILD_DIR}/install
-
-    #    RESULT_VARIABLE OPENBLAS_INSTALL_RESULT
-    #)
-
     if(NOT OPENBLAS_CONFIG_RESULT EQUAL 0)
         message(FATAL_ERROR "OpenBLAS configure failed")
     endif()
@@ -388,11 +380,6 @@ if(CPU_PLATFORM STREQUAL "AMD")
         set(AOCL_UTILS_INCLUDE_DIR ${AOCL_ROOT}/include)
     endif()
 endif()
-
-#message(STATUS "88888888888888+${aocl-utils_DIR}")
-#find_package(aocl-utils REQUIRED)
-#message(STATUS "88888888888888+${LIBAOCLUTILS_INCLUDE_PATH}")
-#message(STATUS "88888888888888+${LIBAOCLUTILS_LIBRARY_PATH}")
 
 if(MATX_ENABLE_OPENBLAS)
     matx_add_openblas()
@@ -541,11 +528,6 @@ if(MATX_ENABLE_LIBFLAME)
     if(EXISTS ${LIBFLAME_LIBRARY_PATH} AND EXISTS ${LIBFLAME_HEADER_PATH})
         message(STATUS "✅ libflame exists，do not compile: ${LIBFLAME_LIBRARY_PATH}")
 
-        #add_library(libflame::libflame SHARED IMPORTED GLOBAL)
-        #set_target_properties(libflame::libflame PROPERTIES
-        #    IMPORTED_LOCATION ${LIBFLAME_LIBRARY_PATH}
-        #    INTERFACE_INCLUDE_DIRECTORIES ${AOCL_ROOT}/include
-        #)
         set(LAPACK_LIBRARIES ${LIBFLAME_LIBRARY_PATH})
     else()
         message(STATUS "🔨 libflame do not exist，start compile and install...")
@@ -705,106 +687,6 @@ if(MATX_ENABLE_SUITESPARSE)
     find_package(GraphBLAS REQUIRED)
     find_package(UMFPACK REQUIRED)
     find_package(CXSparse REQUIRED)
-    #add_library(SuiteSparse::AMD STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::AMD PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/AMD/libamd.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/AMD/Include"
-    #)
-
-    #add_library(SuiteSparse::COLAMD STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::COLAMD PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/COLAMD/libcolamd.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/COLAMD/Include"
-    #)
-
-    #add_library(SuiteSparse::CHOLMOD STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::CHOLMOD PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/CHOLMOD/libcholmod.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/CHOLMOD/Include"
-    #)
-
-    #add_library(SuiteSparse::BTF STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::BTF PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/BTF/libbtf.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/BTF/Include"
-    #)
-
-    #add_library(SuiteSparse::CAMD STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::CAMD PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/CAMD/libcamd.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/CAMD/Include"
-    #)
-
-    #add_library(SuiteSparse::CCOLAMD STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::CCOLAMD PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/CCOLAMD/libccolamd.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/CCOLAMD/Include"
-    #)
-
-    #add_library(SuiteSparse::KLU STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::KLU PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/KLU/libklu.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/KLU/Include"
-    #)
-
-    #add_library(SuiteSparse::UMFPACK STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::UMFPACK PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/UMFPACK/libumfpack.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/UMFPACK/Include"
-    #)
-
-    #add_library(SuiteSparse::GraphBLAS STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::GraphBLAS PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/GraphBLAS/libgraphblas.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/GraphBLAS/Include"
-    #)
-
-
-    #add_library(SuiteSparse::CXSparse STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::CXSparse PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/CXSparse/libcxsparse.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/CXSparse/Include"
-    #)
-
-    #add_library(SuiteSparse::SuiteSparse_config STATIC IMPORTED GLOBAL)
-
-    #set_target_properties(SuiteSparse::SuiteSparse_config PROPERTIES
-    #    IMPORTED_LOCATION
-    #    "${SUITESPARSE_BUILD_DIR}/SuiteSparse_config/libsuitesparseconfig.a"
-    #    INTERFACE_INCLUDE_DIRECTORIES
-    #    "${suitesparse_SOURCE_DIR}/SuiteSparse_config"
-    #)
-
 endif()
 
 # =========================================================
@@ -833,11 +715,6 @@ if(MATX_ENABLE_AOCL_SPARSE)
         -DCMAKE_AOCL_ROOT=${AOCL_ROOT}
         -DSUPPORT_OMP=ON
         -DBUILD_ILP64=ON
-        #-DCMAKE_C_STANDARD_LIBRARIES="-lm"
-        #-DCMAKE_SHARED_LINKER_FLAGS="-lm"
-        #-DBLAS_LIBRARY=${BLAS_LIBRARY}
-        #-DENABLE_AMD_FLAGS=ON
-        #-DENABLE_AOCL_BLAS=ON
         -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
         -DBUILD_SHARED_LIBS=ON
     )
@@ -992,16 +869,8 @@ if(MATX_ENABLE_MUMPS)
         -B ${MUMPS_BUILD_DIR}
 
         -DBUILD_SHARED_LIBS=OFF
-
-        #-DBLA_VENDOR=OpenBLAS
-
-        #-G Ninja
-        #-DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe
-        #-DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe
-        #-DCMAKE_Fortran_COMPILER=C:/msys64/ucrt64/bin/gfortran.exe
         -DMUMPS_parallel=OFF
         -DBLAS_LIBRARIES=${BLAS_LIBRARIES}
-        #-DCMAKE_MAKE_PROGRAM=ON
         -DMUMPS_intsize64=ON
         -DBUILD_COMPLEX16=ON
         -DBUILD_COMPLEX=ON
@@ -1060,6 +929,7 @@ if(MATX_ENABLE_MUMPS)
         "${DEPEND_LIB_OUTPUT}/mumps/lib/libmumps_common.so"
         "${DEPEND_LIB_OUTPUT}/mumps/lib/libmpiseq_fortran.so"
         "${DEPEND_LIB_OUTPUT}/mumps/lib/libmpiseq_c.so"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libpord.so"
     )
 
 endif()
@@ -1074,7 +944,6 @@ add_subdirectory(dense_blas)
 add_subdirectory(sparse_blas)
 add_subdirectory(dense_solve)
 add_subdirectory(sparse_solve)
-#add_subdirectory(tests)
 
 if(MATX_BUILD_TESTS)
   enable_testing()
