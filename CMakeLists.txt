@@ -157,9 +157,7 @@ if(MATX_ENABLE_OPENBLAS)
     list(APPEND BLAS_LIST "OpenBLAS")
 endif()
 
-message(STATUS "44444444")
 if(MATX_ENABLE_BLIS)
-    message(STATUS "3333333333333333")
     list(APPEND BLAS_LIST "BLIS")
 endif()
 
@@ -618,9 +616,6 @@ if(MATX_ENABLE_SUITESPARSE)
     #
     # Configure SuiteSparse
     #
-    message(STATUS "SU333 ${BLAS_LIBRARIES}")
-    message(STATUS "SU222 ${LAPACK_LIBRARIES}")
-    message(STATUS "SU222 ${aocl_root}")
     execute_process(
         COMMAND
         ${CMAKE_COMMAND}
@@ -858,8 +853,6 @@ if(MATX_ENABLE_MUMPS)
     #
     # Configure
     #
-    message(STATUS "000000000000000000+${LAPACK_LIBRARIES}")
-    message(STATUS "000000000000000000+${BLAS_LIBRARIES}")
     execute_process(
 
         COMMAND
