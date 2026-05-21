@@ -207,7 +207,7 @@ function(matx_spdlog)
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${spdlog_BINARY_DIR}
-        --parallel
+        --parallel 1
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )
 
@@ -265,7 +265,7 @@ function(matx_add_openblas)
         COMMAND
         ${CMAKE_COMMAND}
         --build ${OPENBLAS_BUILD_DIR}
-        --parallel
+        --parallel 1
 
         RESULT_VARIABLE OPENBLAS_BUILD_RESULT
     )
@@ -350,7 +350,7 @@ if(CPU_PLATFORM STREQUAL "AMD")
         execute_process(
             COMMAND ${CMAKE_COMMAND}
             --build ${aocl-utils_BINARY_DIR}
-            --parallel
+            --parallel 1
             RESULT_VARIABLE AOCL_UTILS_BUILD_RESULT
         )
 
@@ -425,7 +425,7 @@ elseif(MATX_ENABLE_BLIS)
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${blis_BINARY_DIR}
-        --parallel
+        --parallel 1
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )
 
@@ -498,7 +498,7 @@ if(0)
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
                 --build ${libflame_BINARY_DIR}
-                --parallel
+                --parallel 1
                 RESULT_VARIABLE libflame_BUILD_RESULT
             )
 
@@ -565,7 +565,7 @@ if(MATX_ENABLE_LIBFLAME)
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
                 --build ${libflame_BINARY_DIR}
-                --parallel
+                --parallel 1
                 RESULT_VARIABLE libflame_BUILD_RESULT
             )
 
@@ -651,7 +651,7 @@ if(MATX_ENABLE_SUITESPARSE)
         COMMAND
         ${CMAKE_COMMAND}
         --build ${SUITESPARSE_BUILD_DIR}
-        --parallel
+        --parallel 1
 
         RESULT_VARIABLE SUITESPARSE_BUILD_RESULT
     )
@@ -726,7 +726,7 @@ if(MATX_ENABLE_AOCL_SPARSE)
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${aocl-sparse_BINARY_DIR}
-        --parallel
+        --parallel 1
         RESULT_VARIABLE libflame_BUILD_RESULT
     )
 
@@ -802,7 +802,7 @@ if(MATX_ENABLE_SUPERLU)
         COMMAND
         ${CMAKE_COMMAND}
         --build ${SUPERLU_BUILD_DIR}
-        --parallel
+        --parallel 1
 
         RESULT_VARIABLE SUPERLU_BUILD_RESULT
     )
@@ -897,7 +897,7 @@ if(MATX_ENABLE_MUMPS)
         COMMAND
         ${CMAKE_COMMAND}
         --build ${MUMPS_BUILD_DIR}
-        --parallel
+        --parallel 1
 
         RESULT_VARIABLE MUMPS_BUILD_RESULT
     )
