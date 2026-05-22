@@ -24,7 +24,7 @@ endif()
 # Build options
 # =========================================================
 
-set(MATX_BACKEND "AUTO" CACHE STRING "Backend: OPENBLAS | AMD_AOCL | AUTO")
+set(MATX_BACKEND "OPENBLAS" CACHE STRING "Backend: OPENBLAS | AMD_AOCL | AUTO")
 
 set_property(CACHE MATX_BACKEND PROPERTY STRINGS OPENBLAS AMD_AOCL AUTO)
 
