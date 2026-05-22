@@ -328,7 +328,7 @@ function(matx_add_openblas)
 endfunction()
 
 set(AOCL_ROOT ${DEPEND_LIB_OUTPUT}/aocl_root)
-if(CPU_PLATFORM STREQUAL "AMD")
+if(MATX_BACKEND STREQUAL "AMD_AOCL")
     include(FetchContent)
 
     FetchContent_Declare(
