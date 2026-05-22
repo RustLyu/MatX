@@ -436,19 +436,10 @@ elseif(MATX_ENABLE_BLIS)
     # imported target
     # =========================================================
 
-    #   add_library(blis STATIC IMPORTED GLOBAL)
-    #   set_target_properties(blis PROPERTIES
-    #       IMPORTED_LOCATION
-    #       ${blis_BINARY_DIR}/install/lib/libblis.so
-
-    #       INTERFACE_INCLUDE_DIRECTORIES
-    #       "${BLIS_INSTALL_DIR}/include"
-    #   )
-
     set(BLAS_LIBRARY ${AOCL_ROOT}/lib/libblis-mt.so)
     set(BLAS_LIBRARIES ${BLAS_LIBRARY})
     set(AOCL_BLAS_INCLUDE_DIR ${AOCL_ROOT}/include)
-    set(amdblis_DIR "${CMAKE_CURRENT_BINARY_DIR}/aocl_cmake/")
+    set(amdblis_DIR "${CMAKE_CURRENT_SOURCE_DIR}/aocl_cmake/")
     find_package(amdblis REQUIRED)
 
 endif()
@@ -456,68 +447,6 @@ endif()
 # =========================================================
 # AOCL libflame
 # =========================================================
-if(0)
-    if(MATX_ENABLE_LIBFLAME)
-        include(FetchContent)
-
-        FetchContent_Declare(
-            libflame
-            GIT_REPOSITORY https://github.com/amd/libflame.git
-            GIT_TAG 5.2.2
-            BINARY_DIR ${CMAKE_BINARY_DIR}/libflame-build
-        )
-
-        FetchContent_GetProperties(libflame)
-        if(NOT libflame_POPULATED)
-            FetchContent_Populate(libflame)
-
-            file(MAKE_DIRECTORY ${libflame_BINARY_DIR})
-            execute_process(
-                COMMAND ${CMAKE_COMMAND}
-                -S ${libflame_SOURCE_DIR}
-                -B ${libflame_BINARY_DIR}
-                -DCMAKE_BUILD_TYPE=RELEASE
-                -DBLIS_CONFIG_FAMILY=auto
-                -DAOCL_ROOT=${AOCL_ROOT}
-                -DENABLE_ILP64=ON
-                -DCMAKE_C_STANDARD_LIBRARIES="-lm"
-                -DCMAKE_SHARED_LINKER_FLAGS="-lm"
-                -DBLAS_LIBRARY=${BLAS_LIBRARY}
-                -DENABLE_AMD_FLAGS=ON
-                -DENABLE_AOCL_BLAS=ON
-                -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
-                -DBUILD_SHARED_LIBS=ON
-            )
-
-            # =========================================================
-            # build BLIS
-            # =========================================================
-
-            execute_process(
-                COMMAND ${CMAKE_COMMAND}
-                --build ${libflame_BINARY_DIR}
-                --parallel 1
-                RESULT_VARIABLE libflame_BUILD_RESULT
-            )
-
-            execute_process(
-                COMMAND ${CMAKE_COMMAND}
-                --install ${libflame_BINARY_DIR}
-                RESULT_VARIABLE LIBFLAME_INSTALL_RESULT
-            )
-
-            set(LIBFLAME_INCLUDE_DIR ${AOCL_ROOT}/include)
-            set(LIBFLAME_LIBRARY ${AOCL_ROOT}/lib/libflame.so)
-
-            add_library(libflame::libflame STATIC IMPORTED GLOBAL)
-            set_target_properties(libflame::libflame PROPERTIES
-                IMPORTED_LOCATION ${LIBFLAME_LIBRARY}
-                INTERFACE_INCLUDE_DIRECTORIES ${LIBFLAME_INCLUDE_DIR}
-            )
-            set(LAPACK_LIBRARIES ${LIBFLAME_LIBRARY})
-        endif()
-    endif()
-endif()
 
 if(MATX_ENABLE_LIBFLAME)
     set(LIBFLAME_LIBRARY_PATH "${AOCL_ROOT}/lib/libflame.so")
@@ -576,10 +505,10 @@ if(MATX_ENABLE_LIBFLAME)
             set(LAPACK_LIBRARIES ${AOCL_ROOT}/lib/libflame.so)
         endif()
     endif()
-    set(libflame_DIR "${CMAKE_CURRENT_BINARY_DIR}/aocl_cmake/")
+    set(libflame_DIR "${CMAKE_CURRENT_SOURCE_DIR}/aocl_cmake/")
     find_package(libflame REQUIRED)
 
-    set(aoclutils_DIR "${CMAKE_CURRENT_BINARY_DIR}/aocl_cmake/")
+    set(aoclutils_DIR "${CMAKE_CURRENT_SOURCE_DIR}/aocl_cmake/")
     find_package(aoclutils REQUIRED)
 endif()
 
@@ -739,7 +668,7 @@ if(MATX_ENABLE_AOCL_SPARSE)
         IMPORTED_LOCATION ${AOCLSPARSE_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES ${AOCLSPARSE_INCLUDE_DIR}
     )
-    set(aoclsparse_DIR "${CMAKE_CURRENT_BINARY_DIR}/aocl_cmake/")
+    set(aoclsparse_DIR "${CMAKE_CURRENT_SOURCE_DIR}/aocl_cmake/")
     find_package(aoclsparse REQUIRED)
 endif()
 
