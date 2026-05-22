@@ -8,8 +8,8 @@
 #include <string.h>
 
 #if MATX_ENABLE_OPENBLAS
-    #include "openblas/cblas.h"
-    #include "openblas/lapacke.h"
+    #include "cblas.h"
+    #include "lapacke.h"
 #elif MATX_ENABLE_BLIS
 	#include "blis.h"
 	#include "lapacke.h"

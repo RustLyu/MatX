@@ -6,10 +6,8 @@ project(MatX LANGUAGES C CXX)
 if (WIN32)
     add_definitions(-DOS_WINDOWS)
     message(STATUS "current os：Windows")
-    #set(3Party_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/win32")
 elseif (LINUX)
     message(STATUS "current os：Linux")
-    #set(3Party_path "${CMAKE_CURRENT_SOURCE_DIR}/3party/linux")
 elseif (APPLE)
     message(STATUS "current os：macOS")
 else ()
@@ -26,18 +24,34 @@ endif()
 # Build options
 # =========================================================
 
-option(MATX_BUILD_TESTS "Build tests" ON)
+set(MATX_BACKEND "AUTO" CACHE STRING "Backend: OPENBLAS | AMD_AOCL | AUTO")
 
-option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS backend if found/provided" OFF)
-option(MATX_ENABLE_BLIS "Enable BLIS backend if found/provided" OFF)
-option(MATX_ENABLE_LIBFLAME "Enable LIBFLAME backend if found/provided" OFF)
+set_property(CACHE MATX_BACKEND PROPERTY STRINGS OPENBLAS AMD_AOCL AUTO)
+
+message(STATUS "current backend:${MATX_BACKEND}")
+if(MATX_BACKEND STREQUAL "OPENBLAS")
+	set(MATX_ENABLE_OPENBLAS ON)
+	set(MATX_ENABLE_BLIS OFF)
+	set(MATX_ENABLE_LIBFLAME OFF)
+	set(MATX_ENABLE_AOCL_SPARSE OFF)
+elseif (MATX_BACKEND STREQUAL "AMD_AOCL")
+	set(MATX_ENABLE_OPENBLAS OFF)
+	set(MATX_ENABLE_BLIS ON)
+	set(MATX_ENABLE_LIBFLAME ON)
+	set(MATX_ENABLE_AOCL_SPARSE ON)
+endif()
+
+#option(MATX_ENABLE_OPENBLAS "Enable OpenBLAS backend if found/provided" OFF)
+#option(MATX_ENABLE_BLIS "Enable BLIS backend if found/provided" OFF)
+#option(MATX_ENABLE_LIBFLAME "Enable LIBFLAME backend if found/provided" OFF)
+#option(MATX_ENABLE_AOCL_SPARSE "Enable amd AOCL SPARSE for sparse numerical ops if found" OFF)
+
 option(MATX_ENABLE_SUITESPARSE "Enable SuiteSparse backend if found/provided" ON)
 option(MATX_ENABLE_UMFPACK "Enable SuiteSparse UMFPACK sparse solver backend if found/provided" ON)
 option(MATX_ENABLE_CXSPARSE "Enable SuiteSparse CXSparse sparse solver backend if found/provided" ON)
-option(MATX_ENABLE_SUPERLU "Enable SuperLU sparse solver backend (auto-fetch)" OFF)
-option(MATX_ENABLE_MUMPS "Enable MUMPS sparse solver backend if found/provided" OFF)
-option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" OFF)
-option(MATX_ENABLE_AOCL_SPARSE "Enable amd AOCL SPARSE for sparse numerical ops if found" OFF)
+option(MATX_ENABLE_SUPERLU "Enable SuperLU sparse solver backend (auto-fetch)" ON)
+option(MATX_ENABLE_MUMPS "Enable MUMPS sparse solver backend if found/provided" ON)
+option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" ON)
 
 option(BUILD_SHARED_LIBS "Build shared library (ON) or static (OFF)" OFF)
 
@@ -121,11 +135,12 @@ else()
     set(CPU_VENDOR "(manual override)")
 endif()
 
-set(CPU_PLATFORM "AMD")
+#set(CPU_PLATFORM "AMD")
 message(STATUS "CPU vendor detected: ${CPU_VENDOR}")
 message(STATUS "CPU platform: ${CPU_PLATFORM}")
 # ---- auto detect cpu BLAS/LAPACK & Sparse ----
-if(NOT DEFINED MATX_BLAS_AUTO_SELECTED)
+#if(NOT DEFINED MATX_BLAS_AUTO_SELECTED)
+if(0)
 
     if(CPU_PLATFORM STREQUAL "AMD")
         set(MATX_ENABLE_BLIS ON CACHE BOOL "Enable BLIS backend" FORCE)
@@ -170,8 +185,11 @@ elseif(BLAS_COUNT GREATER 1)
     message(FATAL_ERROR
         "Multiple BLAS backends enabled (${BLAS_LIST}). Only one BLAS backend is allowed.")
 endif()
-
-set(DEPEND_LIB_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/deps_output")
+if(MATX_BACKEND STREQUAL "OPENBLAS")
+	set(DEPEND_LIB_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/deps_output_openblas")
+elseif(MATX_BACKEND STREQUAL "AMD_AOCL")
+	set(DEPEND_LIB_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/deps_output_amd_aocl")
+endif()
 
 function(matx_spdlog)
     include(FetchContent)
@@ -215,6 +233,7 @@ function(matx_spdlog)
         RESULT_VARIABLE spdlog_INSTALL_RESULT
     )
 endfunction()
+
 matx_spdlog()
 
 set(spdlog_DIR ${DEPEND_LIB_OUTPUT}/spdlog/lib/cmake/spdlog)
@@ -253,8 +272,6 @@ function(matx_add_openblas)
         RESULT_VARIABLE OPENBLAS_CONFIG_RESULT
     )
 
-    #execute_process(
-
     if(NOT OPENBLAS_CONFIG_RESULT EQUAL 0)
         message(FATAL_ERROR "OpenBLAS configure failed")
     endif()
@@ -270,7 +287,7 @@ function(matx_add_openblas)
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --install ${OPENBLAS_BUILD_DIR}
-        RESULT_VARIABLE MUMPS_INSTALL_RESULT
+        RESULT_VARIABLE OPENBLAS_INSTALL_RESULT
     )
 
     if(NOT OPENBLAS_BUILD_RESULT EQUAL 0)
@@ -294,19 +311,10 @@ function(matx_add_openblas)
     else()
 
         set(OPENBLAS_LIB
-            ${OPENBLAS_BUILD_DIR}/libopenblas.a)
+            ${DEPEND_LIB_OUTPUT}/openblas/lib/libopenblas.so)
 
     endif()
-    add_library(openblas STATIC IMPORTED GLOBAL)
 
-    set_target_properties(openblas PROPERTIES
-        IMPORTED_LOCATION ${OPENBLAS_LIB}
-
-        INTERFACE_INCLUDE_DIRECTORIES
-        "${OPENBLAS_BUILD_DIR}/install/include"
-    )
-
-    add_library(OpenBLAS::OpenBLAS ALIAS openblas)
     set(BLAS_LIBRARIES
         ${OPENBLAS_LIB}
         PARENT_SCOPE)
@@ -368,7 +376,6 @@ if(CPU_PLATFORM STREQUAL "AMD")
             message(FATAL_ERROR "AOCL Utils install failed")
         endif()
 
-        # 可选：导出路径
         set(AOCL_UTILS_ROOT
             ${aocl-utils_BINARY_DIR}/install
             CACHE PATH "AOCL Utils install path")
@@ -381,9 +388,10 @@ endif()
 
 if(MATX_ENABLE_OPENBLAS)
     matx_add_openblas()
+    set(OpenBLAS_DIR ${DEPEND_LIB_OUTPUT}/openblas/lib/cmake/OpenBLAS)
+	find_package(OpenBLAS REQUIRED)
 elseif(MATX_ENABLE_BLIS)
 
-    # set(BLIS_CONFIG_FAMILY auto)
     include(FetchContent)
 
     FetchContent_Declare(
@@ -545,6 +553,32 @@ if(MATX_ENABLE_SUITESPARSE)
     #
     # Configure SuiteSparse
     #
+
+    message(STATUS "OPENBLAS:${BLAS_LIBRARIES}")
+    message(STATUS "OPENBLAS:${LAPACK_LIBRARIES}")
+if(MATX_BACKEND STREQUAL "OPENBLAS")
+    execute_process(
+        COMMAND
+        ${CMAKE_COMMAND}
+        -S ${suitesparse_SOURCE_DIR}
+        -B ${SUITESPARSE_BUILD_DIR}
+        -DBLA_VENDOR=FLAME
+        -DBLAS_LIBRARIES=${BLAS_LIBRARIES}
+        -DLAPACK_LIBRARIES=${LAPACK_LIBRARIES}
+        -DSUITESPARSE_USE_64BIT_BLAS=ON
+        -DCMAKE_INCLUDE_PATH=${OPENBLAS_INCLUDE_DIR}
+        -DCMAKE_LIBRARY_PATH=${DEPEND_LIB_OUTPUT}/openblas/lib
+        -DCMAKE_BUILD_RPATH=${DEPEND_LIB_OUTPUT}/openblas/lib
+        -DCMAKE_INSTALL_RPATH=${DEPEND_LIB_OUTPUT}/openblas/lib
+         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,${DEPS_OUTPUT_OPENBLAS}/openblas/lib"
+        -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+        -DBUILD_SHARED_LIBS=ON
+        -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON
+        -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/suitesparse
+
+        RESULT_VARIABLE SUITESPARSE_CONFIG_RESULT
+    )
+elseif(MATX_BACKEND STREQUAL "AMD_AOCL")
     execute_process(
         COMMAND
         ${CMAKE_COMMAND}
@@ -563,7 +597,7 @@ if(MATX_ENABLE_SUITESPARSE)
 
         RESULT_VARIABLE SUITESPARSE_CONFIG_RESULT
     )
-
+endif()
     if(NOT SUITESPARSE_CONFIG_RESULT EQUAL 0)
 
         message(FATAL_ERROR
