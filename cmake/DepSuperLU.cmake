@@ -18,21 +18,21 @@ if(MATX_ENABLE_SUPERLU)
     endif()
 
     set(SUPERLU_BUILD_DIR
-        {CMAKE_BINARY_DIR}/superlu-build)
+        ${CMAKE_BINARY_DIR}/superlu-build)
 
     file(MAKE_DIRECTORY
-        {SUPERLU_BUILD_DIR})
+        ${SUPERLU_BUILD_DIR})
 
     execute_process(
         COMMAND
-        {CMAKE_COMMAND}
-        -S {superlu_SOURCE_DIR}
-        -B {SUPERLU_BUILD_DIR}
-        -DTPL_BLAS_LIBRARIES={OPENBLAS_LIB}
+        ${CMAKE_COMMAND}
+        -S ${superlu_SOURCE_DIR}
+        -B ${SUPERLU_BUILD_DIR}
+        -DTPL_BLAS_LIBRARIES=${OPENBLAS_LIB}
         -Denable_tests=OFF
         -Denable_examples=OFF
         -DBUILD_SHARED_LIBS=OFF
-        -DCMAKE_INSTALL_PREFIX={DEPEND_LIB_OUTPUT}/superlu_lib
+        -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/superlu_lib
 
         RESULT_VARIABLE SUPERLU_CONFIG_RESULT
     )
@@ -47,8 +47,8 @@ if(MATX_ENABLE_SUPERLU)
     execute_process(
 
         COMMAND
-        {CMAKE_COMMAND}
-        --build {SUPERLU_BUILD_DIR}
+        ${CMAKE_COMMAND}
+        --build ${SUPERLU_BUILD_DIR}
         --parallel 1
 
         RESULT_VARIABLE SUPERLU_BUILD_RESULT
@@ -62,8 +62,8 @@ if(MATX_ENABLE_SUPERLU)
     endif()
 
     execute_process(
-        COMMAND {CMAKE_COMMAND}
-        --install {SUPERLU_BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND}
+        --install ${SUPERLU_BUILD_DIR}
         RESULT_VARIABLE MUMPS_INSTALL_RESULT
     )
 
@@ -71,10 +71,10 @@ if(MATX_ENABLE_SUPERLU)
 
     set_target_properties(SUPERLU::SUPERLU PROPERTIES
         IMPORTED_LOCATION
-        "{DEPEND_LIB_OUTPUT}/superlu_lib/lib/libsuperlu.a"
+        "${DEPEND_LIB_OUTPUT}/superlu_lib/lib/libsuperlu.a"
 
         INTERFACE_INCLUDE_DIRECTORIES
-        "{DEPEND_LIB_OUTPUT}/superlu_lib/include"
+        "${DEPEND_LIB_OUTPUT}/superlu_lib/include"
     )
 
 endif()
