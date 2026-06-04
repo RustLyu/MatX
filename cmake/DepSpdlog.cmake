@@ -21,12 +21,14 @@ function(matx_spdlog)
         COMMAND ${CMAKE_COMMAND}
         -S ${spdlog_SOURCE_DIR}
         -B ${spdlog_BINARY_DIR}
+		-DCMAKE_BUILD_TYPE=Release
         -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/spdlog
     )
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${spdlog_BINARY_DIR}
+		--config Release
         --parallel 1
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )
