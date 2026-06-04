@@ -29,6 +29,7 @@ function(matx_add_openblas)
         -S ${openblas_SOURCE_DIR}
         -B ${OPENBLAS_BUILD_DIR}
         -DBUILD_SHARED_LIBS=ON
+		-DCMAKE_BUILD_TYPE=Release
         -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/openblas
 
         RESULT_VARIABLE OPENBLAS_CONFIG_RESULT
@@ -42,6 +43,7 @@ function(matx_add_openblas)
         COMMAND
         ${CMAKE_COMMAND}
         --build ${OPENBLAS_BUILD_DIR}
+		--config Release
         --parallel 1
 
         RESULT_VARIABLE OPENBLAS_BUILD_RESULT
