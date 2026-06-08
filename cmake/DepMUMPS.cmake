@@ -1,4 +1,4 @@
-# =========================================================
+﻿# =========================================================
 # DepMUMPS.cmake
 # Fetch + build MUMPS (when MATX_ENABLE_MUMPS=ON)
 # =========================================================
@@ -73,7 +73,15 @@ if(MATX_ENABLE_MUMPS)
 
     endif()
     add_library(MUMPS::MUMPS STATIC IMPORTED GLOBAL)
+if(WIN32)
+    set_target_properties(MUMPS::MUMPS PROPERTIES
+        IMPORTED_LOCATION
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libdmumps.dll.a"
 
+        INTERFACE_INCLUDE_DIRECTORIES
+        "${DEPEND_LIB_OUTPUT}/mumps/include"
+    )
+else()
     set_target_properties(MUMPS::MUMPS PROPERTIES
         IMPORTED_LOCATION
         "${DEPEND_LIB_OUTPUT}/mumps/lib/libdmumps.so"
@@ -81,7 +89,17 @@ if(MATX_ENABLE_MUMPS)
         INTERFACE_INCLUDE_DIRECTORIES
         "${DEPEND_LIB_OUTPUT}/mumps/include"
     )
-
+endif()
+if(WIN32)
+    set(mumps_lib
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libdmumps.dll.a"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libzmumps.dll.a"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libmumps_common.dll.a"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libmpiseq_fortran.dll.a"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libmpiseq_c.dll.a"
+        "${DEPEND_LIB_OUTPUT}/mumps/lib/libpord.dll.a"
+    )
+else()
     set(mumps_lib
         "${DEPEND_LIB_OUTPUT}/mumps/lib/libdmumps.so"
         "${DEPEND_LIB_OUTPUT}/mumps/lib/libzmumps.so"
@@ -90,5 +108,6 @@ if(MATX_ENABLE_MUMPS)
         "${DEPEND_LIB_OUTPUT}/mumps/lib/libmpiseq_c.so"
         "${DEPEND_LIB_OUTPUT}/mumps/lib/libpord.so"
     )
+endif()
 
 endif()

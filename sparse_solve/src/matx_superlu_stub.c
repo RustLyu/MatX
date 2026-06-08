@@ -185,7 +185,9 @@ static matx_status_t slu_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx_d
  */
 static void slu_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
 {
-        if (!F) return;
+        if (!F)
+            return;
+        matx_factor_sparse_c64_slu_t* ptr = (matx_factor_sparse_c64_slu_t*)F->reserved;
 #if MATX_HAVE_SUPERLU
         matx_factor_sparse_c64_slu_t* ptr = (matx_factor_sparse_c64_slu_t*)F->reserved;
         /* Release SuperLU internal matrices */

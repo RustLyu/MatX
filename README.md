@@ -1,61 +1,75 @@
 ## MatX
 
-MatX is a modular linear algebra and numerical compute library written in C/C++, built with CMake for Windows/Linux.
+MatX is a modular linear algebra and numerical compute library written in **C17** (core) with **C++20** build support (tools/io/tests). It uses CMake 3.20+ and targets Windows/Linux.
 
-This README is aligned with the current codebase structure (`master`, Apr 2026 snapshot) and focuses on practical build/use information plus current backend behavior.
+All third-party dependencies are fetched via CMake **FetchContent** at configure time — no submodules, no vendored code in-tree.
 
-## Current module layout
+## Module layout
 
-- `types`: exported ABI types, version, public opaque handles.
-- `tools`: logging/time utilities (`spdlog` based).
-- `core`: allocators, dense/sparse/vector containers, status/error helpers.
-- `io`: matrix/vector print and read helpers.
-- `vec_blas`: vector compute wrappers (`scal/copy/swap/dot/nrm2/asum/iamax/axpy/norm`) with backend dispatch.
-- `dense_blas`: dense compute wrappers (`gemm/gemv/geadd/ger/trsv/trsm/syrk/herk/transpose/norm`) with backend dispatch.
-- `sparse_blas`: sparse compute wrappers (`spmv/spmm/dsp2md/transpose/conj/mat_norm/spadd`) with backend dispatch.
-- `dense_solve`: dense linear solve/factor APIs.
-- `sparse_solve`: sparse linear solve/factor APIs (SuiteSparse KLU path).
+- `types`: exported ABI types, version info, public opaque handle definitions.
+- `tools`: logging and timing utilities (`spdlog` based).
+- `core`: allocators, dense/sparse/vector container create/destroy/wrap/dup/fill.
+- `io`: matrix/vector MTX-format print and read helpers.
+- `vec_blas`: vector compute wrappers (`scal/copy/swap/dot/nrm2/asum/iamax/axpy/norm`) with vtable backend dispatch.
+- `dense_blas`: dense compute wrappers (`gemm/gemv/geadd/ger/trsv/trsm/syrk/herk/transpose/conj_transpose/norm`) with vtable backend dispatch.
+- `sparse_blas`: sparse compute wrappers (`spmv/spmm/dsp2md/transpose/conj/mat_norm/spadd`) with vtable backend dispatch.
+- `dense_solve`: dense linear factor + solve APIs (f64/c64), backed by OpenBLAS / libFLAME.
+- `sparse_solve`: sparse linear factor + solve APIs (f64/c64), backed by SuiteSparse (KLU/UMFPACK), SuperLU, and **MUMPS**.
 - `tests`: GoogleTest-based unit tests.
-- `3party`: vendored dependency packages (Windows/Linux split under subfolders).
+- `cmake/`: CMake module files for platform detection, options, CPU vendor auto-detection, backend validation, and per-dependency FetchContent management.
 
-## Backend auto-selection (current CMake logic)
+## Architecture
 
-Top-level `CMakeLists.txt` detects CPU vendor using a generated `try_run` program and applies defaults unless manually overridden:
+### Opaque Handle + Vtable Dispatch
 
-- AMD:
-  - `MATX_ENABLE_BLIS=ON`
-  - `MATX_ENABLE_LIBFLAME=ON`
-  - `MATX_ENABLE_GRAPHBLAS=ON`
-  - `MATX_ENABLE_AOCL_SPARSE=ON`
-  - `MATX_ENABLE_OPENBLAS=OFF`
-- Intel:
-  - `MATX_ENABLE_OPENBLAS=ON`
-  - `MATX_ENABLE_GRAPHBLAS=ON`
-  - `MATX_ENABLE_AOCL_SPARSE=ON`
-  - `MATX_ENABLE_BLIS=OFF`
-  - `MATX_ENABLE_LIBFLAME=OFF`
-- Other:
-  - `MATX_ENABLE_OPENBLAS=ON`
-  - `MATX_ENABLE_GRAPHBLAS=OFF`
+Public types are **opaque pointers** (`typedef struct *_opaque_t*`). Concrete structs live in internal headers. Each compute module uses a **vtable dispatch** pattern:
 
-Also, build configuration enforces exactly one dense BLAS provider enabled among OpenBLAS/BLIS
+- A `*_backend_kind_t` enum (`REFERENCE`, `OPENBLAS`, `BLIS`, etc.)
+- A vtable struct of function pointers for every operation (separate `_f64` and `_c64` variants)
+- Factory: `matx_*_default()` auto-selects; `matx_*_by_type(kind)` for explicit choice
+- Public API functions take a `const matx_*_backend_t*` and dispatch through the vtable
 
-## Main CMake options
+### Numeric Types
 
-- `-DMATX_BUILD_TESTS=ON|OFF` (default `ON`)
-- `-DMATX_ENABLE_OPENBLAS=ON|OFF`
-- `-DMATX_ENABLE_BLIS=ON|OFF`
-- `-DMATX_ENABLE_LIBFLAME=ON|OFF`
-- `-DMATX_ENABLE_SUITESPARSE=ON|OFF` (default `ON`)
-- `-DMATX_ENABLE_GRAPHBLAS=ON|OFF`
-- `-DMATX_ENABLE_AOCL_SPARSE=ON|OFF`
-- `-DMATX_DENSE_BLAS_BACKEND=AUTO|OPENBLAS|BLIS|REFERENCE`
-- `-DMATX_SPARSE_BLAS_BACKEND=AUTO|OPENBLAS|BLIS|REFERENCE`
-- `-DBUILD_SHARED_LIBS=ON|OFF`
+Every operation has two precision variants: `_f64` (double real) and `_c64` (double complex). Complex type is defined as an aligned `{double real, imag}` struct — not `double _Complex`.
+
+### Memory Layout
+
+Column-major is the default/optimized layout for solve and most compute paths. Set at object creation time via `MATX_COL_MAJOR` / `MATX_ROW_MAJOR`.
+
+### Allocator System
+
+`matx_alloc_t` provides custom malloc/free with user-data pointer. All object creation accepts an optional allocator for user-controlled memory management.
+
+## Backend auto-selection
+
+Top-level CMake detects CPU vendor via a generated `try_run` program and applies defaults unless manually overridden:
+
+| Vendor | BLAS Backend | libFLAME | GraphBLAS | AOCL-Sparse |
+|--------|-------------|----------|-----------|-------------|
+| AMD    | BLIS        | ON       | ON        | ON          |
+| Intel  | OpenBLAS    | OFF      | ON        | ON          |
+| Other  | OpenBLAS    | OFF      | OFF       | OFF         |
+
+Exactly one dense BLAS provider (OpenBLAS / BLIS) is enforced at configure time.
+
+## CMake options
+
+| Option | Default | Purpose |
+|--------|---------|---------|
+| `-DMATX_BACKEND` | `OPENBLAS` | Dense BLAS backend: `OPENBLAS` / `AMD_AOCL` / `AUTO` |
+| `-DMATX_BUILD_TESTS` | `ON` | Build GoogleTest-based unit tests |
+| `-DMATX_ENABLE_SUITESPARSE` | `ON` | SuiteSparse sparse solvers (KLU, UMFPACK) |
+| `-DMATX_ENABLE_OPENBLAS` | `ON` | OpenBLAS dense + sparse BLAS |
+| `-DMATX_ENABLE_BLIS` | `OFF` | BLIS dense BLAS (AMD path) |
+| `-DMATX_ENABLE_LIBFLAME` | `OFF` | libFLAME LAPACK replacement (AMD path) |
+| `-DMATX_ENABLE_GRAPHBLAS` | `OFF` | GraphBLAS sparse operations |
+| `-DMATX_ENABLE_AOCL_SPARSE` | `OFF` | AOCL-Sparse sparse operations |
+| `-DBUILD_SHARED_LIBS` | `OFF` | Build shared libraries instead of static |
 
 ## Build and test
 
-Windows (Visual Studio x64, PowerShell):
+**Windows (Visual Studio x64, PowerShell):**
 
 ```powershell
 cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DMATX_BUILD_TESTS=ON
@@ -63,7 +77,7 @@ cmake --build build --config Release -- /m
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Linux:
+**Linux:**
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DMATX_BUILD_TESTS=ON
@@ -71,35 +85,47 @@ cmake --build build -j$(nproc)
 ctest --test-dir build --output-on-failure
 ```
 
-## Public capability snapshot
+**Run a single test:** use `ctest -R <filter>` or execute `./build/tests/matx_tests` directly.
 
-- Dense compute APIs: `matx_gemm_*`, `matx_gemv_*`, `matx_geadd_*`, `matx_ger_*`, `matx_trsv_*`, `matx_trsm_*`, `matx_syrk_*`, `matx_herk_*`, `matx_transpose_*`, `matx_conj_transpose_*`, `matx_mat_norm*`.
-- Vector compute APIs: `matx_vec_scal_*`, `matx_vec_copy_*`, `matx_vec_swap_*`, `matx_vec_dot_*`, `matx_vec_nrm2_*`, `matx_vec_asum_*`, `matx_vec_iamax_*`, `matx_vec_axpy_*`, `matx_vec_norm1_*`, `matx_vec_norm2_*`, `matx_vec_norminf_*`.
-- Sparse compute APIs: `matx_spmv_*`, `matx_spmm_*`, `matx_dsp2md_*`, sparse-sparse to dense, transpose/conjugate, sparse matrix norms, sparse addition.
-- Dense solve APIs: factor + solve and one-shot solve for `f64/c64`.
-- Sparse solve APIs: factor + solve and one-shot solve for COO/CSC pathways.
-- IO APIs: print/read dense, sparse, and vectors to/from text files.
+## Public API snapshot
 
-## Current test coverage (high level)
+### Dense compute
+`matx_gemm_*`, `matx_gemv_*`, `matx_geadd_*`, `matx_ger_*`, `matx_trsv_*`, `matx_trsm_*`, `matx_syrk_*`, `matx_herk_*`, `matx_transpose_*`, `matx_conj_transpose_*`, `matx_mat_norm*`
 
-The `tests` target includes:
+### Vector compute
+`matx_vec_scal_*`, `matx_vec_copy_*`, `matx_vec_swap_*`, `matx_vec_dot_*`, `matx_vec_nrm2_*`, `matx_vec_asum_*`, `matx_vec_iamax_*`, `matx_vec_axpy_*`, `matx_vec_norm1_*`, `matx_vec_norm2_*`, `matx_vec_norminf_*`
 
-- core object create/destroy and basic behavior
-- dense compute (real + complex)
-- vector compute (real + complex)
-- sparse compute (real + complex)
-- dense/sparse solve paths
-- print/read roundtrip style checks
+### Sparse compute
+`matx_spmv_*`, `matx_spmm_*`, `matx_dsp2md_*`, sparse-sparse to dense, transpose/conjugate, sparse matrix norms, sparse addition
 
-Some tests intentionally allow backend-dependent `MATX_ERR_NOT_SUPPORTED` responses for optional paths.
+### Dense solve
+Factor + solve and one-shot solve for f64 / c64.
+
+### Sparse solve
+Factor + solve and one-shot solve for COO/CSC pathways. Backends: **KLU**, **UMFPACK**, **SuperLU**, **MUMPS**.
+
+### IO
+Print/read dense matrices, sparse matrices (COO), and vectors to/from text files (MTX format).
+
+## Test coverage
+
+The `tests` target covers:
+
+- Core object lifecycle (create/destroy/dup/fill) for dense, sparse, and vector containers
+- Dense compute (real + complex)
+- Vector compute (real + complex)
+- Sparse compute (real + complex)
+- Dense/sparse solve paths (all backends)
+- Print/read roundtrip checks
+
+Some tests allow backend-dependent `MATX_ERR_NOT_SUPPORTED` responses for optional paths.
+
+## CI/CD
+
+GitHub Actions runs on push/PR to all branches: configure (Release) → build → run GTest suite. See `.github/workflows/ci.yml`.
 
 ## Known constraints
 
-- Several solve and compute code paths assume/optimize for column-major memory layout.
-- Sparse solve workflows often rely on COO->CSC conversion cached in handle fields.
-- Certain complex sparse solve functions are present as API placeholders depending on backend availability.
-
-## Optimization roadmap
-
-Actionable optimization items are maintained in `TODO.md` with priorities and expected outcomes.
-
+- Several solve and compute code paths assume/optimize for column-major memory layout
+- Sparse solve workflows rely on COO→CSC conversion cached inside COO handle fields
+- Certain complex sparse solve functions are API placeholders depending on backend availability
