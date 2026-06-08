@@ -32,7 +32,7 @@ if(MATX_BACKEND STREQUAL "AMD_AOCL")
 
         execute_process(
             COMMAND ${CMAKE_COMMAND}
-            --build {aocl-utils_BINARY_DIR}
+            --build ${aocl-utils_BINARY_DIR}
             --parallel 1
             RESULT_VARIABLE AOCL_UTILS_BUILD_RESULT
         )
@@ -54,7 +54,7 @@ if(MATX_BACKEND STREQUAL "AMD_AOCL")
         endif()
 
         set(AOCL_UTILS_ROOT
-            {aocl-utils_BINARY_DIR}/install
+            ${aocl-utils_BINARY_DIR}/install
             CACHE PATH "AOCL Utils install path")
 
         message(STATUS "AOCL Utils installed to: ${AOCL_UTILS_ROOT}")
@@ -96,14 +96,14 @@ if(MATX_ENABLE_BLIS)
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
-        --build {blis_BINARY_DIR}
+        --build ${blis_BINARY_DIR}
         --parallel 1
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
-        --install {blis_BINARY_DIR}
+        --install ${blis_BINARY_DIR}
         RESULT_VARIABLE BLIS_INSTALL_RESULT
     )
 
@@ -143,7 +143,7 @@ if(MATX_ENABLE_LIBFLAME)
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
                 -S ${libflame_SOURCE_DIR}
-                -B {libflame_BINARY_DIR}
+                -B ${libflame_BINARY_DIR}
                 -DCMAKE_BUILD_TYPE=RELEASE
                 -DBLIS_CONFIG_FAMILY=auto
                 -DAOCL_ROOT=${AOCL_ROOT}
@@ -159,14 +159,14 @@ if(MATX_ENABLE_LIBFLAME)
 
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
-                --build {libflame_BINARY_DIR}
+                --build ${libflame_BINARY_DIR}
                 --parallel 1
                 RESULT_VARIABLE libflame_BUILD_RESULT
             )
 
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
-                --install {libflame_BINARY_DIR}
+                --install ${libflame_BINARY_DIR}
                 RESULT_VARIABLE LIBFLAME_INSTALL_RESULT
             )
 
@@ -197,7 +197,7 @@ if(MATX_ENABLE_AOCL_SPARSE)
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         -S ${aocl-sparse_SOURCE_DIR}
-        -B {aocl-sparse_BINARY_DIR}
+        -B ${aocl-sparse_BINARY_DIR}
         -DCMAKE_BUILD_TYPE=RELEASE
         -DBLIS_CONFIG_FAMILY=auto
         -DCMAKE_AOCL_ROOT=${AOCL_ROOT}
@@ -209,14 +209,14 @@ if(MATX_ENABLE_AOCL_SPARSE)
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
-        --build {aocl-sparse_BINARY_DIR}
+        --build ${aocl-sparse_BINARY_DIR}
         --parallel 1
         RESULT_VARIABLE libflame_BUILD_RESULT
     )
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
-        --install {aocl-sparse_BINARY_DIR}
+        --install ${aocl-sparse_BINARY_DIR}
         RESULT VARIABLE LIBFLAME_INSTALL_RESULT
     )
 
