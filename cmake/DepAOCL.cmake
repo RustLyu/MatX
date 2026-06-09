@@ -79,25 +79,40 @@ if(MATX_ENABLE_BLIS)
     if(NOT blis_POPULATED)
         FetchContent_Populate(blis)
     endif()
-
-    execute_process(
-        COMMAND ${CMAKE_COMMAND}
-        -S ${blis_SOURCE_DIR}
-        -B ${blis_BINARY_DIR}
-        -DBLAS_INT_SIZE=64
-        -DBLIS_CONFIG_FAMILY=auto
-        -DBLIS_DISABLE_F77_TYPES=ON
-        -DBLIS_ENABLE_NOFORTRAN=ON
-        -DBLIS_ENABLE_OPENMP=ON
-        -DENABLE_THREADING=openmp
-        -DENABLE_CBLAS=ON
-        -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
-    )
+	if(CPU_PLATFORM STREQUAL "AMD")
+			execute_process(
+				COMMAND ${CMAKE_COMMAND}
+				-S ${blis_SOURCE_DIR}
+				-B ${blis_BINARY_DIR}
+				-DBLAS_INT_SIZE=64
+				-DBLIS_CONFIG_FAMILY=auto
+				-DBLIS_DISABLE_F77_TYPES=ON
+				-DBLIS_ENABLE_NOFORTRAN=ON
+				-DBLIS_ENABLE_OPENMP=ON
+				-DENABLE_THREADING=openmp
+				-DENABLE_CBLAS=ON
+				-DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+			)
+	else()
+		execute_process(
+				COMMAND ${CMAKE_COMMAND}
+				-S ${blis_SOURCE_DIR}
+				-B ${blis_BINARY_DIR}
+				-DBLAS_INT_SIZE=64
+				-DBLIS_CONFIG_FAMILY=generic
+				-DBLIS_DISABLE_F77_TYPES=ON
+				-DBLIS_ENABLE_NOFORTRAN=ON
+				-DBLIS_ENABLE_OPENMP=ON
+				-DENABLE_THREADING=openmp
+				-DENABLE_CBLAS=ON
+				-DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+			)
+	endif()
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${blis_BINARY_DIR}
-        --parallel 1
+        --parallel
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )
 
@@ -160,7 +175,7 @@ if(MATX_ENABLE_LIBFLAME)
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
                 --build ${libflame_BINARY_DIR}
-                --parallel 1
+                --parallel
                 RESULT_VARIABLE libflame_BUILD_RESULT
             )
 
@@ -210,7 +225,7 @@ if(MATX_ENABLE_AOCL_SPARSE)
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${aocl-sparse_BINARY_DIR}
-        --parallel 1
+        --parallel
         RESULT_VARIABLE libflame_BUILD_RESULT
     )
 

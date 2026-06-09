@@ -44,7 +44,7 @@ function(matx_add_openblas)
         ${CMAKE_COMMAND}
         --build ${OPENBLAS_BUILD_DIR}
 		--config Release
-        --parallel 1
+		--parallel ${BUILD_JOBS}
 
         RESULT_VARIABLE OPENBLAS_BUILD_RESULT
     )

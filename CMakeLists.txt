@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.20)
 
 project(MatX LANGUAGES C CXX)
 
+include(ProcessorCount)
+ProcessorCount(NPROC)
+if(NPROC GREATER 0)
+    math(EXPR BUILD_JOBS "${NPROC} / 2")
+else()
+    set(BUILD_JOBS 4)
+endif()
+
 # Add cmake/ module path so find_package() can discover aocl_cmake-style configs
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 

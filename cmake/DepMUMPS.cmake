@@ -56,7 +56,7 @@ if(MATX_ENABLE_MUMPS)
         COMMAND
         ${CMAKE_COMMAND}
         --build ${MUMPS_BUILD_DIR}
-        --parallel 1
+		--parallel ${BUILD_JOBS}
 
         RESULT_VARIABLE MUMPS_BUILD_RESULT
     )

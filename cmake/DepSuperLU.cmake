@@ -49,7 +49,7 @@ if(MATX_ENABLE_SUPERLU)
         COMMAND
         ${CMAKE_COMMAND}
         --build ${SUPERLU_BUILD_DIR}
-        --parallel 1
+        --parallel ${BUILD_JOBS}
 
         RESULT_VARIABLE SUPERLU_BUILD_RESULT
     )

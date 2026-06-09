@@ -29,7 +29,7 @@ function(matx_spdlog)
         COMMAND ${CMAKE_COMMAND}
         --build ${spdlog_BINARY_DIR}
 		--config Release
-        --parallel 1
+        --parallel ${BUILD_JOBS}
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )
 
