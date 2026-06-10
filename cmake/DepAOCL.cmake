@@ -33,7 +33,7 @@ if(MATX_BACKEND STREQUAL "AMD_AOCL")
         execute_process(
             COMMAND ${CMAKE_COMMAND}
             --build ${aocl-utils_BINARY_DIR}
-            --parallel 1
+            --parallel ${BUILD_JOBS}
             RESULT_VARIABLE AOCL_UTILS_BUILD_RESULT
         )
 
@@ -112,7 +112,7 @@ if(MATX_ENABLE_BLIS)
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${blis_BINARY_DIR}
-        --parallel
+        --parallel ${BUILD_JOBS}
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )
 
@@ -175,7 +175,7 @@ if(MATX_ENABLE_LIBFLAME)
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
                 --build ${libflame_BINARY_DIR}
-                --parallel
+                --parallel ${BUILD_JOBS}
                 RESULT_VARIABLE libflame_BUILD_RESULT
             )
 
@@ -225,7 +225,7 @@ if(MATX_ENABLE_AOCL_SPARSE)
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${aocl-sparse_BINARY_DIR}
-        --parallel
+        --parallel ${BUILD_JOBS}
         RESULT_VARIABLE libflame_BUILD_RESULT
     )
 
