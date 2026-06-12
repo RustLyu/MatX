@@ -29,6 +29,7 @@ function(matx_add_openblas)
         -S ${openblas_SOURCE_DIR}
         -B ${OPENBLAS_BUILD_DIR}
         -DBUILD_SHARED_LIBS=ON
+		-DINTERFACE64=1
 		-DCMAKE_BUILD_TYPE=Release
         -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/openblas
 
@@ -64,14 +65,14 @@ endfunction()
 # ---- Conditionally build OpenBLAS and make it available ----
 if(MATX_ENABLE_OPENBLAS)
     matx_add_openblas()
-    set(OPENBLAS_CMAKE_DIR "${DEPEND_LIB_OUTPUT}/openblas/lib/cmake/OpenBLAS")
-	set(OpenBLAS_DIR "${OPENBLAS_CMAKE_DIR}")
-	find_package(OpenBLAS REQUIRED)
+    set(OPENBLAS_CMAKE_DIR "${DEPEND_LIB_OUTPUT}/openblas/lib/cmake/OpenBLAS64")
+	set(OpenBLAS64_DIR "${OPENBLAS_CMAKE_DIR}")
+	find_package(OpenBLAS64 REQUIRED)
 
-	get_target_property(OPENBLAS_LIB OpenBLAS::OpenBLAS IMPORTED_LOCATION_RELEASE)
+	get_target_property(OPENBLAS_LIB OpenBLAS64::OpenBLAS IMPORTED_LOCATION_RELEASE)
 	message(STATUS "1111111111 OpenBLAS library: ${OPENBLAS_LIB}")
 	if(NOT OPENBLAS_LIB)
-		get_target_property(OPENBLAS_LIB OpenBLAS::OpenBLAS IMPORTED_LOCATION)
+		get_target_property(OPENBLAS_LIB OpenBLAS64::OpenBLAS IMPORTED_LOCATION)
 	endif()
 
 	message(STATUS "OpenBLAS library: ${OPENBLAS_LIB}")
