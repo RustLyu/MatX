@@ -48,46 +48,34 @@ function(matx_add_openblas)
 
         RESULT_VARIABLE OPENBLAS_BUILD_RESULT
     )
-    execute_process(
-        COMMAND ${CMAKE_COMMAND}
-        --install ${OPENBLAS_BUILD_DIR}
-        RESULT_VARIABLE OPENBLAS_INSTALL_RESULT
-    )
+	execute_process(
+		COMMAND ${CMAKE_COMMAND}
+		--install ${OPENBLAS_BUILD_DIR}
+		RESULT_VARIABLE OPENBLAS_INSTALL_RESULT
+	)
 
-    if(NOT OPENBLAS_BUILD_RESULT EQUAL 0)
-        message(FATAL_ERROR "OpenBLAS build failed")
-    endif()
-    if(WIN32)
+	if(NOT OPENBLAS_INSTALL_RESULT EQUAL 0)
+		message(FATAL_ERROR "OpenBLAS install failed")
+	endif()
 
-        if(EXISTS ${OPENBLAS_BUILD_DIR}/lib/libopenblas.dll.a)
-            set(OPENBLAS_LIB
-                ${OPENBLAS_BUILD_DIR}/lib/libopenblas.dll.a)
+	set(OPENBLAS_CMAKE_DIR "${DEPEND_LIB_OUTPUT}/openblas/lib/cmake/OpenBLAS")
+	set(OpenBLAS_DIR "${OPENBLAS_CMAKE_DIR}")
+	find_package(OpenBLAS REQUIRED)
 
-        elseif(EXISTS ${OPENBLAS_BUILD_DIR}/lib/libopenblas.a)
-            set(OPENBLAS_LIB
-                ${OPENBLAS_BUILD_DIR}/lib/libopenblas.a)
+	get_target_property(OPENBLAS_LIB OpenBLAS::OpenBLAS IMPORTED_LOCATION_RELEASE)
+	if(NOT OPENBLAS_LIB)
+		get_target_property(OPENBLAS_LIB OpenBLAS::OpenBLAS IMPORTED_LOCATION)
+	endif()
 
-        else()
-            message(FATAL_ERROR
-                "Cannot find built OpenBLAS library")
-        endif()
+	message(STATUS "OpenBLAS library: ${OPENBLAS_LIB}")
 
-    else()
+	set(BLAS_LIBRARIES
+		${OPENBLAS_LIB}
+		PARENT_SCOPE)
 
-        set(OPENBLAS_LIB
-            ${DEPEND_LIB_OUTPUT}/openblas/lib/libopenblas.so)
-
-    endif()
-
-    set(BLAS_LIBRARIES
-        ${OPENBLAS_LIB}
-        PARENT_SCOPE)
-
-    set(LAPACK_LIBRARIES
-        ${OPENBLAS_LIB}
-        PARENT_SCOPE)
-
-    message(STATUS "OpenBLAS lib: ${OPENBLAS_LIB}")
+	set(LAPACK_LIBRARIES
+		${OPENBLAS_LIB}
+		PARENT_SCOPE)
 
 endfunction()
 
