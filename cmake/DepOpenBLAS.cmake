@@ -58,11 +58,18 @@ function(matx_add_openblas)
 		message(FATAL_ERROR "OpenBLAS install failed")
 	endif()
 
-	set(OPENBLAS_CMAKE_DIR "${DEPEND_LIB_OUTPUT}/openblas/lib/cmake/OpenBLAS")
+
+endfunction()
+
+# ---- Conditionally build OpenBLAS and make it available ----
+if(MATX_ENABLE_OPENBLAS)
+    matx_add_openblas()
+    set(OPENBLAS_CMAKE_DIR "${DEPEND_LIB_OUTPUT}/openblas/lib/cmake/OpenBLAS")
 	set(OpenBLAS_DIR "${OPENBLAS_CMAKE_DIR}")
 	find_package(OpenBLAS REQUIRED)
 
 	get_target_property(OPENBLAS_LIB OpenBLAS::OpenBLAS IMPORTED_LOCATION_RELEASE)
+	message(STATUS "1111111111 OpenBLAS library: ${OPENBLAS_LIB}")
 	if(NOT OPENBLAS_LIB)
 		get_target_property(OPENBLAS_LIB OpenBLAS::OpenBLAS IMPORTED_LOCATION)
 	endif()
@@ -70,18 +77,10 @@ function(matx_add_openblas)
 	message(STATUS "OpenBLAS library: ${OPENBLAS_LIB}")
 
 	set(BLAS_LIBRARIES
-		${OPENBLAS_LIB}
-		PARENT_SCOPE)
+		${OPENBLAS_LIB})
 
 	set(LAPACK_LIBRARIES
-		${OPENBLAS_LIB}
-		PARENT_SCOPE)
-
-endfunction()
-
-# ---- Conditionally build OpenBLAS and make it available ----
-if(MATX_ENABLE_OPENBLAS)
-    matx_add_openblas()
-    set(OpenBLAS_DIR ${DEPEND_LIB_OUTPUT}/openblas/lib/cmake/OpenBLAS)
-    find_package(OpenBLAS REQUIRED)
+		${OPENBLAS_LIB})
+	message(STATUS "BLAS_LIBRARIES library: ${BLAS_LIBRARIES}")
+	message(STATUS "LAPACK_LIBRARIES library: ${LAPACK_LIBRARIES}")
 endif()
