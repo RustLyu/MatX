@@ -1,4 +1,4 @@
-# =========================================================
+﻿# =========================================================
 # DepSuiteSparse.cmake
 # Fetch + build SuiteSparse (when MATX_ENABLE_SUITESPARSE=ON)
 # =========================================================
@@ -46,6 +46,7 @@ if(MATX_BACKEND STREQUAL "OPENBLAS")
          -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,${DEPS_OUTPUT_OPENBLAS}/openblas/lib"
         -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
         -DBUILD_SHARED_LIBS=ON
+        -DBLAS64=ON
         -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON
         -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/suitesparse
 

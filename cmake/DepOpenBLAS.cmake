@@ -1,4 +1,4 @@
-# =========================================================
+﻿# =========================================================
 # DepOpenBLAS.cmake
 # Fetch + build OpenBLAS (when MATX_ENABLE_OPENBLAS=ON)
 # =========================================================
@@ -70,7 +70,6 @@ if(MATX_ENABLE_OPENBLAS)
 	find_package(OpenBLAS64 REQUIRED)
 
 	get_target_property(OPENBLAS_LIB OpenBLAS64::OpenBLAS IMPORTED_LOCATION_RELEASE)
-	message(STATUS "1111111111 OpenBLAS library: ${OPENBLAS_LIB}")
 	if(NOT OPENBLAS_LIB)
 		get_target_property(OPENBLAS_LIB OpenBLAS64::OpenBLAS IMPORTED_LOCATION)
 	endif()
