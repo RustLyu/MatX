@@ -593,6 +593,93 @@ TEST(compute_sparse, spdiag_coo_d_i8_off_diag) {
 	matx_finalize(&backend);
 }
 
+TEST(compute_sparse, spdiag_coo_z_i8_main_diag) {
+    matx_alloc_t a = matx_alloc_default();
+
+    matx_int64_t rows[3] = {0, 1, 2};
+    matx_int64_t cols[3] = {0, 1, 2};
+
+    matx_complex_d_i8_t vals[3] = {
+        {10.0, 1.0},
+        {20.0, 2.0},
+        {30.0, 3.0}
+    };
+
+    matx_coo_z_i8_t A = NULL;
+    ASSERT_EQ(
+        matx_coo_sparse_z_i8_create(&a, &A, 3, 3, 3, rows, cols, vals),
+        MATX_OK);
+
+    matx_vec_z_i8_t d = NULL;
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &d, NULL, 3), MATX_OK);
+
+    for (int i = 0; i < 3; ++i) {
+        d->data[i].real = -999.0;
+        d->data[i].imag = -999.0;
+    }
+
+    auto backend = matx_sparse_default();
+    matx_status_t st = matx_spdiag_coo_z_i8(&backend, A, 0, d);
+
+    if (st != MATX_ERR_NOT_SUPPORTED) {
+        ASSERT_EQ(st, MATX_OK);
+
+        EXPECT_NEAR(d->data[0].real, 10.0, 1e-12);
+        EXPECT_NEAR(d->data[0].imag, 1.0, 1e-12);
+
+        EXPECT_NEAR(d->data[1].real, 20.0, 1e-12);
+        EXPECT_NEAR(d->data[1].imag, 2.0, 1e-12);
+
+        EXPECT_NEAR(d->data[2].real, 30.0, 1e-12);
+        EXPECT_NEAR(d->data[2].imag, 3.0, 1e-12);
+    }
+
+    matx_vec_z_i8_destroy(&a, d);
+    matx_coo_sparse_z_i8_destroy(&a, A);
+    matx_finalize(&backend);
+}
+
+TEST(compute_sparse, spdiag_coo_z_i8_off_diag) {
+    // offset = +1
+    // (0,1), (1,2)
+
+    matx_alloc_t a = matx_alloc_default();
+
+    matx_int64_t rows[2] = {0, 1};
+    matx_int64_t cols[2] = {1, 2};
+
+    matx_complex_d_i8_t vals[2] = {
+        {100.0, 10.0},
+        {200.0, 20.0}
+    };
+
+    matx_coo_z_i8_t A = NULL;
+    ASSERT_EQ(
+        matx_coo_sparse_z_i8_create(&a, &A, 3, 3, 2, rows, cols, vals),
+        MATX_OK);
+
+    matx_vec_z_i8_t d = NULL;
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &d, NULL, 2), MATX_OK);
+
+    auto backend = matx_sparse_default();
+
+    matx_status_t st = matx_spdiag_coo_z_i8(&backend, A, 1, d);
+
+    if (st != MATX_ERR_NOT_SUPPORTED) {
+        ASSERT_EQ(st, MATX_OK);
+
+        EXPECT_NEAR(d->data[0].real, 100.0, 1e-12);
+        EXPECT_NEAR(d->data[0].imag, 10.0, 1e-12);
+
+        EXPECT_NEAR(d->data[1].real, 200.0, 1e-12);
+        EXPECT_NEAR(d->data[1].imag, 20.0, 1e-12);
+    }
+
+    matx_vec_z_i8_destroy(&a, d);
+    matx_coo_sparse_z_i8_destroy(&a, A);
+    matx_finalize(&backend);
+}
+
 // ---- In-place scaling tests ----
 
 TEST(compute_sparse, scale_rows_coo_d_i8) {

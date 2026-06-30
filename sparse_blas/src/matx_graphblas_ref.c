@@ -759,7 +759,7 @@ matx_status_t ref_spdiag_z_i8_grb(matx_coo_z_i8_t A, matx_int64_t offset, matx_v
     if (out->n < diag_len) return MATX_ERR_INVALID_ARG;
     for (matx_int64_t i = 0; i < diag_len; ++i) { out->data[i].real = 0.0; out->data[i].imag = 0.0; }
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
-        matx_int64_t d = A->rows[i] - A->columns[i];
+        matx_int64_t d = A->columns[i] - A->rows[i];
         if (d == offset) {
             matx_int64_t idx = (offset >= 0) ? A->rows[i] : A->columns[i];
             if (idx >= 0 && idx < diag_len) out->data[idx] = A->values[i];
