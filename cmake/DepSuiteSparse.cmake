@@ -82,7 +82,7 @@ execute_process(
     COMMAND
     ${CMAKE_COMMAND}
     --build ${SUITESPARSE_BUILD_DIR}
-    --parallel 1
+    --parallel ${BUILD_JOBS}
 
     RESULT_VARIABLE SUITESPARSE_BUILD_RESULT
 )
