@@ -31,7 +31,7 @@ if(MATX_ENABLE_SUPERLU)
         -DTPL_BLAS_LIBRARIES=${OPENBLAS_LIB}
         -Denable_tests=OFF
         -Denable_examples=OFF
-        -DBUILD_SHARED_LIBS=OFF
+        -DBUILD_SHARED_LIBS=ON
         -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/superlu_lib
 
         RESULT_VARIABLE SUPERLU_CONFIG_RESULT
@@ -71,7 +71,7 @@ if(MATX_ENABLE_SUPERLU)
 
     set_target_properties(SUPERLU::SUPERLU PROPERTIES
         IMPORTED_LOCATION
-        "${DEPEND_LIB_OUTPUT}/superlu_lib/lib/libsuperlu.a"
+        "${DEPEND_LIB_OUTPUT}/superlu_lib/lib/libsuperlu.dll.a"
 
         INTERFACE_INCLUDE_DIRECTORIES
         "${DEPEND_LIB_OUTPUT}/superlu_lib/include"
