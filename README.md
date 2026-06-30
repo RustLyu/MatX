@@ -25,13 +25,13 @@ All third-party dependencies are fetched via CMake **FetchContent** at configure
 Public types are **opaque pointers** (`typedef struct *_opaque_t*`). Concrete structs live in internal headers. Each compute module uses a **vtable dispatch** pattern:
 
 - A `*_backend_kind_t` enum (`REFERENCE`, `OPENBLAS`, `BLIS`, etc.)
-- A vtable struct of function pointers for every operation (separate `_f64` and `_c64` variants)
+- A vtable struct of function pointers for every operation (separate `_d_i8` and `_z_i8` variants)
 - Factory: `matx_*_default()` auto-selects; `matx_*_by_type(kind)` for explicit choice
 - Public API functions take a `const matx_*_backend_t*` and dispatch through the vtable
 
 ### Numeric Types
 
-Every operation has two precision variants: `_f64` (double real) and `_c64` (double complex). Complex type is defined as an aligned `{double real, imag}` struct — not `double _Complex`.
+Every operation has two precision variants: `_d_i8` (double real) and `_z_i8` (double complex). Complex type is defined as an aligned `{double real, imag}` struct — not `double _Complex`.
 
 ### Memory Layout
 
@@ -45,11 +45,11 @@ Column-major is the default/optimized layout for solve and most compute paths. S
 
 Top-level CMake detects CPU vendor via a generated `try_run` program and applies defaults unless manually overridden:
 
-| Vendor | BLAS Backend | libFLAME | GraphBLAS | AOCL-Sparse |
-|--------|-------------|----------|-----------|-------------|
-| AMD    | BLIS        | ON       | ON        | ON          |
-| Intel  | OpenBLAS    | OFF      | ON        | ON          |
-| Other  | OpenBLAS    | OFF      | OFF       | OFF         |
+| Vendor | BLAS Backend | libFLAME | AOCL-Sparse | SuiteSparse | GraphBLAS | mumps	   | superlu   |	
+|--------|-------------|----------|--------------|-------------|-----------|-----------|-----------|
+| AMD    | BLIS        | ON       |  ON          |ON           | ON        | ON        | ON        |
+| Intel  | OpenBLAS    | OFF      |  OFF         |ON           | ON        | ON        | ON        |
+| Other  | OpenBLAS    | OFF      |  OFF         |ON           | ON        | ON        | ON        |
 
 Exactly one dense BLAS provider (OpenBLAS / BLIS) is enforced at configure time.
 
@@ -99,7 +99,7 @@ ctest --test-dir build --output-on-failure
 `matx_spmv_*`, `matx_spmm_*`, `matx_dsp2md_*`, sparse-sparse to dense, transpose/conjugate, sparse matrix norms, sparse addition
 
 ### Dense solve
-Factor + solve and one-shot solve for f64 / c64.
+Factor + solve and one-shot solve for d_i8 / z_i8.
 
 ### Sparse solve
 Factor + solve and one-shot solve for COO/CSC pathways. Backends: **KLU**, **UMFPACK**, **SuperLU**, **MUMPS**.
