@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
@@ -74,6 +74,28 @@ extern "C" {
 		// ---- Sparse-sparse addition: C = alpha*A + beta*B ----
 		matx_status_t(*spadd_d_i8)(matx_double alpha, matx_coo_d_i8_t A, matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out);
 		matx_status_t(*spadd_z_i8)(matx_complex_d_i8_t alpha, matx_coo_z_i8_t A, matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out);
+
+		// ---- Per-row / per-column non-zero counts ----
+		matx_status_t(*spnnz_rows_d_i8)(matx_coo_d_i8_t A, matx_vec_d_i8_t out);
+		matx_status_t(*spnnz_cols_d_i8)(matx_coo_d_i8_t A, matx_vec_d_i8_t out);
+		matx_status_t(*spnnz_rows_z_i8)(matx_coo_z_i8_t A, matx_vec_z_i8_t out);
+		matx_status_t(*spnnz_cols_z_i8)(matx_coo_z_i8_t A, matx_vec_z_i8_t out);
+
+		// ---- Row / column sums (absolute values) ----
+		matx_status_t(*sprowsums_d_i8)(matx_coo_d_i8_t A, matx_vec_d_i8_t out);
+		matx_status_t(*spcolsums_d_i8)(matx_coo_d_i8_t A, matx_vec_d_i8_t out);
+		matx_status_t(*sprowsums_z_i8)(matx_coo_z_i8_t A, matx_vec_z_i8_t out);
+		matx_status_t(*spcolsums_z_i8)(matx_coo_z_i8_t A, matx_vec_z_i8_t out);
+
+		// ---- Extract diagonal at offset ----
+		matx_status_t(*spdiag_d_i8)(matx_coo_d_i8_t A, matx_int64_t offset, matx_vec_d_i8_t out);
+		matx_status_t(*spdiag_z_i8)(matx_coo_z_i8_t A, matx_int64_t offset, matx_vec_z_i8_t out);
+
+		// ---- In-place row/column scaling ----
+		matx_status_t(*scale_rows_d_i8)(matx_coo_d_i8_t A, const matx_vec_d_i8_t s);
+		matx_status_t(*scale_cols_d_i8)(matx_coo_d_i8_t A, const matx_vec_d_i8_t s);
+		matx_status_t(*scale_rows_z_i8)(matx_coo_z_i8_t A, const matx_vec_z_i8_t s);
+		matx_status_t(*scale_cols_z_i8)(matx_coo_z_i8_t A, const matx_vec_z_i8_t s);
 
 	} matx_sparse_vtable_t;
 
@@ -241,6 +263,105 @@ extern "C" {
 	 */
 	MATX_API matx_status_t matx_spadd_coo_z_i8(const matx_sparse_backend_t* backend,
 		matx_complex_d_i8_t alpha, matx_coo_z_i8_t A, matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out);
+
+	// ---- Non-zero count per row/column ----
+
+	/**
+	 * @brief Count non-zeros per row for real COO matrix
+	 * @formula out[i] = number of non-zeros in row i
+	 */
+	MATX_API matx_status_t matx_spnnz_rows_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_coo_d_i8_t A, matx_vec_d_i8_t out);
+
+	/**
+	 * @brief Count non-zeros per column for real COO matrix
+	 * @formula out[j] = number of non-zeros in column j
+	 */
+	MATX_API matx_status_t matx_spnnz_cols_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_coo_d_i8_t A, matx_vec_d_i8_t out);
+
+	/**
+	 * @brief Count non-zeros per row for complex COO matrix
+	 */
+	MATX_API matx_status_t matx_spnnz_rows_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A, matx_vec_z_i8_t out);
+
+	/**
+	 * @brief Count non-zeros per column for complex COO matrix
+	 */
+	MATX_API matx_status_t matx_spnnz_cols_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A, matx_vec_z_i8_t out);
+
+	// ---- Row / column sums (absolute values) ----
+
+	/**
+	 * @brief Absolute row sums for real COO matrix
+	 * @formula out[i] = sum_j |A[i,j]|
+	 */
+	MATX_API matx_status_t matx_sprowsums_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_coo_d_i8_t A, matx_vec_d_i8_t out);
+
+	/**
+	 * @brief Absolute column sums for real COO matrix
+	 * @formula out[j] = sum_i |A[i,j]|
+	 */
+	MATX_API matx_status_t matx_spcolsums_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_coo_d_i8_t A, matx_vec_d_i8_t out);
+
+	/**
+	 * @brief Absolute row sums for complex COO matrix
+	 */
+	MATX_API matx_status_t matx_sprowsums_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A, matx_vec_z_i8_t out);
+
+	/**
+	 * @brief Absolute column sums for complex COO matrix
+	 */
+	MATX_API matx_status_t matx_spcolsums_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A, matx_vec_z_i8_t out);
+
+	// ---- Extract diagonal at offset ----
+
+	/**
+	 * @brief Extract diagonal from real COO matrix at given offset
+	 * @formula For entries where rows[i] - cols[i] == offset, collect values into out vector
+	 */
+	MATX_API matx_status_t matx_spdiag_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_coo_d_i8_t A, matx_int64_t offset, matx_vec_d_i8_t out);
+
+	/**
+	 * @brief Extract diagonal from complex COO matrix at given offset
+	 */
+	MATX_API matx_status_t matx_spdiag_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A, matx_int64_t offset, matx_vec_z_i8_t out);
+
+	// ---- In-place row/column scaling ----
+
+	/**
+	 * @brief Scale rows of real COO matrix in-place
+	 * @formula A[i,j] *= s[rows[i]]
+	 */
+	MATX_API matx_status_t matx_scale_rows_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_coo_d_i8_t A, const matx_vec_d_i8_t s);
+
+	/**
+	 * @brief Scale columns of real COO matrix in-place
+	 * @formula A[i,j] *= s[cols[i]]
+	 */
+	MATX_API matx_status_t matx_scale_cols_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_coo_d_i8_t A, const matx_vec_d_i8_t s);
+
+	/**
+	 * @brief Scale rows of complex COO matrix in-place
+	 */
+	MATX_API matx_status_t matx_scale_rows_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A, const matx_vec_z_i8_t s);
+
+	/**
+	 * @brief Scale columns of complex COO matrix in-place
+	 */
+	MATX_API matx_status_t matx_scale_cols_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A, const matx_vec_z_i8_t s);
 
 	MATX_API size_t coo_2_grb_d_i8(matx_coo_d_i8_t A);
 	MATX_API size_t create_empty_grb_d_i8(matx_coo_d_i8_t A);

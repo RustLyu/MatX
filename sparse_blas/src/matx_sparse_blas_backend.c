@@ -191,3 +191,109 @@ matx_status_t matx_spadd_coo_z_i8(const matx_sparse_backend_t* backend,
 	if (!backend->vt.spadd_z_i8) return MATX_ERR_NOT_SUPPORTED;
 	return backend->vt.spadd_z_i8(alpha, A, beta, B, out);
 }
+
+// ---- Non-zero count per row/column ----
+
+matx_status_t matx_spnnz_rows_coo_d_i8(const matx_sparse_backend_t* backend,
+	matx_coo_d_i8_t A, matx_vec_d_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spnnz_rows_d_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spnnz_rows_d_i8(A, out);
+}
+
+matx_status_t matx_spnnz_cols_coo_d_i8(const matx_sparse_backend_t* backend,
+	matx_coo_d_i8_t A, matx_vec_d_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spnnz_cols_d_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spnnz_cols_d_i8(A, out);
+}
+
+matx_status_t matx_spnnz_rows_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_coo_z_i8_t A, matx_vec_z_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spnnz_rows_z_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spnnz_rows_z_i8(A, out);
+}
+
+matx_status_t matx_spnnz_cols_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_coo_z_i8_t A, matx_vec_z_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spnnz_cols_z_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spnnz_cols_z_i8(A, out);
+}
+
+// ---- Row / column sums ----
+
+matx_status_t matx_sprowsums_coo_d_i8(const matx_sparse_backend_t* backend,
+	matx_coo_d_i8_t A, matx_vec_d_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.sprowsums_d_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.sprowsums_d_i8(A, out);
+}
+
+matx_status_t matx_spcolsums_coo_d_i8(const matx_sparse_backend_t* backend,
+	matx_coo_d_i8_t A, matx_vec_d_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spcolsums_d_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spcolsums_d_i8(A, out);
+}
+
+matx_status_t matx_sprowsums_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_coo_z_i8_t A, matx_vec_z_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.sprowsums_z_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.sprowsums_z_i8(A, out);
+}
+
+matx_status_t matx_spcolsums_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_coo_z_i8_t A, matx_vec_z_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spcolsums_z_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spcolsums_z_i8(A, out);
+}
+
+// ---- Diagonal extraction ----
+
+matx_status_t matx_spdiag_coo_d_i8(const matx_sparse_backend_t* backend,
+	matx_coo_d_i8_t A, matx_int64_t offset, matx_vec_d_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spdiag_d_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spdiag_d_i8(A, offset, out);
+}
+
+matx_status_t matx_spdiag_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_coo_z_i8_t A, matx_int64_t offset, matx_vec_z_i8_t out) {
+	if (!backend || !A || !out || !out->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.spdiag_z_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.spdiag_z_i8(A, offset, out);
+}
+
+// ---- In-place row/column scaling ----
+
+matx_status_t matx_scale_rows_coo_d_i8(const matx_sparse_backend_t* backend,
+	matx_coo_d_i8_t A, const matx_vec_d_i8_t s) {
+	if (!backend || !A || !s || !A->values || !s->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.scale_rows_d_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.scale_rows_d_i8(A, s);
+}
+
+matx_status_t matx_scale_cols_coo_d_i8(const matx_sparse_backend_t* backend,
+	matx_coo_d_i8_t A, const matx_vec_d_i8_t s) {
+	if (!backend || !A || !s || !A->values || !s->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.scale_cols_d_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.scale_cols_d_i8(A, s);
+}
+
+matx_status_t matx_scale_rows_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_coo_z_i8_t A, const matx_vec_z_i8_t s) {
+	if (!backend || !A || !s || !A->values || !s->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.scale_rows_z_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.scale_rows_z_i8(A, s);
+}
+
+matx_status_t matx_scale_cols_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_coo_z_i8_t A, const matx_vec_z_i8_t s) {
+	if (!backend || !A || !s || !A->values || !s->data) return MATX_ERR_INVALID_ARG;
+	if (!backend->vt.scale_cols_z_i8) return MATX_ERR_NOT_SUPPORTED;
+	return backend->vt.scale_cols_z_i8(A, s);
+}
