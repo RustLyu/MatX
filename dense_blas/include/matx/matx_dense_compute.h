@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
@@ -108,6 +108,9 @@ extern "C" {
 		matx_status_t(*zgeru)(matx_layout_t layout, matx_int64_t m, matx_int64_t n, const void* alpha,
 			const void* x, matx_int64_t incx, const void* y, matx_int64_t incy,
 			void* A, matx_int64_t lda);
+		matx_status_t(*zgerc)(matx_layout_t layout, matx_int64_t m, matx_int64_t n, const void* alpha,
+			const void* x, matx_int64_t incx, const void* y, matx_int64_t incy,
+			void* A, matx_int64_t lda);
 		matx_status_t(*dtrsv)(matx_layout_t layout, int uplo, int trans, int diag,
 			matx_int64_t n, const matx_double* A, matx_int64_t lda, matx_double* x, matx_int64_t incx);
 		matx_status_t(*ztrsv)(matx_layout_t layout, int uplo, int trans, int diag,
@@ -126,6 +129,14 @@ extern "C" {
 		matx_status_t(*zherk)(matx_layout_t layout, int uplo, int trans,
 			matx_int64_t n, matx_int64_t k, matx_double alpha,
 			const void* A, matx_int64_t lda, matx_double beta, void* C, matx_int64_t ldc);
+		matx_status_t(*dsyr2k)(matx_layout_t layout, int uplo, int trans,
+			matx_int64_t n, matx_int64_t k, matx_double alpha,
+			const matx_double* A, matx_int64_t lda, const matx_double* B, matx_int64_t ldb,
+			matx_double beta, matx_double* C, matx_int64_t ldc);
+		matx_status_t(*zher2k)(matx_layout_t layout, int uplo, int trans,
+			matx_int64_t n, matx_int64_t k, const void* alpha,
+			const void* A, matx_int64_t lda, const void* B, matx_int64_t ldb,
+			matx_double beta, void* C, matx_int64_t ldc);
 
 		// ---- Transpose ----
 		matx_status_t(*transpose_d_i8)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
@@ -134,6 +145,14 @@ extern "C" {
 			const void* A, matx_int64_t lda, void* out, matx_int64_t ldc);
 		matx_status_t(*conj_transpose_z_i8)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 			const void* A, matx_int64_t lda, void* out, matx_int64_t ldc);
+
+		// ---- Element-wise (Hadamard) ----
+		matx_status_t(*hadamard_d_i8)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const matx_double* A, matx_int64_t lda, const matx_double* B, matx_int64_t ldb,
+			matx_double* C, matx_int64_t ldc);
+		matx_status_t(*hadamard_z_i8)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+			const void* A, matx_int64_t lda, const void* B, matx_int64_t ldb,
+			void* C, matx_int64_t ldc);
 
 		// ---- Norms ----
 		matx_status_t(*norm1_d_i8)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
@@ -201,7 +220,7 @@ extern "C" {
 		matx_int64_t trans_a,
 		matx_double alpha,
 		const matx_dense_d_i8_t A,
-		const matx_vec_d_i8_t x,
+		matx_vec_d_i8_t x,
 		matx_double beta,
 		matx_vec_d_i8_t y);
 
@@ -214,7 +233,7 @@ extern "C" {
 		matx_int64_t trans_a,
 		matx_complex_d_i8_t alpha,
 		const matx_dense_z_i8_t A,
-		const matx_vec_z_i8_t x,
+		matx_vec_z_i8_t x,
 		matx_complex_d_i8_t beta,
 		matx_vec_z_i8_t y);
 
@@ -273,6 +292,14 @@ extern "C" {
 		const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_dense_z_i8_t A);
 
 	/**
+	 * @brief Complex conjugated rank-1 update (ZGERC)
+	 * @formula A := alpha * x * y^H + A
+	 *          A is m-by-n, x is m-by-1, y is n-by-1
+	 */
+	MATX_API matx_status_t matx_gerc_z_i8(const matx_dense_backend_t* blas, matx_complex_d_i8_t alpha,
+		const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_dense_z_i8_t A);
+
+	/**
 	 * @brief Real triangular solve (DTRSV)
 	 * @formula x := op(A)^{-1} * x
 	 *          where op(A) = A, A^T, or A^H; A is n-by-n triangular
@@ -325,6 +352,42 @@ extern "C" {
 	 */
 	MATX_API matx_status_t matx_herk_z_i8(const matx_dense_backend_t* blas, int uplo, int trans,
 		matx_double alpha, const matx_dense_z_i8_t A, matx_double beta, matx_dense_z_i8_t C);
+
+	/**
+	 * @brief Real symmetric rank-2k update (DSYR2K)
+	 * @formula C := alpha * A * B^T + alpha * B * A^T + beta * C  (trans=N)
+	 *          or  C := alpha * A^T * B + alpha * B^T * A + beta * C  (trans=T)
+	 *          C is n-by-n symmetric, A and B are n-by-k or k-by-n
+	 */
+	MATX_API matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas, int uplo, int trans,
+		matx_double alpha, const matx_dense_d_i8_t A, const matx_dense_d_i8_t B,
+		matx_double beta, matx_dense_d_i8_t C);
+
+	/**
+	 * @brief Complex Hermitian rank-2k update (ZHER2K)
+	 * @formula C := alpha * A * B^H + conj(alpha) * B * A^H + beta * C  (trans=N)
+	 *          or  C := alpha * A^H * B + conj(alpha) * B^H * A + beta * C  (trans=T)
+	 *          C is n-by-n Hermitian, A and B are n-by-k or k-by-n, beta is real
+	 */
+	MATX_API matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas, int uplo, int trans,
+		matx_complex_d_i8_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
+		matx_double beta, matx_dense_z_i8_t C);
+
+	// ---- Element-wise (Hadamard product) ----
+
+	/**
+	 * @brief Real element-wise matrix multiply (Hadamard product)
+	 * @formula C = A .⊙ B  (element-wise)
+	 */
+	MATX_API matx_status_t matx_hadamard_d_i8(const matx_dense_backend_t* blas,
+		const matx_dense_d_i8_t A, const matx_dense_d_i8_t B, matx_dense_d_i8_t C);
+
+	/**
+	 * @brief Complex element-wise matrix multiply (Hadamard product)
+	 * @formula C = A .⊙ B  (element-wise)
+	 */
+	MATX_API matx_status_t matx_hadamard_z_i8(const matx_dense_backend_t* blas,
+		const matx_dense_z_i8_t A, const matx_dense_z_i8_t B, matx_dense_z_i8_t C);
 
 	// ---- Transpose ----
 

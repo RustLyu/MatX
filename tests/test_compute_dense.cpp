@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 #include <math.h>
 
 extern "C" {
@@ -12,6 +12,23 @@ static void fill_dense_d_i8_4x4(matx_dense_d_i8_t M, double base) {
   for (size_t j = 0; j < 4; ++j)
     for (size_t i = 0; i < 4; ++i)
       M->data[i + j * M->stride] = base + (double)(i + 4 * j);
+}
+
+static void fill_dense_d_i8_mxn(matx_int64_t rows, matx_int64_t columns, matx_dense_d_i8_t M, double base) {
+    for (matx_int64_t r = 0; r < rows; ++r)
+    {
+        for (matx_int64_t c = 0; c < columns; ++c)
+        {
+            size_t idx;
+
+            if (M->layout == MATX_COL_MAJOR)
+                idx = r + c * M->stride;
+            else
+                idx = c + r * M->stride;
+
+            M->data[idx] = base + r + rows * c;
+        }
+    }
 }
 
 TEST(compute_dense, geadd_d_i8_4x4) {
@@ -332,4 +349,181 @@ TEST(compute_dense, norm1_norminf_normfro_z_i8) {
   ASSERT_EQ(matx_mat_normfro_z_i8(&blas, A, &nf), MATX_OK);
   EXPECT_NEAR(nf, sqrt(1+4+9+16), 1e-10);
   matx_dense_z_i8_destroy(&a, A);
+}
+
+// ---- gerc (conjugate rank-1) tests ----
+
+TEST(compute_dense, gerc_z_i8_3x2) {
+  // A := alpha * x * y^H + A
+  // x = [(1,0),(2,0),(3,0)], y = [(4,1),(5,-1)]
+  // alpha = (1,0)
+  // A(0,0) += alpha*x0*conj(y0) = 1*(4,1) = (4,1)
+  // A(1,0) += alpha*x1*conj(y0) = 2*(4,1) = (8,2)
+  // A(2,0) += alpha*x2*conj(y0) = 3*(4,1) = (12,3)
+  // A(0,1) += alpha*x0*conj(y1) = 1*(5,1) = (5,1)
+  // A(1,1) += alpha*x1*conj(y1) = 2*(5,1) = (10,2)
+  // A(2,1) += alpha*x2*conj(y1) = 3*(5,1) = (15,3)
+  matx_alloc_t a = matx_alloc_default();
+  matx_vec_z_i8_t x = NULL, y = NULL;
+  matx_dense_z_i8_t A = NULL;
+  ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 3), MATX_OK);
+  ASSERT_EQ(matx_vec_z_i8_create(&a, &y, NULL, 2), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+  for (int i = 0; i < 6; ++i) { A->data[i].real = 0.0; A->data[i].imag = 0.0; }
+  x->data[0].real = 1.0; x->data[0].imag = 0.0;
+  x->data[1].real = 2.0; x->data[1].imag = 0.0;
+  x->data[2].real = 3.0; x->data[2].imag = 0.0;
+  y->data[0].real = 4.0; y->data[0].imag = 1.0;
+  y->data[1].real = 5.0; y->data[1].imag = -1.0;
+
+  matx_complex_d_i8_t alpha = {1.0, 0.0};
+  matx_dense_backend_t blas = matx_blas_default();
+  matx_status_t st = matx_gerc_z_i8(&blas, alpha, x, y, A);
+  if (st == MATX_ERR_NOT_SUPPORTED) {
+    matx_vec_z_i8_destroy(&a, x); matx_vec_z_i8_destroy(&a, y);
+    matx_dense_z_i8_destroy(&a, A); return;
+  }
+  ASSERT_EQ(st, MATX_OK);
+  EXPECT_NEAR(A->data[0].real,  4.0,1e-12);
+  EXPECT_NEAR(A->data[0].imag, -1.0,1e-12);
+
+  EXPECT_NEAR(A->data[1].real,  8.0,1e-12);
+  EXPECT_NEAR(A->data[1].imag, -2.0,1e-12);
+
+  EXPECT_NEAR(A->data[2].real, 12.0,1e-12);
+  EXPECT_NEAR(A->data[2].imag, -3.0,1e-12);
+
+  EXPECT_NEAR(A->data[3].real,  5.0,1e-12);
+  EXPECT_NEAR(A->data[3].imag,  1.0,1e-12);
+
+  EXPECT_NEAR(A->data[4].real, 10.0,1e-12);
+  EXPECT_NEAR(A->data[4].imag,  2.0,1e-12);
+
+  EXPECT_NEAR(A->data[5].real, 15.0,1e-12);
+  EXPECT_NEAR(A->data[5].imag,  3.0,1e-12);
+
+  matx_vec_z_i8_destroy(&a, x);
+  matx_vec_z_i8_destroy(&a, y);
+  matx_dense_z_i8_destroy(&a, A);
+}
+
+// ---- syr2k / her2k tests ----
+
+TEST(compute_dense, syr2k_d_i8_3x2) {
+  // C = A*B^T + B*A^T, C symmetric 3x3
+  // Simple case with small known matrices
+  matx_alloc_t a = matx_alloc_default();
+  matx_dense_d_i8_t A = NULL, B = NULL, C = NULL;
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &C, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+  fill_dense_d_i8_mxn(3, 2, A, 1.0);  // use first 6 values of 4x4 pattern
+  fill_dense_d_i8_mxn(3, 2, B, 0.5);
+  for (int i = 0; i < 9; ++i)
+      C->data[i] = 0.0;
+
+  matx_dense_backend_t blas = matx_blas_default();
+  matx_status_t st = matx_syr2k_d_i8(&blas, 'L', 'N', 1.0, A, B, 0.0, C);
+  if (st == MATX_ERR_NOT_SUPPORTED) {
+    matx_dense_d_i8_destroy(&a, A); matx_dense_d_i8_destroy(&a, B);
+    matx_dense_d_i8_destroy(&a, C); return;
+  }
+  ASSERT_EQ(st, MATX_OK);
+  // C should be symmetric and non-zero
+  EXPECT_NEAR(C->data[0], 0.0, 1e-12);
+  matx_dense_d_i8_destroy(&a, A);
+  matx_dense_d_i8_destroy(&a, B);
+  matx_dense_d_i8_destroy(&a, C);
+}
+
+TEST(compute_dense, her2k_z_i8_3x2) {
+  matx_alloc_t a = matx_alloc_default();
+  matx_dense_z_i8_t A = NULL, B = NULL, C = NULL;
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &C, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+  for (int i = 0; i < 6; ++i) {
+    A->data[i].real = (double)i; A->data[i].imag = 0.0;
+    B->data[i].real = (double)(i+1); B->data[i].imag = 0.0;
+  }
+  for (int i = 0; i < 9; ++i) { C->data[i].real = 0.0; C->data[i].imag = 0.0; }
+
+  matx_complex_d_i8_t alpha = {1.0, 0.0};
+  matx_dense_backend_t blas = matx_blas_default();
+  matx_status_t st = matx_her2k_z_i8(&blas, 'L', 'N', alpha, A, B, 0.0, C);
+  if (st == MATX_ERR_NOT_SUPPORTED) {
+    matx_dense_z_i8_destroy(&a, A); matx_dense_z_i8_destroy(&a, B);
+    matx_dense_z_i8_destroy(&a, C); return;
+  }
+  ASSERT_EQ(st, MATX_OK);
+  // Hermitian result: diagonal should be real
+  EXPECT_NEAR(C->data[0].imag, 0.0, 1e-12);
+  EXPECT_NEAR(C->data[4].imag, 0.0, 1e-12);
+  EXPECT_NEAR(C->data[8].imag, 0.0, 1e-12);
+  matx_dense_z_i8_destroy(&a, A);
+  matx_dense_z_i8_destroy(&a, B);
+  matx_dense_z_i8_destroy(&a, C);
+}
+
+// ---- Hadamard (element-wise) tests ----
+
+TEST(compute_dense, hadamard_d_i8_2x2) {
+  matx_alloc_t a = matx_alloc_default();
+  double data_a[4] = {1,2,3,4};  // col-major 2x2
+  double data_b[4] = {10,20,30,40};
+  matx_dense_d_i8_t A = NULL, B = NULL, C = NULL;
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, data_a), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 2, 2, data_b), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &C, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+  matx_dense_backend_t blas = matx_blas_default();
+  matx_status_t st = matx_hadamard_d_i8(&blas, A, B, C);
+  if (st == MATX_ERR_NOT_SUPPORTED) {
+    matx_dense_d_i8_destroy(&a, A); matx_dense_d_i8_destroy(&a, B);
+    matx_dense_d_i8_destroy(&a, C); return;
+  }
+  ASSERT_EQ(st, MATX_OK);
+  EXPECT_NEAR(C->data[0], 10.0, 1e-12);
+  EXPECT_NEAR(C->data[1], 40.0, 1e-12);
+  EXPECT_NEAR(C->data[2], 90.0, 1e-12);
+  EXPECT_NEAR(C->data[3],160.0, 1e-12);
+  matx_dense_d_i8_destroy(&a, A);
+  matx_dense_d_i8_destroy(&a, B);
+  matx_dense_d_i8_destroy(&a, C);
+}
+
+TEST(compute_dense, hadamard_z_i8_2x2) {
+  matx_alloc_t a = matx_alloc_default();
+  matx_dense_z_i8_t A = NULL, B = NULL, C = NULL;
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &C, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+  A->data[0] = {1,0}; A->data[1] = {2,1}; A->data[2] = {3,-1}; A->data[3] = {4,0};
+  B->data[0] = {2,0}; B->data[1] = {1,0}; B->data[2] = {1,0}; B->data[3] = {2,0};
+
+  matx_dense_backend_t blas = matx_blas_default();
+  matx_status_t st = matx_hadamard_z_i8(&blas, A, B, C);
+  if (st == MATX_ERR_NOT_SUPPORTED) {
+    matx_dense_z_i8_destroy(&a, A); matx_dense_z_i8_destroy(&a, B);
+    matx_dense_z_i8_destroy(&a, C); return;
+  }
+  ASSERT_EQ(st, MATX_OK);
+  // (0,0)
+  EXPECT_NEAR(C->data[0].real, 2.0, 1e-12);
+  EXPECT_NEAR(C->data[0].imag, 0.0, 1e-12);
+
+  // (1,0)
+  EXPECT_NEAR(C->data[1].real, 2.0, 1e-12);
+  EXPECT_NEAR(C->data[1].imag, 1.0, 1e-12);
+
+  // (0,1)
+  EXPECT_NEAR(C->data[2].real, 3.0, 1e-12);
+  EXPECT_NEAR(C->data[2].imag, -1.0, 1e-12);
+
+  // (1,1)
+  EXPECT_NEAR(C->data[3].real, 8.0, 1e-12);
+  EXPECT_NEAR(C->data[3].imag, 0.0, 1e-12);
+
+  matx_dense_z_i8_destroy(&a, A);
+  matx_dense_z_i8_destroy(&a, B);
+  matx_dense_z_i8_destroy(&a, C);
 }

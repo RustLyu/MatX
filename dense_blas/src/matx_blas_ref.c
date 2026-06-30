@@ -1,5 +1,5 @@
 ﻿#if __linux__
-	#define _XOPEN_SOURCE 600
+#define _XOPEN_SOURCE 600
 #endif
 
 #include "matx/matx_dense_compute.h"
@@ -8,688 +8,876 @@
 #include <string.h>
 
 #if MATX_ENABLE_OPENBLAS
-    #include "cblas.h"
-    #include "lapacke.h"
+#include "cblas.h"
+#include "lapacke.h"
 #elif MATX_ENABLE_BLIS
-	#include "blis.h"
-	#include "lapacke.h"
+#include "blis.h"
+#include "lapacke.h"
 #endif
 
 static matx_status_t ref_dgemm(matx_layout_t layout,
-	matx_int64_t trans_a,
-	matx_int64_t trans_b,
-	matx_int64_t m,
-	matx_int64_t n,
-	matx_int64_t k,
-	matx_double alpha,
-	const matx_double* a,
-	matx_int64_t lda,
-	const matx_double* b,
-	matx_int64_t ldb,
-	matx_double beta,
-	matx_double* c,
-	matx_int64_t ldc) {
-	if (!a || !b || !c) 
-		return MATX_ERR_INVALID_ARG;
-	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) 
-		return MATX_ERR_INVALID_ARG;
+                               matx_int64_t trans_a,
+                               matx_int64_t trans_b,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               matx_int64_t k,
+                               matx_double alpha,
+                               const matx_double* a,
+                               matx_int64_t lda,
+                               const matx_double* b,
+                               matx_int64_t ldb,
+                               matx_double beta,
+                               matx_double* c,
+                               matx_int64_t ldc)
+{
+    if (!a || !b || !c)
+        return MATX_ERR_INVALID_ARG;
+    if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR)
+        return MATX_ERR_INVALID_ARG;
 
-	if (m > INT_MAX || n > INT_MAX || k > INT_MAX ||
-		lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX) {
-		return MATX_ERR_NOT_SUPPORTED;
-	}
+    if (m > INT_MAX || n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX
+        || ldc > INT_MAX) {
+        return MATX_ERR_NOT_SUPPORTED;
+    }
 
-	const enum CBLAS_ORDER order =
-		(layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-	const enum CBLAS_TRANSPOSE ta =
-		(trans_a != 0) ? CblasTrans : CblasNoTrans;
-	const enum CBLAS_TRANSPOSE tb =
-		(trans_b != 0) ? CblasTrans : CblasNoTrans;
-	cblas_dgemm(order,
-		ta,
-		tb,
-		m,
-		n,
-		k,
-		alpha,
-		a,
-		lda,
-		b,
-		ldb,
-		beta,
-		c,
-		ldc);
-	return MATX_OK;
+    const enum CBLAS_TRANSPOSE ta = (trans_a != 0) ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE tb = (trans_b != 0) ? CblasTrans : CblasNoTrans;
+    cblas_dgemm(order, ta, tb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
+    return MATX_OK;
 }
 
 static matx_status_t ref_zgemm(matx_layout_t layout,
-	matx_int64_t trans_a,
-	matx_int64_t trans_b,
-	matx_int64_t m,
-	matx_int64_t n,
-	matx_int64_t k,
-	const void* alpha,
-	const void* A,
-	matx_int64_t lda,
-	const void* B,
-	matx_int64_t ldb,
-	const void* beta,
-	void* C,
-	matx_int64_t ldc) {
-	if (!A || !B || !C || !alpha || !beta)
-		return MATX_ERR_INVALID_ARG;
+                               matx_int64_t trans_a,
+                               matx_int64_t trans_b,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               matx_int64_t k,
+                               const void* alpha,
+                               const void* A,
+                               matx_int64_t lda,
+                               const void* B,
+                               matx_int64_t ldb,
+                               const void* beta,
+                               void* C,
+                               matx_int64_t ldc)
+{
+    if (!A || !B || !C || !alpha || !beta)
+        return MATX_ERR_INVALID_ARG;
 
-	if (m > INT_MAX || n > INT_MAX || k > INT_MAX ||
-		lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
+    if (m > INT_MAX || n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
 
-	const enum CBLAS_ORDER order =
-		(layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-	const enum CBLAS_TRANSPOSE ta =
-		trans_a ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = trans_a ? CblasTrans : CblasNoTrans;
 
-	const enum CBLAS_TRANSPOSE tb =
-		trans_b ? CblasTrans : CblasNoTrans;
-	cblas_zgemm(order, ta, tb,
-		m, n, k,
-		alpha,
-		A, lda,
-		B, ldb,
-		beta,
-		C, ldc);
+    const enum CBLAS_TRANSPOSE tb = trans_b ? CblasTrans : CblasNoTrans;
+    cblas_zgemm(order, ta, tb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 
-	return MATX_OK;
+    return MATX_OK;
 }
 
 static matx_status_t ref_zgemv(matx_layout_t layout,
-        matx_int64_t trans_a,
-	matx_int64_t m,
-	matx_int64_t n,
-	const void* alpha,
-	const void* A,
-	matx_int64_t lda,
-	const void* X,
-	matx_int64_t ldx,
-	const void* beta,
-	void* C,
-	matx_int64_t ldc) {
-	if (!A || !X || !C || !alpha || !beta)
-		return MATX_ERR_INVALID_ARG;
+                               matx_int64_t trans_a,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               const void* alpha,
+                               const void* A,
+                               matx_int64_t lda,
+                               const void* X,
+                               matx_int64_t ldx,
+                               const void* beta,
+                               void* C,
+                               matx_int64_t ldc)
+{
+    if (!A || !X || !C || !alpha || !beta)
+        return MATX_ERR_INVALID_ARG;
 
-	if (m > INT_MAX || n > INT_MAX ||
-		lda > INT_MAX || ldx > INT_MAX || ldc > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
+    if (m > INT_MAX || n > INT_MAX || lda > INT_MAX || ldx > INT_MAX || ldc > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
 
-	const enum CBLAS_ORDER order =
-		(layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-	const enum CBLAS_TRANSPOSE ta =
-		trans_a ? CblasTrans : CblasNoTrans;
-	cblas_zgemv(order, ta,
-		m, n,
-		alpha,
-		A, lda,
-		X, ldx,
-		beta,
-		C, ldc);
+    const enum CBLAS_TRANSPOSE ta = trans_a ? CblasTrans : CblasNoTrans;
+    cblas_zgemv(order, ta, m, n, alpha, A, lda, X, ldx, beta, C, ldc);
 
-	return MATX_OK;
+    return MATX_OK;
 }
 
 static matx_status_t ref_dgemv(matx_layout_t layout,
-	matx_int64_t trans_a,
-	matx_int64_t m,
-	matx_int64_t n,
-	matx_double alpha,
-	const matx_double* A,
-	matx_int64_t lda,
-	matx_double* B,
-	matx_int64_t ldb,
-	matx_double beta,
-	matx_double* C,
-	matx_int64_t ldc)
+                               matx_int64_t trans_a,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               matx_double alpha,
+                               const matx_double* A,
+                               matx_int64_t lda,
+                               matx_double* B,
+                               matx_int64_t ldb,
+                               matx_double beta,
+                               matx_double* C,
+                               matx_int64_t ldc)
 {
-	if (!A || !C)
-		return MATX_ERR_INVALID_ARG;
+    if (!A || !C)
+        return MATX_ERR_INVALID_ARG;
 
-	if (m > INT_MAX || n > INT_MAX ||
-		lda > INT_MAX || ldc > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
+    if (m > INT_MAX || n > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
 
-	const enum CBLAS_ORDER order =
-		(layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-	const enum CBLAS_TRANSPOSE ta =
-		trans_a ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = trans_a ? CblasTrans : CblasNoTrans;
 
-	cblas_dgemv(order, ta,
-		m, n,
-		alpha,
-		A, lda,
-		B, ldb,
-		beta,
-		C, ldc);
+    cblas_dgemv(order, ta, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
 
-	return MATX_OK;
+    return MATX_OK;
 }
 
 static matx_status_t ref_dgeadd(matx_layout_t trans_a,
-	matx_int64_t rows,
-	matx_int64_t cols,
-	matx_double alpha,
-	const matx_double* A,
-	matx_int64_t lda,
-	matx_double beta,
-	matx_double* B,
-	matx_int64_t ldb)
+                                matx_int64_t rows,
+                                matx_int64_t cols,
+                                matx_double alpha,
+                                const matx_double* A,
+                                matx_int64_t lda,
+                                matx_double beta,
+                                matx_double* B,
+                                matx_int64_t ldb)
 {
-	if (!A || !B)
-		return MATX_ERR_INVALID_ARG;
+    if (!A || !B)
+        return MATX_ERR_INVALID_ARG;
 
-	if (rows > INT_MAX || cols > INT_MAX ||
-		lda > INT_MAX || ldb > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldb > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
 
 #if MATX_ENABLE_OPENBLAS
-	const enum CBLAS_ORDER order =
-		(trans_a == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    const enum CBLAS_ORDER order = (trans_a == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-	cblas_dgeadd(
-		order,
-		rows, 
-		cols,
-		alpha,
-		A, lda,
-		beta,
-		B, ldb
-	);
+    cblas_dgeadd(order, rows, cols, alpha, A, lda, beta, B, ldb);
 #elif MATX_ENABLE_BLIS
 
-	if (trans_a == MATX_ROW_MAJOR)
-	{
-		if (lda == cols && ldb == cols)
-		{
-			matx_int64_t len = rows * cols;
+    if (trans_a == MATX_ROW_MAJOR) {
+        if (lda == cols && ldb == cols) {
+            matx_int64_t len = rows * cols;
 
-			if (beta != 1.0)
-				cblas_dscal(len, beta, B, 1);
+            if (beta != 1.0)
+                cblas_dscal(len, beta, B, 1);
 
-			if (alpha != 0.0)
-				cblas_daxpy(len, alpha, A, 1, B, 1);
+            if (alpha != 0.0)
+                cblas_daxpy(len, alpha, A, 1, B, 1);
 
-			return MATX_OK;
-		}
-	}
-	else
-	{
-		if (lda == rows && ldb == rows)
-		{
-			matx_int64_t len = rows * cols;
+            return MATX_OK;
+        }
+    } else {
+        if (lda == rows && ldb == rows) {
+            matx_int64_t len = rows * cols;
 
-			if (beta != 1.0)
-				cblas_dscal(len, beta, B, 1);
+            if (beta != 1.0)
+                cblas_dscal(len, beta, B, 1);
 
-			if (alpha != 0.0)
-				cblas_daxpy(len, alpha, A, 1, B, 1);
+            if (alpha != 0.0)
+                cblas_daxpy(len, alpha, A, 1, B, 1);
 
-			return MATX_OK;
-		}
-	}
+            return MATX_OK;
+        }
+    }
 
-	for (size_t j = 0; j < cols; ++j)
-	{
-		cblas_dscal(rows, beta, B + j * ldb, 1);
-		cblas_daxpy(rows, alpha, A + j * lda, 1, B + j * ldb, 1);
-	}
+    for (size_t j = 0; j < cols; ++j) {
+        cblas_dscal(rows, beta, B + j * ldb, 1);
+        cblas_daxpy(rows, alpha, A + j * lda, 1, B + j * ldb, 1);
+    }
 #endif
-	return MATX_OK;
+    return MATX_OK;
 }
 
 static matx_status_t ref_zgeadd(matx_layout_t trans_a,
-	matx_int64_t rows,
-	matx_int64_t cols,
-	const void* alpha,
-	const void* A,
-	matx_int64_t lda,
-	const void* beta,
-	void* B,
-	matx_int64_t ldb)
+                                matx_int64_t rows,
+                                matx_int64_t cols,
+                                const void* alpha,
+                                const void* A,
+                                matx_int64_t lda,
+                                const void* beta,
+                                void* B,
+                                matx_int64_t ldb)
 {
-	if (!A || !B)
-		return MATX_ERR_INVALID_ARG;
+    if (!A || !B)
+        return MATX_ERR_INVALID_ARG;
 
-	if (rows > INT_MAX || cols > INT_MAX ||
-		lda > INT_MAX || ldb > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldb > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
 #if MATX_ENABLE_OPENBLAS
-	const enum CBLAS_ORDER order =
-		(trans_a == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    const enum CBLAS_ORDER order = (trans_a == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-	cblas_zgeadd(
-		order,
-		rows, cols,
-		alpha,
-		A, lda,
-		beta,
-		B, ldb
-	);
+    cblas_zgeadd(order, rows, cols, alpha, A, lda, beta, B, ldb);
 #elif MATX_ENABLE_BLIS
 
-	const void* alpha_p = alpha;
-	const void* beta_p = beta;
+    const void* alpha_p = alpha;
+    const void* beta_p = beta;
 
-	size_t len;
+    size_t len;
 
-	if (trans_a == MATX_ROW_MAJOR)
-	{
-		if (lda == cols && ldb == cols)
-		{
-			len = rows * cols;
-			cblas_zscal(len, beta_p, B, 1);
-			cblas_zaxpy(len, alpha_p, A, 1, B, 1);
+    if (trans_a == MATX_ROW_MAJOR) {
+        if (lda == cols && ldb == cols) {
+            len = rows * cols;
+            cblas_zscal(len, beta_p, B, 1);
+            cblas_zaxpy(len, alpha_p, A, 1, B, 1);
 
-			return MATX_OK;
-		}
-	}
-	else
-	{
-		if (lda == rows && ldb == rows)
-		{
-			len = rows * cols;
+            return MATX_OK;
+        }
+    } else {
+        if (lda == rows && ldb == rows) {
+            len = rows * cols;
 
-			cblas_zscal((matx_int64_t)len, beta_p, B, 1);
-			cblas_zaxpy((matx_int64_t)len, alpha_p, A, 1, B, 1);
+            cblas_zscal((matx_int64_t) len, beta_p, B, 1);
+            cblas_zaxpy((matx_int64_t) len, alpha_p, A, 1, B, 1);
 
-			return MATX_OK;
-		}
-	}
+            return MATX_OK;
+        }
+    }
 
-	for (matx_int64_t j = 0; j < cols; ++j)
-	{
-		void* Bcol = (char*)B + j * ldb * sizeof(matx_double) * 2;
-		const void* Acol = (const char*)A + j * lda * sizeof(matx_double) * 2;
+    for (matx_int64_t j = 0; j < cols; ++j) {
+        void* Bcol = (char*) B + j * ldb * sizeof(matx_double) * 2;
+        const void* Acol = (const char*) A + j * lda * sizeof(matx_double) * 2;
 
-		cblas_zscal(rows, beta_p, Bcol, 1);
-		cblas_zaxpy(rows, alpha_p, Acol, 1, Bcol, 1);
-	}
+        cblas_zscal(rows, beta_p, Bcol, 1);
+        cblas_zaxpy(rows, alpha_p, Acol, 1, Bcol, 1);
+    }
 #endif
-	return MATX_OK;
+    return MATX_OK;
 }
 
-matx_status_t ref_inv_dense_d_i8(
-	matx_layout_t layout,
-	matx_int64_t rows,
-	matx_int64_t cols,
-	const matx_double* A,
-	matx_double* out_Ainv)
+matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
+                                 matx_int64_t rows,
+                                 matx_int64_t cols,
+                                 const matx_double* A,
+                                 matx_double* out_Ainv)
 {
-	if (!A || !out_Ainv) 
-		return MATX_ERR_INVALID_ARG;
-	if (rows != cols) 
-		return MATX_ERR_INVALID_ARG;
-	if (layout != MATX_COL_MAJOR) 
-		return MATX_ERR_NOT_SUPPORTED;
-	memcpy(out_Ainv, A, sizeof(matx_double) * rows * cols);
+    if (!A || !out_Ainv)
+        return MATX_ERR_INVALID_ARG;
+    if (rows != cols)
+        return MATX_ERR_INVALID_ARG;
+    if (layout != MATX_COL_MAJOR)
+        return MATX_ERR_NOT_SUPPORTED;
+    memcpy(out_Ainv, A, sizeof(matx_double) * rows * cols);
 
-	matx_int64_t N = rows;
-	matx_int64_t lda = rows;
-	matx_int64_t info = 0;
+    matx_int64_t N = rows;
+    matx_int64_t lda = rows;
+    matx_int64_t info = 0;
 
-	matx_int64_t* piv = (matx_int64_t*)malloc(rows * sizeof(matx_int64_t));
-	if (!piv) 
-	{
-		return MATX_ERR_OUT_OF_MEMORY;
-	}
+    matx_int64_t* piv = (matx_int64_t*) malloc(rows * sizeof(matx_int64_t));
+    if (!piv) {
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
 
-	matx_int64_t status = LAPACKE_dgetrf(
-		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR
-		, rows
-		, cols
-		, out_Ainv
-		, lda
-		, piv);
-	if (status != 0)
-	{
-		MATX_ERROR("LAPACKE_dgetrf error:%d", status);
-		free(piv);
-		return MATX_ERR_INTERNAL;
-	}
+    matx_int64_t status = LAPACKE_dgetrf(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR
+                                                                  : LAPACK_ROW_MAJOR,
+                                         rows,
+                                         cols,
+                                         out_Ainv,
+                                         lda,
+                                         piv);
+    if (status != 0) {
+        MATX_ERROR("LAPACKE_dgetrf error:%d", status);
+        free(piv);
+        return MATX_ERR_INTERNAL;
+    }
 
-	status = LAPACKE_dgetri(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR
-		, rows, out_Ainv, lda, piv);
-	if (status != 0)
-	{
-		MATX_ERROR("LAPACKE_dgetri error:%d", status);
-		return MATX_ERR_INTERNAL;
-	}
-	free(piv);
-	return MATX_OK;
+    status = LAPACKE_dgetri(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
+                            rows,
+                            out_Ainv,
+                            lda,
+                            piv);
+    if (status != 0) {
+        MATX_ERROR("LAPACKE_dgetri error:%d", status);
+        return MATX_ERR_INTERNAL;
+    }
+    free(piv);
+    return MATX_OK;
 }
 
 matx_status_t ref_inv_dense_z_i8(
-	matx_layout_t layout,
-	matx_int64_t rows,
-	matx_int64_t cols,
-	const void* A,
-	void* out_Ainv)
+    matx_layout_t layout, matx_int64_t rows, matx_int64_t cols, const void* A, void* out_Ainv)
 {
-	if (!A || !out_Ainv)
-		return MATX_ERR_INVALID_ARG;
-	if (rows != cols)
-		return MATX_ERR_INVALID_ARG;
-	if (layout != MATX_COL_MAJOR)
-		return MATX_ERR_NOT_SUPPORTED;
-	memcpy(out_Ainv, A, sizeof(matx_complex_d_i8_t) * rows * cols);
+    if (!A || !out_Ainv)
+        return MATX_ERR_INVALID_ARG;
+    if (rows != cols)
+        return MATX_ERR_INVALID_ARG;
+    if (layout != MATX_COL_MAJOR)
+        return MATX_ERR_NOT_SUPPORTED;
+    memcpy(out_Ainv, A, sizeof(matx_complex_d_i8_t) * rows * cols);
 
-	matx_int64_t N = rows;
-	matx_int64_t lda = rows;
-	matx_int64_t info = 0;
+    matx_int64_t N = rows;
+    matx_int64_t lda = rows;
+    matx_int64_t info = 0;
 
-	matx_int64_t* piv = (matx_int64_t*)malloc(rows * sizeof(matx_int64_t));
-	if (!piv)
-	{
-		return MATX_ERR_OUT_OF_MEMORY;
-	}
+    matx_int64_t* piv = (matx_int64_t*) malloc(rows * sizeof(matx_int64_t));
+    if (!piv) {
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
 
-	matx_int64_t status = LAPACKE_zgetrf(
-		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR
-		, rows
-		, cols
-		, out_Ainv
-		, lda
-		, piv);
-	if (status != 0)
-	{
-		MATX_ERROR("LAPACKE_dgetrf error:%d", status);
-		free(piv);
-		return MATX_ERR_INTERNAL;
-	}
+    matx_int64_t status = LAPACKE_zgetrf(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR
+                                                                  : LAPACK_ROW_MAJOR,
+                                         rows,
+                                         cols,
+                                         out_Ainv,
+                                         lda,
+                                         piv);
+    if (status != 0) {
+        MATX_ERROR("LAPACKE_dgetrf error:%d", status);
+        free(piv);
+        return MATX_ERR_INTERNAL;
+    }
 
-	status = LAPACKE_zgetri(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR
-		, rows, out_Ainv, lda, piv);
-	if (status != 0)
-	{
-		MATX_ERROR("LAPACKE_dgetri error:%d", status);
-		return MATX_ERR_INTERNAL;
-	}
-	free(piv);
-	return MATX_OK;
+    status = LAPACKE_zgetri(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
+                            rows,
+                            out_Ainv,
+                            lda,
+                            piv);
+    if (status != 0) {
+        MATX_ERROR("LAPACKE_dgetri error:%d", status);
+        return MATX_ERR_INTERNAL;
+    }
+    free(piv);
+    return MATX_OK;
 }
 
 // ---- Level 2 implementations ----
 
-static matx_status_t ref_dger(matx_layout_t layout, matx_int64_t m, matx_int64_t n, matx_double alpha,
-	const matx_double* x, matx_int64_t incx, const matx_double* y, matx_int64_t incy,
-	matx_double* A, matx_int64_t lda) {
-	if (!x || !y || !A) return MATX_ERR_INVALID_ARG;
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_dger(order, m, n, alpha, x, incx, y, incy, A, lda);
-	return MATX_OK;
+static matx_status_t ref_dger(matx_layout_t layout,
+                              matx_int64_t m,
+                              matx_int64_t n,
+                              matx_double alpha,
+                              const matx_double* x,
+                              matx_int64_t incx,
+                              const matx_double* y,
+                              matx_int64_t incy,
+                              matx_double* A,
+                              matx_int64_t lda)
+{
+    if (!x || !y || !A)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dger(order, m, n, alpha, x, incx, y, incy, A, lda);
+    return MATX_OK;
 }
 
-static matx_status_t ref_zgeru(matx_layout_t layout, matx_int64_t m, matx_int64_t n, const void* alpha,
-	const void* x, matx_int64_t incx, const void* y, matx_int64_t incy,
-	void* A, matx_int64_t lda) {
-	if (!x || !y || !A || !alpha) return MATX_ERR_INVALID_ARG;
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_zgeru(order, m, n, alpha, x, incx, y, incy, A, lda);
-	return MATX_OK;
+static matx_status_t ref_zgeru(matx_layout_t layout,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               const void* alpha,
+                               const void* x,
+                               matx_int64_t incx,
+                               const void* y,
+                               matx_int64_t incy,
+                               void* A,
+                               matx_int64_t lda)
+{
+    if (!x || !y || !A || !alpha)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_zgeru(order, m, n, alpha, x, incx, y, incy, A, lda);
+    return MATX_OK;
 }
 
-static matx_status_t ref_dtrsv(matx_layout_t layout, int uplo, int trans, int diag,
-	matx_int64_t n, const matx_double* A, matx_int64_t lda, matx_double* x, matx_int64_t incx) {
-	if (!A || !x) return MATX_ERR_INVALID_ARG;
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_dtrsv(order, uplo, trans, diag, n, A, lda, x, incx);
-	return MATX_OK;
+static matx_status_t ref_zgerc(matx_layout_t layout,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               const void* alpha,
+                               const void* x,
+                               matx_int64_t incx,
+                               const void* y,
+                               matx_int64_t incy,
+                               void* A,
+                               matx_int64_t lda)
+{
+    if (!x || !y || !A || !alpha)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_zgerc(order, m, n, alpha, x, incx, y, incy, A, lda);
+    return MATX_OK;
 }
 
-static matx_status_t ref_ztrsv(matx_layout_t layout, int uplo, int trans, int diag,
-	matx_int64_t n, const void* A, matx_int64_t lda, void* x, matx_int64_t incx) {
-	if (!A || !x) return MATX_ERR_INVALID_ARG;
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_ztrsv(order, uplo, trans, diag, n, A, lda, x, incx);
-	return MATX_OK;
+static matx_status_t ref_dtrsv(matx_layout_t layout,
+                               int uplo,
+                               int trans,
+                               int diag,
+                               matx_int64_t n,
+                               const matx_double* A,
+                               matx_int64_t lda,
+                               matx_double* x,
+                               matx_int64_t incx)
+{
+    if (!A || !x)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dtrsv(order, uplo, trans, diag, n, A, lda, x, incx);
+    return MATX_OK;
+}
+
+static matx_status_t ref_ztrsv(matx_layout_t layout,
+                               int uplo,
+                               int trans,
+                               int diag,
+                               matx_int64_t n,
+                               const void* A,
+                               matx_int64_t lda,
+                               void* x,
+                               matx_int64_t incx)
+{
+    if (!A || !x)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_ztrsv(order, uplo, trans, diag, n, A, lda, x, incx);
+    return MATX_OK;
 }
 
 // ---- Level 3 implementations ----
 
-static matx_status_t ref_dtrsm(matx_layout_t layout, int side, int uplo, int trans, int diag,
-	matx_int64_t m, matx_int64_t n, matx_double alpha,
-	const matx_double* A, matx_int64_t lda, matx_double* B, matx_int64_t ldb) {
-	if (!A || !B) return MATX_ERR_INVALID_ARG;
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_dtrsm(order, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
-	return MATX_OK;
+static matx_status_t ref_dtrsm(matx_layout_t layout,
+                               int side,
+                               int uplo,
+                               int trans,
+                               int diag,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               matx_double alpha,
+                               const matx_double* A,
+                               matx_int64_t lda,
+                               matx_double* B,
+                               matx_int64_t ldb)
+{
+    if (!A || !B)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dtrsm(order, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
+    return MATX_OK;
 }
 
-static matx_status_t ref_ztrsm(matx_layout_t layout, int side, int uplo, int trans, int diag,
-	matx_int64_t m, matx_int64_t n, const void* alpha,
-	const void* A, matx_int64_t lda, void* B, matx_int64_t ldb) {
-	if (!A || !B || !alpha) return MATX_ERR_INVALID_ARG;
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_ztrsm(order, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
-	return MATX_OK;
+static matx_status_t ref_ztrsm(matx_layout_t layout,
+                               int side,
+                               int uplo,
+                               int trans,
+                               int diag,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               const void* alpha,
+                               const void* A,
+                               matx_int64_t lda,
+                               void* B,
+                               matx_int64_t ldb)
+{
+    if (!A || !B || !alpha)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_ztrsm(order, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
+    return MATX_OK;
 }
 
-static matx_status_t ref_dsyrk(matx_layout_t layout, int uplo, int trans,
-	matx_int64_t n, matx_int64_t k, matx_double alpha,
-	const matx_double* A, matx_int64_t lda, matx_double beta, matx_double* C, matx_int64_t ldc) {
-	if (!A || !C) return MATX_ERR_INVALID_ARG;
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_dsyrk(order, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
-	return MATX_OK;
+static matx_status_t ref_dsyrk(matx_layout_t layout,
+                               int uplo,
+                               int trans,
+                               matx_int64_t n,
+                               matx_int64_t k,
+                               matx_double alpha,
+                               const matx_double* A,
+                               matx_int64_t lda,
+                               matx_double beta,
+                               matx_double* C,
+                               matx_int64_t ldc)
+{
+    if (!A || !C)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dsyrk(order, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
+    return MATX_OK;
 }
 
-static matx_status_t ref_zherk(matx_layout_t layout, int uplo, int trans,
-	matx_int64_t n, matx_int64_t k, matx_double alpha,
-	const void* A, matx_int64_t lda, matx_double beta, void* C, matx_int64_t ldc) {
-	if (!A || !C) return MATX_ERR_INVALID_ARG;
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_zherk(order, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
-	return MATX_OK;
+static matx_status_t ref_zherk(matx_layout_t layout,
+                               int uplo,
+                               int trans,
+                               matx_int64_t n,
+                               matx_int64_t k,
+                               matx_double alpha,
+                               const void* A,
+                               matx_int64_t lda,
+                               matx_double beta,
+                               void* C,
+                               matx_int64_t ldc)
+{
+    if (!A || !C)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_zherk(order, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
+    return MATX_OK;
+}
+
+static matx_status_t ref_dsyr2k(matx_layout_t layout,
+                                int uplo,
+                                int trans,
+                                matx_int64_t n,
+                                matx_int64_t k,
+                                matx_double alpha,
+                                const matx_double* A,
+                                matx_int64_t lda,
+                                const matx_double* B,
+                                matx_int64_t ldb,
+                                matx_double beta,
+                                matx_double* C,
+                                matx_int64_t ldc)
+{
+    if (!A || !B || !C)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dsyr2k(order, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    return MATX_OK;
+}
+
+static matx_status_t ref_zher2k(matx_layout_t layout,
+                                int uplo,
+                                int trans,
+                                matx_int64_t n,
+                                matx_int64_t k,
+                                const void* alpha,
+                                const void* A,
+                                matx_int64_t lda,
+                                const void* B,
+                                matx_int64_t ldb,
+                                matx_double beta,
+                                void* C,
+                                matx_int64_t ldc)
+{
+    if (!A || !B || !C || !alpha)
+        return MATX_ERR_INVALID_ARG;
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_zher2k(order, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    return MATX_OK;
 }
 
 // ---- Transpose implementations ----
 
-static matx_status_t ref_transpose_d_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const matx_double* A, matx_int64_t lda, matx_double* out, matx_int64_t ldc) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
+static matx_status_t ref_transpose_d_i8(matx_layout_t layout,
+                                        matx_int64_t rows,
+                                        matx_int64_t cols,
+                                        const matx_double* A,
+                                        matx_int64_t lda,
+                                        matx_double* out,
+                                        matx_int64_t ldc)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
 #if MATX_ENABLE_OPENBLAS
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	cblas_domatcopy(order, CblasTrans, rows, cols, 1.0, A, lda, out, ldc);
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_domatcopy(order, CblasTrans, rows, cols, 1.0, A, lda, out, ldc);
 #elif MATX_ENABLE_BLIS
-	for (matx_int64_t i = 0; i < rows; ++i)
-		for (matx_int64_t j = 0; j < cols; ++j) {
-			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
-			matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
-			out[dst] = A[src];
-		}
+    for (matx_int64_t i = 0; i < rows; ++i)
+        for (matx_int64_t j = 0; j < cols; ++j) {
+            matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
+            matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
+            out[dst] = A[src];
+        }
 #else
-	for (matx_int64_t i = 0; i < rows; ++i)
-		for (matx_int64_t j = 0; j < cols; ++j) {
-			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
-			matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
-			out[dst] = A[src];
-		}
+    for (matx_int64_t i = 0; i < rows; ++i)
+        for (matx_int64_t j = 0; j < cols; ++j) {
+            matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
+            matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
+            out[dst] = A[src];
+        }
 #endif
-	return MATX_OK;
+    return MATX_OK;
 }
 
-static matx_status_t ref_transpose_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const void* A, matx_int64_t lda, void* out, matx_int64_t ldc) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
+static matx_status_t ref_transpose_z_i8(matx_layout_t layout,
+                                        matx_int64_t rows,
+                                        matx_int64_t cols,
+                                        const void* A,
+                                        matx_int64_t lda,
+                                        void* out,
+                                        matx_int64_t ldc)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
 #if MATX_ENABLE_OPENBLAS
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	const matx_double alpha[2] = {1.0, 0.0};
-	cblas_zomatcopy(order, CblasTrans, rows, cols, alpha, A, lda, out, ldc);
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    const matx_double alpha[2] = {1.0, 0.0};
+    cblas_zomatcopy(order, CblasTrans, rows, cols, alpha, A, lda, out, ldc);
 #elif MATX_ENABLE_BLIS
-	const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*)A;
-	matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*)out;
-	for (matx_int64_t i = 0; i < rows; ++i)
-		for (matx_int64_t j = 0; j < cols; ++j) {
-			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
-			matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
-			o_data[dst] = a_data[src];
-		}
+    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
+    matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*) out;
+    for (matx_int64_t i = 0; i < rows; ++i)
+        for (matx_int64_t j = 0; j < cols; ++j) {
+            matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
+            matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
+            o_data[dst] = a_data[src];
+        }
 #else
-	const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*)A;
-	matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*)out;
-	for (matx_int64_t i = 0; i < rows; ++i)
-		for (matx_int64_t j = 0; j < cols; ++j) {
-			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
-			matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
-			o_data[dst] = a_data[src];
-		}
+    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
+    matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*) out;
+    for (matx_int64_t i = 0; i < rows; ++i)
+        for (matx_int64_t j = 0; j < cols; ++j) {
+            matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
+            matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
+            o_data[dst] = a_data[src];
+        }
 #endif
-	return MATX_OK;
+    return MATX_OK;
 }
 
-static matx_status_t ref_conj_transpose_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const void* A, matx_int64_t lda, void* out, matx_int64_t ldc) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
+static matx_status_t ref_conj_transpose_z_i8(matx_layout_t layout,
+                                             matx_int64_t rows,
+                                             matx_int64_t cols,
+                                             const void* A,
+                                             matx_int64_t lda,
+                                             void* out,
+                                             matx_int64_t ldc)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
 #if MATX_ENABLE_OPENBLAS
-	const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-	const matx_double alpha[2] = {1.0, 0.0};
-	cblas_zomatcopy(order, CblasConjTrans, rows, cols, alpha, A, lda, out, ldc);
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    const matx_double alpha[2] = {1.0, 0.0};
+    cblas_zomatcopy(order, CblasConjTrans, rows, cols, alpha, A, lda, out, ldc);
 #elif MATX_ENABLE_BLIS
-	const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*)A;
-	matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*)out;
-	for (matx_int64_t i = 0; i < rows; ++i)
-		for (matx_int64_t j = 0; j < cols; ++j) {
-			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
-			matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
-			o_data[dst].real =  a_data[src].real;
-			o_data[dst].imag = -a_data[src].imag;
-		}
+    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
+    matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*) out;
+    for (matx_int64_t i = 0; i < rows; ++i)
+        for (matx_int64_t j = 0; j < cols; ++j) {
+            matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
+            matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
+            o_data[dst].real = a_data[src].real;
+            o_data[dst].imag = -a_data[src].imag;
+        }
 #else
-	const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*)A;
-	matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*)out;
-	for (matx_int64_t i = 0; i < rows; ++i)
-		for (matx_int64_t j = 0; j < cols; ++j) {
-			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
-			matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
-			o_data[dst].real =  a_data[src].real;
-			o_data[dst].imag = -a_data[src].imag;
-		}
+    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
+    matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*) out;
+    for (matx_int64_t i = 0; i < rows; ++i)
+        for (matx_int64_t j = 0; j < cols; ++j) {
+            matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
+            matx_int64_t dst = (layout == MATX_COL_MAJOR) ? j + i * ldc : j * ldc + i;
+            o_data[dst].real = a_data[src].real;
+            o_data[dst].imag = -a_data[src].imag;
+        }
 #endif
-	return MATX_OK;
+    return MATX_OK;
 }
 
 // ---- Norm implementations ----
 
-static matx_status_t ref_norm1_d_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const matx_double* A, matx_int64_t lda, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
-	*out = LAPACKE_dlange(
-		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-		'1', (lapack_int)rows, (lapack_int)cols, A, (lapack_int)lda);
-	return MATX_OK;
+static matx_status_t ref_norm1_d_i8(matx_layout_t layout,
+                                    matx_int64_t rows,
+                                    matx_int64_t cols,
+                                    const matx_double* A,
+                                    matx_int64_t lda,
+                                    matx_double* out)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
+    *out = LAPACKE_dlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
+                          '1',
+                          (lapack_int) rows,
+                          (lapack_int) cols,
+                          A,
+                          (lapack_int) lda);
+    return MATX_OK;
 }
 
-static matx_status_t ref_norminf_d_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const matx_double* A, matx_int64_t lda, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
-	*out = LAPACKE_dlange(
-		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-		'I', (lapack_int)rows, (lapack_int)cols, A, (lapack_int)lda);
-	return MATX_OK;
+static matx_status_t ref_norminf_d_i8(matx_layout_t layout,
+                                      matx_int64_t rows,
+                                      matx_int64_t cols,
+                                      const matx_double* A,
+                                      matx_int64_t lda,
+                                      matx_double* out)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
+    *out = LAPACKE_dlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
+                          'I',
+                          (lapack_int) rows,
+                          (lapack_int) cols,
+                          A,
+                          (lapack_int) lda);
+    return MATX_OK;
 }
 
-static matx_status_t ref_normfro_d_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const matx_double* A, matx_int64_t lda, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
-	*out = LAPACKE_dlange(
-		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-		'F', (lapack_int)rows, (lapack_int)cols, A, (lapack_int)lda);
-	return MATX_OK;
+static matx_status_t ref_normfro_d_i8(matx_layout_t layout,
+                                      matx_int64_t rows,
+                                      matx_int64_t cols,
+                                      const matx_double* A,
+                                      matx_int64_t lda,
+                                      matx_double* out)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
+    *out = LAPACKE_dlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
+                          'F',
+                          (lapack_int) rows,
+                          (lapack_int) cols,
+                          A,
+                          (lapack_int) lda);
+    return MATX_OK;
 }
 
-static matx_status_t ref_norm1_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const void* A, matx_int64_t lda, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
-	*out = LAPACKE_zlange(
-		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-		'1', (lapack_int)rows, (lapack_int)cols, A, (lapack_int)lda);
-	return MATX_OK;
+static matx_status_t ref_norm1_z_i8(matx_layout_t layout,
+                                    matx_int64_t rows,
+                                    matx_int64_t cols,
+                                    const void* A,
+                                    matx_int64_t lda,
+                                    matx_double* out)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
+    *out = LAPACKE_zlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
+                          '1',
+                          (lapack_int) rows,
+                          (lapack_int) cols,
+                          A,
+                          (lapack_int) lda);
+    return MATX_OK;
 }
 
-static matx_status_t ref_norminf_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const void* A, matx_int64_t lda, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
-	*out = LAPACKE_zlange(
-		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-		'I', (lapack_int)rows, (lapack_int)cols, A, (lapack_int)lda);
-	return MATX_OK;
+static matx_status_t ref_norminf_z_i8(matx_layout_t layout,
+                                      matx_int64_t rows,
+                                      matx_int64_t cols,
+                                      const void* A,
+                                      matx_int64_t lda,
+                                      matx_double* out)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
+    *out = LAPACKE_zlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
+                          'I',
+                          (lapack_int) rows,
+                          (lapack_int) cols,
+                          A,
+                          (lapack_int) lda);
+    return MATX_OK;
 }
 
-static matx_status_t ref_normfro_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
-	const void* A, matx_int64_t lda, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
-		return MATX_ERR_NOT_SUPPORTED;
-	*out = LAPACKE_zlange(
-		layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-		'F', (lapack_int)rows, (lapack_int)cols, A, (lapack_int)lda);
-	return MATX_OK;
+static matx_status_t ref_normfro_z_i8(matx_layout_t layout,
+                                      matx_int64_t rows,
+                                      matx_int64_t cols,
+                                      const void* A,
+                                      matx_int64_t lda,
+                                      matx_double* out)
+{
+    if (!A || !out)
+        return MATX_ERR_INVALID_ARG;
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+        return MATX_ERR_NOT_SUPPORTED;
+    *out = LAPACKE_zlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
+                          'F',
+                          (lapack_int) rows,
+                          (lapack_int) cols,
+                          A,
+                          (lapack_int) lda);
+    return MATX_OK;
 }
 
-matx_dense_backend_t matx_blas_make_reference(void) {
-	matx_dense_backend_t b = {
+static matx_status_t ref_hadamard_d_i8(matx_layout_t layout,
+                                       matx_int64_t rows,
+                                       matx_int64_t cols,
+                                       const matx_double* A,
+                                       matx_int64_t lda,
+                                       const matx_double* B,
+                                       matx_int64_t ldb,
+                                       matx_double* C,
+                                       matx_int64_t ldc)
+{
+    if (!A || !B || !C)
+        return MATX_ERR_INVALID_ARG;
+    for (matx_int64_t i = 0; i < rows; ++i)
+        for (matx_int64_t j = 0; j < cols; ++j) {
+            matx_int64_t si = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
+            matx_int64_t bi = (layout == MATX_COL_MAJOR) ? i + j * ldb : i * ldb + j;
+            matx_int64_t di = (layout == MATX_COL_MAJOR) ? i + j * ldc : j * ldc + i;
+            C[di] = A[si] * B[bi];
+        }
+    return MATX_OK;
+}
+
+static matx_status_t ref_hadamard_z_i8(matx_layout_t layout,
+                                       matx_int64_t rows,
+                                       matx_int64_t cols,
+                                       const void* A,
+                                       matx_int64_t lda,
+                                       const void* B,
+                                       matx_int64_t ldb,
+                                       void* C,
+                                       matx_int64_t ldc)
+{
+    if (!A || !B || !C)
+        return MATX_ERR_INVALID_ARG;
+    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
+    const matx_complex_d_i8_t* b_data = (const matx_complex_d_i8_t*) B;
+    matx_complex_d_i8_t* c_data = (matx_complex_d_i8_t*) C;
+    for (matx_int64_t i = 0; i < rows; ++i)
+        for (matx_int64_t j = 0; j < cols; ++j) {
+            matx_int64_t si = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
+            matx_int64_t bi = (layout == MATX_COL_MAJOR) ? i + j * ldb : i * ldb + j;
+            matx_int64_t di = (layout == MATX_COL_MAJOR) ? i + j * ldc : j * ldc + i;
+            c_data[di].real = a_data[si].real * b_data[bi].real - a_data[si].imag * b_data[bi].imag;
+            c_data[di].imag = a_data[si].real * b_data[bi].imag + a_data[si].imag * b_data[bi].real;
+        }
+    return MATX_OK;
+}
+
+matx_dense_backend_t matx_blas_make_reference(void)
+{
+    matx_dense_backend_t b = {
 #if MATX_ENABLE_BLIS
-		.kind = MATX_BLAS_BACKEND_BLIS,
+        .kind = MATX_BLAS_BACKEND_BLIS,
 #elif MATX_ENABLE_OPENBLAS
-		.kind = MATX_BLAS_BACKEND_OPENBLAS,
+        .kind = MATX_BLAS_BACKEND_OPENBLAS,
 #else
-		.kind = MATX_BLAS_BACKEND_REFERENCE,
+        .kind = MATX_BLAS_BACKEND_REFERENCE,
 #endif
-		.vt = {
-			.dgemm = &ref_dgemm,
-			.zgemm = &ref_zgemm,
-			.dgemv = &ref_dgemv,
-			.zgemv = &ref_zgemv,
-			.dgeadd = &ref_dgeadd,
-			.zgeadd = &ref_zgeadd,
-			.inv_dense_d_i8 = &ref_inv_dense_d_i8,
-			.inv_dense_z_i8 = &ref_inv_dense_z_i8,
-				.dger = &ref_dger,
-				.zgeru = &ref_zgeru,
-			.dtrsv = &ref_dtrsv,
-			.ztrsv = &ref_ztrsv,
-			.dtrsm = &ref_dtrsm,
-			.ztrsm = &ref_ztrsm,
-			.dsyrk = &ref_dsyrk,
-			.zherk = &ref_zherk,
-			.transpose_d_i8 = &ref_transpose_d_i8,
-			.transpose_z_i8 = &ref_transpose_z_i8,
-			.conj_transpose_z_i8 = &ref_conj_transpose_z_i8,
-			.norm1_d_i8 = &ref_norm1_d_i8,
-			.norminf_d_i8 = &ref_norminf_d_i8,
-			.normfro_d_i8 = &ref_normfro_d_i8,
-			.norm1_z_i8 = &ref_norm1_z_i8,
-			.norminf_z_i8 = &ref_norminf_z_i8,
-			.normfro_z_i8 = &ref_normfro_z_i8,
-		}
-	};
+        .vt = {
+        .dgemm = &ref_dgemm,
+        .zgemm = &ref_zgemm,
+        .dgemv = &ref_dgemv,
+        .zgemv = &ref_zgemv,
+        .dgeadd = &ref_dgeadd,
+        .zgeadd = &ref_zgeadd,
+        .inv_dense_d_i8 = &ref_inv_dense_d_i8,
+        .inv_dense_z_i8 = &ref_inv_dense_z_i8,
+        .dger = &ref_dger,
+        .zgeru = &ref_zgeru,
+        .zgerc = &ref_zgerc,
+        .dtrsv = &ref_dtrsv,
+        .ztrsv = &ref_ztrsv,
+        .dtrsm = &ref_dtrsm,
+        .ztrsm = &ref_ztrsm,
+        .dsyrk = &ref_dsyrk,
+        .zherk = &ref_zherk,
+        .dsyr2k = &ref_dsyr2k,
+        .zher2k = &ref_zher2k,
+        .transpose_d_i8 = &ref_transpose_d_i8,
+        .transpose_z_i8 = &ref_transpose_z_i8,
+        .conj_transpose_z_i8 = &ref_conj_transpose_z_i8,
+        .hadamard_d_i8 = &ref_hadamard_d_i8,
+        .hadamard_z_i8 = &ref_hadamard_z_i8,
+        .norm1_d_i8 = &ref_norm1_d_i8,
+        .norminf_d_i8 = &ref_norminf_d_i8,
+        .normfro_d_i8 = &ref_normfro_d_i8,
+        .norm1_z_i8 = &ref_norm1_z_i8,
+        .norminf_z_i8 = &ref_norminf_z_i8,
+        .normfro_z_i8 = &ref_normfro_z_i8,
+        }};
 
-	return b;
+    return b;
 }
-
