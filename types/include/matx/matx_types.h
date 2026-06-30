@@ -99,27 +99,27 @@ extern "C" {
 
 	// ---- Real/complex scalar ----
 #define MATX_COMPLEX_ALIGNMENT 16
-	typedef struct MATX_ALIGNED(MATX_COMPLEX_ALIGNMENT) matx_complex_f64_t {
+	typedef struct MATX_ALIGNED(MATX_COMPLEX_ALIGNMENT) matx_complex_d_i8_t {
 		matx_double real;
 		matx_double imag;
-	} matx_complex_f64_t;
+	} matx_complex_d_i8_t;
 
 	// ---- Dense vector (double) ----
-	typedef struct matx_vec_f64_opaque_t* matx_vec_f64_t;
+	typedef struct matx_vec_d_i8_opaque_t* matx_vec_d_i8_t;
 
 	// ---- Dense vector (complex) ----
-	typedef struct matx_vec_c64_opaque_t* matx_vec_c64_t;
+	typedef struct matx_vec_z_i8_opaque_t* matx_vec_z_i8_t;
 
 	// ---- Dense matrix (double) ----
-	typedef struct matx_dense_f64_opaque_t* matx_dense_f64_t;
+	typedef struct matx_dense_d_i8_opaque_t* matx_dense_d_i8_t;
 	// ---- Dense matrix (complex) ----
-	typedef struct matx_dense_c64_opaque_t* matx_dense_c64_t;
+	typedef struct matx_dense_z_i8_opaque_t* matx_dense_z_i8_t;
 
 	// ---- Sparse CSC/COO (real/complex) ----
-	typedef struct matx_csc_f64_opaque_t* matx_csc_f64_t;
-	typedef struct matx_coo_f64_opaque_t* matx_coo_f64_t;
-	typedef struct matx_csc_c64_opaque_t* matx_csc_c64_t;
-	typedef struct matx_coo_c64_opaque_t* matx_coo_c64_t;
+	typedef struct matx_csc_d_i8_opaque_t* matx_csc_d_i8_t;
+	typedef struct matx_coo_d_i8_opaque_t* matx_coo_d_i8_t;
+	typedef struct matx_csc_z_i8_opaque_t* matx_csc_z_i8_t;
+	typedef struct matx_coo_z_i8_opaque_t* matx_coo_z_i8_t;
 
 	MATX_API const char* matx_version_string(void);
 #ifdef __cplusplus

@@ -15,65 +15,65 @@ extern "C" {
 	} matx_sparse_backend_kind_t;
 
 	typedef struct matx_sparse_vtable_t {
-		matx_status_t(*spmv_c64)(
-			matx_complex_f64_t alpha,
-			matx_coo_c64_t A,
-			matx_vec_c64_t x,
-			matx_complex_f64_t beta,
-			matx_vec_c64_t y);
-		matx_status_t(*spmm_c64)(
-			matx_complex_f64_t alpha,
-			matx_coo_c64_t A,
-			matx_dense_c64_t B,
-			matx_complex_f64_t beta,
-			matx_dense_c64_t C);
-		matx_status_t(*spmm_f64)(
+		matx_status_t(*spmv_z_i8)(
+			matx_complex_d_i8_t alpha,
+			matx_coo_z_i8_t A,
+			matx_vec_z_i8_t x,
+			matx_complex_d_i8_t beta,
+			matx_vec_z_i8_t y);
+		matx_status_t(*spmm_z_i8)(
+			matx_complex_d_i8_t alpha,
+			matx_coo_z_i8_t A,
+			matx_dense_z_i8_t B,
+			matx_complex_d_i8_t beta,
+			matx_dense_z_i8_t C);
+		matx_status_t(*spmm_d_i8)(
 			matx_double alpha,
-			matx_coo_f64_t A,
-			matx_dense_f64_t B,
+			matx_coo_d_i8_t A,
+			matx_dense_d_i8_t B,
 			matx_double beta,
-			matx_dense_f64_t C);
-		matx_status_t(*dsp2md_f64)(
+			matx_dense_d_i8_t C);
+		matx_status_t(*dsp2md_d_i8)(
 			matx_double alpha,
-			matx_coo_f64_t A,
-			matx_coo_f64_t B,
+			matx_coo_d_i8_t A,
+			matx_coo_d_i8_t B,
 			matx_double beta,
-			matx_dense_f64_t C);
-		matx_status_t(*zsp2md_c64)(
-			matx_complex_f64_t alpha,
-			matx_coo_c64_t A,
-			matx_coo_c64_t B,
-			matx_complex_f64_t beta,
-			matx_dense_c64_t C);
-		matx_status_t(*spmv_f64)(
+			matx_dense_d_i8_t C);
+		matx_status_t(*zsp2md_z_i8)(
+			matx_complex_d_i8_t alpha,
+			matx_coo_z_i8_t A,
+			matx_coo_z_i8_t B,
+			matx_complex_d_i8_t beta,
+			matx_dense_z_i8_t C);
+		matx_status_t(*spmv_d_i8)(
 			matx_double alpha,
-			matx_coo_f64_t A,
-			matx_vec_f64_t x,
+			matx_coo_d_i8_t A,
+			matx_vec_d_i8_t x,
 			matx_double beta,
-			matx_vec_f64_t y);
-		matx_status_t(*transpose_f64)(
-			matx_coo_f64_t A,
-			matx_coo_f64_t out);
-		matx_status_t(*transpose_c64)(
-			matx_coo_c64_t A,
-			matx_coo_c64_t out);
-		matx_status_t(*conj_trans_c64)(
-			matx_coo_c64_t A,
-			matx_coo_c64_t out);
+			matx_vec_d_i8_t y);
+		matx_status_t(*transpose_d_i8)(
+			matx_coo_d_i8_t A,
+			matx_coo_d_i8_t out);
+		matx_status_t(*transpose_z_i8)(
+			matx_coo_z_i8_t A,
+			matx_coo_z_i8_t out);
+		matx_status_t(*conj_trans_z_i8)(
+			matx_coo_z_i8_t A,
+			matx_coo_z_i8_t out);
 
 		matx_status_t(*finalize)();
 
 		// ---- Sparse matrix norms ----
-		matx_status_t(*norm1_mat_f64)(matx_coo_f64_t A, matx_double* out);
-		matx_status_t(*norminf_mat_f64)(matx_coo_f64_t A, matx_double* out);
-		matx_status_t(*normfro_mat_f64)(matx_coo_f64_t A, matx_double* out);
-		matx_status_t(*norm1_mat_c64)(matx_coo_c64_t A, matx_double* out);
-		matx_status_t(*norminf_mat_c64)(matx_coo_c64_t A, matx_double* out);
-		matx_status_t(*normfro_mat_c64)(matx_coo_c64_t A, matx_double* out);
+		matx_status_t(*norm1_mat_d_i8)(matx_coo_d_i8_t A, matx_double* out);
+		matx_status_t(*norminf_mat_d_i8)(matx_coo_d_i8_t A, matx_double* out);
+		matx_status_t(*normfro_mat_d_i8)(matx_coo_d_i8_t A, matx_double* out);
+		matx_status_t(*norm1_mat_z_i8)(matx_coo_z_i8_t A, matx_double* out);
+		matx_status_t(*norminf_mat_z_i8)(matx_coo_z_i8_t A, matx_double* out);
+		matx_status_t(*normfro_mat_z_i8)(matx_coo_z_i8_t A, matx_double* out);
 
 		// ---- Sparse-sparse addition: C = alpha*A + beta*B ----
-		matx_status_t(*spadd_f64)(matx_double alpha, matx_coo_f64_t A, matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out);
-		matx_status_t(*spadd_c64)(matx_complex_f64_t alpha, matx_coo_c64_t A, matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out);
+		matx_status_t(*spadd_d_i8)(matx_double alpha, matx_coo_d_i8_t A, matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out);
+		matx_status_t(*spadd_z_i8)(matx_complex_d_i8_t alpha, matx_coo_z_i8_t A, matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out);
 
 	} matx_sparse_vtable_t;
 
@@ -92,96 +92,96 @@ extern "C" {
 	 * @formula y := alpha * A * x + beta * y
 	 *          A is sparse (COO), x and y are dense vectors.
 	 */
-	MATX_API matx_status_t matx_spmv_coo_f64(const matx_sparse_backend_t* backend,
+	MATX_API matx_status_t matx_spmv_coo_d_i8(const matx_sparse_backend_t* backend,
 		matx_double alpha,
-		matx_coo_f64_t A,
-		matx_vec_f64_t x,
+		matx_coo_d_i8_t A,
+		matx_vec_d_i8_t x,
 		matx_double beta,
-		matx_vec_f64_t y);
+		matx_vec_d_i8_t y);
 
 	/**
 	 * @brief Sparse matrix-vector multiply for complex COO matrix (SpMV)
 	 * @formula y := alpha * A * x + beta * y
 	 *          A is sparse (COO), x and y are dense vectors.
 	 */
-	MATX_API matx_status_t matx_spmv_coo_c64(const matx_sparse_backend_t* backend,
-		matx_complex_f64_t alpha,
-		matx_coo_c64_t A,
-		matx_vec_c64_t x,
-		matx_complex_f64_t beta,
-		matx_vec_c64_t y);
+	MATX_API matx_status_t matx_spmv_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_complex_d_i8_t alpha,
+		matx_coo_z_i8_t A,
+		matx_vec_z_i8_t x,
+		matx_complex_d_i8_t beta,
+		matx_vec_z_i8_t y);
 
 	/**
 	 * @brief Sparse-dense matrix multiply for real COO matrix (SpMM)
 	 * @formula C := alpha * A * B + beta * C
 	 *          A is sparse (COO), B and C are dense matrices.
 	 */
-	MATX_API matx_status_t matx_spmm_coo_f64(const matx_sparse_backend_t* backend,
+	MATX_API matx_status_t matx_spmm_coo_d_i8(const matx_sparse_backend_t* backend,
 		matx_double alpha,
-		matx_coo_f64_t A,
-		matx_dense_f64_t B,
+		matx_coo_d_i8_t A,
+		matx_dense_d_i8_t B,
 		matx_double beta,
-		matx_dense_f64_t C);
+		matx_dense_d_i8_t C);
 
 	/**
 	 * @brief Sparse-dense matrix multiply for complex COO matrix (SpMM)
 	 * @formula C := alpha * A * B + beta * C
 	 *          A is sparse (COO), B and C are dense matrices.
 	 */
-	MATX_API matx_status_t matx_spmm_coo_c64(const matx_sparse_backend_t* backend,
-		matx_complex_f64_t alpha,
-		matx_coo_c64_t A,
-		matx_dense_c64_t B,
-		matx_complex_f64_t beta,
-		matx_dense_c64_t C);
+	MATX_API matx_status_t matx_spmm_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_complex_d_i8_t alpha,
+		matx_coo_z_i8_t A,
+		matx_dense_z_i8_t B,
+		matx_complex_d_i8_t beta,
+		matx_dense_z_i8_t C);
 
 	/**
 	 * @brief Sparse-sparse multiply producing dense result, real (SpGEMM -> dense)
 	 * @formula C := alpha * A * B + beta * C
 	 *          A and B are sparse (COO), C is dense matrix.
 	 */
-	MATX_API matx_status_t matx_dsp2md_coo_f64(const matx_sparse_backend_t* backend,
+	MATX_API matx_status_t matx_dsp2md_coo_d_i8(const matx_sparse_backend_t* backend,
 		matx_double alpha,
-		matx_coo_f64_t A,
-		matx_coo_f64_t B,
+		matx_coo_d_i8_t A,
+		matx_coo_d_i8_t B,
 		matx_double beta,
-		matx_dense_f64_t C);
+		matx_dense_d_i8_t C);
 
 	/**
 	 * @brief Sparse-sparse multiply producing dense result, complex (SpGEMM -> dense)
 	 * @formula C := alpha * A * B + beta * C
 	 *          A and B are sparse (COO), C is dense matrix.
 	 */
-	MATX_API matx_status_t matx_zsp2md_coo_c64(const matx_sparse_backend_t* backend,
-		matx_complex_f64_t alpha,
-		matx_coo_c64_t A,
-		matx_coo_c64_t B,
-		matx_complex_f64_t beta,
-		matx_dense_c64_t C);
+	MATX_API matx_status_t matx_zsp2md_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_complex_d_i8_t alpha,
+		matx_coo_z_i8_t A,
+		matx_coo_z_i8_t B,
+		matx_complex_d_i8_t beta,
+		matx_dense_z_i8_t C);
 
 	/**
 	 * @brief Transpose a real sparse COO matrix
 	 * @formula out[i][j] = A[j][i]  (swap row and column indices)
 	 */
-	MATX_API matx_status_t matx_transpose_coo_f64(const matx_sparse_backend_t* backend,
-		matx_coo_f64_t A,
-		matx_coo_f64_t out);
+	MATX_API matx_status_t matx_transpose_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_coo_d_i8_t A,
+		matx_coo_d_i8_t out);
 
 	/**
 	 * @brief Transpose a complex sparse COO matrix (no conjugation)
 	 * @formula out[i][j] = A[j][i]  (swap row and column indices)
 	 */
-	MATX_API matx_status_t matx_transpose_coo_c64(const matx_sparse_backend_t* backend,
-		matx_coo_c64_t A,
-		matx_coo_c64_t out);
+	MATX_API matx_status_t matx_transpose_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A,
+		matx_coo_z_i8_t out);
 
 	/**
 	 * @brief Conjugate transpose of a complex sparse COO matrix
 	 * @formula out[i][j] = conj(A[j][i])
 	 */
-	MATX_API matx_status_t matx_conj_coo_c64(const matx_sparse_backend_t* backend,
-		matx_coo_c64_t A,
-		matx_coo_c64_t out);
+	MATX_API matx_status_t matx_conj_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_coo_z_i8_t A,
+		matx_coo_z_i8_t out);
 
 
 	MATX_API matx_status_t matx_finalize(const matx_sparse_backend_t* backend);
@@ -192,19 +192,19 @@ extern "C" {
 	 * @brief 1-norm of a real sparse COO matrix (max column sum)
 	 * @formula ||A||_1 = max_{j=0,...,n-1} sum_{i=0}^{m-1} |A[i][j]|
 	 */
-	MATX_API matx_status_t matx_norm1_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
+	MATX_API matx_status_t matx_norm1_mat_coo_d_i8(const matx_sparse_backend_t* backend, matx_coo_d_i8_t A, matx_double* out);
 
 	/**
 	 * @brief Infinity-norm of a real sparse COO matrix (max row sum)
 	 * @formula ||A||_inf = max_{i=0,...,m-1} sum_{j=0}^{n-1} |A[i][j]|
 	 */
-	MATX_API matx_status_t matx_norminf_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
+	MATX_API matx_status_t matx_norminf_mat_coo_d_i8(const matx_sparse_backend_t* backend, matx_coo_d_i8_t A, matx_double* out);
 
 	/**
 	 * @brief Frobenius norm of a real sparse COO matrix
 	 * @formula ||A||_F = sqrt( sum_{(i,j) in nnz} A[i][j]^2 )
 	 */
-	MATX_API matx_status_t matx_normfro_mat_coo_f64(const matx_sparse_backend_t* backend, matx_coo_f64_t A, matx_double* out);
+	MATX_API matx_status_t matx_normfro_mat_coo_d_i8(const matx_sparse_backend_t* backend, matx_coo_d_i8_t A, matx_double* out);
 
 	// ---- Sparse matrix norms (c64) ----
 
@@ -212,19 +212,19 @@ extern "C" {
 	 * @brief 1-norm of a complex sparse COO matrix (max column sum)
 	 * @formula ||A||_1 = max_{j=0,...,n-1} sum_{i=0}^{m-1} |A[i][j]|
 	 */
-	MATX_API matx_status_t matx_norm1_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
+	MATX_API matx_status_t matx_norm1_mat_coo_z_i8(const matx_sparse_backend_t* backend, matx_coo_z_i8_t A, matx_double* out);
 
 	/**
 	 * @brief Infinity-norm of a complex sparse COO matrix (max row sum)
 	 * @formula ||A||_inf = max_{i=0,...,m-1} sum_{j=0}^{n-1} |A[i][j]|
 	 */
-	MATX_API matx_status_t matx_norminf_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
+	MATX_API matx_status_t matx_norminf_mat_coo_z_i8(const matx_sparse_backend_t* backend, matx_coo_z_i8_t A, matx_double* out);
 
 	/**
 	 * @brief Frobenius norm of a complex sparse COO matrix
 	 * @formula ||A||_F = sqrt( sum_{(i,j) in nnz} |A[i][j]|^2 )
 	 */
-	MATX_API matx_status_t matx_normfro_mat_coo_c64(const matx_sparse_backend_t* backend, matx_coo_c64_t A, matx_double* out);
+	MATX_API matx_status_t matx_normfro_mat_coo_z_i8(const matx_sparse_backend_t* backend, matx_coo_z_i8_t A, matx_double* out);
 
 	// ---- Sparse-sparse addition: out = alpha*A + beta*B (COO) ----
 
@@ -232,34 +232,34 @@ extern "C" {
 	 * @brief Sparse matrix addition for real COO matrices
 	 * @formula out := alpha * A + beta * B
 	 */
-	MATX_API matx_status_t matx_spadd_coo_f64(const matx_sparse_backend_t* backend,
-		matx_double alpha, matx_coo_f64_t A, matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out);
+	MATX_API matx_status_t matx_spadd_coo_d_i8(const matx_sparse_backend_t* backend,
+		matx_double alpha, matx_coo_d_i8_t A, matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out);
 
 	/**
 	 * @brief Sparse matrix addition for complex COO matrices
 	 * @formula out := alpha * A + beta * B
 	 */
-	MATX_API matx_status_t matx_spadd_coo_c64(const matx_sparse_backend_t* backend,
-		matx_complex_f64_t alpha, matx_coo_c64_t A, matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out);
+	MATX_API matx_status_t matx_spadd_coo_z_i8(const matx_sparse_backend_t* backend,
+		matx_complex_d_i8_t alpha, matx_coo_z_i8_t A, matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out);
 
-	MATX_API size_t coo_2_grb_f64(matx_coo_f64_t A);
-	MATX_API size_t create_empty_grb_f64(matx_coo_f64_t A);
-	MATX_API size_t create_empty_grb_c64(matx_coo_c64_t A);
-	MATX_API size_t dense_2_grb_f64(matx_dense_f64_t A);
-	MATX_API size_t grb_2_dense_f64(matx_dense_f64_t A);
-	MATX_API size_t grb_2_coo_f64(matx_coo_f64_t A);
-	MATX_API size_t vec_2_grb_f64(matx_vec_f64_t v);
-	MATX_API size_t grb_2_vec_f64(matx_vec_f64_t v);
-	MATX_API size_t coo_2_grb_c64(matx_coo_c64_t A);
-	MATX_API size_t dense_2_grb_c64(matx_dense_c64_t A);
-	MATX_API size_t grb_2_dense_c64(matx_dense_c64_t A);
-	MATX_API size_t grb_2_coo_c64(matx_coo_c64_t A);
-	MATX_API size_t vec_2_grb_c64(matx_vec_c64_t v);
-	MATX_API size_t grb_2_vec_c64(matx_vec_c64_t v);
+	MATX_API size_t coo_2_grb_d_i8(matx_coo_d_i8_t A);
+	MATX_API size_t create_empty_grb_d_i8(matx_coo_d_i8_t A);
+	MATX_API size_t create_empty_grb_z_i8(matx_coo_z_i8_t A);
+	MATX_API size_t dense_2_grb_d_i8(matx_dense_d_i8_t A);
+	MATX_API size_t grb_2_dense_d_i8(matx_dense_d_i8_t A);
+	MATX_API size_t grb_2_coo_d_i8(matx_coo_d_i8_t A);
+	MATX_API size_t vec_2_grb_d_i8(matx_vec_d_i8_t v);
+	MATX_API size_t grb_2_vec_d_i8(matx_vec_d_i8_t v);
+	MATX_API size_t coo_2_grb_z_i8(matx_coo_z_i8_t A);
+	MATX_API size_t dense_2_grb_z_i8(matx_dense_z_i8_t A);
+	MATX_API size_t grb_2_dense_z_i8(matx_dense_z_i8_t A);
+	MATX_API size_t grb_2_coo_z_i8(matx_coo_z_i8_t A);
+	MATX_API size_t vec_2_grb_z_i8(matx_vec_z_i8_t v);
+	MATX_API size_t grb_2_vec_z_i8(matx_vec_z_i8_t v);
 
-	MATX_API size_t coo_2_aocl_f64(matx_coo_f64_t A);
-	MATX_API size_t coo_2_aocl_c64(matx_coo_c64_t A);
-	MATX_API size_t aocl_2_coo_c64(matx_coo_c64_t A);
+	MATX_API size_t coo_2_aocl_d_i8(matx_coo_d_i8_t A);
+	MATX_API size_t coo_2_aocl_z_i8(matx_coo_z_i8_t A);
+	MATX_API size_t aocl_2_coo_z_i8(matx_coo_z_i8_t A);
 #ifdef __cplusplus
 }
 #endif

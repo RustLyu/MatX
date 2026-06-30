@@ -6,43 +6,43 @@
 #include "klu.h"
 #include "matx/matx_log.h"
 
-typedef struct matx_factor_sparse_f64_klu{
+typedef struct matx_factor_sparse_d_i8_klu{
 	klu_l_symbolic* S;
 	klu_l_numeric* N;
 	klu_l_common common;
 	matx_int64_t n;
-} matx_factor_sparse_f64_klu_t;
+} matx_factor_sparse_d_i8_klu_t;
 
-typedef struct matx_factor_sparse_c64_klu {
+typedef struct matx_factor_sparse_z_i8_klu {
 	klu_l_symbolic* S;
 	klu_l_numeric* N;
 	klu_l_common common;
 	matx_int64_t n;
-} matx_factor_sparse_c64_klu_t;
+} matx_factor_sparse_z_i8_klu_t;
 
-static void ss_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F) {
+static void ss_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F) {
 	if (!F || !F->reserved)
 		return;
-	matx_factor_sparse_f64_klu_t* ptr = (matx_factor_sparse_f64_klu_t*)F->reserved;
+	matx_factor_sparse_d_i8_klu_t* ptr = (matx_factor_sparse_d_i8_klu_t*)F->reserved;
 	klu_l_free_numeric(&ptr->N, &ptr->common);
 	klu_l_free_symbolic(&ptr->S, &ptr->common);
 	free(ptr);
 }
 
-static void ss_factor_csc_c64_destroy(
-	matx_factor_sparse_c64_t* F)
+static void ss_factor_csc_z_i8_destroy(
+	matx_factor_sparse_z_i8_t* F)
 {
 	if (!F || !F->reserved)
 		return;
-	matx_factor_sparse_c64_klu_t* ptr = (matx_factor_sparse_c64_klu_t*)F->reserved;
+	matx_factor_sparse_z_i8_klu_t* ptr = (matx_factor_sparse_z_i8_klu_t*)F->reserved;
 	klu_zl_free_numeric(&ptr->N, &ptr->common);
 	klu_l_free_symbolic(&ptr->S, &ptr->common);
 	free(ptr);
 }
 
 // Sparse real: KLU-based ---------------------------------------------------
-static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
-	matx_factor_sparse_f64_t* out_F) {
+static matx_status_t ss_factor_csc_d_i8(matx_coo_d_i8_t A,
+	matx_factor_sparse_d_i8_t* out_F) {
 	if (!A || !out_F)
 	{
 		MATX_ERROR("input pointer is null error");
@@ -50,13 +50,13 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 	}
 	if (out_F != NULL)
 	{
-		ss_factor_csc_f64_destroy(out_F);
+		ss_factor_csc_d_i8_destroy(out_F);
 	}
 
-	matx_status_t st = coo_to_csc_f64(A);
+	matx_status_t st = coo_to_csc_d_i8(A);
 	if (st != MATX_OK)
 	{
-		MATX_ERROR("coo_to_csc_f64 error:%d", st);
+		MATX_ERROR("coo_to_csc_d_i8 error:%d", st);
 		return st;
 	}
 	if (!A->handle_csc->col_ptr || !A->handle_csc->row_ind || !A->handle_csc->values)
@@ -76,8 +76,8 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 		return MATX_ERR_NOT_SUPPORTED;
 	}
 
-	matx_factor_sparse_f64_klu_t* F =
-		(matx_factor_sparse_f64_klu_t*)malloc(sizeof(*F));
+	matx_factor_sparse_d_i8_klu_t* F =
+		(matx_factor_sparse_d_i8_klu_t*)malloc(sizeof(*F));
 	if (!F)
 	{
 		MATX_ERROR("malloc Factor handle error");
@@ -98,10 +98,10 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 		return MATX_ERR_INTERNAL;
 	}
 
-	st = coo_to_csc_f64_value_remap(A);
+	st = coo_to_csc_d_i8_value_remap(A);
 
 	if(st != MATX_OK) {
-		MATX_ERROR("call coo_to_csc_f64_value_remap error:%d", F->common.status);
+		MATX_ERROR("call coo_to_csc_d_i8_value_remap error:%d", F->common.status);
 		klu_l_free_symbolic(&F->S, &F->common);
 		free(F);
 		return st;
@@ -124,7 +124,7 @@ static matx_status_t ss_factor_csc_f64(matx_coo_f64_t A,
 	return MATX_OK;
 }
 
-static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
+static matx_status_t ss_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F,
 	const matx_double* b,
 	matx_double* x) {
 	if (!F || !F->reserved || !b || !x)
@@ -132,7 +132,7 @@ static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
 		MATX_ERROR("input pointer is null");
 		return MATX_ERR_INVALID_ARG;
 	}
-	matx_factor_sparse_f64_klu_t* ptr = (matx_factor_sparse_f64_klu_t*)F->reserved;
+	matx_factor_sparse_d_i8_klu_t* ptr = (matx_factor_sparse_d_i8_klu_t*)F->reserved;
 	const matx_int64_t n = ptr->n;
 	for (matx_int64_t i = 0; i < n; ++i) {
 		x[i] = b[i];
@@ -147,9 +147,9 @@ static matx_status_t ss_solve_csc_f64(matx_factor_sparse_f64_t* F,
 	return MATX_OK;
 }
 
-static matx_status_t ss_factor_csc_c64(
-	matx_coo_c64_t A,
-	matx_factor_sparse_c64_t* out_F)
+static matx_status_t ss_factor_csc_z_i8(
+	matx_coo_z_i8_t A,
+	matx_factor_sparse_z_i8_t* out_F)
 {
 	if (!A || !out_F)
 	{
@@ -159,13 +159,13 @@ static matx_status_t ss_factor_csc_c64(
 
 	if (out_F != NULL)
 	{
-		ss_factor_csc_c64_destroy(out_F);
+		ss_factor_csc_z_i8_destroy(out_F);
 	}
 
-	matx_status_t st = coo_to_csc_c64(A);
+	matx_status_t st = coo_to_csc_z_i8(A);
 	if (st != MATX_OK)
 	{
-		MATX_ERROR("coo_to_csc_c64 error");
+		MATX_ERROR("coo_to_csc_z_i8 error");
 		return st;
 	}
 
@@ -184,8 +184,8 @@ static matx_status_t ss_factor_csc_c64(
 		return MATX_ERR_NOT_SUPPORTED;
 	}
 
-	matx_factor_sparse_c64_klu_t* F =
-		(matx_factor_sparse_c64_klu_t*)malloc(sizeof(*F));
+	matx_factor_sparse_z_i8_klu_t* F =
+		(matx_factor_sparse_z_i8_klu_t*)malloc(sizeof(*F));
 	if (!F)
 	{
 		MATX_ERROR("malloc F failed");
@@ -209,10 +209,10 @@ static matx_status_t ss_factor_csc_c64(
 		goto fail;
 	}
 
-	st = coo_to_csc_c64_value_remap(A);
+	st = coo_to_csc_z_i8_value_remap(A);
 	if (st != MATX_OK)
 	{
-		MATX_ERROR("coo_to_csc_c64_value_remap failed");
+		MATX_ERROR("coo_to_csc_z_i8_value_remap failed");
 		goto fail;
 	}
 
@@ -238,19 +238,19 @@ fail:
 	return MATX_ERR_INTERNAL;
 }
 
-static matx_status_t ss_solve_csc_c64(
-	matx_factor_sparse_c64_t* F,
-	const matx_vec_c64_t b,
-	matx_vec_c64_t x)
+static matx_status_t ss_solve_csc_z_i8(
+	matx_factor_sparse_z_i8_t* F,
+	const matx_vec_z_i8_t b,
+	matx_vec_z_i8_t x)
 {
 	if (!F || !b || !x)
 		return MATX_ERR_INVALID_ARG;
 	if (b->stride != 1 || x->stride != 1)
 		return MATX_ERR_NOT_SUPPORTED;
-	matx_factor_sparse_c64_klu_t* ptr = (matx_factor_sparse_c64_klu_t*)F->reserved;
+	matx_factor_sparse_z_i8_klu_t* ptr = (matx_factor_sparse_z_i8_klu_t*)F->reserved;
 	matx_int64_t n = ptr->n;
 
-	memcpy(x->data, b->data, sizeof(matx_complex_f64_t) * n);
+	memcpy(x->data, b->data, sizeof(matx_complex_d_i8_t) * n);
 
 	matx_int64_t status = klu_zl_solve(
 		ptr->S, ptr->N, n, 1, (matx_double*)x->data, &ptr->common);
@@ -269,12 +269,12 @@ matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void) {
 	{
 		.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU,
 		.vt = {
-			.factor_csc_f64 = &ss_factor_csc_f64,
-			.solve_csc_f64 = &ss_solve_csc_f64,
-			.factor_csc_f64_destroy = &ss_factor_csc_f64_destroy,
-			.factor_csc_c64 = &ss_factor_csc_c64,
-			.solve_csc_c64 = &ss_solve_csc_c64,
-			.factor_csc_c64_destroy = &ss_factor_csc_c64_destroy
+			.factor_csc_d_i8 = &ss_factor_csc_d_i8,
+			.solve_csc_d_i8 = &ss_solve_csc_d_i8,
+			.factor_csc_d_i8_destroy = &ss_factor_csc_d_i8_destroy,
+			.factor_csc_z_i8 = &ss_factor_csc_z_i8,
+			.solve_csc_z_i8 = &ss_solve_csc_z_i8,
+			.factor_csc_z_i8_destroy = &ss_factor_csc_z_i8_destroy
 		}
 	};
 	return ls;

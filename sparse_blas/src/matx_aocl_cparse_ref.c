@@ -13,12 +13,12 @@
 #endif
 
 // y = \alpha \, op(A) \, x + \beta \, y,
-matx_status_t ref_spmv_c64_aocl(
-	matx_complex_f64_t alpha,
-	matx_coo_c64_t A,
-	matx_vec_c64_t x,
-	matx_complex_f64_t beta,
-	matx_vec_c64_t y)
+matx_status_t ref_spmv_z_i8_aocl(
+	matx_complex_d_i8_t alpha,
+	matx_coo_z_i8_t A,
+	matx_vec_z_i8_t x,
+	matx_complex_d_i8_t beta,
+	matx_vec_z_i8_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !x || !y)
@@ -29,7 +29,7 @@ matx_status_t ref_spmv_c64_aocl(
 
 	if (A->handle_aocl.valid <= 0)
 	{
-		if (coo_2_aocl_c64(A) != 0)
+		if (coo_2_aocl_z_i8(A) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
@@ -65,12 +65,12 @@ matx_status_t ref_spmv_c64_aocl(
 }
 
 //    C = \alpha \, op(A) \, B + \beta \, C,
-matx_status_t ref_spmm_c64_aocl(
-	matx_complex_f64_t alpha,
-	matx_coo_c64_t A,
-	const matx_dense_c64_t B,
-	matx_complex_f64_t beta,
-	matx_dense_c64_t C)
+matx_status_t ref_spmm_z_i8_aocl(
+	matx_complex_d_i8_t alpha,
+	matx_coo_z_i8_t A,
+	const matx_dense_z_i8_t B,
+	matx_complex_d_i8_t beta,
+	matx_dense_z_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !B || !C)
@@ -78,7 +78,7 @@ matx_status_t ref_spmm_c64_aocl(
 
 	if (A->handle_aocl.valid <= 0)
 	{
-		if (coo_2_aocl_c64(A) != 0)
+		if (coo_2_aocl_z_i8(A) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
@@ -115,12 +115,12 @@ matx_status_t ref_spmm_c64_aocl(
 }
 
 // y = \alpha \, op(A) \, x + \beta \, y
-matx_status_t ref_spmv_f64_aocl(
+matx_status_t ref_spmv_d_i8_aocl(
 	matx_double alpha,
-	matx_coo_f64_t A,
-	matx_vec_f64_t x,
+	matx_coo_d_i8_t A,
+	matx_vec_d_i8_t x,
 	matx_double beta,
-	matx_vec_f64_t y)
+	matx_vec_d_i8_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
 
@@ -129,7 +129,7 @@ matx_status_t ref_spmv_f64_aocl(
 
 	if (A->handle_aocl.valid <= 0)
 	{
-		if (coo_2_aocl_f64(A) != 0)
+		if (coo_2_aocl_d_i8(A) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
@@ -166,12 +166,12 @@ matx_status_t ref_spmv_f64_aocl(
 	return MATX_OK;
 }
 //C = α * A * B + β * C
-matx_status_t ref_spmm_f64_aocl(
+matx_status_t ref_spmm_d_i8_aocl(
 	matx_double alpha,
-	matx_coo_f64_t A,
-	matx_dense_f64_t B,
+	matx_coo_d_i8_t A,
+	matx_dense_d_i8_t B,
 	matx_double beta,
-	matx_dense_f64_t C)
+	matx_dense_d_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !B || !C)
@@ -179,7 +179,7 @@ matx_status_t ref_spmm_f64_aocl(
 
 	if (A->handle_aocl.valid <= 0)
 	{
-		if (coo_2_aocl_f64(A) != 0)
+		if (coo_2_aocl_d_i8(A) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
@@ -213,12 +213,12 @@ matx_status_t ref_spmm_f64_aocl(
 }
 
 // C := α · op(A) · op(B) + β · C
-matx_status_t ref_dsp2md_f64_aocl(
+matx_status_t ref_dsp2md_d_i8_aocl(
 	matx_double alpha,
-	matx_coo_f64_t A,
-	matx_coo_f64_t B,
+	matx_coo_d_i8_t A,
+	matx_coo_d_i8_t B,
 	matx_double beta,
-	matx_dense_f64_t C)
+	matx_dense_d_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !B || !C)
@@ -226,13 +226,13 @@ matx_status_t ref_dsp2md_f64_aocl(
 
 	if (A->handle_aocl.valid <= 0)
 	{
-		if (coo_2_aocl_f64(A) != 0)
+		if (coo_2_aocl_d_i8(A) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
 	if (B->handle_aocl.valid <= 0)
 	{
-		if (coo_2_aocl_f64(B) != 0)
+		if (coo_2_aocl_d_i8(B) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
@@ -266,12 +266,12 @@ matx_status_t ref_dsp2md_f64_aocl(
 }
 
 // C := α · op(A) · op(B) + β · C
-matx_status_t ref_zsp2md_c64_aocl(
-	matx_complex_f64_t alpha,
-	matx_coo_c64_t A,
-	matx_coo_c64_t B,
-	matx_complex_f64_t beta,
-	matx_dense_c64_t C)
+matx_status_t ref_zsp2md_z_i8_aocl(
+	matx_complex_d_i8_t alpha,
+	matx_coo_z_i8_t A,
+	matx_coo_z_i8_t B,
+	matx_complex_d_i8_t beta,
+	matx_dense_z_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !B || !C)
@@ -279,13 +279,13 @@ matx_status_t ref_zsp2md_c64_aocl(
 
 	if (A->handle_aocl.valid <= 0)
 	{
-		if (coo_2_aocl_c64(A) != 0)
+		if (coo_2_aocl_z_i8(A) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
 	if (B->handle_aocl.valid <= 0)
 	{
-		if (coo_2_aocl_c64(B) != 0)
+		if (coo_2_aocl_z_i8(B) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
@@ -322,9 +322,9 @@ matx_status_t ref_zsp2md_c64_aocl(
 	return MATX_OK;
 }
 
-matx_status_t ref_transpose_f64_aocl(
-	matx_coo_f64_t A,
-	matx_coo_f64_t out)
+matx_status_t ref_transpose_d_i8_aocl(
+	matx_coo_d_i8_t A,
+	matx_coo_d_i8_t out)
 {
 	if (!A)
 		return MATX_ERR_INVALID_ARG;
@@ -337,9 +337,9 @@ matx_status_t ref_transpose_f64_aocl(
 	return MATX_OK;
 }
 
-matx_status_t ref_transpose_c64_aocl(
-	matx_coo_c64_t A,
-	matx_coo_c64_t out)
+matx_status_t ref_transpose_z_i8_aocl(
+	matx_coo_z_i8_t A,
+	matx_coo_z_i8_t out)
 {
 	if (!A)
 		return MATX_ERR_INVALID_ARG;
@@ -348,19 +348,19 @@ matx_status_t ref_transpose_c64_aocl(
 	out->nnz = A->nnz;
 	memcpy(out->rows, A->columns, sizeof(matx_int64_t) * A->nnz);
 	memcpy(out->columns, A->rows, sizeof(matx_int64_t) * A->nnz);
-	memcpy(out->values, A->values, sizeof(matx_complex_f64_t) * A->nnz);
+	memcpy(out->values, A->values, sizeof(matx_complex_d_i8_t) * A->nnz);
 	return MATX_OK;
 }
 
-matx_status_t ref_conj_trans_c64_aocl(matx_coo_c64_t A,
-	matx_coo_c64_t out)
+matx_status_t ref_conj_trans_z_i8_aocl(matx_coo_z_i8_t A,
+	matx_coo_z_i8_t out)
 {
 #if MATX_HAVE_AOCL_SPARSE
 	if (!A || !out)
 		return MATX_ERR_INVALID_ARG;
 
 	if (A->handle_aocl.valid <= 0) {
-		if (coo_2_aocl_c64(A) != 0)
+		if (coo_2_aocl_z_i8(A) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
@@ -375,7 +375,7 @@ matx_status_t ref_conj_trans_c64_aocl(matx_coo_c64_t A,
 		MATX_ERROR("aoclsparse_convert_csr error: %d", status);
 		return MATX_ERR_INTERNAL;
 	}
-	aocl_2_coo_c64(out);
+	aocl_2_coo_z_i8(out);
 #endif
 	return MATX_OK;
 }
@@ -387,7 +387,7 @@ matx_status_t ref_finalize_aocl()
 
 // ---- Sparse matrix norms ----
 
-matx_status_t ref_norm1_mat_aocl(matx_coo_f64_t A, matx_double* out) {
+matx_status_t ref_norm1_mat_aocl(matx_coo_d_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double* col_sums = (matx_double*)calloc((size_t)A->ncols, sizeof(matx_double));
 	if (!col_sums) return MATX_ERR_OUT_OF_MEMORY;
@@ -401,7 +401,7 @@ matx_status_t ref_norm1_mat_aocl(matx_coo_f64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-matx_status_t ref_norminf_mat_aocl(matx_coo_f64_t A, matx_double* out) {
+matx_status_t ref_norminf_mat_aocl(matx_coo_d_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double* row_sums = (matx_double*)calloc((size_t)A->nrows, sizeof(matx_double));
 	if (!row_sums) return MATX_ERR_OUT_OF_MEMORY;
@@ -415,7 +415,7 @@ matx_status_t ref_norminf_mat_aocl(matx_coo_f64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-matx_status_t ref_normfro_mat_aocl(matx_coo_f64_t A, matx_double* out) {
+matx_status_t ref_normfro_mat_aocl(matx_coo_d_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->nnz; ++i)
@@ -428,7 +428,7 @@ matx_status_t ref_normfro_mat_aocl(matx_coo_f64_t A, matx_double* out) {
 
 // ---- Sparse matrix norms (c64) ----
 
-matx_status_t ref_norm1_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
+matx_status_t ref_norm1_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double* col_sums = (matx_double*)calloc((size_t)A->ncols, sizeof(matx_double));
 	if (!col_sums) return MATX_ERR_OUT_OF_MEMORY;
@@ -445,7 +445,7 @@ matx_status_t ref_norm1_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-matx_status_t ref_norminf_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
+matx_status_t ref_norminf_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double* row_sums = (matx_double*)calloc((size_t)A->nrows, sizeof(matx_double));
 	if (!row_sums) return MATX_ERR_OUT_OF_MEMORY;
@@ -462,7 +462,7 @@ matx_status_t ref_norminf_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-matx_status_t ref_normfro_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
+matx_status_t ref_normfro_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->nnz; ++i) {
@@ -475,8 +475,8 @@ matx_status_t ref_normfro_mat_c64_aocl(matx_coo_c64_t A, matx_double* out) {
 }
 // ---- Sparse-sparse addition ----
 
-matx_status_t ref_spadd_f64_aocl(matx_double alpha, matx_coo_f64_t A,
-	matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out) {
+matx_status_t ref_spadd_d_i8_aocl(matx_double alpha, matx_coo_d_i8_t A,
+	matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out) {
 	if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
 	if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
 
@@ -494,8 +494,8 @@ matx_status_t ref_spadd_f64_aocl(matx_double alpha, matx_coo_f64_t A,
 	return MATX_OK;
 }
 
-matx_status_t ref_spadd_c64_aocl(matx_complex_f64_t alpha, matx_coo_c64_t A,
-	matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out) {
+matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_i8_t alpha, matx_coo_z_i8_t A,
+	matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out) {
 	if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
 	if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
 
@@ -522,24 +522,24 @@ matx_sparse_backend_t matx_sparse_make_reference_aocl(void) {
 	{
 		.kind = MATX_SPARSE_BACKEND_AOCL_CPARSE,
 		.vt = {
-			.spmm_c64 = ref_spmm_c64_aocl,
-			.spmv_c64 = ref_spmv_c64_aocl,
-			.spmm_f64 = ref_spmm_f64_aocl,
-			.spmv_f64 = ref_spmv_f64_aocl,
-			.dsp2md_f64 = ref_dsp2md_f64_aocl,
-			.zsp2md_c64 = ref_zsp2md_c64_aocl,
-			.transpose_f64 = ref_transpose_f64_aocl,
-			.transpose_c64 = ref_transpose_c64_aocl,
-			.conj_trans_c64 = ref_conj_trans_c64_aocl,
+			.spmm_z_i8 = ref_spmm_z_i8_aocl,
+			.spmv_z_i8 = ref_spmv_z_i8_aocl,
+			.spmm_d_i8 = ref_spmm_d_i8_aocl,
+			.spmv_d_i8 = ref_spmv_d_i8_aocl,
+			.dsp2md_d_i8 = ref_dsp2md_d_i8_aocl,
+			.zsp2md_z_i8 = ref_zsp2md_z_i8_aocl,
+			.transpose_d_i8 = ref_transpose_d_i8_aocl,
+			.transpose_z_i8 = ref_transpose_z_i8_aocl,
+			.conj_trans_z_i8 = ref_conj_trans_z_i8_aocl,
 			.finalize = ref_finalize_aocl,
-			.norm1_mat_f64 = ref_norm1_mat_aocl,
-			.norminf_mat_f64 = ref_norminf_mat_aocl,
-			.normfro_mat_f64 = ref_normfro_mat_aocl,
-			.norm1_mat_c64 = ref_norm1_mat_c64_aocl,
-			.norminf_mat_c64 = ref_norminf_mat_c64_aocl,
-			.normfro_mat_c64 = ref_normfro_mat_c64_aocl,
-			.spadd_f64 = ref_spadd_f64_aocl,
-			.spadd_c64 = ref_spadd_c64_aocl,
+			.norm1_mat_d_i8 = ref_norm1_mat_aocl,
+			.norminf_mat_d_i8 = ref_norminf_mat_aocl,
+			.normfro_mat_d_i8 = ref_normfro_mat_aocl,
+			.norm1_mat_z_i8 = ref_norm1_mat_z_i8_aocl,
+			.norminf_mat_z_i8 = ref_norminf_mat_z_i8_aocl,
+			.normfro_mat_z_i8 = ref_normfro_mat_z_i8_aocl,
+			.spadd_d_i8 = ref_spadd_d_i8_aocl,
+			.spadd_z_i8 = ref_spadd_z_i8_aocl,
 		}
 	};
 	MATX_TRACE("AOCL INIT");

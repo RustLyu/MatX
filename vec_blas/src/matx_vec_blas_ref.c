@@ -33,10 +33,10 @@ static matx_status_t ref_zscal(matx_int64_t n, const void* alpha, void* x, matx_
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zscal(n, alpha, x, incx);
 #else
-	const matx_complex_f64_t* a = (const matx_complex_f64_t*)alpha;
-	matx_complex_f64_t* xd = (matx_complex_f64_t*)x;
+	const matx_complex_d_i8_t* a = (const matx_complex_d_i8_t*)alpha;
+	matx_complex_d_i8_t* xd = (matx_complex_d_i8_t*)x;
 	for (matx_int64_t i = 0; i < n; ++i) {
-		matx_complex_f64_t v = xd[i * incx];
+		matx_complex_d_i8_t v = xd[i * incx];
 		xd[i * incx].real = a->real * v.real - a->imag * v.imag;
 		xd[i * incx].imag = a->real * v.imag + a->imag * v.real;
 	}
@@ -60,8 +60,8 @@ static matx_status_t ref_zcopy(matx_int64_t n, const void* x, matx_int64_t incx,
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zcopy(n, x, incx, y, incy);
 #else
-	const matx_complex_f64_t* xd = (const matx_complex_f64_t*)x;
-	matx_complex_f64_t* yd = (matx_complex_f64_t*)y;
+	const matx_complex_d_i8_t* xd = (const matx_complex_d_i8_t*)x;
+	matx_complex_d_i8_t* yd = (matx_complex_d_i8_t*)y;
 	for (matx_int64_t i = 0; i < n; ++i)
 		yd[i * incy] = xd[i * incx];
 #endif
@@ -87,10 +87,10 @@ static matx_status_t ref_zswap(matx_int64_t n, void* x, matx_int64_t incx, void*
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zswap(n, x, incx, y, incy);
 #else
-	matx_complex_f64_t* xd = (matx_complex_f64_t*)x;
-	matx_complex_f64_t* yd = (matx_complex_f64_t*)y;
+	matx_complex_d_i8_t* xd = (matx_complex_d_i8_t*)x;
+	matx_complex_d_i8_t* yd = (matx_complex_d_i8_t*)y;
 	for (matx_int64_t i = 0; i < n; ++i) {
-		matx_complex_f64_t t = xd[i * incx];
+		matx_complex_d_i8_t t = xd[i * incx];
 		xd[i * incx] = yd[i * incy];
 		yd[i * incy] = t;
 	}
@@ -118,9 +118,9 @@ static matx_status_t ref_zdotu(matx_int64_t n, const void* x, matx_int64_t incx,
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zdotu_sub(n, x, incx, y, incy, result);
 #else
-	const matx_complex_f64_t* xd = (const matx_complex_f64_t*)x;
-	const matx_complex_f64_t* yd = (const matx_complex_f64_t*)y;
-	matx_complex_f64_t* r = (matx_complex_f64_t*)result;
+	const matx_complex_d_i8_t* xd = (const matx_complex_d_i8_t*)x;
+	const matx_complex_d_i8_t* yd = (const matx_complex_d_i8_t*)y;
+	matx_complex_d_i8_t* r = (matx_complex_d_i8_t*)result;
 	r->real = 0.0; r->imag = 0.0;
 	for (matx_int64_t i = 0; i < n; ++i) {
 		r->real += xd[i * incx].real * yd[i * incy].real - xd[i * incx].imag * yd[i * incy].imag;
@@ -136,9 +136,9 @@ static matx_status_t ref_zdotc(matx_int64_t n, const void* x, matx_int64_t incx,
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zdotc_sub(n, x, incx, y, incy, result);
 #else
-	const matx_complex_f64_t* xd = (const matx_complex_f64_t*)x;
-	const matx_complex_f64_t* yd = (const matx_complex_f64_t*)y;
-	matx_complex_f64_t* r = (matx_complex_f64_t*)result;
+	const matx_complex_d_i8_t* xd = (const matx_complex_d_i8_t*)x;
+	const matx_complex_d_i8_t* yd = (const matx_complex_d_i8_t*)y;
+	matx_complex_d_i8_t* r = (matx_complex_d_i8_t*)result;
 	r->real = 0.0; r->imag = 0.0;
 	for (matx_int64_t i = 0; i < n; ++i) {
 		r->real += xd[i * incx].real * yd[i * incy].real + xd[i * incx].imag * yd[i * incy].imag;
@@ -166,7 +166,7 @@ static matx_status_t ref_dznrm2(matx_int64_t n, const void* x, matx_int64_t incx
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = cblas_dznrm2(n, x, incx);
 #else
-	const matx_complex_f64_t* xd = (const matx_complex_f64_t*)x;
+	const matx_complex_d_i8_t* xd = (const matx_complex_d_i8_t*)x;
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < n; ++i) {
 		matx_double re = xd[i * incx].real;
@@ -196,7 +196,7 @@ static matx_status_t ref_dzasum(matx_int64_t n, const void* x, matx_int64_t incx
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = cblas_dzasum(n, x, incx);
 #else
-	const matx_complex_f64_t* xd = (const matx_complex_f64_t*)x;
+	const matx_complex_d_i8_t* xd = (const matx_complex_d_i8_t*)x;
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < n; ++i)
 		sum += fabs(xd[i * incx].real) + fabs(xd[i * incx].imag);
@@ -226,7 +226,7 @@ static matx_status_t ref_izamax(matx_int64_t n, const void* x, matx_int64_t incx
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = (matx_int64_t)cblas_izamax(n, x, incx);
 #else
-	const matx_complex_f64_t* xd = (const matx_complex_f64_t*)x;
+	const matx_complex_d_i8_t* xd = (const matx_complex_d_i8_t*)x;
 	matx_double max_val = -1.0;
 	matx_int64_t idx = 0;
 	for (matx_int64_t i = 0; i < n; ++i) {
@@ -259,9 +259,9 @@ static matx_status_t ref_zaxpy(matx_int64_t n, const void* alpha, const void* x,
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zaxpy(n, alpha, x, lda, y, ldy);
 #else
-	const matx_complex_f64_t* a = (const matx_complex_f64_t*)alpha;
-	const matx_complex_f64_t* xd = (const matx_complex_f64_t*)x;
-	matx_complex_f64_t* yd = (matx_complex_f64_t*)y;
+	const matx_complex_d_i8_t* a = (const matx_complex_d_i8_t*)alpha;
+	const matx_complex_d_i8_t* xd = (const matx_complex_d_i8_t*)x;
+	matx_complex_d_i8_t* yd = (matx_complex_d_i8_t*)y;
 	for (matx_int64_t i = 0; i < n; ++i) {
 		yd[i * ldy].real += a->real * xd[i * lda].real - a->imag * xd[i * lda].imag;
 		yd[i * ldy].imag += a->real * xd[i * lda].imag + a->imag * xd[i * lda].real;
@@ -272,7 +272,7 @@ static matx_status_t ref_zaxpy(matx_int64_t n, const void* alpha, const void* x,
 
 // ---- Vector norm implementations (pure C loops) ----
 
-static matx_status_t ref_vec_norm1_f64(matx_vec_f64_t A, matx_double* out) {
+static matx_status_t ref_vec_norm1_d_i8(matx_vec_d_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i)
@@ -281,7 +281,7 @@ static matx_status_t ref_vec_norm1_f64(matx_vec_f64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-static matx_status_t ref_vec_norm2_f64(matx_vec_f64_t A, matx_double* out) {
+static matx_status_t ref_vec_norm2_d_i8(matx_vec_d_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
@@ -292,7 +292,7 @@ static matx_status_t ref_vec_norm2_f64(matx_vec_f64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-static matx_status_t ref_vec_norminf_f64(matx_vec_f64_t A, matx_double* out) {
+static matx_status_t ref_vec_norminf_d_i8(matx_vec_d_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double max_val = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
@@ -303,7 +303,7 @@ static matx_status_t ref_vec_norminf_f64(matx_vec_f64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-static matx_status_t ref_vec_norm1_c64(matx_vec_c64_t A, matx_double* out) {
+static matx_status_t ref_vec_norm1_z_i8(matx_vec_z_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
@@ -315,7 +315,7 @@ static matx_status_t ref_vec_norm1_c64(matx_vec_c64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-static matx_status_t ref_vec_norm2_c64(matx_vec_c64_t A, matx_double* out) {
+static matx_status_t ref_vec_norm2_z_i8(matx_vec_z_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
@@ -327,7 +327,7 @@ static matx_status_t ref_vec_norm2_c64(matx_vec_c64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-static matx_status_t ref_vec_norminf_c64(matx_vec_c64_t A, matx_double* out) {
+static matx_status_t ref_vec_norminf_z_i8(matx_vec_z_i8_t A, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	matx_double max_val = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
@@ -369,12 +369,12 @@ matx_vec_backend_t matx_vec_blas_make_reference(void) {
 			.izamax = &ref_izamax,
 			.daxpy = &ref_daxpy,
 			.zaxpy = &ref_zaxpy,
-			.norm1_f64    = &ref_vec_norm1_f64,
-			.norm1_c64    = &ref_vec_norm1_c64,
-			.norm2_f64    = &ref_vec_norm2_f64,
-			.norm2_c64    = &ref_vec_norm2_c64,
-			.norminf_f64  = &ref_vec_norminf_f64,
-			.norminf_c64  = &ref_vec_norminf_c64,
+			.norm1_d_i8    = &ref_vec_norm1_d_i8,
+			.norm1_z_i8    = &ref_vec_norm1_z_i8,
+			.norm2_d_i8    = &ref_vec_norm2_d_i8,
+			.norm2_z_i8    = &ref_vec_norm2_z_i8,
+			.norminf_d_i8  = &ref_vec_norminf_d_i8,
+			.norminf_z_i8  = &ref_vec_norminf_z_i8,
 		}
 	};
 	return b;

@@ -5,12 +5,12 @@
 	#include "mkl.h"
 #endif
 
-matx_status_t ref_spmv_c64_mkl(
-	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_vec_c64_t* x,
-	matx_complex_f64 beta,
-	matx_vec_c64_t* y)
+matx_status_t ref_spmv_z_i8_mkl(
+	matx_complex_d_i8 alpha,
+	matx_coo_z_i8_t* A,
+	matx_vec_z_i8_t* x,
+	matx_complex_d_i8 beta,
+	matx_vec_z_i8_t* y)
 {
 #if MATX_ENABLE_MKL
 	if (!A || !x || !y)
@@ -21,7 +21,7 @@ matx_status_t ref_spmv_c64_mkl(
 
 	if (A->handle_mkl.valid <= 0)
 	{
-		if (coo_2_mkl_c64(A) != 0)
+		if (coo_2_mkl_z_i8(A) != 0)
 			return MATX_ERR_INTERNAL;
 	}
 
@@ -46,12 +46,12 @@ matx_status_t ref_spmv_c64_mkl(
 	return MATX_OK;
 }
 
-matx_status_t ref_spmm_c64_mkl(
-	matx_complex_f64 alpha,
-	const matx_coo_c64_t* A,
-	const matx_dense_c64_t* B,
-	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+matx_status_t ref_spmm_z_i8_mkl(
+	matx_complex_d_i8 alpha,
+	const matx_coo_z_i8_t* A,
+	const matx_dense_z_i8_t* B,
+	matx_complex_d_i8 beta,
+	matx_dense_z_i8_t* C)
 {
 #if MATX_ENABLE_MKL
 	if (!A || !B || !C)
@@ -59,7 +59,7 @@ matx_status_t ref_spmm_c64_mkl(
 
 	if (A->handle_mkl.valid <= 0)
 	{
-		coo_2_mkl_c64(A);
+		coo_2_mkl_z_i8(A);
 	}
 
 	struct matrix_descr descr;
@@ -100,19 +100,19 @@ static inline int64_t get_time_us()
 
 	return (int64_t)(counter.QuadPart * 1000000LL / freq.QuadPart);
 }
-matx_status_t ref_spmv_f64_mkl(
+matx_status_t ref_spmv_d_i8_mkl(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_vec_f64_t* x,
+	matx_coo_d_i8_t* A,
+	matx_vec_d_i8_t* x,
 	matx_double beta,
-	matx_vec_f64_t* y)
+	matx_vec_d_i8_t* y)
 {
 #if MATX_ENABLE_MKL
 	if (!A || !x || !y)
 		return MATX_ERR_INVALID_ARG;
 	if (A->handle_mkl.valid <= 0)
 	{
-		coo_2_mkl_f64(A);
+		coo_2_mkl_d_i8(A);
 	}
 	int64_t t0 = get_time_us();
 	struct matrix_descr descr;
@@ -134,12 +134,12 @@ matx_status_t ref_spmv_f64_mkl(
 	return MATX_OK;
 }
 
-matx_status_t ref_spmm_f64_mkl(
+matx_status_t ref_spmm_d_i8_mkl(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_dense_f64_t* B,
+	matx_coo_d_i8_t* A,
+	matx_dense_d_i8_t* B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_d_i8_t* C)
 {
 #if MATX_ENABLE_MKL
 	if (!A || !B || !C)
@@ -147,7 +147,7 @@ matx_status_t ref_spmm_f64_mkl(
 
 	if (A->handle_mkl.valid <= 0)
 	{
-		coo_2_mkl_c64(A);
+		coo_2_mkl_z_i8(A);
 	}
 
 	struct matrix_descr descr;
@@ -177,10 +177,10 @@ matx_status_t ref_spmm_f64_mkl(
 matx_sparse_backend_t matx_sparse_make_reference_mkl(void) {
 	matx_sparse_backend_t b;
 	b.kind = MATX_SPARSE_BACKEND_GRAPHBLAS;
-	b.vt.spmm_c64 = ref_spmm_c64_mkl;
-	b.vt.spmv_c64 = ref_spmv_c64_mkl;
-	b.vt.spmm_f64 = ref_spmm_f64_mkl;
-	b.vt.spmv_f64 = ref_spmv_f64_mkl;
+	b.vt.spmm_z_i8 = ref_spmm_z_i8_mkl;
+	b.vt.spmv_z_i8 = ref_spmv_z_i8_mkl;
+	b.vt.spmm_d_i8 = ref_spmm_d_i8_mkl;
+	b.vt.spmv_d_i8 = ref_spmv_d_i8_mkl;
 	return b;
 }
 

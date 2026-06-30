@@ -13,42 +13,42 @@ extern "C" {
 	} matx_dense_linsolve_backend_kind_t;
 
 	// Opaque factorization handles
-	typedef struct matx_factor_dense_f64_t matx_factor_dense_f64_t;
-	typedef struct matx_factor_dense_c64_t matx_factor_dense_c64_t;
+	typedef struct matx_factor_dense_d_i8_t matx_factor_dense_d_i8_t;
+	typedef struct matx_factor_dense_z_i8_t matx_factor_dense_z_i8_t;
 
 	typedef struct matx_dense_linsolve_vtable_t {
 		// Dense real LU
-		matx_status_t(*factor_dense_f64)(const matx_dense_f64_t A,
-			matx_factor_dense_f64_t** out_F);
-		matx_status_t(*solve_dense_f64)(const matx_factor_dense_f64_t* F,
+		matx_status_t(*factor_dense_d_i8)(const matx_dense_d_i8_t A,
+			matx_factor_dense_d_i8_t** out_F);
+		matx_status_t(*solve_dense_d_i8)(const matx_factor_dense_d_i8_t* F,
 			const double* b,
 			double* x);
-		void (*factor_dense_f64_destroy)(matx_factor_dense_f64_t* F);
+		void (*factor_dense_d_i8_destroy)(matx_factor_dense_d_i8_t* F);
 
 		// Dense complex LU
-		matx_status_t(*factor_dense_c64)(const matx_dense_c64_t A,
-			matx_factor_dense_c64_t** out_F);
-		matx_status_t(*solve_dense_c64)(const matx_factor_dense_c64_t* F,
-			const matx_vec_c64_t b,
-			matx_vec_c64_t x);
-		void (*factor_dense_c64_destroy)(matx_factor_dense_c64_t* F);
+		matx_status_t(*factor_dense_z_i8)(const matx_dense_z_i8_t A,
+			matx_factor_dense_z_i8_t** out_F);
+		matx_status_t(*solve_dense_z_i8)(const matx_factor_dense_z_i8_t* F,
+			const matx_vec_z_i8_t b,
+			matx_vec_z_i8_t x);
+		void (*factor_dense_z_i8_destroy)(matx_factor_dense_z_i8_t* F);
 
 		// Cholesky
-		matx_status_t(*potrf_f64)(const matx_dense_f64_t A, int uplo, matx_factor_dense_f64_t** out_F);
-		matx_status_t(*potrs_f64)(const matx_factor_dense_f64_t* F, const matx_double* b, matx_double* x);
-		matx_status_t(*potrf_c64)(const matx_dense_c64_t A, int uplo, matx_factor_dense_c64_t** out_F);
-		matx_status_t(*potrs_c64)(const matx_factor_dense_c64_t* F, const matx_vec_c64_t b, matx_vec_c64_t x);
+		matx_status_t(*potrf_d_i8)(const matx_dense_d_i8_t A, int uplo, matx_factor_dense_d_i8_t** out_F);
+		matx_status_t(*potrs_d_i8)(const matx_factor_dense_d_i8_t* F, const matx_double* b, matx_double* x);
+		matx_status_t(*potrf_z_i8)(const matx_dense_z_i8_t A, int uplo, matx_factor_dense_z_i8_t** out_F);
+		matx_status_t(*potrs_z_i8)(const matx_factor_dense_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x);
 
 		// Least squares (GELS)
-		matx_status_t(*gels_f64)(const matx_dense_f64_t A, const matx_double* b, matx_double* x);
-		matx_status_t(*gels_c64)(const matx_dense_c64_t A, const matx_vec_c64_t b, matx_vec_c64_t x);
+		matx_status_t(*gels_d_i8)(const matx_dense_d_i8_t A, const matx_double* b, matx_double* x);
+		matx_status_t(*gels_z_i8)(const matx_dense_z_i8_t A, const matx_vec_z_i8_t b, matx_vec_z_i8_t x);
 
 		// Symmetric eigenvalue (real only)
-		matx_status_t(*syev_f64)(const matx_dense_f64_t A, matx_vec_f64_t eigenvalues, matx_dense_f64_t* eigenvectors);
+		matx_status_t(*syev_d_i8)(const matx_dense_d_i8_t A, matx_vec_d_i8_t eigenvalues, matx_dense_d_i8_t* eigenvectors);
 
 		// SVD
-		matx_status_t(*gesvd_f64)(const matx_dense_f64_t A, matx_vec_f64_t S, matx_dense_f64_t* U, matx_dense_f64_t* Vt);
-		matx_status_t(*gesvd_c64)(const matx_dense_c64_t A, matx_vec_f64_t S, matx_dense_c64_t* U, matx_dense_c64_t* Vt);
+		matx_status_t(*gesvd_d_i8)(const matx_dense_d_i8_t A, matx_vec_d_i8_t S, matx_dense_d_i8_t* U, matx_dense_d_i8_t* Vt);
+		matx_status_t(*gesvd_z_i8)(const matx_dense_z_i8_t A, matx_vec_d_i8_t S, matx_dense_z_i8_t* U, matx_dense_z_i8_t* Vt);
 	} matx_dense_linsolve_vtable_t;
 
 	typedef struct matx_dense_linsolve_t {
@@ -69,29 +69,29 @@ extern "C" {
 	 *          where P is a permutation matrix, L is lower triangular with unit diagonal,
 	 *          U is upper triangular.
 	 */
-	MATX_API matx_status_t matx_factor_dense_f64(const matx_dense_linsolve_t* ls,
-		const matx_dense_f64_t A,
-		matx_factor_dense_f64_t** out_F);
+	MATX_API matx_status_t matx_factor_dense_d_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_d_i8_t A,
+		matx_factor_dense_d_i8_t** out_F);
 
 	/**
 	 * @brief Solve a real linear system using pre-computed LU factorization (DGETRS)
 	 * @formula A * x = b  =>  x = A^{-1} * b
 	 */
-	MATX_API matx_status_t matx_solve_dense_f64_factor(const matx_dense_linsolve_t* ls,
-		const matx_factor_dense_f64_t* F,
+	MATX_API matx_status_t matx_solve_dense_d_i8_factor(const matx_dense_linsolve_t* ls,
+		const matx_factor_dense_d_i8_t* F,
 		const matx_double* b,
 		matx_double* x);
 
-	MATX_API void matx_factor_dense_f64_destroy(const matx_dense_linsolve_t* ls,
-		matx_factor_dense_f64_t* F);
+	MATX_API void matx_factor_dense_d_i8_destroy(const matx_dense_linsolve_t* ls,
+		matx_factor_dense_d_i8_t* F);
 
 	/**
 	 * @brief Solve a real linear system directly via LU factorization (DGETRF + DGETRS)
 	 * @formula A * x = b  =>  x = A^{-1} * b
 	 *          Factorizes A internally, solves for x, and discards the factorization.
 	 */
-	MATX_API matx_status_t matx_solve_dense_f64(const matx_dense_linsolve_t* ls,
-		const matx_dense_f64_t A,
+	MATX_API matx_status_t matx_solve_dense_d_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_d_i8_t A,
 		const matx_double* b,
 		matx_double* x);
 
@@ -103,31 +103,31 @@ extern "C" {
 	 *          where P is a permutation matrix, L is lower triangular with unit diagonal,
 	 *          U is upper triangular.
 	 */
-	MATX_API matx_status_t matx_factor_dense_c64(const matx_dense_linsolve_t* ls,
-		const matx_dense_c64_t A,
-		matx_factor_dense_c64_t** out_F);
+	MATX_API matx_status_t matx_factor_dense_z_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_z_i8_t A,
+		matx_factor_dense_z_i8_t** out_F);
 
 	/**
 	 * @brief Solve a complex linear system using pre-computed LU factorization (ZGETRS)
 	 * @formula A * x = b  =>  x = A^{-1} * b
 	 */
-	MATX_API matx_status_t matx_solve_dense_c64_factor(const matx_dense_linsolve_t* ls,
-		const matx_factor_dense_c64_t* F,
-		const matx_vec_c64_t b,
-		matx_vec_c64_t x);
+	MATX_API matx_status_t matx_solve_dense_z_i8_factor(const matx_dense_linsolve_t* ls,
+		const matx_factor_dense_z_i8_t* F,
+		const matx_vec_z_i8_t b,
+		matx_vec_z_i8_t x);
 
-	MATX_API void matx_factor_dense_c64_destroy(const matx_dense_linsolve_t* ls,
-		matx_factor_dense_c64_t* F);
+	MATX_API void matx_factor_dense_z_i8_destroy(const matx_dense_linsolve_t* ls,
+		matx_factor_dense_z_i8_t* F);
 
 	/**
 	 * @brief Solve a complex linear system directly via LU factorization (ZGETRF + ZGETRS)
 	 * @formula A * x = b  =>  x = A^{-1} * b
 	 *          Factorizes A internally, solves for x, and discards the factorization.
 	 */
-	MATX_API matx_status_t matx_solve_dense_c64(const matx_dense_linsolve_t* ls,
-		const matx_dense_c64_t A,
-		const matx_vec_c64_t b,
-		matx_vec_c64_t x);
+	MATX_API matx_status_t matx_solve_dense_z_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_z_i8_t A,
+		const matx_vec_z_i8_t b,
+		matx_vec_z_i8_t x);
 
 	// ---- Cholesky ----
 
@@ -137,22 +137,22 @@ extern "C" {
 	 *          where L is lower triangular, U is upper triangular.
 	 *          A must be symmetric positive-definite.
 	 */
-	MATX_API matx_status_t matx_factor_chol_f64(const matx_dense_linsolve_t* ls,
-		const matx_dense_f64_t A, int uplo, matx_factor_dense_f64_t** out_F);
+	MATX_API matx_status_t matx_factor_chol_d_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_d_i8_t A, int uplo, matx_factor_dense_d_i8_t** out_F);
 
 	/**
 	 * @brief Solve a real SPD system using Cholesky factorization (DPOTRS)
 	 * @formula A * x = b  =>  x = A^{-1} * b
 	 */
-	MATX_API matx_status_t matx_solve_chol_f64(const matx_dense_linsolve_t* ls,
-		const matx_factor_dense_f64_t* F, const matx_double* b, matx_double* x);
+	MATX_API matx_status_t matx_solve_chol_d_i8(const matx_dense_linsolve_t* ls,
+		const matx_factor_dense_d_i8_t* F, const matx_double* b, matx_double* x);
 
 	/**
 	 * @brief Solve a real SPD system in one shot (DPOTRF + DPOTRS)
 	 * @formula A * x = b  =>  x = A^{-1} * b
 	 */
-	MATX_API matx_status_t matx_solve_chol_f64_oneshot(const matx_dense_linsolve_t* ls,
-		const matx_dense_f64_t A, int uplo, const matx_double* b, matx_double* x);
+	MATX_API matx_status_t matx_solve_chol_d_i8_oneshot(const matx_dense_linsolve_t* ls,
+		const matx_dense_d_i8_t A, int uplo, const matx_double* b, matx_double* x);
 
 	/**
 	 * @brief Cholesky factorization of a complex HPD matrix (ZPOTRF)
@@ -160,15 +160,15 @@ extern "C" {
 	 *          where L is lower triangular, U is upper triangular.
 	 *          A must be Hermitian positive-definite.
 	 */
-	MATX_API matx_status_t matx_factor_chol_c64(const matx_dense_linsolve_t* ls,
-		const matx_dense_c64_t A, int uplo, matx_factor_dense_c64_t** out_F);
+	MATX_API matx_status_t matx_factor_chol_z_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_z_i8_t A, int uplo, matx_factor_dense_z_i8_t** out_F);
 
 	/**
 	 * @brief Solve a complex HPD system using Cholesky factorization (ZPOTRS)
 	 * @formula A * x = b  =>  x = A^{-1} * b
 	 */
-	MATX_API matx_status_t matx_solve_chol_c64(const matx_dense_linsolve_t* ls,
-		const matx_factor_dense_c64_t* F, const matx_vec_c64_t b, matx_vec_c64_t x);
+	MATX_API matx_status_t matx_solve_chol_z_i8(const matx_dense_linsolve_t* ls,
+		const matx_factor_dense_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x);
 
 	// ---- Least squares (GELS) ----
 
@@ -177,16 +177,16 @@ extern "C" {
 	 * @formula min ||b - A * x||_2  (overdetermined, m >= n)
 	 *          or  min ||x||_2 s.t. A * x = b  (underdetermined, m < n)
 	 */
-	MATX_API matx_status_t matx_gels_f64(const matx_dense_linsolve_t* ls,
-		const matx_dense_f64_t A, const matx_double* b, matx_double* x);
+	MATX_API matx_status_t matx_gels_d_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_d_i8_t A, const matx_double* b, matx_double* x);
 
 	/**
 	 * @brief Solve a complex linear least-squares problem via QR/LQ (ZGELS)
 	 * @formula min ||b - A * x||_2  (overdetermined, m >= n)
 	 *          or  min ||x||_2 s.t. A * x = b  (underdetermined, m < n)
 	 */
-	MATX_API matx_status_t matx_gels_c64(const matx_dense_linsolve_t* ls,
-		const matx_dense_c64_t A, const matx_vec_c64_t b, matx_vec_c64_t x);
+	MATX_API matx_status_t matx_gels_z_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_z_i8_t A, const matx_vec_z_i8_t b, matx_vec_z_i8_t x);
 
 	// ---- Symmetric eigenvalue (SYEV) ----
 
@@ -196,8 +196,8 @@ extern "C" {
 	 *          where Q is orthogonal, W is the vector of eigenvalues in ascending order.
 	 *          eigenvalues must be pre-allocated (size n); eigenvectors allocated by callee (or NULL to skip)
 	 */
-	MATX_API matx_status_t matx_syev_f64(const matx_dense_linsolve_t* ls,
-		const matx_dense_f64_t A, matx_vec_f64_t eigenvalues, matx_dense_f64_t* eigenvectors);
+	MATX_API matx_status_t matx_syev_d_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_d_i8_t A, matx_vec_d_i8_t eigenvalues, matx_dense_d_i8_t* eigenvectors);
 
 	// ---- SVD (GESVD) ----
 
@@ -208,8 +208,8 @@ extern "C" {
 	 *          V^T is min(m,n)-by-n. A is m-by-n, overwritten.
 	 *          S must be pre-allocated (size min(m,n)); U and Vt allocated by callee (or NULL to skip)
 	 */
-	MATX_API matx_status_t matx_gesvd_f64(const matx_dense_linsolve_t* ls,
-		const matx_dense_f64_t A, matx_vec_f64_t S, matx_dense_f64_t* U, matx_dense_f64_t* Vt);
+	MATX_API matx_status_t matx_gesvd_d_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_d_i8_t A, matx_vec_d_i8_t S, matx_dense_d_i8_t* U, matx_dense_d_i8_t* Vt);
 
 	/**
 	 * @brief Singular value decomposition of a complex matrix (ZGESVD)
@@ -218,8 +218,8 @@ extern "C" {
 	 *          V^H is min(m,n)-by-n. A is m-by-n, overwritten.
 	 *          S must be pre-allocated (size min(m,n)); U and Vt allocated by callee (or NULL to skip)
 	 */
-	MATX_API matx_status_t matx_gesvd_c64(const matx_dense_linsolve_t* ls,
-		const matx_dense_c64_t A, matx_vec_f64_t S, matx_dense_c64_t* U, matx_dense_c64_t* Vt);
+	MATX_API matx_status_t matx_gesvd_z_i8(const matx_dense_linsolve_t* ls,
+		const matx_dense_z_i8_t A, matx_vec_d_i8_t S, matx_dense_z_i8_t* U, matx_dense_z_i8_t* Vt);
 
 #ifdef __cplusplus
 }

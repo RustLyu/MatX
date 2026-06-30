@@ -15,12 +15,12 @@
 //C(i,j)=k⨁​(A(i,k)⊗B(k,j))
 
 
-matx_status_t ref_spmv_c64_grb(
-	matx_complex_f64_t alpha,
-	matx_coo_c64_t A,
-	matx_vec_c64_t x,
-	matx_complex_f64_t beta,
-	matx_vec_c64_t y)
+matx_status_t ref_spmv_z_i8_grb(
+	matx_complex_d_i8_t alpha,
+	matx_coo_z_i8_t A,
+	matx_vec_z_i8_t x,
+	matx_complex_d_i8_t beta,
+	matx_vec_z_i8_t y)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !x || !y)
@@ -30,11 +30,11 @@ matx_status_t ref_spmv_c64_grb(
 		return MATX_ERR_INVALID_ARG;
 
 	if (A->handle_grb.valid <= 0)
-		coo_2_grb_c64(A);
+		coo_2_grb_z_i8(A);
 	if (x->handle_grb.valid <= 0)
-		vec_2_grb_c64(x);
+		vec_2_grb_z_i8(x);
 	if (y->handle_grb.valid <= 0)
-		vec_2_grb_c64(y);
+		vec_2_grb_z_i8(y);
 
 	GxB_FC64_t a = { alpha.real, alpha.imag };
 	GxB_FC64_t b = { beta.real, beta.imag };
@@ -69,17 +69,17 @@ matx_status_t ref_spmv_c64_grb(
 		MATX_ERROR("GrB_eWiseAdd error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	grb_2_vec_c64(y);
+	grb_2_vec_z_i8(y);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_spmm_c64_grb(
-	matx_complex_f64_t alpha,
-	matx_coo_c64_t A,
-	matx_dense_c64_t B,
-	matx_complex_f64_t beta,
-	matx_dense_c64_t C)
+matx_status_t ref_spmm_z_i8_grb(
+	matx_complex_d_i8_t alpha,
+	matx_coo_z_i8_t A,
+	matx_dense_z_i8_t B,
+	matx_complex_d_i8_t beta,
+	matx_dense_z_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !B || !C)
@@ -93,15 +93,15 @@ matx_status_t ref_spmm_c64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_c64(A);
+		coo_2_grb_z_i8(A);
 	}
 	if (B->handle_grb.valid <= 0)
 	{
-		dense_2_grb_c64(B);
+		dense_2_grb_z_i8(B);
 	}
 	if (C->handle_grb.valid <= 0)
 	{
-		dense_2_grb_c64(C);
+		dense_2_grb_z_i8(C);
 	}
 
 	/* C = alpha*A*B + beta*C */
@@ -138,17 +138,17 @@ matx_status_t ref_spmm_c64_grb(
 		return MATX_ERR_INTERNAL;
 	}
 	GrB_Matrix_free(&temp);
-	grb_2_dense_c64(C);
+	grb_2_dense_z_i8(C);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_spmv_f64_grb(
+matx_status_t ref_spmv_d_i8_grb(
 	matx_double alpha,
-	matx_coo_f64_t A,
-	matx_vec_f64_t x,
+	matx_coo_d_i8_t A,
+	matx_vec_d_i8_t x,
 	matx_double beta,
-	matx_vec_f64_t y)
+	matx_vec_d_i8_t y)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !x || !y)
@@ -158,11 +158,11 @@ matx_status_t ref_spmv_f64_grb(
 		return MATX_ERR_INVALID_ARG;
 
 	if (A->handle_grb.valid <= 0)
-		coo_2_grb_f64(A);
+		coo_2_grb_d_i8(A);
 	if (x->handle_grb.valid <= 0)
-		vec_2_grb_f64(x);
+		vec_2_grb_d_i8(x);
 	if (y->handle_grb.valid <= 0)
-		vec_2_grb_f64(y);
+		vec_2_grb_d_i8(y);
 
 	// gy = beta * gy
 	GrB_Info info = GrB_apply((GrB_Vector)y->handle_grb.impl, NULL, NULL,
@@ -197,17 +197,17 @@ matx_status_t ref_spmv_f64_grb(
 	}
 	matx_int64_t t1 = matx_tm_now(MATX_TM_MICROSECOND);
 	MATX_TRACE("GraphBLAS SpMV time: %ld micro.s", t1 - t0);
-	grb_2_vec_f64(y);
+	grb_2_vec_d_i8(y);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_spmm_f64_grb(
+matx_status_t ref_spmm_d_i8_grb(
 	matx_double alpha,
-	matx_coo_f64_t A,
-	matx_dense_f64_t B,
+	matx_coo_d_i8_t A,
+	matx_dense_d_i8_t B,
 	matx_double beta,
-	matx_dense_f64_t C)
+	matx_dense_d_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !B || !C)
@@ -216,15 +216,15 @@ matx_status_t ref_spmm_f64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_f64(A);
+		coo_2_grb_d_i8(A);
 	}
 	if (B->handle_grb.valid <= 0)
 	{
-		dense_2_grb_f64(B);
+		dense_2_grb_d_i8(B);
 	}
 	if (C->handle_grb.valid <= 0)
 	{
-		dense_2_grb_f64(C);
+		dense_2_grb_d_i8(C);
 	}
 
 	/* C = alpha*A*B + beta*C */
@@ -259,17 +259,17 @@ matx_status_t ref_spmm_f64_grb(
 		return MATX_ERR_INTERNAL;
 	}
 	GrB_Matrix_free(&temp);
-	grb_2_dense_f64(C);
+	grb_2_dense_d_i8(C);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_dsp2md_f64_grb(
+matx_status_t ref_dsp2md_d_i8_grb(
 	matx_double alpha,
-	matx_coo_f64_t A,
-	matx_coo_f64_t B,
+	matx_coo_d_i8_t A,
+	matx_coo_d_i8_t B,
 	matx_double beta,
-	matx_dense_f64_t C)
+	matx_dense_d_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !B || !C)
@@ -278,15 +278,15 @@ matx_status_t ref_dsp2md_f64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_f64(A);
+		coo_2_grb_d_i8(A);
 	}
 	if (B->handle_grb.valid <= 0)
 	{
-		coo_2_grb_f64(B);
+		coo_2_grb_d_i8(B);
 	}
 	if (C->handle_grb.valid <= 0)
 	{
-		dense_2_grb_f64(C);
+		dense_2_grb_d_i8(C);
 	}
 
 	/* C = alpha*A*B + beta*C */
@@ -321,17 +321,17 @@ matx_status_t ref_dsp2md_f64_grb(
 		return MATX_ERR_INTERNAL;
 	}
 	GrB_Matrix_free(&temp);
-	grb_2_dense_f64(C);
+	grb_2_dense_d_i8(C);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_zsp2md_c64_grb(
-	matx_complex_f64_t alpha,
-	matx_coo_c64_t A,
-	matx_coo_c64_t B,
-	matx_complex_f64_t beta,
-	matx_dense_c64_t C)
+matx_status_t ref_zsp2md_z_i8_grb(
+	matx_complex_d_i8_t alpha,
+	matx_coo_z_i8_t A,
+	matx_coo_z_i8_t B,
+	matx_complex_d_i8_t beta,
+	matx_dense_z_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !B || !C)
@@ -340,15 +340,15 @@ matx_status_t ref_zsp2md_c64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_c64(A);
+		coo_2_grb_z_i8(A);
 	}
 	if (B->handle_grb.valid <= 0)
 	{
-		coo_2_grb_c64(B);
+		coo_2_grb_z_i8(B);
 	}
 	if (C->handle_grb.valid <= 0)
 	{
-		dense_2_grb_c64(C);
+		dense_2_grb_z_i8(C);
 	}
 
 	/* C = alpha*A*B + beta*C */
@@ -384,14 +384,14 @@ matx_status_t ref_zsp2md_c64_grb(
 		return MATX_ERR_INTERNAL;
 	}
 	GrB_Matrix_free(&temp);
-	grb_2_dense_c64(C);
+	grb_2_dense_z_i8(C);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_transpose_f64_grb(
-	matx_coo_f64_t A,
-	matx_coo_f64_t out)
+matx_status_t ref_transpose_d_i8_grb(
+	matx_coo_d_i8_t A,
+	matx_coo_d_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A)
@@ -400,23 +400,23 @@ matx_status_t ref_transpose_f64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_f64(A);
+		coo_2_grb_d_i8(A);
 	}
-	create_empty_grb_f64(out);
+	create_empty_grb_d_i8(out);
 	GrB_Info info = GrB_transpose((GrB_Matrix)out->handle_grb.impl, NULL, NULL, (GrB_Matrix)A->handle_grb.impl, NULL);
 	if (info != GrB_SUCCESS)
 	{
 		MATX_ERROR("GrB_transpose error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	grb_2_coo_f64(out);
+	grb_2_coo_d_i8(out);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_transpose_c64_grb(
-	matx_coo_c64_t A,
-	matx_coo_c64_t out)
+matx_status_t ref_transpose_z_i8_grb(
+	matx_coo_z_i8_t A,
+	matx_coo_z_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !out)
@@ -425,23 +425,23 @@ matx_status_t ref_transpose_c64_grb(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_c64(A);
+		coo_2_grb_z_i8(A);
 	}
 	if (!out->handle_grb.impl)
-		create_empty_grb_c64(out);
+		create_empty_grb_z_i8(out);
 	GrB_Info info = GrB_transpose((GrB_Matrix)(out->handle_grb.impl), NULL, NULL, (GrB_Matrix)(A->handle_grb.impl), NULL);
 	if (info != GrB_SUCCESS)
 	{
 		MATX_ERROR("GrB_transpose error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	grb_2_coo_c64(out);
+	grb_2_coo_z_i8(out);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t A,
-	matx_coo_c64_t out)
+matx_status_t ref_conj_trans_z_i8_grb(matx_coo_z_i8_t A,
+	matx_coo_z_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A)
@@ -450,12 +450,12 @@ matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t A,
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_c64(A);
+		coo_2_grb_z_i8(A);
 	}
 	if (!out->handle_grb.impl)
-		create_empty_grb_c64(out);
+		create_empty_grb_z_i8(out);
 	//1. transpose
-	matx_status_t trans_status = ref_transpose_c64_grb(A, out);
+	matx_status_t trans_status = ref_transpose_z_i8_grb(A, out);
 	if (trans_status != MATX_OK)
 	{
 		MATX_ERROR("GrB_transpose error: %d", trans_status);
@@ -469,7 +469,7 @@ matx_status_t ref_conj_trans_c64_grb(matx_coo_c64_t A,
 		MATX_ERROR("GrB_CONJ error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	grb_2_coo_c64(out);
+	grb_2_coo_z_i8(out);
 #endif
 	return MATX_OK;
 
@@ -486,10 +486,10 @@ matx_status_t ref_finalize_grb()
 
 // ---- Sparse matrix norms ----
 
-matx_status_t ref_norm1_mat_grb(matx_coo_f64_t A, matx_double* out) {
+matx_status_t ref_norm1_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (A->handle_grb.valid <= 0) coo_2_grb_f64(A);
+	if (A->handle_grb.valid <= 0) coo_2_grb_d_i8(A);
 
 	GrB_Matrix tmp;
 	GrB_Matrix_dup(&tmp, (GrB_Matrix)A->handle_grb.impl);
@@ -504,10 +504,10 @@ matx_status_t ref_norm1_mat_grb(matx_coo_f64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-matx_status_t ref_norminf_mat_grb(matx_coo_f64_t A, matx_double* out) {
+matx_status_t ref_norminf_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (A->handle_grb.valid <= 0) coo_2_grb_f64(A);
+	if (A->handle_grb.valid <= 0) coo_2_grb_d_i8(A);
 
 	GrB_Matrix tmp;
 	GrB_Matrix_dup(&tmp, (GrB_Matrix)A->handle_grb.impl);
@@ -522,10 +522,10 @@ matx_status_t ref_norminf_mat_grb(matx_coo_f64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-matx_status_t ref_normfro_mat_grb(matx_coo_f64_t A, matx_double* out) {
+matx_status_t ref_normfro_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (A->handle_grb.valid <= 0) coo_2_grb_f64(A);
+	if (A->handle_grb.valid <= 0) coo_2_grb_d_i8(A);
 
 	GrB_Matrix tmp;
 	GrB_Matrix_dup(&tmp, (GrB_Matrix)A->handle_grb.impl);
@@ -540,10 +540,10 @@ matx_status_t ref_normfro_mat_grb(matx_coo_f64_t A, matx_double* out) {
 
 // ---- Sparse matrix norms (c64) ----
 
-matx_status_t ref_norm1_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
+matx_status_t ref_norm1_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (A->handle_grb.valid <= 0) coo_2_grb_c64(A);
+	if (A->handle_grb.valid <= 0) coo_2_grb_z_i8(A);
 
 	GrB_Matrix abs_mat;
 	GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
@@ -558,10 +558,10 @@ matx_status_t ref_norm1_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-matx_status_t ref_norminf_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
+matx_status_t ref_norminf_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (A->handle_grb.valid <= 0) coo_2_grb_c64(A);
+	if (A->handle_grb.valid <= 0) coo_2_grb_z_i8(A);
 
 	GrB_Matrix abs_mat;
 	GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
@@ -576,10 +576,10 @@ matx_status_t ref_norminf_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
 	return MATX_OK;
 }
 
-matx_status_t ref_normfro_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
+matx_status_t ref_normfro_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
-	if (A->handle_grb.valid <= 0) coo_2_grb_c64(A);
+	if (A->handle_grb.valid <= 0) coo_2_grb_z_i8(A);
 
 	GrB_Matrix abs_mat;
 	GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
@@ -595,13 +595,13 @@ matx_status_t ref_normfro_mat_c64_grb(matx_coo_c64_t A, matx_double* out) {
 
 // ---- Sparse-sparse addition ----
 
-matx_status_t ref_spadd_f64_grb(matx_double alpha, matx_coo_f64_t A,
-	matx_double beta, matx_coo_f64_t B, matx_coo_f64_t out) {
+matx_status_t ref_spadd_d_i8_grb(matx_double alpha, matx_coo_d_i8_t A,
+	matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
 	if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
-	if (A->handle_grb.valid <= 0) coo_2_grb_f64(A);
-	if (B->handle_grb.valid <= 0) coo_2_grb_f64(B);
+	if (A->handle_grb.valid <= 0) coo_2_grb_d_i8(A);
+	if (B->handle_grb.valid <= 0) coo_2_grb_d_i8(B);
 
 	GrB_Matrix temp_a;
 	GrB_Matrix_dup(&temp_a, (GrB_Matrix)A->handle_grb.impl);
@@ -610,27 +610,27 @@ matx_status_t ref_spadd_f64_grb(matx_double alpha, matx_coo_f64_t A,
 	GrB_Matrix_dup(&temp_b, (GrB_Matrix)B->handle_grb.impl);
 	GrB_apply(temp_b, NULL, NULL, GrB_TIMES_FP64, temp_b, beta, NULL);
 
-	create_empty_grb_f64(out);
+	create_empty_grb_d_i8(out);
 	GrB_Info info = GrB_eWiseAdd((GrB_Matrix)out->handle_grb.impl, NULL, NULL,
 		GrB_PLUS_FP64, temp_a, temp_b, NULL);
 	GrB_Matrix_free(&temp_a);
 	GrB_Matrix_free(&temp_b);
 	if (info != GrB_SUCCESS) {
-		MATX_ERROR("GrB_eWiseAdd spadd_f64 error: %d", info);
+		MATX_ERROR("GrB_eWiseAdd spadd_d_i8 error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	grb_2_coo_f64(out);
+	grb_2_coo_d_i8(out);
 #endif
 	return MATX_OK;
 }
 
-matx_status_t ref_spadd_c64_grb(matx_complex_f64_t alpha, matx_coo_c64_t A,
-	matx_complex_f64_t beta, matx_coo_c64_t B, matx_coo_c64_t out) {
+matx_status_t ref_spadd_z_i8_grb(matx_complex_d_i8_t alpha, matx_coo_z_i8_t A,
+	matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
 	if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
 	if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
-	if (A->handle_grb.valid <= 0) coo_2_grb_c64(A);
-	if (B->handle_grb.valid <= 0) coo_2_grb_c64(B);
+	if (A->handle_grb.valid <= 0) coo_2_grb_z_i8(A);
+	if (B->handle_grb.valid <= 0) coo_2_grb_z_i8(B);
 
 	GxB_FC64_t a = { alpha.real, alpha.imag };
 	GxB_FC64_t b = { beta.real, beta.imag };
@@ -641,16 +641,16 @@ matx_status_t ref_spadd_c64_grb(matx_complex_f64_t alpha, matx_coo_c64_t A,
 	GrB_Matrix_dup(&temp_b, (GrB_Matrix)B->handle_grb.impl);
 	GrB_apply(temp_b, NULL, NULL, GxB_TIMES_FC64, temp_b, b, NULL);
 
-	create_empty_grb_c64(out);
+	create_empty_grb_z_i8(out);
 	GrB_Info info = GrB_eWiseAdd((GrB_Matrix)out->handle_grb.impl, NULL, NULL,
 		GxB_PLUS_FC64, temp_a, temp_b, NULL);
 	GrB_Matrix_free(&temp_a);
 	GrB_Matrix_free(&temp_b);
 	if (info != GrB_SUCCESS) {
-		MATX_ERROR("GrB_eWiseAdd spadd_c64 error: %d", info);
+		MATX_ERROR("GrB_eWiseAdd spadd_z_i8 error: %d", info);
 		return MATX_ERR_INTERNAL;
 	}
-	grb_2_coo_c64(out);
+	grb_2_coo_z_i8(out);
 #endif
 	return MATX_OK;
 }
@@ -693,24 +693,24 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 	{
 		.kind = MATX_SPARSE_BACKEND_GRAPHBLAS,
 		.vt = {
-			.spmm_c64 = ref_spmm_c64_grb,
-			.spmv_c64 = ref_spmv_c64_grb,
-			.spmm_f64 = ref_spmm_f64_grb,
-			.spmv_f64 = ref_spmv_f64_grb,
-			.dsp2md_f64 = ref_dsp2md_f64_grb,
-			.zsp2md_c64 = ref_zsp2md_c64_grb,
-			.transpose_f64 = ref_transpose_f64_grb,
-			.transpose_c64 = ref_transpose_c64_grb,
-			.conj_trans_c64 = ref_conj_trans_c64_grb,
+			.spmm_z_i8 = ref_spmm_z_i8_grb,
+			.spmv_z_i8 = ref_spmv_z_i8_grb,
+			.spmm_d_i8 = ref_spmm_d_i8_grb,
+			.spmv_d_i8 = ref_spmv_d_i8_grb,
+			.dsp2md_d_i8 = ref_dsp2md_d_i8_grb,
+			.zsp2md_z_i8 = ref_zsp2md_z_i8_grb,
+			.transpose_d_i8 = ref_transpose_d_i8_grb,
+			.transpose_z_i8 = ref_transpose_z_i8_grb,
+			.conj_trans_z_i8 = ref_conj_trans_z_i8_grb,
 			.finalize = ref_finalize_grb,
-			.norm1_mat_f64 = ref_norm1_mat_grb,
-			.norminf_mat_f64 = ref_norminf_mat_grb,
-			.normfro_mat_f64 = ref_normfro_mat_grb,
-			.norm1_mat_c64 = ref_norm1_mat_c64_grb,
-			.norminf_mat_c64 = ref_norminf_mat_c64_grb,
-			.normfro_mat_c64 = ref_normfro_mat_c64_grb,
-			.spadd_f64 = ref_spadd_f64_grb,
-			.spadd_c64 = ref_spadd_c64_grb,
+			.norm1_mat_d_i8 = ref_norm1_mat_grb,
+			.norminf_mat_d_i8 = ref_norminf_mat_grb,
+			.normfro_mat_d_i8 = ref_normfro_mat_grb,
+			.norm1_mat_z_i8 = ref_norm1_mat_z_i8_grb,
+			.norminf_mat_z_i8 = ref_norminf_mat_z_i8_grb,
+			.normfro_mat_z_i8 = ref_normfro_mat_z_i8_grb,
+			.spadd_d_i8 = ref_spadd_d_i8_grb,
+			.spadd_z_i8 = ref_spadd_z_i8_grb,
 		}
 	};
 	return b;

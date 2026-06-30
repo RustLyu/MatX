@@ -12,7 +12,7 @@
 /**
  * @brief MUMPS context for real double (f64) sparse factorization
  */
-typedef struct matx_factor_sparse_f64_mumps {
+typedef struct matx_factor_sparse_d_i8_mumps {
 #if MATX_HAVE_MUMPS
     DMUMPS_STRUC_C mumps;
     matx_int64_t n;
@@ -22,12 +22,12 @@ typedef struct matx_factor_sparse_f64_mumps {
     matx_double* a;     // Values
 #endif
     int unused;
-}matx_factor_sparse_f64_mumps_t;
+}matx_factor_sparse_d_i8_mumps_t;
 
 /**
  * @brief MUMPS context for complex double (c64) sparse factorization
  */
-typedef struct matx_factor_sparse_c64_mumps {
+typedef struct matx_factor_sparse_z_i8_mumps {
 #if MATX_HAVE_MUMPS
     ZMUMPS_STRUC_C mumps;
     matx_int64_t n;
@@ -37,17 +37,17 @@ typedef struct matx_factor_sparse_c64_mumps {
     matx_double* a;      // Complex values: [r0,i0,r1,i1,...]
 #endif
     int unused;
-} matx_factor_sparse_c64_mumps_t;
+} matx_factor_sparse_z_i8_mumps_t;
 
 /**
  * @brief Destroy real f64 MUMPS factorization context
  * @param F Factor handle
  */
-static void mumps_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
+static void mumps_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
 {
     if (!F) return;
 #if MATX_HAVE_MUMPS
-    matx_factor_sparse_f64_mumps_t* ptr = (matx_factor_sparse_f64_mumps_t*)F->reserved;
+    matx_factor_sparse_d_i8_mumps_t* ptr = (matx_factor_sparse_d_i8_mumps_t*)F->reserved;
     // Cleanup MUMPS internal data
     if (ptr->mumps.comm_fortran != -987654) {
         ptr->mumps.job = -2;
@@ -67,7 +67,7 @@ static void mumps_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
  * @param out_F Output factorization handle
  * @return matx_status_t
  */
-static matx_status_t mumps_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64_t* out_F)
+static matx_status_t mumps_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
 {
     if (!A || !out_F) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_MUMPS
@@ -75,17 +75,17 @@ static matx_status_t mumps_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f
     return MATX_ERR_NOT_SUPPORTED;
 #else
     if (out_F->reserved)
-        mumps_factor_csc_f64_destroy(out_F);
+        mumps_factor_csc_d_i8_destroy(out_F);
     if (A->nrows != A->ncols || A->nrows <= 0) return MATX_ERR_INVALID_ARG;
 
     // Convert to CSC format
-    matx_status_t st = coo_to_csc_f64(A);
+    matx_status_t st = coo_to_csc_d_i8(A);
     if (st != MATX_OK) return st;
-    st = coo_to_csc_f64_value_remap(A);
+    st = coo_to_csc_d_i8_value_remap(A);
     if (st != MATX_OK) return st;
 
     // Allocate factor handle
-    matx_factor_sparse_f64_mumps_t* F = (matx_factor_sparse_f64_mumps_t*)calloc(1, sizeof(*F));
+    matx_factor_sparse_d_i8_mumps_t* F = (matx_factor_sparse_d_i8_mumps_t*)calloc(1, sizeof(*F));
     if (!F)
       return MATX_ERR_OUT_OF_MEMORY;
     out_F->reserved = F;
@@ -97,7 +97,7 @@ static matx_status_t mumps_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f
     F->jcn = (matx_int64_t*)malloc(sizeof(matx_int64_t) * (size_t)F->nnz);
     F->a = (matx_double*)malloc(sizeof(matx_double) * (size_t)F->nnz);
     if (!F->irn || !F->jcn || !F->a) {
-        mumps_factor_csc_f64_destroy(out_F);
+        mumps_factor_csc_d_i8_destroy(out_F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -130,7 +130,7 @@ static matx_status_t mumps_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f
     dmumps_c(&F->mumps);
     if (F->mumps.info[0] != 0) {
         MATX_ERROR("MUMPS real analysis failed, info[0]=%d", F->mumps.info[0]);
-        mumps_factor_csc_f64_destroy(out_F);
+        mumps_factor_csc_d_i8_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -139,7 +139,7 @@ static matx_status_t mumps_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f
     dmumps_c(&F->mumps);
     if (F->mumps.info[0] != 0) {
         MATX_ERROR("MUMPS real factorization failed, info[0]=%d", F->mumps.info[0]);
-        mumps_factor_csc_f64_destroy(out_F);
+        mumps_factor_csc_d_i8_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -154,14 +154,14 @@ static matx_status_t mumps_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f
  * @param x Solution vector
  * @return matx_status_t
  */
-static matx_status_t mumps_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx_double* b, matx_double* x)
+static matx_status_t mumps_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F, const matx_double* b, matx_double* x)
 {
     if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_MUMPS
     (void)F; (void)b; (void)x;
     return MATX_ERR_NOT_SUPPORTED;
 #else
-    matx_factor_sparse_f64_mumps_t* ptr = (matx_factor_sparse_f64_mumps_t*)F->reserved;
+    matx_factor_sparse_d_i8_mumps_t* ptr = (matx_factor_sparse_d_i8_mumps_t*)F->reserved;
     // Copy RHS to MUMPS solution buffer
     for (matx_int64_t i = 0; i < ptr->n; i++) {
         x[i] = b[i];
@@ -184,12 +184,12 @@ static matx_status_t mumps_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx
  * @brief Destroy complex c64 MUMPS factorization context
  * @param F Complex factor handle
  */
-static void mumps_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
+static void mumps_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
 {
     if (!F) return;
 #if MATX_HAVE_MUMPS
     // Cleanup MUMPS internal data
-    matx_factor_sparse_f64_mumps_t* ptr = (matx_factor_sparse_f64_mumps_t*)F->reserved;
+    matx_factor_sparse_d_i8_mumps_t* ptr = (matx_factor_sparse_d_i8_mumps_t*)F->reserved;
     if (ptr->mumps.comm_fortran != -987654) {
         ptr->mumps.job = -2;
         dmumps_c(&ptr->mumps);
@@ -208,7 +208,7 @@ static void mumps_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
  * @param out_F Output complex factorization handle
  * @return matx_status_t
  */
-static matx_status_t mumps_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64_t* out_F)
+static matx_status_t mumps_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
 {
     if (!A || !out_F) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_MUMPS
@@ -216,18 +216,18 @@ static matx_status_t mumps_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c
     return MATX_ERR_NOT_SUPPORTED;
 #else
     if (out_F->reserved)
-        mumps_factor_csc_c64_destroy(out_F);
+        mumps_factor_csc_z_i8_destroy(out_F);
     if (A->nrows != A->ncols || A->nrows <= 0) 
         return MATX_ERR_INVALID_ARG;
 
     // Convert complex COO to CSC
-    matx_status_t st = coo_to_csc_c64(A);
+    matx_status_t st = coo_to_csc_z_i8(A);
     if (st != MATX_OK) return st;
-    st = coo_to_csc_c64_value_remap(A);
+    st = coo_to_csc_z_i8_value_remap(A);
     if (st != MATX_OK) return st;
 
     // Allocate complex factor handle
-    matx_factor_sparse_c64_mumps_t* F = (matx_factor_sparse_c64_mumps_t*)calloc(1, sizeof(*F));
+    matx_factor_sparse_z_i8_mumps_t* F = (matx_factor_sparse_z_i8_mumps_t*)calloc(1, sizeof(*F));
     if (!F)
       return MATX_ERR_OUT_OF_MEMORY;
     out_F->reserved= F;
@@ -239,7 +239,7 @@ static matx_status_t mumps_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c
     F->jcn = (matx_int64_t*)malloc(sizeof(matx_int64_t) * (size_t)F->nnz);
     F->a = (matx_double*)malloc(sizeof(matx_double) * 2 * (size_t)F->nnz);
     if (!F->irn || !F->jcn || !F->a) {
-        mumps_factor_csc_c64_destroy(out_F);
+        mumps_factor_csc_z_i8_destroy(out_F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -273,7 +273,7 @@ static matx_status_t mumps_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c
     zmumps_c(&F->mumps);
     if (F->mumps.info[0] != 0) {
         MATX_ERROR("MUMPS complex analysis failed, info[0]=%d", F->mumps.info[0]);
-        mumps_factor_csc_c64_destroy(out_F);
+        mumps_factor_csc_z_i8_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -282,7 +282,7 @@ static matx_status_t mumps_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c
     zmumps_c(&F->mumps);
     if (F->mumps.info[0] != 0) {
         MATX_ERROR("MUMPS complex factorization failed, info[0]=%d", F->mumps.info[0]);
-        mumps_factor_csc_c64_destroy(out_F);
+        mumps_factor_csc_z_i8_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -297,14 +297,14 @@ static matx_status_t mumps_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c
  * @param x Complex solution vector
  * @return matx_status_t
  */
-static matx_status_t mumps_solve_csc_c64(matx_factor_sparse_c64_t* F, const matx_vec_c64_t b, matx_vec_c64_t x)
+static matx_status_t mumps_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x)
 {
     if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_MUMPS
     (void)F; (void)b; (void)x;
     return MATX_ERR_NOT_SUPPORTED;
 #else
-    matx_factor_sparse_c64_mumps_t* ptr = (matx_factor_sparse_c64_mumps_t*)F->reserved;
+    matx_factor_sparse_z_i8_mumps_t* ptr = (matx_factor_sparse_z_i8_mumps_t*)F->reserved;
     // Allocate interleaved complex RHS buffer for MUMPS
     matx_double* rhs_umf = (matx_double*)malloc(sizeof(matx_double) * 2 * (size_t)ptr->n);
     if (!rhs_umf)
@@ -349,12 +349,12 @@ matx_sparse_linsolve_t matx_linsolve_make_mumps(void)
     matx_sparse_linsolve_t ls = {
         .kind = MATX_LINSOLVE_BACKEND_MUMPS,
         .vt = {
-            .factor_csc_f64 = &mumps_factor_csc_f64,
-            .solve_csc_f64 = &mumps_solve_csc_f64,
-            .factor_csc_f64_destroy = &mumps_factor_csc_f64_destroy,
-            .factor_csc_c64 = &mumps_factor_csc_c64,
-            .solve_csc_c64 = &mumps_solve_csc_c64,
-            .factor_csc_c64_destroy = &mumps_factor_csc_c64_destroy
+            .factor_csc_d_i8 = &mumps_factor_csc_d_i8,
+            .solve_csc_d_i8 = &mumps_solve_csc_d_i8,
+            .factor_csc_d_i8_destroy = &mumps_factor_csc_d_i8_destroy,
+            .factor_csc_z_i8 = &mumps_factor_csc_z_i8,
+            .solve_csc_z_i8 = &mumps_solve_csc_z_i8,
+            .factor_csc_z_i8_destroy = &mumps_factor_csc_z_i8_destroy
         }
     };
     return ls;

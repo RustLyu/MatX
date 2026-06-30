@@ -4,12 +4,12 @@
 
 #include <suitesparse/GraphBLAS.h>
 
-matx_status_t ref_spmv_c64(
-	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_vec_c64_t* x,
-	matx_complex_f64 beta,
-	matx_vec_c64_t* y)
+matx_status_t ref_spmv_z_i8(
+	matx_complex_d_i8 alpha,
+	matx_coo_z_i8_t* A,
+	matx_vec_z_i8_t* x,
+	matx_complex_d_i8 beta,
+	matx_vec_z_i8_t* y)
 {
 	GrB_Info info = GrB_init(GrB_NONBLOCKING);
 	if (!A || !x || !y)
@@ -22,17 +22,17 @@ matx_status_t ref_spmv_c64(
 
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_c64(A);
+		coo_2_grb_z_i8(A);
 	}
 	/* ---------------- build vectors ---------------- */
 	if (x->handle_grb.valid <= 0)
 	{
-		vec_2_grb_c64(x);
+		vec_2_grb_z_i8(x);
 	}
 
 	if (y->handle_grb.valid <= 0)
 	{
-		vec_2_grb_c64(y);
+		vec_2_grb_z_i8(y);
 	}
 	/* ---------------- gy = alpha*A*x + beta*y ---------------- */
 	GxB_FC64_t a = { alpha.real, alpha.imag };
@@ -49,16 +49,16 @@ matx_status_t ref_spmv_c64(
 	// gy = temp + gy
 	info = GrB_eWiseAdd(*(GrB_Vector*)y->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Vector*)y->handle_grb.impl, NULL);
 	GrB_Vector_free(&temp);
-	grb_2_vec_c64(y);
+	grb_2_vec_z_i8(y);
 	return MATX_OK;
 }
 
-matx_status_t ref_spmm_c64(
-	matx_complex_f64 alpha,
-	const matx_coo_c64_t* A,
-	const matx_dense_c64_t* B,
-	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+matx_status_t ref_spmm_z_i8(
+	matx_complex_d_i8 alpha,
+	const matx_coo_z_i8_t* A,
+	const matx_dense_z_i8_t* B,
+	matx_complex_d_i8 beta,
+	matx_dense_z_i8_t* C)
 {
 	GrB_Info info = GrB_init(GrB_NONBLOCKING);
 	if (!A || !B || !C)
@@ -72,15 +72,15 @@ matx_status_t ref_spmm_c64(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_c64(A);
+		coo_2_grb_z_i8(A);
 	}
 	if (B->handle_grb.valid <= 0)
 	{
-		dense_2_grb_c64(B);
+		dense_2_grb_z_i8(B);
 	}
 	if (C->handle_grb.valid <= 0)
 	{
-		dense_2_grb_c64(C);
+		dense_2_grb_z_i8(C);
 	}
 
 	/* C = alpha*A*B + beta*C */
@@ -97,7 +97,7 @@ matx_status_t ref_spmm_c64(
 	//3. gC = temp + gC
 	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GxB_PLUS_FC64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
 	GrB_Matrix_free(&temp);
-	grb_2_dense_c64(C);
+	grb_2_dense_z_i8(C);
 	return MATX_OK;
 }
 #include <windows.h>
@@ -117,12 +117,12 @@ static inline int64_t get_time_us()
 	return (int64_t)(counter.QuadPart * 1000000LL / freq.QuadPart);
 }
 
-matx_status_t ref_spmv_f64(
+matx_status_t ref_spmv_d_i8(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_vec_f64_t* x,
+	matx_coo_d_i8_t* A,
+	matx_vec_d_i8_t* x,
 	matx_double beta,
-	matx_vec_f64_t* y)
+	matx_vec_d_i8_t* y)
 {
 	GrB_Info info = GrB_init(GrB_NONBLOCKING);
 	if (!A || !x || !y)
@@ -135,17 +135,17 @@ matx_status_t ref_spmv_f64(
 
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_f64(A);
+		coo_2_grb_d_i8(A);
 	}
 	/* ---------------- build vectors ---------------- */
 	if (x->handle_grb.valid <= 0)
 	{
-		vec_2_grb_f64(x);
+		vec_2_grb_d_i8(x);
 	}
 
 	if (y->handle_grb.valid <= 0)
 	{
-		vec_2_grb_f64(y);
+		vec_2_grb_d_i8(y);
 	}
 
 	/* ---------------- gy = alpha*A*x + beta*y ---------------- */
@@ -164,16 +164,16 @@ matx_status_t ref_spmv_f64(
 	int64_t t1 = get_time_us();
 	printf("GraphBLAS SpMV time: %ld us\n", t1 - t0);
 	GrB_Vector_free(&temp);
-	grb_2_vec_f64(y);
+	grb_2_vec_d_i8(y);
 	return MATX_OK;
 }
 
-matx_status_t ref_spmm_f64(
+matx_status_t ref_spmm_d_i8(
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_dense_f64_t* B,
+	matx_coo_d_i8_t* A,
+	matx_dense_d_i8_t* B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_d_i8_t* C)
 {
 	GrB_Info info = GrB_init(GrB_NONBLOCKING);
 	if (!A || !B || !C)
@@ -182,15 +182,15 @@ matx_status_t ref_spmm_f64(
 	/* build A */
 	if (A->handle_grb.valid <= 0)
 	{
-		coo_2_grb_f64(A);
+		coo_2_grb_d_i8(A);
 	}
 	if (B->handle_grb.valid <= 0)
 	{
-		dense_2_grb_f64(B);
+		dense_2_grb_d_i8(B);
 	}
 	if (C->handle_grb.valid <= 0)
 	{
-		dense_2_grb_f64(C);
+		dense_2_grb_d_i8(C);
 	}
 
 	/* C = alpha*A*B + beta*C */
@@ -205,17 +205,17 @@ matx_status_t ref_spmm_f64(
 	//3. gC = temp + gC
 	info = GrB_eWiseAdd(*(GrB_Matrix*)C->handle_grb.impl, NULL, NULL, GrB_PLUS_FP64, temp, *(GrB_Matrix*)C->handle_grb.impl, NULL);
 	GrB_Matrix_free(&temp);
-	grb_2_dense_f64(C);
+	grb_2_dense_d_i8(C);
 	return MATX_OK;
 }
 
 matx_sparse_backend_t matx_sparse_make_reference_grb(void) {
 	matx_sparse_backend_t b;
 	b.kind = MATX_SPARSE_BACKEND_GRAPHBLAS;
-	b.vt.spmm_c64 = ref_spmm_c64;
-	b.vt.spmv_c64 = ref_spmv_c64;
-	b.vt.spmm_f64 = ref_spmm_f64;
-	b.vt.spmv_f64 = ref_spmv_f64;
+	b.vt.spmm_z_i8 = ref_spmm_z_i8;
+	b.vt.spmv_z_i8 = ref_spmv_z_i8;
+	b.vt.spmm_d_i8 = ref_spmm_d_i8;
+	b.vt.spmv_d_i8 = ref_spmv_d_i8;
 	return b;
 }
 

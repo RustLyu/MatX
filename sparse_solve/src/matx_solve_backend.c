@@ -47,86 +47,86 @@ matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend
 // High-level wrappers ------------------------------------------------------
 
 // Sparse real
-matx_status_t matx_factor_csc_f64(const matx_sparse_linsolve_t* ls,
-                                  matx_coo_f64_t A,
-                                  matx_factor_sparse_f64_t* out_F) {
+matx_status_t matx_factor_csc_d_i8(const matx_sparse_linsolve_t* ls,
+                                  matx_coo_d_i8_t A,
+                                  matx_factor_sparse_d_i8_t* out_F) {
   if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
-  if (!ls->vt.factor_csc_f64) return MATX_ERR_NOT_SUPPORTED;
-  return ls->vt.factor_csc_f64(A, out_F);
+  if (!ls->vt.factor_csc_d_i8) return MATX_ERR_NOT_SUPPORTED;
+  return ls->vt.factor_csc_d_i8(A, out_F);
 }
 
-matx_status_t matx_solve_csc_f64_factor(const matx_sparse_linsolve_t* ls,
-                                        matx_factor_sparse_f64_t* F,
+matx_status_t matx_solve_csc_d_i8_factor(const matx_sparse_linsolve_t* ls,
+                                        matx_factor_sparse_d_i8_t* F,
                                         const matx_double* b,
     matx_double* x) {
   if (!ls || !F || !b || !x) return MATX_ERR_INVALID_ARG;
-  if (!ls->vt.solve_csc_f64) return MATX_ERR_NOT_SUPPORTED;
-  return ls->vt.solve_csc_f64(F, b, x);
+  if (!ls->vt.solve_csc_d_i8) return MATX_ERR_NOT_SUPPORTED;
+  return ls->vt.solve_csc_d_i8(F, b, x);
 }
 
-void matx_factor_csc_f64_destroy(const matx_sparse_linsolve_t* ls,
-                                 matx_factor_sparse_f64_t* F) {
+void matx_factor_csc_d_i8_destroy(const matx_sparse_linsolve_t* ls,
+                                 matx_factor_sparse_d_i8_t* F) {
   if (!ls || !F) return;
-  if (ls->vt.factor_csc_f64_destroy) {
-    ls->vt.factor_csc_f64_destroy(F);
+  if (ls->vt.factor_csc_d_i8_destroy) {
+    ls->vt.factor_csc_d_i8_destroy(F);
   }
 }
 
-matx_status_t matx_solve_csc_f64(const matx_sparse_linsolve_t* ls,
-                                 matx_coo_f64_t A,
+matx_status_t matx_solve_csc_d_i8(const matx_sparse_linsolve_t* ls,
+                                 matx_coo_d_i8_t A,
                                  const matx_double* b,
     matx_double* x) {
   if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
-  matx_factor_sparse_f64_t F;
+  matx_factor_sparse_d_i8_t F;
   F.reserved = NULL;
-  matx_status_t st = matx_factor_csc_f64(ls, A, &F);
+  matx_status_t st = matx_factor_csc_d_i8(ls, A, &F);
   if (st != MATX_OK) 
       return st;
-  st = matx_solve_csc_f64_factor(ls, &F, b, x);
-  matx_factor_csc_f64_destroy(ls, &F);
+  st = matx_solve_csc_d_i8_factor(ls, &F, b, x);
+  matx_factor_csc_d_i8_destroy(ls, &F);
   return st;
 }
 
 
 // Complex variants (default to NOT_SUPPORTED until backend provides them)
-matx_status_t matx_factor_csc_c64(const matx_sparse_linsolve_t* ls,
-                                  matx_coo_c64_t A,
-                                  matx_factor_sparse_c64_t* out_F) {
+matx_status_t matx_factor_csc_z_i8(const matx_sparse_linsolve_t* ls,
+                                  matx_coo_z_i8_t A,
+                                  matx_factor_sparse_z_i8_t* out_F) {
   if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
-  if (!ls->vt.factor_csc_c64) return MATX_ERR_NOT_SUPPORTED;
-  return ls->vt.factor_csc_c64(A, out_F);
+  if (!ls->vt.factor_csc_z_i8) return MATX_ERR_NOT_SUPPORTED;
+  return ls->vt.factor_csc_z_i8(A, out_F);
 }
 
-matx_status_t matx_solve_csc_c64_factor(const matx_sparse_linsolve_t* ls,
-                                        matx_factor_sparse_c64_t* F,
-                                        const matx_vec_c64_t b,
-                                        matx_vec_c64_t x) {
+matx_status_t matx_solve_csc_z_i8_factor(const matx_sparse_linsolve_t* ls,
+                                        matx_factor_sparse_z_i8_t* F,
+                                        const matx_vec_z_i8_t b,
+                                        matx_vec_z_i8_t x) {
   if (!ls || !F || !b || !x) return MATX_ERR_INVALID_ARG;
-  if (!ls->vt.solve_csc_c64) return MATX_ERR_NOT_SUPPORTED;
-  return ls->vt.solve_csc_c64(F, b, x);
+  if (!ls->vt.solve_csc_z_i8) return MATX_ERR_NOT_SUPPORTED;
+  return ls->vt.solve_csc_z_i8(F, b, x);
 }
 
-void matx_factor_csc_c64_destroy(const matx_sparse_linsolve_t* ls,
-                                 matx_factor_sparse_c64_t* F) {
+void matx_factor_csc_z_i8_destroy(const matx_sparse_linsolve_t* ls,
+                                 matx_factor_sparse_z_i8_t* F) {
   if (!ls || !F) 
       return;
-  if (ls->vt.factor_csc_c64_destroy) {
-    ls->vt.factor_csc_c64_destroy(F);
+  if (ls->vt.factor_csc_z_i8_destroy) {
+    ls->vt.factor_csc_z_i8_destroy(F);
   }
 }
 
-matx_status_t matx_solve_csc_c64(const matx_sparse_linsolve_t* ls,
-                                 matx_coo_c64_t A,
-                                 const matx_vec_c64_t b,
-                                 matx_vec_c64_t x) {
+matx_status_t matx_solve_csc_z_i8(const matx_sparse_linsolve_t* ls,
+                                 matx_coo_z_i8_t A,
+                                 const matx_vec_z_i8_t b,
+                                 matx_vec_z_i8_t x) {
   if (!ls || !A || !b || !x) 
       return MATX_ERR_INVALID_ARG;
-  matx_factor_sparse_c64_t F;
-  matx_status_t st = matx_factor_csc_c64(ls, A, &F);
+  matx_factor_sparse_z_i8_t F;
+  matx_status_t st = matx_factor_csc_z_i8(ls, A, &F);
   if (st != MATX_OK) 
       return st;
-  st = matx_solve_csc_c64_factor(ls, &F, b, x);
-  matx_factor_csc_c64_destroy(ls, &F);
+  st = matx_solve_csc_z_i8_factor(ls, &F, b, x);
+  matx_factor_csc_z_i8_destroy(ls, &F);
   return st;
 }
 

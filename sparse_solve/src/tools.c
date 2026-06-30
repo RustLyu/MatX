@@ -163,9 +163,9 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
     return COO2CSC_SUCCESS;
 }
 
-int build_Ax_from_coo_c64(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
-    const matx_complex_f64_t* values,
-    matx_complex_f64_t* Ax) {
+int build_Ax_from_coo_z_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
+    const matx_complex_d_i8_t* values,
+    matx_complex_d_i8_t* Ax) {
     if (coo2csc == NULL || values == NULL || Ax == NULL) {
         return COO2CSC_ERR_NULL_PTR;
     }
@@ -189,7 +189,7 @@ int build_Ax_from_coo_c64(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
     return COO2CSC_SUCCESS;
 }
 
-int build_Ax_from_coo_f64(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
+int build_Ax_from_coo_d_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
     const matx_double* values,
     matx_double* Ax) {
     if (coo2csc == NULL || values == NULL || Ax == NULL) {
@@ -209,31 +209,31 @@ int build_Ax_from_coo_f64(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
 }
 
 
-matx_status_t coo_to_csc_f64(matx_coo_f64_t coo)
+matx_status_t coo_to_csc_d_i8(matx_coo_d_i8_t coo)
 {
     int s = coo_2_csc(coo->columns, coo->rows, coo->ncols, coo->nnz, coo->handle_csc->col_ptr, coo->handle_csc->row_ind, (matx_int64_t*)coo->handle_csc->coo_csc_index_map);
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
 }
 
-matx_status_t coo_to_csc_c64(matx_coo_c64_t coo)
+matx_status_t coo_to_csc_z_i8(matx_coo_z_i8_t coo)
 {
     coo_2_csc(coo->columns, coo->rows, coo->ncols, coo->nnz, coo->handle_csc->col_ptr, coo->handle_csc->row_ind, (matx_int64_t*)coo->handle_csc->coo_csc_index_map);
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
 }
 
-matx_status_t coo_to_csc_c64_value_remap(matx_coo_c64_t coo)
+matx_status_t coo_to_csc_z_i8_value_remap(matx_coo_z_i8_t coo)
 {
-    build_Ax_from_coo_c64((matx_int64_t*)coo->handle_csc->coo_csc_index_map, coo->nnz, coo->values, coo->handle_csc->values);
+    build_Ax_from_coo_z_i8((matx_int64_t*)coo->handle_csc->coo_csc_index_map, coo->nnz, coo->values, coo->handle_csc->values);
     coo->handle_csc->only_value_update = 0;
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
 }
 
-matx_status_t coo_to_csc_f64_value_remap(matx_coo_f64_t coo)
+matx_status_t coo_to_csc_d_i8_value_remap(matx_coo_d_i8_t coo)
 {
-    build_Ax_from_coo_f64((matx_int64_t*)coo->handle_csc->coo_csc_index_map, coo->nnz, coo->values, coo->handle_csc->values);
+    build_Ax_from_coo_d_i8((matx_int64_t*)coo->handle_csc->coo_csc_index_map, coo->nnz, coo->values, coo->handle_csc->values);
     coo->handle_csc->only_value_update = 0;
     coo->handle_csc->struct_update = 0;
     return MATX_OK;

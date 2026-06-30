@@ -30,43 +30,43 @@ matx_sparse_backend_t matx_sparse_default(void) {
 	return choose_default_backend();
 }
 
-matx_status_t matx_spmv_coo_c64(const matx_sparse_backend_t* backend,
-	matx_complex_f64 alpha,
-	matx_coo_c64_t* A,
-	matx_vec_c64_t* x,
-	matx_complex_f64 beta,
-	matx_vec_c64_t* y)
+matx_status_t matx_spmv_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_complex_d_i8 alpha,
+	matx_coo_z_i8_t* A,
+	matx_vec_z_i8_t* x,
+	matx_complex_d_i8 beta,
+	matx_vec_z_i8_t* y)
 {
-	return backend->vt.spmv_c64(alpha, A, x, beta, y);
+	return backend->vt.spmv_z_i8(alpha, A, x, beta, y);
 	return MATX_OK;
 }
 
-matx_status_t matx_spmm_coo_c64(const matx_sparse_backend_t* backend,
-	matx_complex_f64 alpha,
-	const matx_coo_c64_t* A,
-	const matx_dense_c64_t* B,
-	matx_complex_f64 beta,
-	matx_dense_c64_t* C)
+matx_status_t matx_spmm_coo_z_i8(const matx_sparse_backend_t* backend,
+	matx_complex_d_i8 alpha,
+	const matx_coo_z_i8_t* A,
+	const matx_dense_z_i8_t* B,
+	matx_complex_d_i8 beta,
+	matx_dense_z_i8_t* C)
 {
-	return backend->vt.spmm_c64(alpha, A, B, beta, C);
+	return backend->vt.spmm_z_i8(alpha, A, B, beta, C);
 }
 
-matx_status_t matx_spmv_coo_f64(const matx_sparse_backend_t* backend,
+matx_status_t matx_spmv_coo_d_i8(const matx_sparse_backend_t* backend,
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_vec_f64_t* x,
+	matx_coo_d_i8_t* A,
+	matx_vec_d_i8_t* x,
 	matx_double beta,
-	matx_vec_f64_t* y)
+	matx_vec_d_i8_t* y)
 {
-	return backend->vt.spmv_f64(alpha, A, x, beta, y);
+	return backend->vt.spmv_d_i8(alpha, A, x, beta, y);
 }
 
-matx_status_t matx_spmm_coo_f64(const matx_sparse_backend_t* backend,
+matx_status_t matx_spmm_coo_d_i8(const matx_sparse_backend_t* backend,
 	matx_double alpha,
-	matx_coo_f64_t* A,
-	matx_dense_f64_t* B,
+	matx_coo_d_i8_t* A,
+	matx_dense_d_i8_t* B,
 	matx_double beta,
-	matx_dense_f64_t* C)
+	matx_dense_d_i8_t* C)
 {
-	return backend->vt.spmm_f64(alpha, A, B, beta, C);
+	return backend->vt.spmm_d_i8(alpha, A, B, beta, C);
 }

@@ -11,44 +11,44 @@ extern "C" {
 
 TEST(read, dense_real_4x4) {
 	matx_alloc_t a = matx_alloc_default();
-	matx_dense_f64_t mtx = NULL;
-	ASSERT_EQ(matx_read_dense_mtx_f64(&a, &mtx, "dense_real_4x4_print.txt"), MATX_OK);
-	matx_dense_f64_destroy(&a, mtx);
+	matx_dense_d_i8_t mtx = NULL;
+	ASSERT_EQ(matx_read_dense_mtx_d_i8(&a, &mtx, "dense_real_4x4_print.txt"), MATX_OK);
+	matx_dense_d_i8_destroy(&a, mtx);
 }
 
 TEST(read, dense_complex_4x4) {
 	matx_alloc_t a = matx_alloc_default();
-	matx_dense_c64_t mtx = NULL;
-	ASSERT_EQ(matx_read_dense_mtx_c64(&a, &mtx, "dense_complex_4x4_print.txt"), MATX_OK);
-	matx_dense_c64_destroy(&a, mtx);
+	matx_dense_z_i8_t mtx = NULL;
+	ASSERT_EQ(matx_read_dense_mtx_z_i8(&a, &mtx, "dense_complex_4x4_print.txt"), MATX_OK);
+	matx_dense_z_i8_destroy(&a, mtx);
 }
 
 
 TEST(read, sparse_real_4x4) {
 	matx_alloc_t a = matx_alloc_default();
-	matx_coo_f64_t mtx = NULL;
-	ASSERT_EQ(matx_read_sparse_mtx_f64(&a, &mtx, "sparse_real_4x4_print.txt"), MATX_OK);
-	matx_coo_sparse_f64_destroy(&a, mtx);
+	matx_coo_d_i8_t mtx = NULL;
+	ASSERT_EQ(matx_read_sparse_mtx_d_i8(&a, &mtx, "sparse_real_4x4_print.txt"), MATX_OK);
+	matx_coo_sparse_d_i8_destroy(&a, mtx);
 }
 
 TEST(read, sparse_complex_4x4) {
 	matx_alloc_t a = matx_alloc_default();
-	matx_coo_c64_t mtx = NULL;
-	ASSERT_EQ(matx_read_sparse_mtx_c64(&a, &mtx, "sparse_complex_4x4_print.txt"), MATX_OK);
-	matx_coo_sparse_c64_destroy(&a, mtx);
+	matx_coo_z_i8_t mtx = NULL;
+	ASSERT_EQ(matx_read_sparse_mtx_z_i8(&a, &mtx, "sparse_complex_4x4_print.txt"), MATX_OK);
+	matx_coo_sparse_z_i8_destroy(&a, mtx);
 }
 
 
 TEST(read, vec_real_4x4_read) {
 	matx_alloc_t a = matx_alloc_default();
-	matx_vec_f64_t vec = NULL;
-	ASSERT_EQ(matx_read_vec_f64(&a, &vec, "vec_real_4x4_print.txt"), MATX_OK);
-	matx_vec_f64_destroy(&a, vec);
+	matx_vec_d_i8_t vec = NULL;
+	ASSERT_EQ(matx_read_vec_d_i8(&a, &vec, "vec_real_4x4_print.txt"), MATX_OK);
+	matx_vec_d_i8_destroy(&a, vec);
 }
 
 TEST(read, vec_complex_4x4_read) {
 	matx_alloc_t a = matx_alloc_default();
-	matx_vec_c64_t vec = NULL;
-	ASSERT_EQ(matx_read_vec_c64(&a, &vec, "vec_complex_4x4_print.txt"), MATX_OK);
-	matx_vec_c64_destroy(&a, vec);
+	matx_vec_z_i8_t vec = NULL;
+	ASSERT_EQ(matx_read_vec_z_i8(&a, &vec, "vec_complex_4x4_print.txt"), MATX_OK);
+	matx_vec_z_i8_destroy(&a, vec);
 }

@@ -9,7 +9,7 @@
 /**
  * @brief Double-precision real sparse matrix factorization handle for UMFPACK
  */
-typedef struct matx_factor_sparse_f64_umfpack {
+typedef struct matx_factor_sparse_d_i8_umfpack {
     void* symbolic;
     void* numeric;
     matx_int64_t n;
@@ -17,12 +17,12 @@ typedef struct matx_factor_sparse_f64_umfpack {
     matx_int64_t* Ap;
     matx_int64_t* Ai;
     matx_double* Ax;
-}matx_factor_sparse_f64_umfpack_t;
+}matx_factor_sparse_d_i8_umfpack_t;
 
 /**
  * @brief Double-precision complex sparse matrix factorization handle for UMFPACK
  */
-typedef struct matx_factor_sparse_c64_umfpack {
+typedef struct matx_factor_sparse_z_i8_umfpack {
 #if MATX_HAVE_UMFPACK
     void* symbolic;
     void* numeric;
@@ -34,18 +34,18 @@ typedef struct matx_factor_sparse_c64_umfpack {
     matx_double* Az;
 #endif
     int unused;
-}matx_factor_sparse_c64_umfpack_t;
+}matx_factor_sparse_z_i8_umfpack_t;
 
 /**
  * @brief Destroy real f64 sparse factorization handle
  * @param F Factorization handle
  */
-static void umf_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
+static void umf_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
 {
     if (!F) 
         return;
 #if MATX_HAVE_UMFPACK
-    matx_factor_sparse_f64_umfpack_t* ptr = (matx_factor_sparse_f64_umfpack_t*)F->reserved;
+    matx_factor_sparse_d_i8_umfpack_t* ptr = (matx_factor_sparse_d_i8_umfpack_t*)F->reserved;
     if (ptr->numeric)  
         umfpack_dl_free_numeric(&ptr->numeric);
     if (ptr->symbolic) 
@@ -63,7 +63,7 @@ static void umf_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
  * @param out_F Output factorization handle
  * @return matx_status_t
  */
-static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64_t* out_F)
+static matx_status_t umf_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
 {
     if (!A || !out_F) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_UMFPACK
@@ -71,16 +71,16 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
     return MATX_ERR_NOT_SUPPORTED;
 #else
     if (out_F->reserved)
-        umf_factor_csc_f64_destroy(out_F);
+        umf_factor_csc_d_i8_destroy(out_F);
     if (A->nrows != A->ncols || A->nrows <= 0)
         return MATX_ERR_INVALID_ARG;
 
-    matx_status_t st = coo_to_csc_f64(A);
+    matx_status_t st = coo_to_csc_d_i8(A);
     if (st != MATX_OK) return st;
-    st = coo_to_csc_f64_value_remap(A);
+    st = coo_to_csc_d_i8_value_remap(A);
     if (st != MATX_OK) return st;
 
-    matx_factor_sparse_f64_umfpack_t* F = (matx_factor_sparse_f64_umfpack_t*)calloc(1, sizeof(*F));
+    matx_factor_sparse_d_i8_umfpack_t* F = (matx_factor_sparse_d_i8_umfpack_t*)calloc(1, sizeof(*F));
     if (!F)
         return MATX_ERR_OUT_OF_MEMORY;
 
@@ -92,7 +92,7 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
     F->Ai = (matx_int64_t*)malloc(sizeof(matx_int64_t) * (size_t)F->nnz);
     F->Ax = (matx_double*)malloc(sizeof(matx_double) * (size_t)F->nnz);
     if (!F->Ap || !F->Ai || !F->Ax) {
-        umf_factor_csc_f64_destroy(out_F);
+        umf_factor_csc_d_i8_destroy(out_F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -106,7 +106,7 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
         &F->symbolic, NULL, NULL);
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_dl_symbolic failed status=%d", status);
-        umf_factor_csc_f64_destroy(out_F);
+        umf_factor_csc_d_i8_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -115,7 +115,7 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
         F->symbolic, &F->numeric, NULL, NULL);
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_dl_numeric failed status=%d", status);
-        umf_factor_csc_f64_destroy(out_F);
+        umf_factor_csc_d_i8_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -130,14 +130,14 @@ static matx_status_t umf_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
  * @param x Solution vector
  * @return matx_status_t
  */
-static matx_status_t umf_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx_double* b, matx_double* x)
+static matx_status_t umf_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F, const matx_double* b, matx_double* x)
 {
     if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_UMFPACK
     (void)F; (void)b; (void)x;
     return MATX_ERR_NOT_SUPPORTED;
 #else
-    matx_factor_sparse_f64_umfpack_t* ptr = (matx_factor_sparse_f64_umfpack_t*)F->reserved;
+    matx_factor_sparse_d_i8_umfpack_t* ptr = (matx_factor_sparse_d_i8_umfpack_t*)F->reserved;
     int status = umfpack_dl_solve(UMFPACK_A,
         (const int64_t*)ptr->Ap, (const int64_t*)ptr->Ai, (const double*)ptr->Ax,
         (double*)x, (double*)b, ptr->numeric, NULL, NULL);
@@ -155,11 +155,11 @@ static matx_status_t umf_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx_d
  * @brief Destroy complex c64 sparse factorization handle
  * @param F Complex factorization handle
  */
-static void umf_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
+static void umf_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
 {
     if (!F || !F->reserved)
         return;
-    matx_factor_sparse_c64_umfpack_t* ptr = (matx_factor_sparse_c64_umfpack_t*)F->reserved;
+    matx_factor_sparse_z_i8_umfpack_t* ptr = (matx_factor_sparse_z_i8_umfpack_t*)F->reserved;
 #if MATX_HAVE_UMFPACK
     if (ptr->numeric)  umfpack_zl_free_numeric(&ptr->numeric);
     if (ptr->symbolic) umfpack_zl_free_symbolic(&ptr->symbolic);
@@ -176,7 +176,7 @@ static void umf_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
  * @param out_F Output complex factorization handle
  * @return matx_status_t
  */
-static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64_t* out_F)
+static matx_status_t umf_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
 {
     if (!A || !out_F) 
         return MATX_ERR_INVALID_ARG;
@@ -185,20 +185,20 @@ static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
     return MATX_ERR_NOT_SUPPORTED;
 #else
     if (out_F) 
-        umf_factor_csc_c64_destroy(out_F);
+        umf_factor_csc_z_i8_destroy(out_F);
     if (A->nrows != A->ncols || A->nrows <= 0) 
         return MATX_ERR_INVALID_ARG;
 
     // Convert complex COO to CSC format
-    matx_status_t st = coo_to_csc_c64(A);
+    matx_status_t st = coo_to_csc_z_i8(A);
     if (st != MATX_OK) 
         return st;
-    st = coo_to_csc_c64_value_remap(A);
+    st = coo_to_csc_z_i8_value_remap(A);
     if (st != MATX_OK) 
         return st;
 
     // Allocate factorization handle
-    matx_factor_sparse_c64_umfpack_t* F = (matx_factor_sparse_c64_umfpack_t*)calloc(1, sizeof(*F));
+    matx_factor_sparse_z_i8_umfpack_t* F = (matx_factor_sparse_z_i8_umfpack_t*)calloc(1, sizeof(*F));
     if (!F)
         return MATX_ERR_OUT_OF_MEMORY;
     out_F->reserved = F;
@@ -210,7 +210,7 @@ static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
     F->Ax = (matx_double*)malloc(sizeof(matx_double) * (size_t)F->nnz);
     F->Az = (matx_double*)malloc(sizeof(matx_double) * (size_t)F->nnz);
     if (!F->Ap || !F->Ai || !F->Az || !F->Ax) {
-        umf_factor_csc_c64_destroy(out_F);
+        umf_factor_csc_z_i8_destroy(out_F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -231,7 +231,7 @@ static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
         (const double*)F->Az, &F->symbolic, NULL, NULL);
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_zl_symbolic failed status=%d", status);
-        umf_factor_csc_c64_destroy(out_F);
+        umf_factor_csc_z_i8_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -241,7 +241,7 @@ static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
         (const double*)F->Az, F->symbolic, &F->numeric, NULL, NULL);
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_zl_numeric failed status=%d", status);
-        umf_factor_csc_c64_destroy(out_F);
+        umf_factor_csc_z_i8_destroy(out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -256,7 +256,7 @@ static matx_status_t umf_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
  * @param x Complex solution vector
  * @return matx_status_t
  */
-static matx_status_t umf_solve_csc_c64(matx_factor_sparse_c64_t* F, const matx_vec_c64_t b, matx_vec_c64_t x)
+static matx_status_t umf_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x)
 {
     if (!F || !b || !x) 
         return MATX_ERR_INVALID_ARG;
@@ -264,7 +264,7 @@ static matx_status_t umf_solve_csc_c64(matx_factor_sparse_c64_t* F, const matx_v
     (void)F; (void)b; (void)x;
     return MATX_ERR_NOT_SUPPORTED;
 #else
-    matx_factor_sparse_c64_umfpack_t* ptr = (matx_factor_sparse_c64_umfpack_t*)F->reserved;
+    matx_factor_sparse_z_i8_umfpack_t* ptr = (matx_factor_sparse_z_i8_umfpack_t*)F->reserved;
     // UMFPACK complex vectors: interleaved [real0, imag0, real1, imag1...]
     matx_double* b_umf_x = (matx_double*)malloc(sizeof(matx_double) * (size_t)ptr->nnz);
     matx_double* b_umf_z = (matx_double*)malloc(sizeof(matx_double) * (size_t)ptr->nnz);
@@ -321,12 +321,12 @@ matx_sparse_linsolve_t matx_linsolve_make_umfpack(void)
     matx_sparse_linsolve_t ls = {
         .kind = MATX_LINSOLVE_BACKEND_UMFPACK,
         .vt = {
-            .factor_csc_f64 = &umf_factor_csc_f64,
-            .solve_csc_f64 = &umf_solve_csc_f64,
-            .factor_csc_f64_destroy = &umf_factor_csc_f64_destroy,
-            .factor_csc_c64 = &umf_factor_csc_c64,
-            .solve_csc_c64 = &umf_solve_csc_c64,
-            .factor_csc_c64_destroy = &umf_factor_csc_c64_destroy
+            .factor_csc_d_i8 = &umf_factor_csc_d_i8,
+            .solve_csc_d_i8 = &umf_solve_csc_d_i8,
+            .factor_csc_d_i8_destroy = &umf_factor_csc_d_i8_destroy,
+            .factor_csc_z_i8 = &umf_factor_csc_z_i8,
+            .solve_csc_z_i8 = &umf_solve_csc_z_i8,
+            .factor_csc_z_i8_destroy = &umf_factor_csc_z_i8_destroy
         }
     };
     return ls;

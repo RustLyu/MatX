@@ -7,7 +7,7 @@
 #include <iostream>
 #include <iomanip>
 
-matx_status_t matx_read_dense_mtx_f64(const matx_alloc_t* alloc, matx_dense_f64_t* mtx, const char* file)
+matx_status_t matx_read_dense_mtx_d_i8(const matx_alloc_t* alloc, matx_dense_d_i8_t* mtx, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -22,7 +22,7 @@ matx_status_t matx_read_dense_mtx_f64(const matx_alloc_t* alloc, matx_dense_f64_
     matx_int64_t layout = -1;
     is >> m >> n >> layout;
 
-    auto status = matx_dense_f64_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
+    auto status = matx_dense_d_i8_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
     if (status != MATX_OK)
     {
         MATX_ERROR("create dense mtx failed code:%d", status);
@@ -43,7 +43,7 @@ matx_status_t matx_read_dense_mtx_f64(const matx_alloc_t* alloc, matx_dense_f64_
     return ret;
 }
 
-matx_status_t matx_read_dense_mtx_c64(const matx_alloc_t* alloc, matx_dense_c64_t* mtx, const char* file)
+matx_status_t matx_read_dense_mtx_z_i8(const matx_alloc_t* alloc, matx_dense_z_i8_t* mtx, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -58,7 +58,7 @@ matx_status_t matx_read_dense_mtx_c64(const matx_alloc_t* alloc, matx_dense_c64_
     matx_int64_t layout = -1;
     is >> m >> n >> layout;
 
-    auto status = matx_dense_c64_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
+    auto status = matx_dense_z_i8_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
     if (status != MATX_OK)
     {
         MATX_ERROR("create dense mtx failed code:%d", status);
@@ -79,7 +79,7 @@ matx_status_t matx_read_dense_mtx_c64(const matx_alloc_t* alloc, matx_dense_c64_
     return ret;
 }
 
-matx_status_t matx_read_sparse_mtx_f64(const matx_alloc_t* alloc, matx_coo_f64_t* mtx, const char* file)
+matx_status_t matx_read_sparse_mtx_d_i8(const matx_alloc_t* alloc, matx_coo_d_i8_t* mtx, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -94,7 +94,7 @@ matx_status_t matx_read_sparse_mtx_f64(const matx_alloc_t* alloc, matx_coo_f64_t
     matx_int64_t nnz = -1;
     is >> m >> n >> nnz;
 
-    auto status = matx_coo_sparse_f64_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
+    auto status = matx_coo_sparse_d_i8_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
     if (status != MATX_OK)
     {
         MATX_ERROR("create coo sparse mtx failed code:%d", status);
@@ -111,7 +111,7 @@ matx_status_t matx_read_sparse_mtx_f64(const matx_alloc_t* alloc, matx_coo_f64_t
     return ret;
 }
 
-matx_status_t matx_read_sparse_mtx_c64(const matx_alloc_t* alloc, matx_coo_c64_t* mtx, const char* file)
+matx_status_t matx_read_sparse_mtx_z_i8(const matx_alloc_t* alloc, matx_coo_z_i8_t* mtx, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -126,7 +126,7 @@ matx_status_t matx_read_sparse_mtx_c64(const matx_alloc_t* alloc, matx_coo_c64_t
     matx_int64_t nnz = -1;
     is >> m >> n >> nnz;
 
-    auto status = matx_coo_sparse_c64_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
+    auto status = matx_coo_sparse_z_i8_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
     if (status != MATX_OK)
     {
         MATX_ERROR("create coo sparse mtx failed code:%d", status);
@@ -143,7 +143,7 @@ matx_status_t matx_read_sparse_mtx_c64(const matx_alloc_t* alloc, matx_coo_c64_t
     return ret;
 }
 
-matx_status_t matx_read_vec_f64(const matx_alloc_t* alloc, matx_vec_f64_t* vec, const char* file)
+matx_status_t matx_read_vec_d_i8(const matx_alloc_t* alloc, matx_vec_d_i8_t* vec, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -156,7 +156,7 @@ matx_status_t matx_read_vec_f64(const matx_alloc_t* alloc, matx_vec_f64_t* vec, 
     matx_int64_t n = -1;
     is >> n;
 
-    auto status = matx_vec_f64_create(alloc, vec, NULL, n);
+    auto status = matx_vec_d_i8_create(alloc, vec, NULL, n);
     if (status != MATX_OK)
     {
         MATX_ERROR("create vec failed code:%d", status);
@@ -173,7 +173,7 @@ matx_status_t matx_read_vec_f64(const matx_alloc_t* alloc, matx_vec_f64_t* vec, 
     return ret;
 }
 
-matx_status_t matx_read_vec_c64(const matx_alloc_t* alloc, matx_vec_c64_t* vec, const char* file)
+matx_status_t matx_read_vec_z_i8(const matx_alloc_t* alloc, matx_vec_z_i8_t* vec, const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
@@ -186,7 +186,7 @@ matx_status_t matx_read_vec_c64(const matx_alloc_t* alloc, matx_vec_c64_t* vec, 
     matx_int64_t n = -1;
     is >> n;
 
-    auto status = matx_vec_c64_create(alloc, vec, NULL, n);
+    auto status = matx_vec_z_i8_create(alloc, vec, NULL, n);
     if (status != MATX_OK)
     {
         MATX_ERROR("create vec failed code:%d", status);

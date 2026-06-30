@@ -12,7 +12,7 @@
 /**
  * @brief Double precision sparse LU factorization handle
  */
-typedef struct matx_factor_sparse_f64_slu {
+typedef struct matx_factor_sparse_d_i8_slu {
 #if MATX_HAVE_SUPERLU
 	SuperMatrix A;
 	SuperMatrix L;
@@ -27,12 +27,12 @@ typedef struct matx_factor_sparse_f64_slu {
 	double* rhs;
 #endif
 	int place_holder;
-} matx_factor_sparse_f64_slu_t;
+} matx_factor_sparse_d_i8_slu_t;
 
 /**
  * @brief Complex double precision sparse LU factorization handle
  */
-typedef struct matx_factor_sparse_c64_slu {
+typedef struct matx_factor_sparse_z_i8_slu {
 #if MATX_HAVE_SUPERLU
 	SuperMatrix A;
 	SuperMatrix L;
@@ -47,17 +47,17 @@ typedef struct matx_factor_sparse_c64_slu {
 	doublecomplex* rhs;
 #endif
 	int unused;
-} matx_factor_sparse_c64_slu_t;
+} matx_factor_sparse_z_i8_slu_t;
 
 /**
  * @brief Destroy double precision sparse factorization handle and free resources
  * @param F Factor handle to destroy
  */
-static void slu_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
+static void slu_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
 {
 	if (!F) 
 		return;
-	matx_factor_sparse_f64_slu_t* ptr = (matx_factor_sparse_f64_slu_t*)F->reserved;
+	matx_factor_sparse_d_i8_slu_t* ptr = (matx_factor_sparse_d_i8_slu_t*)F->reserved;
 #if MATX_HAVE_SUPERLU
 	Destroy_SuperNode_Matrix(&ptr->L);
 	Destroy_CompCol_Matrix(&ptr->U);
@@ -78,7 +78,7 @@ static void slu_factor_csc_f64_destroy(matx_factor_sparse_f64_t* F)
  * @param out_F Output factorization handle
  * @return MATX_OK on success, error code otherwise
  */
-static matx_status_t slu_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64_t* out_F)
+static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
 {
 	if (!A || !out_F) 
 		return MATX_ERR_INVALID_ARG;
@@ -87,20 +87,20 @@ static matx_status_t slu_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
 	return MATX_ERR_NOT_SUPPORTED;
 #else
 	/* Free existing handle if allocated */
-	if (out_F) slu_factor_csc_f64_destroy(out_F);
+	if (out_F) slu_factor_csc_d_i8_destroy(out_F);
 
 	/* Validate matrix dimension */
 	if (A->nrows != A->ncols || A->nrows <= 0) return MATX_ERR_INVALID_ARG;
 	if (A->nrows > INT_MAX || A->nnz > INT_MAX) return MATX_ERR_NOT_SUPPORTED;
 
 	/* Convert COO to CSC format */
-	matx_status_t st = coo_to_csc_f64(A);
+	matx_status_t st = coo_to_csc_d_i8(A);
 	if (st != MATX_OK) return st;
-	st = coo_to_csc_f64_value_remap(A);
+	st = coo_to_csc_d_i8_value_remap(A);
 	if (st != MATX_OK) return st;
 
 	/* Allocate factorization handle */
-        matx_factor_sparse_f64_slu_t* F = (matx_factor_sparse_f64_slu_t*)calloc(1, sizeof(*F));
+        matx_factor_sparse_d_i8_slu_t* F = (matx_factor_sparse_d_i8_slu_t*)calloc(1, sizeof(*F));
         if (!F)
           return MATX_ERR_OUT_OF_MEMORY;
         out_F->reserved = F;
@@ -114,7 +114,7 @@ static matx_status_t slu_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
 
 	/* Check memory allocation */
 	if (!F->perm_c || !F->perm_r || !F->etree || !F->rhs) {
-                slu_factor_csc_f64_destroy(out_F);
+                slu_factor_csc_d_i8_destroy(out_F);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -135,7 +135,7 @@ static matx_status_t slu_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
 	dgssv(&F->options, &F->A, F->perm_c, F->perm_r, &F->L, &F->U, &F->B, &F->stat, &info);
 	if (info != 0) {
 		MATX_ERROR("dgssv factor failed info=%d", info);
-                slu_factor_csc_f64_destroy(out_F);
+                slu_factor_csc_d_i8_destroy(out_F);
 		return MATX_ERR_INTERNAL;
 	}
 
@@ -152,14 +152,14 @@ static matx_status_t slu_factor_csc_f64(matx_coo_f64_t A, matx_factor_sparse_f64
  * @param x Solution output vector
  * @return MATX_OK on success, error code otherwise
  */
-static matx_status_t slu_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx_double* b, matx_double* x)
+static matx_status_t slu_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F, const matx_double* b, matx_double* x)
 {
 	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_SUPERLU
 	(void)F; (void)b; (void)x;
 	return MATX_ERR_NOT_SUPPORTED;
 #else
-      matx_factor_sparse_f64_slu_t* ptr = (matx_factor_sparse_f64_slu_t*)F->reserved;
+      matx_factor_sparse_d_i8_slu_t* ptr = (matx_factor_sparse_d_i8_slu_t*)F->reserved;
 	/* Copy RHS to internal buffer */
         for (int i = 0; i < ptr->n; ++i)
           ptr->rhs[i] = b[i];
@@ -183,11 +183,11 @@ static matx_status_t slu_solve_csc_f64(matx_factor_sparse_f64_t* F, const matx_d
  * @brief Destroy complex sparse factorization handle and release all resources
  * @param F Complex factor handle to destroy
  */
-static void slu_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
+static void slu_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
 {
         if (!F)
             return;
-        matx_factor_sparse_c64_slu_t* ptr = (matx_factor_sparse_c64_slu_t*)F->reserved;
+        matx_factor_sparse_z_i8_slu_t* ptr = (matx_factor_sparse_z_i8_slu_t*)F->reserved;
 #if MATX_HAVE_SUPERLU
         /* Release SuperLU internal matrices */
         Destroy_SuperNode_Matrix(&ptr->L);
@@ -211,7 +211,7 @@ static void slu_factor_csc_c64_destroy(matx_factor_sparse_c64_t* F)
  * @param out_F Output complex factorization handle
  * @return MATX_OK on success, error code otherwise
  */
-static matx_status_t slu_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64_t* out_F)
+static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
 {
 	if (!A || !out_F) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_SUPERLU
@@ -220,20 +220,20 @@ static matx_status_t slu_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
 #else
 	/* Free existing handle if allocated */
         if (out_F->reserved)
-          slu_factor_csc_c64_destroy(out_F);
+          slu_factor_csc_z_i8_destroy(out_F);
 
 	/* Validate square matrix and size limit */
 	if (A->nrows != A->ncols || A->nrows <= 0) return MATX_ERR_INVALID_ARG;
 	if (A->nrows > INT_MAX || A->nnz > INT_MAX) return MATX_ERR_NOT_SUPPORTED;
 
 	/* Convert complex COO to CSC format */
-	matx_status_t st = coo_to_csc_c64(A);
+	matx_status_t st = coo_to_csc_z_i8(A);
 	if (st != MATX_OK) return st;
-	st = coo_to_csc_c64_value_remap(A);
+	st = coo_to_csc_z_i8_value_remap(A);
 	if (st != MATX_OK) return st;
 
 	/* Allocate complex factorization handle */
-        matx_factor_sparse_c64_slu_t* F = (matx_factor_sparse_c64_slu_t*)calloc(1, sizeof(*F));
+        matx_factor_sparse_z_i8_slu_t* F = (matx_factor_sparse_z_i8_slu_t*)calloc(1, sizeof(*F));
         if (!F)
           return MATX_ERR_OUT_OF_MEMORY;
         out_F->reserved = F;
@@ -247,7 +247,7 @@ static matx_status_t slu_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
 
 	/* Check memory allocation status */
 	if (!F->perm_c || !F->perm_r || !F->etree || !F->rhs) {
-                slu_factor_csc_c64_destroy(out_F);
+                slu_factor_csc_z_i8_destroy(out_F);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -269,7 +269,7 @@ static matx_status_t slu_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
 	zgssv(&F->options, &F->A, F->perm_c, F->perm_r, &F->L, &F->U, &F->B, &F->stat, &info);
 	if (info != 0) {
 		MATX_ERROR("zgssv complex factor failed info=%d", info);
-                slu_factor_csc_c64_destroy(out_F);
+                slu_factor_csc_z_i8_destroy(out_F);
 		return MATX_ERR_INTERNAL;
 	}
 
@@ -287,14 +287,14 @@ static matx_status_t slu_factor_csc_c64(matx_coo_c64_t A, matx_factor_sparse_c64
  * @param x Complex solution vector
  * @return MATX_OK on success, error code otherwise
  */
-static matx_status_t slu_solve_csc_c64(matx_factor_sparse_c64_t* F, const matx_vec_c64_t b, matx_vec_c64_t x)
+static matx_status_t slu_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x)
 {
 	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
 #if !MATX_HAVE_SUPERLU
 	(void)F; (void)b; (void)x;
 	return MATX_ERR_NOT_SUPPORTED;
 #else
-        matx_factor_sparse_c64_slu_t* ptr = (matx_factor_sparse_c64_slu_t*)F->reserved;
+        matx_factor_sparse_z_i8_slu_t* ptr = (matx_factor_sparse_z_i8_slu_t*)F->reserved;
 	/* Copy complex RHS (real + imaginary part) */
  //        for (int i = 0; i < ptr->n; ++i) {
  //                ptr->rhs[i].r = b[i].r;
@@ -328,12 +328,12 @@ matx_sparse_linsolve_t matx_linsolve_make_superlu(void)
 	matx_sparse_linsolve_t ls = {
 		.kind = MATX_LINSOLVE_BACKEND_SUPERLU,
 		.vt = {
-			.factor_csc_f64 = &slu_factor_csc_f64,
-			.solve_csc_f64 = &slu_solve_csc_f64,
-			.factor_csc_f64_destroy = &slu_factor_csc_f64_destroy,
-			.factor_csc_c64 = &slu_factor_csc_c64,
-			.solve_csc_c64 = &slu_solve_csc_c64,
-			.factor_csc_c64_destroy = &slu_factor_csc_c64_destroy
+			.factor_csc_d_i8 = &slu_factor_csc_d_i8,
+			.solve_csc_d_i8 = &slu_solve_csc_d_i8,
+			.factor_csc_d_i8_destroy = &slu_factor_csc_d_i8_destroy,
+			.factor_csc_z_i8 = &slu_factor_csc_z_i8,
+			.solve_csc_z_i8 = &slu_solve_csc_z_i8,
+			.factor_csc_z_i8_destroy = &slu_factor_csc_z_i8_destroy
 		}
 	};
 	return ls;

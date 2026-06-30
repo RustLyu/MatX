@@ -318,7 +318,7 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
 	return MATX_OK;
 }
 
-matx_status_t ref_inv_dense_f64(
+matx_status_t ref_inv_dense_d_i8(
 	matx_layout_t layout,
 	matx_int64_t rows,
 	matx_int64_t cols,
@@ -368,7 +368,7 @@ matx_status_t ref_inv_dense_f64(
 	return MATX_OK;
 }
 
-matx_status_t ref_inv_dense_c64(
+matx_status_t ref_inv_dense_z_i8(
 	matx_layout_t layout,
 	matx_int64_t rows,
 	matx_int64_t cols,
@@ -381,7 +381,7 @@ matx_status_t ref_inv_dense_c64(
 		return MATX_ERR_INVALID_ARG;
 	if (layout != MATX_COL_MAJOR)
 		return MATX_ERR_NOT_SUPPORTED;
-	memcpy(out_Ainv, A, sizeof(matx_complex_f64_t) * rows * cols);
+	memcpy(out_Ainv, A, sizeof(matx_complex_d_i8_t) * rows * cols);
 
 	matx_int64_t N = rows;
 	matx_int64_t lda = rows;
@@ -494,7 +494,7 @@ static matx_status_t ref_zherk(matx_layout_t layout, int uplo, int trans,
 
 // ---- Transpose implementations ----
 
-static matx_status_t ref_transpose_f64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_transpose_d_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const matx_double* A, matx_int64_t lda, matx_double* out, matx_int64_t ldc) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
@@ -520,7 +520,7 @@ static matx_status_t ref_transpose_f64(matx_layout_t layout, matx_int64_t rows, 
 	return MATX_OK;
 }
 
-static matx_status_t ref_transpose_c64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_transpose_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const void* A, matx_int64_t lda, void* out, matx_int64_t ldc) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
@@ -530,8 +530,8 @@ static matx_status_t ref_transpose_c64(matx_layout_t layout, matx_int64_t rows, 
 	const matx_double alpha[2] = {1.0, 0.0};
 	cblas_zomatcopy(order, CblasTrans, rows, cols, alpha, A, lda, out, ldc);
 #elif MATX_ENABLE_BLIS
-	const matx_complex_f64_t* a_data = (const matx_complex_f64_t*)A;
-	matx_complex_f64_t* o_data = (matx_complex_f64_t*)out;
+	const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*)A;
+	matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*)out;
 	for (matx_int64_t i = 0; i < rows; ++i)
 		for (matx_int64_t j = 0; j < cols; ++j) {
 			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
@@ -539,8 +539,8 @@ static matx_status_t ref_transpose_c64(matx_layout_t layout, matx_int64_t rows, 
 			o_data[dst] = a_data[src];
 		}
 #else
-	const matx_complex_f64_t* a_data = (const matx_complex_f64_t*)A;
-	matx_complex_f64_t* o_data = (matx_complex_f64_t*)out;
+	const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*)A;
+	matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*)out;
 	for (matx_int64_t i = 0; i < rows; ++i)
 		for (matx_int64_t j = 0; j < cols; ++j) {
 			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
@@ -551,7 +551,7 @@ static matx_status_t ref_transpose_c64(matx_layout_t layout, matx_int64_t rows, 
 	return MATX_OK;
 }
 
-static matx_status_t ref_conj_transpose_c64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_conj_transpose_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const void* A, matx_int64_t lda, void* out, matx_int64_t ldc) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
@@ -561,8 +561,8 @@ static matx_status_t ref_conj_transpose_c64(matx_layout_t layout, matx_int64_t r
 	const matx_double alpha[2] = {1.0, 0.0};
 	cblas_zomatcopy(order, CblasConjTrans, rows, cols, alpha, A, lda, out, ldc);
 #elif MATX_ENABLE_BLIS
-	const matx_complex_f64_t* a_data = (const matx_complex_f64_t*)A;
-	matx_complex_f64_t* o_data = (matx_complex_f64_t*)out;
+	const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*)A;
+	matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*)out;
 	for (matx_int64_t i = 0; i < rows; ++i)
 		for (matx_int64_t j = 0; j < cols; ++j) {
 			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
@@ -571,8 +571,8 @@ static matx_status_t ref_conj_transpose_c64(matx_layout_t layout, matx_int64_t r
 			o_data[dst].imag = -a_data[src].imag;
 		}
 #else
-	const matx_complex_f64_t* a_data = (const matx_complex_f64_t*)A;
-	matx_complex_f64_t* o_data = (matx_complex_f64_t*)out;
+	const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*)A;
+	matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*)out;
 	for (matx_int64_t i = 0; i < rows; ++i)
 		for (matx_int64_t j = 0; j < cols; ++j) {
 			matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
@@ -586,7 +586,7 @@ static matx_status_t ref_conj_transpose_c64(matx_layout_t layout, matx_int64_t r
 
 // ---- Norm implementations ----
 
-static matx_status_t ref_norm1_f64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_norm1_d_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const matx_double* A, matx_int64_t lda, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
@@ -597,7 +597,7 @@ static matx_status_t ref_norm1_f64(matx_layout_t layout, matx_int64_t rows, matx
 	return MATX_OK;
 }
 
-static matx_status_t ref_norminf_f64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_norminf_d_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const matx_double* A, matx_int64_t lda, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
@@ -608,7 +608,7 @@ static matx_status_t ref_norminf_f64(matx_layout_t layout, matx_int64_t rows, ma
 	return MATX_OK;
 }
 
-static matx_status_t ref_normfro_f64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_normfro_d_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const matx_double* A, matx_int64_t lda, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
@@ -619,7 +619,7 @@ static matx_status_t ref_normfro_f64(matx_layout_t layout, matx_int64_t rows, ma
 	return MATX_OK;
 }
 
-static matx_status_t ref_norm1_c64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_norm1_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const void* A, matx_int64_t lda, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
@@ -630,7 +630,7 @@ static matx_status_t ref_norm1_c64(matx_layout_t layout, matx_int64_t rows, matx
 	return MATX_OK;
 }
 
-static matx_status_t ref_norminf_c64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_norminf_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const void* A, matx_int64_t lda, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
@@ -641,7 +641,7 @@ static matx_status_t ref_norminf_c64(matx_layout_t layout, matx_int64_t rows, ma
 	return MATX_OK;
 }
 
-static matx_status_t ref_normfro_c64(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+static matx_status_t ref_normfro_z_i8(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
 	const void* A, matx_int64_t lda, matx_double* out) {
 	if (!A || !out) return MATX_ERR_INVALID_ARG;
 	if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
@@ -668,8 +668,8 @@ matx_dense_backend_t matx_blas_make_reference(void) {
 			.zgemv = &ref_zgemv,
 			.dgeadd = &ref_dgeadd,
 			.zgeadd = &ref_zgeadd,
-			.inv_dense_f64 = &ref_inv_dense_f64,
-			.inv_dense_c64 = &ref_inv_dense_c64,
+			.inv_dense_d_i8 = &ref_inv_dense_d_i8,
+			.inv_dense_z_i8 = &ref_inv_dense_z_i8,
 				.dger = &ref_dger,
 				.zgeru = &ref_zgeru,
 			.dtrsv = &ref_dtrsv,
@@ -678,15 +678,15 @@ matx_dense_backend_t matx_blas_make_reference(void) {
 			.ztrsm = &ref_ztrsm,
 			.dsyrk = &ref_dsyrk,
 			.zherk = &ref_zherk,
-			.transpose_f64 = &ref_transpose_f64,
-			.transpose_c64 = &ref_transpose_c64,
-			.conj_transpose_c64 = &ref_conj_transpose_c64,
-			.norm1_f64 = &ref_norm1_f64,
-			.norminf_f64 = &ref_norminf_f64,
-			.normfro_f64 = &ref_normfro_f64,
-			.norm1_c64 = &ref_norm1_c64,
-			.norminf_c64 = &ref_norminf_c64,
-			.normfro_c64 = &ref_normfro_c64,
+			.transpose_d_i8 = &ref_transpose_d_i8,
+			.transpose_z_i8 = &ref_transpose_z_i8,
+			.conj_transpose_z_i8 = &ref_conj_transpose_z_i8,
+			.norm1_d_i8 = &ref_norm1_d_i8,
+			.norminf_d_i8 = &ref_norminf_d_i8,
+			.normfro_d_i8 = &ref_normfro_d_i8,
+			.norm1_z_i8 = &ref_norm1_z_i8,
+			.norminf_z_i8 = &ref_norminf_z_i8,
+			.normfro_z_i8 = &ref_normfro_z_i8,
 		}
 	};
 

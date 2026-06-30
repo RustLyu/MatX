@@ -8,34 +8,34 @@ extern "C" {
 #include "matx/matx_vec_compute.h"
 #include "matx/matx_types_internal.h"
 }
-static void fill_dense_f64_4x4(matx_dense_f64_t M, double base) {
+static void fill_dense_d_i8_4x4(matx_dense_d_i8_t M, double base) {
   for (size_t j = 0; j < 4; ++j)
     for (size_t i = 0; i < 4; ++i)
       M->data[i + j * M->stride] = base + (double)(i + 4 * j);
 }
 
-TEST(compute_dense, geadd_f64_4x4) {
+TEST(compute_dense, geadd_d_i8_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_dense_f64_t A = NULL, B = NULL;
-  ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  ASSERT_EQ(matx_dense_f64_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  fill_dense_f64_4x4(A, 1.0);
-  fill_dense_f64_4x4(B, 2.0);
+  matx_dense_d_i8_t A = NULL, B = NULL;
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  fill_dense_d_i8_4x4(A, 1.0);
+  fill_dense_d_i8_4x4(B, 2.0);
   matx_dense_backend_t blas = matx_blas_default();
-  matx_status_t st = matx_geadd_f64(&blas, 3.0, A, 0.0, B);
+  matx_status_t st = matx_geadd_d_i8(&blas, 3.0, A, 0.0, B);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(B->data[0], 3.0 * 1.0, 1e-12);
   EXPECT_NEAR(B->data[5], 3.0 * 6.0, 1e-12);
 
-  matx_dense_f64_destroy(&a, A);
-  matx_dense_f64_destroy(&a, B);
+  matx_dense_d_i8_destroy(&a, A);
+  matx_dense_d_i8_destroy(&a, B);
 }
 
-TEST(compute_dense, geadd_c64_4x4) {
+TEST(compute_dense, geadd_z_i8_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_dense_c64_t A = NULL, B = NULL;
-  ASSERT_EQ(matx_dense_c64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  ASSERT_EQ(matx_dense_c64_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  matx_dense_z_i8_t A = NULL, B = NULL;
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
   for (size_t i = 0; i < 16; ++i) {
     A->data[i].real = (double)i;
     A->data[i].imag = 0.0;
@@ -44,25 +44,25 @@ TEST(compute_dense, geadd_c64_4x4) {
   }
 
   matx_dense_backend_t blas = matx_blas_default();
-  matx_complex_f64_t alpha = {2.0, 0.0};
-  matx_complex_f64_t beta = {0.0, 0.0};
-  matx_status_t st = matx_geadd_c64(&blas, alpha, A, beta, B);
+  matx_complex_d_i8_t alpha = {2.0, 0.0};
+  matx_complex_d_i8_t beta = {0.0, 0.0};
+  matx_status_t st = matx_geadd_z_i8(&blas, alpha, A, beta, B);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(B->data[0].real, 0.0, 1e-12);
   EXPECT_NEAR(B->data[1].real, 2.0, 1e-12);
 
-  matx_dense_c64_destroy(&a, A);
-  matx_dense_c64_destroy(&a, B);
+  matx_dense_z_i8_destroy(&a, A);
+  matx_dense_z_i8_destroy(&a, B);
 }
 
-TEST(compute_dense, gemv_f64_4x4) {
+TEST(compute_dense, gemv_d_i8_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_dense_f64_t A = NULL;
-  matx_vec_f64_t x = NULL, y = NULL;
-  ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, NULL, 4), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &y, NULL, 4), MATX_OK);
-  fill_dense_f64_4x4(A, 1.0);
+  matx_dense_d_i8_t A = NULL;
+  matx_vec_d_i8_t x = NULL, y = NULL;
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &x, NULL, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &y, NULL, 4), MATX_OK);
+  fill_dense_d_i8_4x4(A, 1.0);
   x->data[0] = 1.0;
   x->data[1] = 0.0;
   x->data[2] = 0.0;
@@ -70,50 +70,50 @@ TEST(compute_dense, gemv_f64_4x4) {
   y->data[0] = y->data[1] = y->data[2] = y->data[3] = 0.0;
 
   matx_dense_backend_t blas = matx_blas_default();
-  matx_status_t st = matx_gemv_f64(&blas, 0, 1.0, A, x, 0.0, y);
+  matx_status_t st = matx_gemv_d_i8(&blas, 0, 1.0, A, x, 0.0, y);
   if (st == MATX_ERR_NOT_SUPPORTED) {
-    matx_dense_f64_destroy(&a, A);
-    matx_vec_f64_destroy(&a, x);
-    matx_vec_f64_destroy(&a, y);
+    matx_dense_d_i8_destroy(&a, A);
+    matx_vec_d_i8_destroy(&a, x);
+    matx_vec_d_i8_destroy(&a, y);
     return;
   }
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(y->data[0], A->data[0], 1e-12);
   EXPECT_NEAR(y->data[1], A->data[1], 1e-12);
 
-  matx_dense_f64_destroy(&a, A);
-  matx_vec_f64_destroy(&a, x);
-  matx_vec_f64_destroy(&a, y);
+  matx_dense_d_i8_destroy(&a, A);
+  matx_vec_d_i8_destroy(&a, x);
+  matx_vec_d_i8_destroy(&a, y);
 }
 
-TEST(compute_dense, gemm_f64_4x4) {
+TEST(compute_dense, gemm_d_i8_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_dense_f64_t A = NULL, B = NULL, C = NULL;
-  ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  ASSERT_EQ(matx_dense_f64_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  ASSERT_EQ(matx_dense_f64_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  fill_dense_f64_4x4(A, 1.0);
-  fill_dense_f64_4x4(B, 0.5);
+  matx_dense_d_i8_t A = NULL, B = NULL, C = NULL;
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  fill_dense_d_i8_4x4(A, 1.0);
+  fill_dense_d_i8_4x4(B, 0.5);
   for (size_t i = 0; i < 16; ++i) C->data[i] = 0.0;
 
   matx_dense_backend_t blas = matx_blas_default();
-  matx_status_t st = matx_gemm_f64(&blas, 0, 0, 1.0, A, B, 0.0, C);
+  matx_status_t st = matx_gemm_d_i8(&blas, 0, 0, 1.0, A, B, 0.0, C);
   ASSERT_EQ(st, MATX_OK);
   double c00 = 0.0;
   for (size_t k = 0; k < 4; ++k) c00 += A->data[0 + k * 4] * B->data[k + 0 * 4];
   EXPECT_NEAR(C->data[0], c00, 1e-10);
 
-  matx_dense_f64_destroy(&a, A);
-  matx_dense_f64_destroy(&a, B);
-  matx_dense_f64_destroy(&a, C);
+  matx_dense_d_i8_destroy(&a, A);
+  matx_dense_d_i8_destroy(&a, B);
+  matx_dense_d_i8_destroy(&a, C);
 }
 
-TEST(compute_dense, gemm_c64_4x4) {
+TEST(compute_dense, gemm_z_i8_4x4) {
   matx_alloc_t a = matx_alloc_default();
-  matx_dense_c64_t A = NULL, B = NULL, C = NULL;
-  ASSERT_EQ(matx_dense_c64_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  ASSERT_EQ(matx_dense_c64_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-  ASSERT_EQ(matx_dense_c64_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  matx_dense_z_i8_t A = NULL, B = NULL, C = NULL;
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
   for (size_t i = 0; i < 16; ++i) {
     A->data[i].real = (double)i;
     A->data[i].imag = 0.0;
@@ -123,120 +123,120 @@ TEST(compute_dense, gemm_c64_4x4) {
   }
 
   matx_dense_backend_t blas = matx_blas_default();
-  matx_complex_f64_t alpha = {1.0, 0.0};
-  matx_complex_f64_t beta = {0.0, 0.0};
-  matx_status_t st = matx_gemm_c64(&blas, 0, 0, alpha, A, B, beta, C);
+  matx_complex_d_i8_t alpha = {1.0, 0.0};
+  matx_complex_d_i8_t beta = {0.0, 0.0};
+  matx_status_t st = matx_gemm_z_i8(&blas, 0, 0, alpha, A, B, beta, C);
   if (st == MATX_ERR_NOT_SUPPORTED) {
-    matx_dense_c64_destroy(&a, A);
-    matx_dense_c64_destroy(&a, B);
-    matx_dense_c64_destroy(&a, C);
+    matx_dense_z_i8_destroy(&a, A);
+    matx_dense_z_i8_destroy(&a, B);
+    matx_dense_z_i8_destroy(&a, C);
     return;
   }
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(C->data[0].real, A->data[0].real, 1e-10);
 
-  matx_dense_c64_destroy(&a, A);
-  matx_dense_c64_destroy(&a, B);
-  matx_dense_c64_destroy(&a, C);
+  matx_dense_z_i8_destroy(&a, A);
+  matx_dense_z_i8_destroy(&a, B);
+  matx_dense_z_i8_destroy(&a, C);
 }
 
 // ---- Level 1 tests ----
 
-TEST(compute_dense, scal_f64) {
+TEST(compute_dense, scal_d_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_vec_f64_t x = NULL;
+  matx_vec_d_i8_t x = NULL;
   double data[4] = {1.0, 2.0, 3.0, 4.0};
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, data, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &x, data, 4), MATX_OK);
   matx_vec_backend_t vblas = matx_vec_default();
-  ASSERT_EQ(matx_vec_scal_f64(&vblas, 2.0, x), MATX_OK);
+  ASSERT_EQ(matx_vec_scal_d_i8(&vblas, 2.0, x), MATX_OK);
   EXPECT_NEAR(x->data[0], 2.0, 1e-12);
   EXPECT_NEAR(x->data[3], 8.0, 1e-12);
-  matx_vec_f64_destroy(&a, x);
+  matx_vec_d_i8_destroy(&a, x);
 }
 
-TEST(compute_dense, copy_f64) {
+TEST(compute_dense, copy_d_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_vec_f64_t x = NULL, y = NULL;
+  matx_vec_d_i8_t x = NULL, y = NULL;
   double data[3] = {1.0, 2.0, 3.0};
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, data, 3), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &y, NULL, 3), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &x, data, 3), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &y, NULL, 3), MATX_OK);
   matx_vec_backend_t vblas = matx_vec_default();
-  ASSERT_EQ(matx_vec_copy_f64(&vblas, x, y), MATX_OK);
+  ASSERT_EQ(matx_vec_copy_d_i8(&vblas, x, y), MATX_OK);
   EXPECT_NEAR(y->data[0], 1.0, 1e-12);
   EXPECT_NEAR(y->data[2], 3.0, 1e-12);
-  matx_vec_f64_destroy(&a, x);
-  matx_vec_f64_destroy(&a, y);
+  matx_vec_d_i8_destroy(&a, x);
+  matx_vec_d_i8_destroy(&a, y);
 }
 
-TEST(compute_dense, dot_f64) {
+TEST(compute_dense, dot_d_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_vec_f64_t x = NULL, y = NULL;
+  matx_vec_d_i8_t x = NULL, y = NULL;
   double xd[3] = {1.0, 2.0, 3.0}, yd[3] = {4.0, 5.0, 6.0};
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, xd, 3), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &y, yd, 3), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &x, xd, 3), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &y, yd, 3), MATX_OK);
   matx_vec_backend_t vblas = matx_vec_default();
   double result = 0.0;
-  ASSERT_EQ(matx_vec_dot_f64(&vblas, x, y, &result), MATX_OK);
+  ASSERT_EQ(matx_vec_dot_d_i8(&vblas, x, y, &result), MATX_OK);
   EXPECT_NEAR(result, 32.0, 1e-12); // 1*4+2*5+3*6=32
-  matx_vec_f64_destroy(&a, x);
-  matx_vec_f64_destroy(&a, y);
+  matx_vec_d_i8_destroy(&a, x);
+  matx_vec_d_i8_destroy(&a, y);
 }
 
-TEST(compute_dense, nrm2_f64) {
+TEST(compute_dense, nrm2_d_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_vec_f64_t x = NULL;
+  matx_vec_d_i8_t x = NULL;
   double data[3] = {3.0, 4.0, 0.0};
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, data, 3), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &x, data, 3), MATX_OK);
   matx_vec_backend_t vblas = matx_vec_default();
   double result = 0.0;
-  ASSERT_EQ(matx_vec_nrm2_f64(&vblas, x, &result), MATX_OK);
+  ASSERT_EQ(matx_vec_nrm2_d_i8(&vblas, x, &result), MATX_OK);
   EXPECT_NEAR(result, 5.0, 1e-12);
-  matx_vec_f64_destroy(&a, x);
+  matx_vec_d_i8_destroy(&a, x);
 }
 
-TEST(compute_dense, iamax_f64) {
+TEST(compute_dense, iamax_d_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_vec_f64_t x = NULL;
+  matx_vec_d_i8_t x = NULL;
   double data[4] = {1.0, -9.0, 3.0, 2.0};
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, data, 4), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &x, data, 4), MATX_OK);
   matx_vec_backend_t vblas = matx_vec_default();
   matx_int64_t idx = -1;
-  ASSERT_EQ(matx_vec_iamax_f64(&vblas, x, &idx), MATX_OK);
+  ASSERT_EQ(matx_vec_iamax_d_i8(&vblas, x, &idx), MATX_OK);
   EXPECT_EQ(idx, 1); // index of max abs value (-9)
-  matx_vec_f64_destroy(&a, x);
+  matx_vec_d_i8_destroy(&a, x);
 }
 
-TEST(compute_dense, ger_f64) {
+TEST(compute_dense, ger_d_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_vec_f64_t x = NULL, y = NULL;
-  matx_dense_f64_t A = NULL;
+  matx_vec_d_i8_t x = NULL, y = NULL;
+  matx_dense_d_i8_t A = NULL;
   double xd[2] = {1.0, 2.0}, yd[3] = {1.0, 2.0, 3.0};
-  ASSERT_EQ(matx_vec_f64_create(&a, &x, xd, 2), MATX_OK);
-  ASSERT_EQ(matx_vec_f64_create(&a, &y, yd, 3), MATX_OK);
-  ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 2, 3, NULL), MATX_OK);
-  matx_dense_f64_zeros(A);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &x, xd, 2), MATX_OK);
+  ASSERT_EQ(matx_vec_d_i8_create(&a, &y, yd, 3), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 3, NULL), MATX_OK);
+  matx_dense_d_i8_zeros(A);
   matx_dense_backend_t blas = matx_blas_default();
-  ASSERT_EQ(matx_ger_f64(&blas, 1.0, x, y, A), MATX_OK);
+  ASSERT_EQ(matx_ger_d_i8(&blas, 1.0, x, y, A), MATX_OK);
   EXPECT_NEAR(A->data[0], 1.0, 1e-12);
   EXPECT_NEAR(A->data[1], 2.0, 1e-12);
-  matx_vec_f64_destroy(&a, x);
-  matx_vec_f64_destroy(&a, y);
-  matx_dense_f64_destroy(&a, A);
+  matx_vec_d_i8_destroy(&a, x);
+  matx_vec_d_i8_destroy(&a, y);
+  matx_dense_d_i8_destroy(&a, A);
 }
 
 // ---- Transpose tests ----
 
-TEST(compute_dense, transpose_f64) {
+TEST(compute_dense, transpose_d_i8) {
   matx_alloc_t a = matx_alloc_default();
   double data[6] = {1,2,3,4,5,6}; // 2x3 col-major
-  matx_dense_f64_t A = NULL, T = NULL;
-  ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 2, 3, data), MATX_OK);
-  ASSERT_EQ(matx_dense_f64_create(&a, &T, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+  matx_dense_d_i8_t A = NULL, T = NULL;
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 3, data), MATX_OK);
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &T, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
   matx_dense_backend_t blas = matx_blas_default();
-  matx_status_t st = matx_transpose_f64(&blas, A, T);
+  matx_status_t st = matx_transpose_d_i8(&blas, A, T);
   if (st == MATX_ERR_NOT_SUPPORTED) {
-    matx_dense_f64_destroy(&a, A);
-    matx_dense_f64_destroy(&a, T);
+    matx_dense_d_i8_destroy(&a, A);
+    matx_dense_d_i8_destroy(&a, T);
     return;
   }
   ASSERT_EQ(st, MATX_OK);
@@ -245,79 +245,79 @@ TEST(compute_dense, transpose_f64) {
   // A(0,0)=1 => T(0,0)=1; A(1,0)=2 => T(0,1)=2
   EXPECT_NEAR(T->data[0], 1.0, 1e-12);
   EXPECT_NEAR(T->data[1], 3.0, 1e-12);
-  matx_dense_f64_destroy(&a, A);
-  matx_dense_f64_destroy(&a, T);
+  matx_dense_d_i8_destroy(&a, A);
+  matx_dense_d_i8_destroy(&a, T);
 }
 
-TEST(compute_dense, transpose_c64) {
+TEST(compute_dense, transpose_z_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_dense_c64_t A = NULL, T = NULL;
-  ASSERT_EQ(matx_dense_c64_create(&a, &A, MATX_COL_MAJOR, 2, 3, NULL), MATX_OK);
-  ASSERT_EQ(matx_dense_c64_create(&a, &T, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+  matx_dense_z_i8_t A = NULL, T = NULL;
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 3, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &T, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
   for (matx_int64_t i = 0; i < 6; ++i) {
     A->data[i].real = (double)(i + 1);
     A->data[i].imag = (double)(i + 1) * 2.0;
   }
   matx_dense_backend_t blas = matx_blas_default();
-  matx_status_t st = matx_transpose_c64(&blas, A, T);
+  matx_status_t st = matx_transpose_z_i8(&blas, A, T);
   if (st == MATX_ERR_NOT_SUPPORTED) {
-    matx_dense_c64_destroy(&a, A);
-    matx_dense_c64_destroy(&a, T);
+    matx_dense_z_i8_destroy(&a, A);
+    matx_dense_z_i8_destroy(&a, T);
     return;
   }
   ASSERT_EQ(st, MATX_OK);
   EXPECT_EQ(T->nrows, 3u);
   EXPECT_EQ(T->ncols, 2u);
-  matx_dense_c64_destroy(&a, A);
-  matx_dense_c64_destroy(&a, T);
+  matx_dense_z_i8_destroy(&a, A);
+  matx_dense_z_i8_destroy(&a, T);
 }
 
-TEST(compute_dense, conj_transpose_c64) {
+TEST(compute_dense, conj_transpose_z_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_dense_c64_t A = NULL, T = NULL;
-  ASSERT_EQ(matx_dense_c64_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
-  ASSERT_EQ(matx_dense_c64_create(&a, &T, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+  matx_dense_z_i8_t A = NULL, T = NULL;
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &T, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
   A->data[0].real = 1.0; A->data[0].imag = 2.0;
   A->data[1].real = 3.0; A->data[1].imag = 4.0;
   A->data[2].real = 5.0; A->data[2].imag = 6.0;
   A->data[3].real = 7.0; A->data[3].imag = 8.0;
   matx_dense_backend_t blas = matx_blas_default();
-  matx_status_t st = matx_conj_transpose_c64(&blas, A, T);
+  matx_status_t st = matx_conj_transpose_z_i8(&blas, A, T);
   if (st == MATX_ERR_NOT_SUPPORTED) {
-    matx_dense_c64_destroy(&a, A);
-    matx_dense_c64_destroy(&a, T);
+    matx_dense_z_i8_destroy(&a, A);
+    matx_dense_z_i8_destroy(&a, T);
     return;
   }
   ASSERT_EQ(st, MATX_OK);
   // T(0,0) = conj(A(0,0)) = (1, -2)
   EXPECT_NEAR(T->data[0].real, 1.0, 1e-12);
   EXPECT_NEAR(T->data[0].imag, -2.0, 1e-12);
-  matx_dense_c64_destroy(&a, A);
-  matx_dense_c64_destroy(&a, T);
+  matx_dense_z_i8_destroy(&a, A);
+  matx_dense_z_i8_destroy(&a, T);
 }
 
 // ---- Norm tests ----
 
-TEST(compute_dense, norm1_norminf_normfro_f64) {
+TEST(compute_dense, norm1_norminf_normfro_d_i8) {
   matx_alloc_t a = matx_alloc_default();
   double data[4] = {1,2,3,4}; // 2x2 col-major: col0={1,2}, col1={3,4}
-  matx_dense_f64_t A = NULL;
-  ASSERT_EQ(matx_dense_f64_create(&a, &A, MATX_COL_MAJOR, 2, 2, data), MATX_OK);
+  matx_dense_d_i8_t A = NULL;
+  ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, data), MATX_OK);
   matx_dense_backend_t blas = matx_blas_default();
   double n1 = 0, ni = 0, nf = 0;
-  ASSERT_EQ(matx_mat_norm1_f64(&blas, A, &n1), MATX_OK);
+  ASSERT_EQ(matx_mat_norm1_d_i8(&blas, A, &n1), MATX_OK);
   EXPECT_NEAR(n1, 7.0, 1e-12); // max col sum: col0=3, col1=7
-  ASSERT_EQ(matx_mat_norminf_f64(&blas, A, &ni), MATX_OK);
+  ASSERT_EQ(matx_mat_norminf_d_i8(&blas, A, &ni), MATX_OK);
   EXPECT_NEAR(ni, 6.0, 1e-12); // max row sum: row0=4, row1=6
-  ASSERT_EQ(matx_mat_normfro_f64(&blas, A, &nf), MATX_OK);
+  ASSERT_EQ(matx_mat_normfro_d_i8(&blas, A, &nf), MATX_OK);
   EXPECT_NEAR(nf, sqrt(1+4+9+16), 1e-10);
-  matx_dense_f64_destroy(&a, A);
+  matx_dense_d_i8_destroy(&a, A);
 }
 
-TEST(compute_dense, norm1_norminf_normfro_c64) {
+TEST(compute_dense, norm1_norminf_normfro_z_i8) {
   matx_alloc_t a = matx_alloc_default();
-  matx_dense_c64_t A = NULL;
-  ASSERT_EQ(matx_dense_c64_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+  matx_dense_z_i8_t A = NULL;
+  ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
   // col0: (1+0j, 2+0j), col1: (3+0j, 4+0j) — same as f64 test
   A->data[0].real = 1.0; A->data[0].imag = 0.0;
   A->data[1].real = 2.0; A->data[1].imag = 0.0;
@@ -325,11 +325,11 @@ TEST(compute_dense, norm1_norminf_normfro_c64) {
   A->data[3].real = 4.0; A->data[3].imag = 0.0;
   matx_dense_backend_t blas = matx_blas_default();
   double n1 = 0, ni = 0, nf = 0;
-  ASSERT_EQ(matx_mat_norm1_c64(&blas, A, &n1), MATX_OK);
+  ASSERT_EQ(matx_mat_norm1_z_i8(&blas, A, &n1), MATX_OK);
   EXPECT_NEAR(n1, 7.0, 1e-12);
-  ASSERT_EQ(matx_mat_norminf_c64(&blas, A, &ni), MATX_OK);
+  ASSERT_EQ(matx_mat_norminf_z_i8(&blas, A, &ni), MATX_OK);
   EXPECT_NEAR(ni, 6.0, 1e-12);
-  ASSERT_EQ(matx_mat_normfro_c64(&blas, A, &nf), MATX_OK);
+  ASSERT_EQ(matx_mat_normfro_z_i8(&blas, A, &nf), MATX_OK);
   EXPECT_NEAR(nf, sqrt(1+4+9+16), 1e-10);
-  matx_dense_c64_destroy(&a, A);
+  matx_dense_z_i8_destroy(&a, A);
 }
