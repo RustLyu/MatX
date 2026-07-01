@@ -81,10 +81,10 @@ matx_status_t matx_gemm_d_i8(const matx_dense_backend_t* blas,
 matx_status_t matx_gemm_z_i8(const matx_dense_backend_t* blas,
                              matx_int64_t trans_a,
                              matx_int64_t trans_b,
-                             matx_complex_d_i8_t alpha,
+                             matx_complex_d_t alpha,
                              const matx_dense_z_i8_t A,
                              const matx_dense_z_i8_t B,
-                             matx_complex_d_i8_t beta,
+                             matx_complex_d_t beta,
                              matx_dense_z_i8_t C)
 {
     if (!A || !B || !C || !A->data || !B->data || !C->data)
@@ -124,10 +124,10 @@ matx_status_t matx_gemm_z_i8(const matx_dense_backend_t* blas,
 
 matx_status_t matx_gemv_z_i8(const matx_dense_backend_t* blas,
                              matx_int64_t trans_a,
-                             matx_complex_d_i8_t alpha,
+                             matx_complex_d_t alpha,
                              const matx_dense_z_i8_t A,
                              const matx_vec_z_i8_t x,
-                             matx_complex_d_i8_t beta,
+                             matx_complex_d_t beta,
                              matx_vec_z_i8_t y)
 {
     (void) blas;
@@ -191,9 +191,9 @@ matx_status_t matx_gemv_d_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_geadd_z_i8(const matx_dense_backend_t* blas,
-                              matx_complex_d_i8_t alpha,
+                              matx_complex_d_t alpha,
                               const matx_dense_z_i8_t A,
-                              matx_complex_d_i8_t beta,
+                              matx_complex_d_t beta,
                               matx_dense_z_i8_t B)
 {
     if (!A || !B || !A->data || !B->data)
@@ -253,7 +253,7 @@ matx_status_t matx_ger_d_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_geru_z_i8(const matx_dense_backend_t* blas,
-                             matx_complex_d_i8_t alpha,
+                             matx_complex_d_t alpha,
                              const matx_vec_z_i8_t x,
                              const matx_vec_z_i8_t y,
                              matx_dense_z_i8_t A)
@@ -277,7 +277,7 @@ matx_status_t matx_geru_z_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_gerc_z_i8(const matx_dense_backend_t* blas,
-                             matx_complex_d_i8_t alpha,
+                             matx_complex_d_t alpha,
                              const matx_vec_z_i8_t x,
                              const matx_vec_z_i8_t y,
                              matx_dense_z_i8_t A)
@@ -370,7 +370,7 @@ matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas,
                              int uplo,
                              int trans,
                              int diag,
-                             matx_complex_d_i8_t alpha,
+                             matx_complex_d_t alpha,
                              const matx_dense_z_i8_t A,
                              matx_dense_z_i8_t B)
 {
@@ -475,7 +475,7 @@ matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas,
 matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas,
                               int uplo,
                               int trans,
-                              matx_complex_d_i8_t alpha,
+                              matx_complex_d_t alpha,
                               const matx_dense_z_i8_t A,
                               const matx_dense_z_i8_t B,
                               matx_double beta,

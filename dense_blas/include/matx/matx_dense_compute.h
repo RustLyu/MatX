@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
@@ -203,10 +203,10 @@ extern "C" {
 	MATX_API matx_status_t matx_gemm_z_i8(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_int64_t trans_b,
-		matx_complex_d_i8_t alpha,
+        matx_complex_d_t alpha,
 		const matx_dense_z_i8_t A,
 		const matx_dense_z_i8_t B,
-		matx_complex_d_i8_t beta,
+        matx_complex_d_t beta,
 		matx_dense_z_i8_t C);
 
 	// ---- Level 2: matrix-vector ----
@@ -231,10 +231,10 @@ extern "C" {
 	 */
 	MATX_API matx_status_t matx_gemv_z_i8(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
-		matx_complex_d_i8_t alpha,
+        matx_complex_d_t alpha,
 		const matx_dense_z_i8_t A,
 		matx_vec_z_i8_t x,
-		matx_complex_d_i8_t beta,
+        matx_complex_d_t beta,
 		matx_vec_z_i8_t y);
 
 	// ---- Level 3: matrix-matrix ----
@@ -258,9 +258,9 @@ extern "C" {
 	 * @formula B := alpha * A + beta * B
 	 */
 	MATX_API matx_status_t matx_geadd_z_i8(const matx_dense_backend_t* blas,
-		matx_complex_d_i8_t alpha,
+        matx_complex_d_t alpha,
 		const matx_dense_z_i8_t A,
-		matx_complex_d_i8_t beta,
+        matx_complex_d_t beta,
 		matx_dense_z_i8_t B);
 
 	/**
@@ -288,7 +288,7 @@ extern "C" {
 	 * @formula A := alpha * x * y^T + A
 	 *          A is m-by-n, x is m-by-1, y is n-by-1
 	 */
-	MATX_API matx_status_t matx_geru_z_i8(const matx_dense_backend_t* blas, matx_complex_d_i8_t alpha,
+    MATX_API matx_status_t matx_geru_z_i8(const matx_dense_backend_t* blas, matx_complex_d_t alpha,
 		const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_dense_z_i8_t A);
 
 	/**
@@ -296,7 +296,7 @@ extern "C" {
 	 * @formula A := alpha * x * y^H + A
 	 *          A is m-by-n, x is m-by-1, y is n-by-1
 	 */
-	MATX_API matx_status_t matx_gerc_z_i8(const matx_dense_backend_t* blas, matx_complex_d_i8_t alpha,
+    MATX_API matx_status_t matx_gerc_z_i8(const matx_dense_backend_t* blas, matx_complex_d_t alpha,
 		const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_dense_z_i8_t A);
 
 	/**
@@ -333,7 +333,7 @@ extern "C" {
 	 *          where op(A) = A, A^T, or A^H; A is triangular
 	 */
 	MATX_API matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas, int side, int uplo, int trans, int diag,
-		matx_complex_d_i8_t alpha, const matx_dense_z_i8_t A, matx_dense_z_i8_t B);
+        matx_complex_d_t alpha, const matx_dense_z_i8_t A, matx_dense_z_i8_t B);
 
 	/**
 	 * @brief Real symmetric rank-k update (DSYRK)
@@ -370,7 +370,7 @@ extern "C" {
 	 *          C is n-by-n Hermitian, A and B are n-by-k or k-by-n, beta is real
 	 */
 	MATX_API matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas, int uplo, int trans,
-		matx_complex_d_i8_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
+        matx_complex_d_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
 		matx_double beta, matx_dense_z_i8_t C);
 
 	// ---- Element-wise (Hadamard product) ----

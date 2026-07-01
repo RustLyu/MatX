@@ -72,11 +72,11 @@ static void ss_pack_d_i8(matx_layout_t layout, matx_int64_t nrows, matx_int64_t 
 }
 
 static void ss_pack_z_i8(matx_layout_t layout, matx_int64_t nrows, matx_int64_t ncols,
-	matx_int64_t src_stride, const matx_complex_d_i8_t* src, matx_complex_d_i8_t* dst)
+	matx_int64_t src_stride, const matx_complex_d_t* src, matx_complex_d_t* dst)
 {
 	matx_int64_t lda = ss_packed_lda(layout, nrows, ncols);
 	if (src_stride == lda) {
-		memcpy(dst, src, (size_t)nrows * (size_t)ncols * sizeof(matx_complex_d_i8_t));
+		memcpy(dst, src, (size_t)nrows * (size_t)ncols * sizeof(matx_complex_d_t));
 	} else {
 		for (matx_int64_t j = 0; j < ncols; ++j)
 			for (matx_int64_t i = 0; i < nrows; ++i) {
@@ -174,14 +174,14 @@ static matx_status_t ss_factor_dense_z_i8(const matx_dense_z_i8_t A,
 	F->lda = lda;
 	F->layout = A->layout;
 
-	F->lu = (matx_double*)malloc((size_t)n * (size_t)n * sizeof(matx_complex_d_i8_t));
+    F->lu = (matx_double*)malloc((size_t)n * (size_t)n * sizeof(matx_complex_d_t));
 	F->piv = (matx_int64_t*)malloc(n * sizeof(matx_int64_t));
 	if (!F->lu || !F->piv) {
 		free(F->lu); free(F->piv); free(F);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
-	ss_pack_z_i8(A->layout, n, n, A->stride, A->data, (matx_complex_d_i8_t*)F->lu);
+    ss_pack_z_i8(A->layout, n, n, A->stride, A->data, (matx_complex_d_t*)F->lu);
 
 	matx_int64_t info = LAPACKE_zgetrf(ss_layout_to_lapack(A->layout),
 		n, n, (lapack_complex_double*)F->lu, lda, F->piv);
@@ -200,7 +200,7 @@ static matx_status_t ss_solve_dense_z_i8(const matx_factor_dense_z_i8_t* F,
 	const matx_vec_z_i8_t b, matx_vec_z_i8_t x)
 {
 	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
-	memcpy(x->data, b->data, F->n * sizeof(matx_complex_d_i8_t));
+	memcpy(x->data, b->data, F->n * sizeof(matx_complex_d_t));
 
 	matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
 	matx_int64_t info = LAPACKE_zgetrs(ss_layout_to_lapack(F->layout),
@@ -280,10 +280,10 @@ static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, int uplo, matx_fac
 	F->layout = A->layout;
 	F->uplo = uplo;
 
-	F->lu = (matx_double*)malloc((size_t)n * (size_t)n * sizeof(matx_complex_d_i8_t));
+	F->lu = (matx_double*)malloc((size_t)n * (size_t)n * sizeof(matx_complex_d_t));
 	if (!F->lu) { free(F); return MATX_ERR_OUT_OF_MEMORY; }
 
-	ss_pack_z_i8(A->layout, n, n, A->stride, A->data, (matx_complex_d_i8_t*)F->lu);
+	ss_pack_z_i8(A->layout, n, n, A->stride, A->data, (matx_complex_d_t*)F->lu);
 
 	matx_int64_t info = LAPACKE_zpotrf(ss_layout_to_lapack(A->layout),
 		uplo, n, (lapack_complex_double*)F->lu, lda);
@@ -298,7 +298,7 @@ static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, int uplo, matx_fac
 
 static matx_status_t ss_potrs_z_i8(const matx_factor_dense_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x) {
 	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
-	memcpy(x->data, b->data, F->n * sizeof(matx_complex_d_i8_t));
+	memcpy(x->data, b->data, F->n * sizeof(matx_complex_d_t));
 
 	matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
 	matx_int64_t info = LAPACKE_zpotrs(ss_layout_to_lapack(F->layout),
@@ -346,12 +346,12 @@ static matx_status_t ss_gels_z_i8(const matx_dense_z_i8_t A, const matx_vec_z_i8
 	const matx_int64_t blen = (m > n) ? m : n;
 	const matx_int64_t ldb = (A->layout == MATX_COL_MAJOR) ? blen : 1;
 
-	matx_complex_d_i8_t* Acopy = (matx_complex_d_i8_t*)malloc((size_t)m * (size_t)n * sizeof(matx_complex_d_i8_t));
-	matx_complex_d_i8_t* bcopy = (matx_complex_d_i8_t*)calloc(blen, sizeof(matx_complex_d_i8_t));
+	matx_complex_d_t* Acopy = (matx_complex_d_t*)malloc((size_t)m * (size_t)n * sizeof(matx_complex_d_t));
+	matx_complex_d_t* bcopy = (matx_complex_d_t*)calloc(blen, sizeof(matx_complex_d_t));
 	if (!Acopy || !bcopy) { free(Acopy); free(bcopy); return MATX_ERR_OUT_OF_MEMORY; }
 
 	ss_pack_z_i8(A->layout, m, n, A->stride, A->data, Acopy);
-	memcpy(bcopy, b->data, m * sizeof(matx_complex_d_i8_t));
+	memcpy(bcopy, b->data, m * sizeof(matx_complex_d_t));
 
 	matx_int64_t info = LAPACKE_zgels(ss_layout_to_lapack(A->layout),
 		'N', m, n, 1, (lapack_complex_double*)Acopy, lda,
@@ -361,7 +361,7 @@ static matx_status_t ss_gels_z_i8(const matx_dense_z_i8_t A, const matx_vec_z_i8
 		free(Acopy); free(bcopy);
 		return MATX_ERR_INTERNAL;
 	}
-	memcpy(x->data, bcopy, n * sizeof(matx_complex_d_i8_t));
+	memcpy(x->data, bcopy, n * sizeof(matx_complex_d_t));
 	free(Acopy); free(bcopy);
 	return MATX_OK;
 }
@@ -471,9 +471,9 @@ static matx_status_t ss_gesvd_z_i8(const matx_dense_z_i8_t A, matx_vec_d_i8_t S,
 
 	matx_int64_t lda = ss_packed_lda(A->layout, m, n);
 
-	matx_complex_d_i8_t* Acopy = (matx_complex_d_i8_t*)malloc((size_t)m * (size_t)n * sizeof(matx_complex_d_i8_t));
-	matx_complex_d_i8_t* u_data = U ? (matx_complex_d_i8_t*)malloc((size_t)m * (size_t)m * sizeof(matx_complex_d_i8_t)) : NULL;
-	matx_complex_d_i8_t* vt_data = Vt ? (matx_complex_d_i8_t*)malloc((size_t)n * (size_t)n * sizeof(matx_complex_d_i8_t)) : NULL;
+	matx_complex_d_t* Acopy = (matx_complex_d_t*)malloc((size_t)m * (size_t)n * sizeof(matx_complex_d_t));
+	matx_complex_d_t* u_data = U ? (matx_complex_d_t*)malloc((size_t)m * (size_t)m * sizeof(matx_complex_d_t)) : NULL;
+	matx_complex_d_t* vt_data = Vt ? (matx_complex_d_t*)malloc((size_t)n * (size_t)n * sizeof(matx_complex_d_t)) : NULL;
 	matx_double* superb = (matx_double*)malloc(k * sizeof(matx_double));
 	if (!Acopy || !superb || (U && !u_data) || (Vt && !vt_data)) {
 		free(Acopy); free(u_data); free(vt_data); free(superb);

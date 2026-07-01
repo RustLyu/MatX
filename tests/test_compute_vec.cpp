@@ -52,7 +52,7 @@ TEST(compute_vec, axpy_z_i8) {
   y->data[3] = {1.0, 1.0};
 
   matx_vec_backend_t vblas = matx_vec_default();
-  matx_complex_d_i8_t alpha = {2.0, 0.0};
+  matx_complex_d_t alpha = {2.0, 0.0};
   matx_status_t st = matx_vec_axpy_z_i8(&vblas, alpha, x, y);
   if (st == MATX_ERR_NOT_SUPPORTED) {
     matx_vec_z_i8_destroy(&a, x);

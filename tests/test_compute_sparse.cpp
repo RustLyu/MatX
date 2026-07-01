@@ -119,7 +119,7 @@ TEST(compute_sparse, spmv_csc_z_i8_4x4) {
 
 	matx_int64_t coo_rows[16];
 	matx_int64_t coo_cols[16];
-	matx_complex_d_i8_t coo_values[16];
+    matx_complex_d_t coo_values[16];
 
 	for (matx_int64_t i = 0; i < nnz; ++i) {
 		matx_int64_t row = i % 4;
@@ -146,8 +146,8 @@ TEST(compute_sparse, spmv_csc_z_i8_4x4) {
 		y->data[i].imag = 0.0;
 	}
 
-	matx_complex_d_i8_t alpha = { 1.0, 0.0 };
-	matx_complex_d_i8_t beta = { 0.0, 0.0 };
+    matx_complex_d_t alpha = { 1.0, 0.0 };
+    matx_complex_d_t beta = { 0.0, 0.0 };
 	auto backend = matx_sparse_default();
 	matx_status_t st = matx_spmv_coo_z_i8(&backend, alpha, A, x, beta, y);
 
@@ -202,7 +202,7 @@ TEST(compute_sparse, spmm_csc_z_i8_4x4) {
 	matx_int64_t rows[16] = { 0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3 };
 	matx_int64_t cols[16] = { 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3 };
 
-	matx_complex_d_i8_t values[16];
+    matx_complex_d_t values[16];
 	for (int i = 0; i < 16; ++i) {
 		values[i].real = (i % 4 == i / 4) ? 1.0 : 0.0;
 		values[i].imag = 0.0;
@@ -221,8 +221,8 @@ TEST(compute_sparse, spmm_csc_z_i8_4x4) {
 		C->data[i].real = C->data[i].imag = 0.0;
 	}
 
-	matx_complex_d_i8_t alpha = { 1.0, 0.0 };
-	matx_complex_d_i8_t beta = { 0.0, 0.0 };
+    matx_complex_d_t alpha = { 1.0, 0.0 };
+    matx_complex_d_t beta = { 0.0, 0.0 };
 	auto backend = matx_sparse_default();
 	matx_status_t st = matx_spmm_coo_z_i8(&backend, alpha, A, B, beta, C);
 	ASSERT_EQ(st, MATX_OK);
@@ -309,7 +309,7 @@ TEST(compute_sparse, conj_z_i8_4x4) {
 	matx_int64_t rows[16] = { 0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3 };
 	matx_int64_t cols[16] = { 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3 };
 
-	matx_complex_d_i8_t values[16];
+    matx_complex_d_t values[16];
 	for (int i = 0; i < 16; ++i) {
 		values[i].real = i;
 		values[i].imag = i + 1;
@@ -446,7 +446,7 @@ TEST(compute_sparse, spnnz_rows_cols_coo_z_i8) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_int64_t r[4] = {0, 0, 1, 2};
 	matx_int64_t c[4] = {0, 1, 1, 2};
-	matx_complex_d_i8_t v[4] = {{1,0},{2,0},{3,0},{4,0}};
+    matx_complex_d_t v[4] = {{1,0},{2,0},{3,0},{4,0}};
 	matx_coo_z_i8_t A = NULL;
 	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &A, 3, 3, 4, r, c, v), MATX_OK);
 
@@ -512,7 +512,7 @@ TEST(compute_sparse, sprowsums_spcolsums_coo_d_i8) {
 TEST(compute_sparse, sprowsums_spcolsums_coo_z_i8) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_int64_t r[2] = {0, 1}, c[2] = {0, 1};
-	matx_complex_d_i8_t v[2] = {{3,4},{5,6}};
+    matx_complex_d_t v[2] = {{3,4},{5,6}};
 	matx_coo_z_i8_t A = NULL;
 	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &A, 2, 2, 2, r, c, v), MATX_OK);
 
@@ -599,7 +599,7 @@ TEST(compute_sparse, spdiag_coo_z_i8_main_diag) {
     matx_int64_t rows[3] = {0, 1, 2};
     matx_int64_t cols[3] = {0, 1, 2};
 
-    matx_complex_d_i8_t vals[3] = {
+    matx_complex_d_t vals[3] = {
         {10.0, 1.0},
         {20.0, 2.0},
         {30.0, 3.0}
@@ -648,7 +648,7 @@ TEST(compute_sparse, spdiag_coo_z_i8_off_diag) {
     matx_int64_t rows[2] = {0, 1};
     matx_int64_t cols[2] = {1, 2};
 
-    matx_complex_d_i8_t vals[2] = {
+    matx_complex_d_t vals[2] = {
         {100.0, 10.0},
         {200.0, 20.0}
     };
@@ -731,11 +731,11 @@ TEST(compute_sparse, scale_cols_coo_d_i8) {
 TEST(compute_sparse, scale_rows_coo_z_i8) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_int64_t r[2] = {0, 1}, c[2] = {0, 1};
-	matx_complex_d_i8_t v[2] = {{1,0},{2,0}};
+    matx_complex_d_t v[2] = {{1,0},{2,0}};
 	matx_coo_z_i8_t A = NULL;
 	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &A, 2, 2, 2, r, c, v), MATX_OK);
 
-	matx_complex_d_i8_t s_data[2] = {{10,0},{20,0}};
+    matx_complex_d_t s_data[2] = {{10,0},{20,0}};
 	matx_vec_z_i8_t s = NULL;
 	ASSERT_EQ(matx_vec_z_i8_create(&a, &s, NULL, 2), MATX_OK);
 	s->data[0] = s_data[0]; s->data[1] = s_data[1];
@@ -757,11 +757,11 @@ TEST(compute_sparse, scale_rows_coo_z_i8) {
 TEST(compute_sparse, scale_cols_coo_z_i8) {
 	matx_alloc_t a = matx_alloc_default();
 	matx_int64_t r[2] = {0, 1}, c[2] = {0, 1};
-	matx_complex_d_i8_t v[2] = {{1,0},{2,0}};
+    matx_complex_d_t v[2] = {{1,0},{2,0}};
 	matx_coo_z_i8_t A = NULL;
 	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &A, 2, 2, 2, r, c, v), MATX_OK);
 
-	matx_complex_d_i8_t s_data[2] = {{10,0},{20,0}};
+    matx_complex_d_t s_data[2] = {{10,0},{20,0}};
 	matx_vec_z_i8_t s = NULL;
 	ASSERT_EQ(matx_vec_z_i8_create(&a, &s, NULL, 2), MATX_OK);
 	s->data[0] = s_data[0]; s->data[1] = s_data[1];

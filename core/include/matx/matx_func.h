@@ -72,7 +72,7 @@ extern "C" {
 	MATX_API matx_status_t matx_vec_z_i8_create(
 		const matx_alloc_t* alloc,
 		matx_vec_z_i8_t* out,
-		matx_complex_d_i8_t* data,
+		matx_complex_d_t* data,
 		matx_int64_t n);
 
 	/**
@@ -89,7 +89,7 @@ extern "C" {
 		matx_vec_z_i8_t* out,
 		matx_int64_t n,
 		matx_int64_t stride,
-		matx_complex_d_i8_t* data);
+		matx_complex_d_t* data);
 
 	MATX_API void matx_vec_z_i8_destroy(const matx_alloc_t* alloc, matx_vec_z_i8_t v);
 
@@ -99,7 +99,7 @@ extern "C" {
 		matx_layout_t layout,
 		matx_int64_t rows,
 		matx_int64_t cols,
-		matx_complex_d_i8_t* data);
+		matx_complex_d_t* data);
 
 	/**
 	 * @brief Duplicate a complex dense matrix
@@ -118,7 +118,7 @@ extern "C" {
 		matx_int64_t cols,
 		matx_int64_t stride,
 		matx_layout_t layout,
-		matx_complex_d_i8_t* data);
+		matx_complex_d_t* data);
 
 	MATX_API void matx_dense_z_i8_destroy(const matx_alloc_t* alloc, matx_dense_z_i8_t m);
 
@@ -168,7 +168,7 @@ extern "C" {
 		matx_int64_t nnz,
 		matx_int64_t* ap,
 		matx_int64_t* ai,
-		matx_complex_d_i8_t* ax);
+		matx_complex_d_t* ax);
 
 	/**
 	 * @brief Duplicate a complex COO sparse matrix
@@ -187,7 +187,7 @@ extern "C" {
 		matx_int64_t nnz,
 		const matx_int64_t* rows,
 		const matx_int64_t* cols,
-		const matx_complex_d_i8_t* values);
+		const matx_complex_d_t* values);
 
 	MATX_API void matx_coo_sparse_z_i8_destroy(const matx_alloc_t* alloc, matx_coo_z_i8_t m);
 
@@ -212,7 +212,7 @@ extern "C" {
 	 * @brief Fill a complex vector with a scalar value
 	 * @formula v[i] := val,  i = 0, 1, ..., n-1
 	 */
-	MATX_API matx_status_t matx_vec_z_i8_fill(matx_vec_z_i8_t v, matx_complex_d_i8_t val);
+	MATX_API matx_status_t matx_vec_z_i8_fill(matx_vec_z_i8_t v, matx_complex_d_t val);
 
 	/**
 	 * @brief Set all elements of a real vector to zero
@@ -244,7 +244,7 @@ extern "C" {
 	 * @brief Fill a complex dense matrix with a scalar value
 	 * @formula m[i][j] := val,  i = 0,...,rows-1; j = 0,...,cols-1
 	 */
-	MATX_API matx_status_t matx_dense_z_i8_fill(matx_dense_z_i8_t m, matx_complex_d_i8_t val);
+	MATX_API matx_status_t matx_dense_z_i8_fill(matx_dense_z_i8_t m, matx_complex_d_t val);
 
 	/**
 	 * @brief Set all elements of a real dense matrix to zero
@@ -278,7 +278,7 @@ extern "C" {
 	 * @formula out := sum_{i=0}^{n-1} A[i][i]
 	 *          where n = min(rows, cols)
 	 */
-	MATX_API matx_status_t matx_dense_z_i8_trace(const matx_dense_z_i8_t A, matx_complex_d_i8_t* out);
+	MATX_API matx_status_t matx_dense_z_i8_trace(const matx_dense_z_i8_t A, matx_complex_d_t* out);
 
 	// ---- Type conversion ----
 

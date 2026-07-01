@@ -164,8 +164,8 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
 }
 
 int build_Ax_from_coo_z_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
-    const matx_complex_d_i8_t* values,
-    matx_complex_d_i8_t* Ax) {
+    const matx_complex_d_t* values,
+    matx_complex_d_t* Ax) {
     if (coo2csc == NULL || values == NULL || Ax == NULL) {
         return COO2CSC_ERR_NULL_PTR;
     }

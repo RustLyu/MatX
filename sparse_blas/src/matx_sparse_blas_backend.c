@@ -30,10 +30,10 @@ MATX_API matx_sparse_backend_t matx_sparse_by_type(matx_sparse_backend_kind_t k)
 }
 
 matx_status_t matx_spmv_coo_z_i8(const matx_sparse_backend_t* backend,
-	matx_complex_d_i8_t alpha,
+	matx_complex_d_t alpha,
         matx_coo_z_i8_t A,
         matx_vec_z_i8_t x,
-	matx_complex_d_i8_t beta,
+	matx_complex_d_t beta,
 	matx_vec_z_i8_t y)
 {
 	if (!backend || !A || !x || !y) return MATX_ERR_INVALID_ARG;
@@ -43,10 +43,10 @@ matx_status_t matx_spmv_coo_z_i8(const matx_sparse_backend_t* backend,
 }
 
 matx_status_t matx_spmm_coo_z_i8(const matx_sparse_backend_t* backend,
-	matx_complex_d_i8_t alpha,
+	matx_complex_d_t alpha,
 	matx_coo_z_i8_t A,
 	matx_dense_z_i8_t B,
-	matx_complex_d_i8_t beta,
+	matx_complex_d_t beta,
 	matx_dense_z_i8_t C)
 {
 	if (!backend || !A || !B || !C) return MATX_ERR_INVALID_ARG;
@@ -95,10 +95,10 @@ matx_status_t matx_dsp2md_coo_d_i8(const matx_sparse_backend_t* backend,
 }
 
 matx_status_t matx_zsp2md_coo_z_i8(const matx_sparse_backend_t* backend,
-	matx_complex_d_i8_t alpha,
+	matx_complex_d_t alpha,
 	matx_coo_z_i8_t A,
 	matx_coo_z_i8_t B,
-	matx_complex_d_i8_t beta,
+	matx_complex_d_t beta,
 	matx_dense_z_i8_t C)
 {
 	if (!backend || !A || !B || !C) return MATX_ERR_INVALID_ARG;
@@ -186,7 +186,7 @@ matx_status_t matx_spadd_coo_d_i8(const matx_sparse_backend_t* backend,
 }
 
 matx_status_t matx_spadd_coo_z_i8(const matx_sparse_backend_t* backend,
-	matx_complex_d_i8_t alpha, matx_coo_z_i8_t A, matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out) {
+	matx_complex_d_t alpha, matx_coo_z_i8_t A, matx_complex_d_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out) {
 	if (!backend || !A || !B || !out) return MATX_ERR_INVALID_ARG;
 	if (!backend->vt.spadd_z_i8) return MATX_ERR_NOT_SUPPORTED;
 	return backend->vt.spadd_z_i8(alpha, A, beta, B, out);

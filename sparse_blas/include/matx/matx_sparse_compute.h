@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "matx/matx_types.h"
 #include "matx/matx_func.h"
@@ -16,16 +16,16 @@ extern "C" {
 
 	typedef struct matx_sparse_vtable_t {
 		matx_status_t(*spmv_z_i8)(
-			matx_complex_d_i8_t alpha,
+            matx_complex_d_t alpha,
 			matx_coo_z_i8_t A,
 			matx_vec_z_i8_t x,
-			matx_complex_d_i8_t beta,
+            matx_complex_d_t beta,
 			matx_vec_z_i8_t y);
 		matx_status_t(*spmm_z_i8)(
-			matx_complex_d_i8_t alpha,
+            matx_complex_d_t alpha,
 			matx_coo_z_i8_t A,
 			matx_dense_z_i8_t B,
-			matx_complex_d_i8_t beta,
+            matx_complex_d_t beta,
 			matx_dense_z_i8_t C);
 		matx_status_t(*spmm_d_i8)(
 			matx_double alpha,
@@ -40,10 +40,10 @@ extern "C" {
 			matx_double beta,
 			matx_dense_d_i8_t C);
 		matx_status_t(*zsp2md_z_i8)(
-			matx_complex_d_i8_t alpha,
+            matx_complex_d_t alpha,
 			matx_coo_z_i8_t A,
 			matx_coo_z_i8_t B,
-			matx_complex_d_i8_t beta,
+            matx_complex_d_t beta,
 			matx_dense_z_i8_t C);
 		matx_status_t(*spmv_d_i8)(
 			matx_double alpha,
@@ -73,7 +73,7 @@ extern "C" {
 
 		// ---- Sparse-sparse addition: C = alpha*A + beta*B ----
 		matx_status_t(*spadd_d_i8)(matx_double alpha, matx_coo_d_i8_t A, matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out);
-		matx_status_t(*spadd_z_i8)(matx_complex_d_i8_t alpha, matx_coo_z_i8_t A, matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out);
+        matx_status_t(*spadd_z_i8)(matx_complex_d_t alpha, matx_coo_z_i8_t A, matx_complex_d_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out);
 
 		// ---- Per-row / per-column non-zero counts ----
 		matx_status_t(*spnnz_rows_d_i8)(matx_coo_d_i8_t A, matx_vec_d_i8_t out);
@@ -127,10 +127,10 @@ extern "C" {
 	 *          A is sparse (COO), x and y are dense vectors.
 	 */
 	MATX_API matx_status_t matx_spmv_coo_z_i8(const matx_sparse_backend_t* backend,
-		matx_complex_d_i8_t alpha,
+		matx_complex_d_t alpha,
 		matx_coo_z_i8_t A,
 		matx_vec_z_i8_t x,
-		matx_complex_d_i8_t beta,
+		matx_complex_d_t beta,
 		matx_vec_z_i8_t y);
 
 	/**
@@ -151,10 +151,10 @@ extern "C" {
 	 *          A is sparse (COO), B and C are dense matrices.
 	 */
 	MATX_API matx_status_t matx_spmm_coo_z_i8(const matx_sparse_backend_t* backend,
-		matx_complex_d_i8_t alpha,
+		matx_complex_d_t alpha,
 		matx_coo_z_i8_t A,
 		matx_dense_z_i8_t B,
-		matx_complex_d_i8_t beta,
+		matx_complex_d_t beta,
 		matx_dense_z_i8_t C);
 
 	/**
@@ -175,10 +175,10 @@ extern "C" {
 	 *          A and B are sparse (COO), C is dense matrix.
 	 */
 	MATX_API matx_status_t matx_zsp2md_coo_z_i8(const matx_sparse_backend_t* backend,
-		matx_complex_d_i8_t alpha,
+		matx_complex_d_t alpha,
 		matx_coo_z_i8_t A,
 		matx_coo_z_i8_t B,
-		matx_complex_d_i8_t beta,
+		matx_complex_d_t beta,
 		matx_dense_z_i8_t C);
 
 	/**
@@ -262,7 +262,7 @@ extern "C" {
 	 * @formula out := alpha * A + beta * B
 	 */
 	MATX_API matx_status_t matx_spadd_coo_z_i8(const matx_sparse_backend_t* backend,
-		matx_complex_d_i8_t alpha, matx_coo_z_i8_t A, matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out);
+		matx_complex_d_t alpha, matx_coo_z_i8_t A, matx_complex_d_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out);
 
 	// ---- Non-zero count per row/column ----
 

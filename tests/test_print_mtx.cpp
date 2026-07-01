@@ -28,7 +28,7 @@ TEST(print, sparse_complex_4x4_print) {
 
 	matx_int64_t coo_rows[16];
 	matx_int64_t coo_cols[16];
-	matx_complex_d_i8_t coo_values[16];
+	matx_complex_d_t coo_values[16];
 
 	for (matx_int64_t i = 0; i < nnz; ++i) {
 		matx_int64_t row = i % 4;

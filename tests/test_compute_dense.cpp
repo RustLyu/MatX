@@ -61,8 +61,8 @@ TEST(compute_dense, geadd_z_i8_4x4) {
   }
 
   matx_dense_backend_t blas = matx_blas_default();
-  matx_complex_d_i8_t alpha = {2.0, 0.0};
-  matx_complex_d_i8_t beta = {0.0, 0.0};
+  matx_complex_d_t alpha = {2.0, 0.0};
+  matx_complex_d_t beta = {0.0, 0.0};
   matx_status_t st = matx_geadd_z_i8(&blas, alpha, A, beta, B);
   ASSERT_EQ(st, MATX_OK);
   EXPECT_NEAR(B->data[0].real, 0.0, 1e-12);
@@ -140,8 +140,8 @@ TEST(compute_dense, gemm_z_i8_4x4) {
   }
 
   matx_dense_backend_t blas = matx_blas_default();
-  matx_complex_d_i8_t alpha = {1.0, 0.0};
-  matx_complex_d_i8_t beta = {0.0, 0.0};
+  matx_complex_d_t alpha = {1.0, 0.0};
+  matx_complex_d_t beta = {0.0, 0.0};
   matx_status_t st = matx_gemm_z_i8(&blas, 0, 0, alpha, A, B, beta, C);
   if (st == MATX_ERR_NOT_SUPPORTED) {
     matx_dense_z_i8_destroy(&a, A);
@@ -376,7 +376,7 @@ TEST(compute_dense, gerc_z_i8_3x2) {
   y->data[0].real = 4.0; y->data[0].imag = 1.0;
   y->data[1].real = 5.0; y->data[1].imag = -1.0;
 
-  matx_complex_d_i8_t alpha = {1.0, 0.0};
+  matx_complex_d_t alpha = {1.0, 0.0};
   matx_dense_backend_t blas = matx_blas_default();
   matx_status_t st = matx_gerc_z_i8(&blas, alpha, x, y, A);
   if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -448,7 +448,7 @@ TEST(compute_dense, her2k_z_i8_3x2) {
   }
   for (int i = 0; i < 9; ++i) { C->data[i].real = 0.0; C->data[i].imag = 0.0; }
 
-  matx_complex_d_i8_t alpha = {1.0, 0.0};
+  matx_complex_d_t alpha = {1.0, 0.0};
   matx_dense_backend_t blas = matx_blas_default();
   matx_status_t st = matx_her2k_z_i8(&blas, 'L', 'N', alpha, A, B, 0.0, C);
   if (st == MATX_ERR_NOT_SUPPORTED) {

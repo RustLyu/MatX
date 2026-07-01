@@ -250,7 +250,7 @@ static matx_status_t ss_solve_csc_z_i8(
 	matx_factor_sparse_z_i8_klu_t* ptr = (matx_factor_sparse_z_i8_klu_t*)F->reserved;
 	matx_int64_t n = ptr->n;
 
-	memcpy(x->data, b->data, sizeof(matx_complex_d_i8_t) * n);
+    memcpy(x->data, b->data, sizeof(matx_complex_d_t) * n);
 
 	matx_int64_t status = klu_zl_solve(
 		ptr->S, ptr->N, n, 1, (matx_double*)x->data, &ptr->common);

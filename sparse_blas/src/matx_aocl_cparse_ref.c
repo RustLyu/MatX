@@ -13,10 +13,10 @@
 #endif
 
 // y = \alpha \, op(A) \, x + \beta \, y,
-static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_i8_t alpha,
+static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_t alpha,
                                  matx_coo_z_i8_t A,
                                  matx_vec_z_i8_t x,
-                                 matx_complex_d_i8_t beta,
+                                 matx_complex_d_t beta,
                                  matx_vec_z_i8_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
@@ -60,10 +60,10 @@ static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_i8_t alpha,
 }
 
 //    C = \alpha \, op(A) \, B + \beta \, C,
-static matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_i8_t alpha,
+static matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_t alpha,
                                  matx_coo_z_i8_t A,
                                  const matx_dense_z_i8_t B,
-                                 matx_complex_d_i8_t beta,
+                                 matx_complex_d_t beta,
                                  matx_dense_z_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
@@ -238,10 +238,10 @@ static matx_status_t ref_dsp2md_d_i8_aocl(
 }
 
 // C := α · op(A) · op(B) + β · C
-static matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_i8_t alpha,
+static matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_t alpha,
                                    matx_coo_z_i8_t A,
                                    matx_coo_z_i8_t B,
-                                   matx_complex_d_i8_t beta,
+                                   matx_complex_d_t beta,
                                    matx_dense_z_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
@@ -311,7 +311,7 @@ static matx_status_t ref_transpose_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t 
     out->nnz = A->nnz;
     memcpy(out->rows, A->columns, sizeof(matx_int64_t) * A->nnz);
     memcpy(out->columns, A->rows, sizeof(matx_int64_t) * A->nnz);
-    memcpy(out->values, A->values, sizeof(matx_complex_d_i8_t) * A->nnz);
+    memcpy(out->values, A->values, sizeof(matx_complex_d_t) * A->nnz);
     return MATX_OK;
 }
 
@@ -474,9 +474,9 @@ static matx_status_t ref_spadd_d_i8_aocl(
     return MATX_OK;
 }
 
-static matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_i8_t alpha,
+static matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_t alpha,
                                   matx_coo_z_i8_t A,
-                                  matx_complex_d_i8_t beta,
+                                  matx_complex_d_t beta,
                                   matx_coo_z_i8_t B,
                                   matx_coo_z_i8_t out)
 {

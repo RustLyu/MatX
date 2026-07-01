@@ -186,7 +186,7 @@ TEST(solve, sparse_complex_4x4_factor_solve) {
 	matx_int64_t nnz = 4;
 	matx_int64_t coo_rows[4] = { 0, 1, 2, 3 };
 	matx_int64_t coo_cols[4] = { 0, 1, 2, 3 };
-	matx_complex_d_i8_t coo_values[4] = { {2.0,0.0},{2.0,0.0},{2.0,0.0},{2.0,0.0} };
+	matx_complex_d_t coo_values[4] = { {2.0,0.0},{2.0,0.0},{2.0,0.0},{2.0,0.0} };
 
 	matx_coo_z_i8_t coo_A = NULL;
 	matx_coo_sparse_z_i8_create(&a, &coo_A, 4, 4, nnz, coo_rows, coo_cols, coo_values);

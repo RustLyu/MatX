@@ -29,7 +29,7 @@ matx_status_t matx_vec_scal_d_i8(const matx_vec_backend_t* blas, matx_double alp
 	return blas->vt.dscal(x->n, alpha, x->data, x->stride);
 }
 
-matx_status_t matx_vec_scal_z_i8(const matx_vec_backend_t* blas, matx_complex_d_i8_t alpha, matx_vec_z_i8_t x) {
+matx_status_t matx_vec_scal_z_i8(const matx_vec_backend_t* blas, matx_complex_d_t alpha, matx_vec_z_i8_t x) {
 	if (!blas || !x || !x->data) return MATX_ERR_INVALID_ARG;
 	if (!blas->vt.zscal) return MATX_ERR_NOT_SUPPORTED;
 	return blas->vt.zscal(x->n, &alpha, x->data, x->stride);
@@ -70,14 +70,14 @@ matx_status_t matx_vec_dot_d_i8(const matx_vec_backend_t* blas, const matx_vec_d
 	return blas->vt.ddot(x->n, x->data, x->stride, y->data, y->stride, result);
 }
 
-matx_status_t matx_vec_dotu_z_i8(const matx_vec_backend_t* blas, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_complex_d_i8_t* result) {
+matx_status_t matx_vec_dotu_z_i8(const matx_vec_backend_t* blas, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_complex_d_t* result) {
 	if (!blas || !x || !y || !x->data || !y->data || !result) return MATX_ERR_INVALID_ARG;
 	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
 	if (!blas->vt.zdotu) return MATX_ERR_NOT_SUPPORTED;
 	return blas->vt.zdotu(x->n, x->data, x->stride, y->data, y->stride, result);
 }
 
-matx_status_t matx_vec_dotc_z_i8(const matx_vec_backend_t* blas, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_complex_d_i8_t* result) {
+matx_status_t matx_vec_dotc_z_i8(const matx_vec_backend_t* blas, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_complex_d_t* result) {
 	if (!blas || !x || !y || !x->data || !y->data || !result) return MATX_ERR_INVALID_ARG;
 	if (x->n != y->n) return MATX_ERR_INVALID_ARG;
 	if (!blas->vt.zdotc) return MATX_ERR_NOT_SUPPORTED;
@@ -133,7 +133,7 @@ matx_status_t matx_vec_axpy_d_i8(const matx_vec_backend_t* blas,
 }
 
 matx_status_t matx_vec_axpy_z_i8(const matx_vec_backend_t* blas,
-	matx_complex_d_i8_t alpha,
+	matx_complex_d_t alpha,
 	const matx_vec_z_i8_t x,
 	matx_vec_z_i8_t y) {
 	if (!x || !y || !x->data || !y->data)

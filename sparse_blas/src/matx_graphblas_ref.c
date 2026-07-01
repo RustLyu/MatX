@@ -16,10 +16,10 @@
 
 
 static matx_status_t ref_spmv_z_i8_grb(
-        matx_complex_d_i8_t alpha,
+        matx_complex_d_t alpha,
         matx_coo_z_i8_t A,
         matx_vec_z_i8_t x,
-        matx_complex_d_i8_t beta,
+        matx_complex_d_t beta,
         matx_vec_z_i8_t y)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
@@ -75,10 +75,10 @@ static matx_status_t ref_spmv_z_i8_grb(
 }
 
 static matx_status_t ref_spmm_z_i8_grb(
-        matx_complex_d_i8_t alpha,
+        matx_complex_d_t alpha,
         matx_coo_z_i8_t A,
         matx_dense_z_i8_t B,
-        matx_complex_d_i8_t beta,
+        matx_complex_d_t beta,
         matx_dense_z_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
@@ -327,10 +327,10 @@ static matx_status_t ref_dsp2md_d_i8_grb(
 }
 
 static matx_status_t ref_zsp2md_z_i8_grb(
-        matx_complex_d_i8_t alpha,
+        matx_complex_d_t alpha,
         matx_coo_z_i8_t A,
         matx_coo_z_i8_t B,
-        matx_complex_d_i8_t beta,
+        matx_complex_d_t beta,
         matx_dense_z_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
@@ -624,8 +624,8 @@ static matx_status_t ref_spadd_d_i8_grb(matx_double alpha, matx_coo_d_i8_t A,
     return MATX_OK;
 }
 
-static matx_status_t ref_spadd_z_i8_grb(matx_complex_d_i8_t alpha, matx_coo_z_i8_t A,
-                                 matx_complex_d_i8_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out) {
+static matx_status_t ref_spadd_z_i8_grb(matx_complex_d_t alpha, matx_coo_z_i8_t A,
+                                 matx_complex_d_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
     if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
     if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;

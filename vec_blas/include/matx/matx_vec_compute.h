@@ -62,7 +62,7 @@ extern "C" {
 	 * @brief Scale a complex vector by a scalar (ZSCAL)
 	 * @formula x[i] := alpha * x[i],  i = 0, 1, ..., n-1
 	 */
-	MATX_API matx_status_t matx_vec_scal_z_i8(const matx_vec_backend_t* blas, matx_complex_d_i8_t alpha, matx_vec_z_i8_t x);
+	MATX_API matx_status_t matx_vec_scal_z_i8(const matx_vec_backend_t* blas, matx_complex_d_t alpha, matx_vec_z_i8_t x);
 
 	/**
 	 * @brief Copy a real vector (DCOPY)
@@ -98,13 +98,13 @@ extern "C" {
 	 * @brief Unconjugated dot product of two complex vectors (ZDOTU)
 	 * @formula result := x^T * y = sum_{i=0}^{n-1} x[i] * y[i]  (no conjugation)
 	 */
-	MATX_API matx_status_t matx_vec_dotu_z_i8(const matx_vec_backend_t* blas, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_complex_d_i8_t* result);
+	MATX_API matx_status_t matx_vec_dotu_z_i8(const matx_vec_backend_t* blas, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_complex_d_t* result);
 
 	/**
 	 * @brief Conjugated dot product of two complex vectors (ZDOTC)
 	 * @formula result := x^H * y = sum_{i=0}^{n-1} conj(x[i]) * y[i]
 	 */
-	MATX_API matx_status_t matx_vec_dotc_z_i8(const matx_vec_backend_t* blas, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_complex_d_i8_t* result);
+	MATX_API matx_status_t matx_vec_dotc_z_i8(const matx_vec_backend_t* blas, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_complex_d_t* result);
 
 	/**
 	 * @brief Euclidean norm of a real vector (DNRM2)
@@ -152,7 +152,7 @@ extern "C" {
 	 * @brief Complex vector scaled accumulation (ZAXPY)
 	 * @formula y[i] := alpha * x[i] + y[i],  i = 0, 1, ..., n-1
 	 */
-	MATX_API matx_status_t matx_vec_axpy_z_i8(const matx_vec_backend_t* blas, matx_complex_d_i8_t alpha, const matx_vec_z_i8_t x, matx_vec_z_i8_t y);
+	MATX_API matx_status_t matx_vec_axpy_z_i8(const matx_vec_backend_t* blas, matx_complex_d_t alpha, const matx_vec_z_i8_t x, matx_vec_z_i8_t y);
 
 	// ---- Vector norms ----
 

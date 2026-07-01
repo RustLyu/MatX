@@ -38,7 +38,7 @@ TEST(core_vec, vec_z_i8_create_destroy) {
 
 TEST(core_vec, vec_z_i8_wrap) {
 	matx_alloc_t a = matx_alloc_default();
-	matx_complex_d_i8_t buf[4] = { {1.0, 0.0}, {0.0, 1.0}, {2.0, -1.0}, {0.0, 0.0} };
+	matx_complex_d_t buf[4] = { {1.0, 0.0}, {0.0, 1.0}, {2.0, -1.0}, {0.0, 0.0} };
 	matx_vec_z_i8_t v = NULL;
 	ASSERT_EQ(matx_vec_z_i8_wrap(&a, &v, 4, 1, buf), MATX_OK);
 	EXPECT_EQ(v->data, buf);

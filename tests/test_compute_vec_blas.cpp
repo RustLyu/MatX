@@ -34,7 +34,7 @@ TEST(vec_blas, scal_z_i8) {
   x->data[0] = {1.0, 2.0}; x->data[1] = {3.0, 4.0}; x->data[2] = {0.0, -1.0};
 
   matx_vec_backend_t blas = matx_vec_default();
-  matx_complex_d_i8_t alpha = {2.0, 1.0};
+  matx_complex_d_t alpha = {2.0, 1.0};
   matx_status_t st = matx_vec_scal_z_i8(&blas, alpha, x);
   if (st == MATX_ERR_NOT_SUPPORTED) { matx_vec_z_i8_destroy(&a, x); return; }
   ASSERT_EQ(st, MATX_OK);
@@ -157,7 +157,7 @@ TEST(vec_blas, dotu_z_i8) {
   y->data[0] = {4.0, 5.0}; y->data[1] = {6.0, 0.0};
 
   matx_vec_backend_t blas = matx_vec_default();
-  matx_complex_d_i8_t result = {0.0, 0.0};
+  matx_complex_d_t result = {0.0, 0.0};
   matx_status_t st = matx_vec_dotu_z_i8(&blas, x, y, &result);
   if (st == MATX_ERR_NOT_SUPPORTED) { matx_vec_z_i8_destroy(&a, x); matx_vec_z_i8_destroy(&a, y); return; }
   ASSERT_EQ(st, MATX_OK);
@@ -176,7 +176,7 @@ TEST(vec_blas, dotc_z_i8) {
   y->data[0] = {4.0, 5.0}; y->data[1] = {6.0, 0.0};
 
   matx_vec_backend_t blas = matx_vec_default();
-  matx_complex_d_i8_t result = {0.0, 0.0};
+  matx_complex_d_t result = {0.0, 0.0};
   matx_status_t st = matx_vec_dotc_z_i8(&blas, x, y, &result);
   if (st == MATX_ERR_NOT_SUPPORTED) { matx_vec_z_i8_destroy(&a, x); matx_vec_z_i8_destroy(&a, y); return; }
   ASSERT_EQ(st, MATX_OK);
@@ -314,7 +314,7 @@ TEST(vec_blas, axpy_z_i8) {
   y->data[0] = {0.5, 0.0}; y->data[1] = {0.0, 0.5}; y->data[2] = {0.0, 0.0}; y->data[3] = {1.0, 1.0};
 
   matx_vec_backend_t blas = matx_vec_default();
-  matx_complex_d_i8_t alpha = {2.0, 0.0};
+  matx_complex_d_t alpha = {2.0, 0.0};
   matx_status_t st = matx_vec_axpy_z_i8(&blas, alpha, x, y);
   if (st == MATX_ERR_NOT_SUPPORTED) { matx_vec_z_i8_destroy(&a, x); matx_vec_z_i8_destroy(&a, y); return; }
   ASSERT_EQ(st, MATX_OK);

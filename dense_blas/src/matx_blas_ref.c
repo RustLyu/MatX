@@ -304,7 +304,7 @@ static matx_status_t ref_inv_dense_z_i8(
         return MATX_ERR_INVALID_ARG;
     if (layout != MATX_COL_MAJOR)
         return MATX_ERR_NOT_SUPPORTED;
-    memcpy(out_Ainv, A, sizeof(matx_complex_d_i8_t) * rows * cols);
+    memcpy(out_Ainv, A, sizeof(matx_complex_d_t) * rows * cols);
 
     matx_int64_t N = rows;
     matx_int64_t lda = rows;
@@ -614,8 +614,8 @@ static matx_status_t ref_transpose_z_i8(matx_layout_t layout,
             o_data[dst] = a_data[src];
         }
 #else
-    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
-    matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*) out;
+    const matx_complex_d_t* a_data = (const matx_complex_d_t*) A;
+    matx_complex_d_t* o_data = (matx_complex_d_t*) out;
     for (matx_int64_t i = 0; i < rows; ++i)
         for (matx_int64_t j = 0; j < cols; ++j) {
             matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
@@ -653,8 +653,8 @@ static matx_status_t ref_conj_transpose_z_i8(matx_layout_t layout,
             o_data[dst].imag = -a_data[src].imag;
         }
 #else
-    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
-    matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*) out;
+    const matx_complex_d_t* a_data = (const matx_complex_d_t*) A;
+    matx_complex_d_t* o_data = (matx_complex_d_t*) out;
     for (matx_int64_t i = 0; i < rows; ++i)
         for (matx_int64_t j = 0; j < cols; ++j) {
             matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
@@ -822,9 +822,9 @@ static matx_status_t ref_hadamard_z_i8(matx_layout_t layout,
 {
     if (!A || !B || !C)
         return MATX_ERR_INVALID_ARG;
-    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
-    const matx_complex_d_i8_t* b_data = (const matx_complex_d_i8_t*) B;
-    matx_complex_d_i8_t* c_data = (matx_complex_d_i8_t*) C;
+    const matx_complex_d_t* a_data = (const matx_complex_d_t*) A;
+    const matx_complex_d_t* b_data = (const matx_complex_d_t*) B;
+    matx_complex_d_t* c_data = (matx_complex_d_t*) C;
     for (matx_int64_t i = 0; i < rows; ++i)
         for (matx_int64_t j = 0; j < cols; ++j) {
             matx_int64_t si = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;

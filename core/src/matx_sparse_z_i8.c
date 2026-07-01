@@ -12,7 +12,7 @@ matx_status_t matx_coo_sparse_z_i8_create(
     matx_int64_t nnz,
     matx_int64_t* ap,
     matx_int64_t* ai,
-    matx_complex_d_i8_t* ax) {
+    matx_complex_d_t* ax) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
         return MATX_ERR_INVALID_ARG;
     }
@@ -21,7 +21,7 @@ matx_status_t matx_coo_sparse_z_i8_create(
     
     matx_int64_t* rows = (matx_int64_t*)matx_malloc(alloc, nnz * sizeof(matx_int64_t));
     matx_int64_t* cols = (matx_int64_t*)matx_malloc(alloc, (nnz) * sizeof(matx_int64_t));
-    matx_complex_d_i8_t* values_buf = (matx_complex_d_i8_t*)matx_malloc(alloc, nnz * sizeof(matx_complex_d_i8_t));
+    matx_complex_d_t* values_buf = (matx_complex_d_t*)matx_malloc(alloc, nnz * sizeof(matx_complex_d_t));
 
     if (!rows || !cols || !values_buf) {
         if (rows) 
@@ -38,7 +38,7 @@ matx_status_t matx_coo_sparse_z_i8_create(
     if (ai != NULL)
         memcpy(cols, ai, sizeof(matx_int64_t) * nnz);
     if (ax != NULL)
-        memcpy(values_buf, ax, sizeof(matx_complex_d_i8_t) * nnz);
+        memcpy(values_buf, ax, sizeof(matx_complex_d_t) * nnz);
 
     matx_coo_z_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_coo_z_i8_opaque_t));
     memset(out_value, 0, sizeof(matx_coo_z_i8_opaque_t));
@@ -80,9 +80,9 @@ matx_status_t matx_csc_sparse_z_i8_create(
 
     matx_int64_t* col_ptr_buf = (matx_int64_t*)matx_malloc(alloc, (ncols + 1) * sizeof(matx_int64_t));
     matx_int64_t* row_ind_buf = (matx_int64_t*)matx_malloc(alloc, nnz * sizeof(matx_int64_t));
-    matx_complex_d_i8_t* values_buf = (matx_complex_d_i8_t*)matx_malloc(alloc, nnz * sizeof(matx_complex_d_i8_t));
+    matx_complex_d_t* values_buf = (matx_complex_d_t*)matx_malloc(alloc, nnz * sizeof(matx_complex_d_t));
     matx_int64_t* coo_2_csc_id_map = (matx_int64_t*)matx_malloc(alloc, nnz * sizeof(matx_int64_t));
-    memset(values_buf, 0, sizeof(matx_complex_d_i8_t) * nnz);
+    memset(values_buf, 0, sizeof(matx_complex_d_t) * nnz);
     if (!col_ptr_buf || !row_ind_buf || !values_buf) {
         if (col_ptr_buf) matx_free(alloc, col_ptr_buf);
         if (row_ind_buf) matx_free(alloc, row_ind_buf);
@@ -120,7 +120,7 @@ matx_status_t matx_coo_sparse_z_i8_wrap(const matx_alloc_t* alloc, matx_coo_z_i8
     matx_int64_t nnz,
     const matx_int64_t* rows,
     const matx_int64_t* cols,
-    const matx_complex_d_i8_t* values) {
+    const matx_complex_d_t* values) {
     if (!out || !rows || !cols || !values) {
         return MATX_ERR_INVALID_ARG;
     }
@@ -172,7 +172,7 @@ void matx_coo_sparse_z_i8_destroy(const matx_alloc_t* alloc, matx_coo_z_i8_t m) 
 m->rows = NULL;
         matx_free(alloc, (matx_int64_t*)m->columns);
 m->columns = NULL;
-        matx_free(alloc, (matx_complex_d_i8_t*)m->values);
+        matx_free(alloc, (matx_complex_d_t*)m->values);
 m->values = NULL;
     }
 

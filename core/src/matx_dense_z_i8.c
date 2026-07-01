@@ -11,7 +11,7 @@ matx_status_t matx_dense_z_i8_create(
 	matx_layout_t layout,
 	matx_int64_t rows,
 	matx_int64_t cols,
-	matx_complex_d_i8_t* data) {
+	matx_complex_d_t* data) {
 	if (!out || !alloc || rows == 0 || cols == 0)
 		return MATX_ERR_INVALID_ARG;
 	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR)
@@ -27,7 +27,7 @@ matx_status_t matx_dense_z_i8_create(
 	out_value->flags = 1u;
 
 	const size_t n = rows * cols;
-	out_value->data = (matx_complex_d_i8_t*)matx_malloc(alloc, n * sizeof(matx_complex_d_i8_t));
+	out_value->data = (matx_complex_d_t*)matx_malloc(alloc, n * sizeof(matx_complex_d_t));
 	if (!out_value->data) {
 		matx_free(alloc, out_value);
 		return MATX_ERR_OUT_OF_MEMORY;
@@ -35,7 +35,7 @@ matx_status_t matx_dense_z_i8_create(
 
 	if (data != NULL)
 	{
-		memcpy(out_value->data, data, sizeof(matx_complex_d_i8_t) * out_value->nrows * out_value->ncols);
+		memcpy(out_value->data, data, sizeof(matx_complex_d_t) * out_value->nrows * out_value->ncols);
 	}
 	if (*out != NULL)
 	{
@@ -57,7 +57,7 @@ matx_status_t matx_dense_z_i8_wrap(
 	matx_int64_t cols,
 	matx_int64_t stride,
 	matx_layout_t layout,
-	matx_complex_d_i8_t* data) {
+	matx_complex_d_t* data) {
 	if (!out || !data || rows == 0 || cols == 0) return MATX_ERR_INVALID_ARG;
 	if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) return MATX_ERR_INVALID_ARG;
 	if (layout == MATX_COL_MAJOR) {
@@ -103,7 +103,7 @@ void matx_dense_z_i8_destroy(const matx_alloc_t* alloc, matx_dense_z_i8_t m) {
 	matx_free(alloc, m);
 }
 
-matx_status_t matx_dense_z_i8_fill(matx_dense_z_i8_t m, matx_complex_d_i8_t val) {
+matx_status_t matx_dense_z_i8_fill(matx_dense_z_i8_t m, matx_complex_d_t val) {
     if (!m || !m->data) return MATX_ERR_INVALID_ARG;
     const matx_int64_t total = m->nrows * m->ncols;
     for (matx_int64_t i = 0; i < total; ++i)
@@ -113,14 +113,14 @@ matx_status_t matx_dense_z_i8_fill(matx_dense_z_i8_t m, matx_complex_d_i8_t val)
 
 matx_status_t matx_dense_z_i8_zeros(matx_dense_z_i8_t m) {
     if (!m || !m->data) return MATX_ERR_INVALID_ARG;
-    memset(m->data, 0, (size_t)(m->nrows * m->ncols) * sizeof(matx_complex_d_i8_t));
+    memset(m->data, 0, (size_t)(m->nrows * m->ncols) * sizeof(matx_complex_d_t));
     return MATX_OK;
 }
 
-matx_status_t matx_dense_z_i8_trace(const matx_dense_z_i8_t A, matx_complex_d_i8_t* out) {
+matx_status_t matx_dense_z_i8_trace(const matx_dense_z_i8_t A, matx_complex_d_t* out) {
     if (!A || !out) return MATX_ERR_INVALID_ARG;
     if (A->nrows != A->ncols) return MATX_ERR_INVALID_ARG;
-    matx_complex_d_i8_t sum = {0.0, 0.0};
+    matx_complex_d_t sum = {0.0, 0.0};
     for (matx_int64_t i = 0; i < A->nrows; ++i) {
         matx_int64_t idx = (A->layout == MATX_COL_MAJOR) ? i + i * A->stride : i * A->stride + i;
         sum.real += A->data[idx].real;
