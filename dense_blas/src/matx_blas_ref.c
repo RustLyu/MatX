@@ -246,7 +246,7 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
     return MATX_OK;
 }
 
-matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
+static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
                                  matx_int64_t rows,
                                  matx_int64_t cols,
                                  const matx_double* A,
@@ -295,7 +295,7 @@ matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
     return MATX_OK;
 }
 
-matx_status_t ref_inv_dense_z_i8(
+static matx_status_t ref_inv_dense_z_i8(
     matx_layout_t layout, matx_int64_t rows, matx_int64_t cols, const void* A, void* out_Ainv)
 {
     if (!A || !out_Ainv)

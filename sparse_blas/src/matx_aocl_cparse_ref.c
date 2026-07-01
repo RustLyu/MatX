@@ -13,7 +13,7 @@
 #endif
 
 // y = \alpha \, op(A) \, x + \beta \, y,
-matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_i8_t alpha,
+static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_i8_t alpha,
                                  matx_coo_z_i8_t A,
                                  matx_vec_z_i8_t x,
                                  matx_complex_d_i8_t beta,
@@ -60,7 +60,7 @@ matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_i8_t alpha,
 }
 
 //    C = \alpha \, op(A) \, B + \beta \, C,
-matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_i8_t alpha,
+static matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_i8_t alpha,
                                  matx_coo_z_i8_t A,
                                  const matx_dense_z_i8_t B,
                                  matx_complex_d_i8_t beta,
@@ -104,7 +104,7 @@ matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_i8_t alpha,
 }
 
 // y = \alpha \, op(A) \, x + \beta \, y
-matx_status_t ref_spmv_d_i8_aocl(
+static matx_status_t ref_spmv_d_i8_aocl(
     matx_double alpha, matx_coo_d_i8_t A, matx_vec_d_i8_t x, matx_double beta, matx_vec_d_i8_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
@@ -148,7 +148,7 @@ matx_status_t ref_spmv_d_i8_aocl(
     return MATX_OK;
 }
 //C = α * A * B + β * C
-matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
+static matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
                                  matx_coo_d_i8_t A,
                                  matx_dense_d_i8_t B,
                                  matx_double beta,
@@ -192,7 +192,7 @@ matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
 }
 
 // C := α · op(A) · op(B) + β · C
-matx_status_t ref_dsp2md_d_i8_aocl(
+static matx_status_t ref_dsp2md_d_i8_aocl(
     matx_double alpha, matx_coo_d_i8_t A, matx_coo_d_i8_t B, matx_double beta, matx_dense_d_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
@@ -238,7 +238,7 @@ matx_status_t ref_dsp2md_d_i8_aocl(
 }
 
 // C := α · op(A) · op(B) + β · C
-matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_i8_t alpha,
+static matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_i8_t alpha,
                                    matx_coo_z_i8_t A,
                                    matx_coo_z_i8_t B,
                                    matx_complex_d_i8_t beta,
@@ -289,7 +289,7 @@ matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_i8_t alpha,
     return MATX_OK;
 }
 
-matx_status_t ref_transpose_d_i8_aocl(matx_coo_d_i8_t A, matx_coo_d_i8_t out)
+static matx_status_t ref_transpose_d_i8_aocl(matx_coo_d_i8_t A, matx_coo_d_i8_t out)
 {
     if (!A)
         return MATX_ERR_INVALID_ARG;
@@ -302,7 +302,7 @@ matx_status_t ref_transpose_d_i8_aocl(matx_coo_d_i8_t A, matx_coo_d_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_transpose_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
+static matx_status_t ref_transpose_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
 {
     if (!A)
         return MATX_ERR_INVALID_ARG;
@@ -315,7 +315,7 @@ matx_status_t ref_transpose_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_conj_trans_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
+static matx_status_t ref_conj_trans_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
 {
 #if MATX_HAVE_AOCL_SPARSE
     if (!A || !out)
@@ -339,14 +339,14 @@ matx_status_t ref_conj_trans_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_finalize_aocl()
+static matx_status_t ref_finalize_aocl()
 {
     return MATX_OK;
 }
 
 // ---- Sparse matrix norms ----
 
-matx_status_t ref_norm1_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
+static matx_status_t ref_norm1_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 {
     if (!A || !out)
         return MATX_ERR_INVALID_ARG;
@@ -364,7 +364,7 @@ matx_status_t ref_norm1_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
     return MATX_OK;
 }
 
-matx_status_t ref_norminf_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
+static matx_status_t ref_norminf_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 {
     if (!A || !out)
         return MATX_ERR_INVALID_ARG;
@@ -382,7 +382,7 @@ matx_status_t ref_norminf_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
     return MATX_OK;
 }
 
-matx_status_t ref_normfro_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
+static matx_status_t ref_normfro_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 {
     if (!A || !out)
         return MATX_ERR_INVALID_ARG;
@@ -395,7 +395,7 @@ matx_status_t ref_normfro_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 
 // ---- Sparse matrix norms (c64) ----
 
-matx_status_t ref_norm1_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
+static matx_status_t ref_norm1_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
 {
     if (!A || !out)
         return MATX_ERR_INVALID_ARG;
@@ -416,7 +416,7 @@ matx_status_t ref_norm1_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
     return MATX_OK;
 }
 
-matx_status_t ref_norminf_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
+static matx_status_t ref_norminf_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
 {
     if (!A || !out)
         return MATX_ERR_INVALID_ARG;
@@ -437,7 +437,7 @@ matx_status_t ref_norminf_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
     return MATX_OK;
 }
 
-matx_status_t ref_normfro_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
+static matx_status_t ref_normfro_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
 {
     if (!A || !out)
         return MATX_ERR_INVALID_ARG;
@@ -452,7 +452,7 @@ matx_status_t ref_normfro_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
 }
 // ---- Sparse-sparse addition ----
 
-matx_status_t ref_spadd_d_i8_aocl(
+static matx_status_t ref_spadd_d_i8_aocl(
     matx_double alpha, matx_coo_d_i8_t A, matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out)
 {
     if (!A || !B || !out)
@@ -474,7 +474,7 @@ matx_status_t ref_spadd_d_i8_aocl(
     return MATX_OK;
 }
 
-matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_i8_t alpha,
+static matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_i8_t alpha,
                                   matx_coo_z_i8_t A,
                                   matx_complex_d_i8_t beta,
                                   matx_coo_z_i8_t B,
@@ -507,7 +507,7 @@ matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_i8_t alpha,
 
 // ---- Non-zero count per row/column ----
 
-matx_status_t ref_spnnz_rows_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
+static matx_status_t ref_spnnz_rows_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
 {
     if (!A || !out || !A->values)
         return MATX_ERR_INVALID_ARG;
@@ -517,7 +517,7 @@ matx_status_t ref_spnnz_rows_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_spnnz_cols_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
+static matx_status_t ref_spnnz_cols_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
 {
     if (!A || !out || !A->values)
         return MATX_ERR_INVALID_ARG;
@@ -527,7 +527,7 @@ matx_status_t ref_spnnz_cols_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_spnnz_rows_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
+static matx_status_t ref_spnnz_rows_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 {
     if (!A || !out || !A->values)
         return MATX_ERR_INVALID_ARG;
@@ -540,7 +540,7 @@ matx_status_t ref_spnnz_rows_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_spnnz_cols_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
+static matx_status_t ref_spnnz_cols_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 {
     if (!A || !out || !A->values)
         return MATX_ERR_INVALID_ARG;
@@ -555,7 +555,7 @@ matx_status_t ref_spnnz_cols_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 
 // ---- Row / column sums ----
 
-matx_status_t ref_sprowsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
+static matx_status_t ref_sprowsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
 {
     if (!A || !out || !A->values)
         return MATX_ERR_INVALID_ARG;
@@ -565,7 +565,7 @@ matx_status_t ref_sprowsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_spcolsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
+static matx_status_t ref_spcolsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
 {
     if (!A || !out || !A->values)
         return MATX_ERR_INVALID_ARG;
@@ -575,7 +575,7 @@ matx_status_t ref_spcolsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_sprowsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
+static matx_status_t ref_sprowsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 {
     if (!A || !out || !A->values)
         return MATX_ERR_INVALID_ARG;
@@ -591,7 +591,7 @@ matx_status_t ref_sprowsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
     return MATX_OK;
 }
 
-matx_status_t ref_spcolsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
+static matx_status_t ref_spcolsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 {
     if (!A || !out || !A->values)
         return MATX_ERR_INVALID_ARG;
@@ -609,7 +609,7 @@ matx_status_t ref_spcolsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 
 // ---- Diagonal extraction ----
 
-matx_status_t ref_spdiag_d_i8_aocl(matx_coo_d_i8_t A, matx_int64_t offset, matx_vec_d_i8_t out)
+static matx_status_t ref_spdiag_d_i8_aocl(matx_coo_d_i8_t A, matx_int64_t offset, matx_vec_d_i8_t out)
 {
     if (!A || !out)
         return MATX_ERR_INVALID_ARG;
@@ -632,7 +632,7 @@ matx_status_t ref_spdiag_d_i8_aocl(matx_coo_d_i8_t A, matx_int64_t offset, matx_
     return MATX_OK;
 }
 
-matx_status_t ref_spdiag_z_i8_aocl(matx_coo_z_i8_t A, matx_int64_t offset, matx_vec_z_i8_t out)
+static matx_status_t ref_spdiag_z_i8_aocl(matx_coo_z_i8_t A, matx_int64_t offset, matx_vec_z_i8_t out)
 {
     if (!A || !out)
         return MATX_ERR_INVALID_ARG;
@@ -660,7 +660,7 @@ matx_status_t ref_spdiag_z_i8_aocl(matx_coo_z_i8_t A, matx_int64_t offset, matx_
 
 // ---- In-place scaling ----
 
-matx_status_t ref_scale_rows_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_d_i8_t s)
+static matx_status_t ref_scale_rows_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_d_i8_t s)
 {
     if (!A || !s || !A->values || !s->data)
         return MATX_ERR_INVALID_ARG;
@@ -671,7 +671,7 @@ matx_status_t ref_scale_rows_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_d_i8_t 
     return MATX_OK;
 }
 
-matx_status_t ref_scale_cols_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_d_i8_t s)
+static matx_status_t ref_scale_cols_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_d_i8_t s)
 {
     if (!A || !s || !A->values || !s->data)
         return MATX_ERR_INVALID_ARG;
@@ -682,7 +682,7 @@ matx_status_t ref_scale_cols_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_d_i8_t 
     return MATX_OK;
 }
 
-matx_status_t ref_scale_rows_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_z_i8_t s)
+static matx_status_t ref_scale_rows_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_z_i8_t s)
 {
     if (!A || !s || !A->values || !s->data)
         return MATX_ERR_INVALID_ARG;
@@ -699,7 +699,7 @@ matx_status_t ref_scale_rows_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_z_i8_t 
     return MATX_OK;
 }
 
-matx_status_t ref_scale_cols_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_z_i8_t s)
+static matx_status_t ref_scale_cols_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_z_i8_t s)
 {
     if (!A || !s || !A->values || !s->data)
         return MATX_ERR_INVALID_ARG;
