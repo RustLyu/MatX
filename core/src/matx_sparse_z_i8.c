@@ -139,8 +139,8 @@ matx_status_t matx_coo_sparse_z_i8_wrap(const matx_alloc_t* alloc, matx_coo_z_i8
     out_value->nrows = nrows;
     out_value->ncols = ncols;
     out_value->nnz = nnz;
-    out_value->columns = rows;
-    out_value->rows = cols;
+    out_value->rows = rows;
+    out_value->columns = cols;
     out_value->values = values;
     out_value->flags = 0u;
 
