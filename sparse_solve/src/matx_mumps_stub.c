@@ -45,9 +45,11 @@ typedef struct matx_factor_sparse_z_i8_mumps {
  */
 static void mumps_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
 {
-    if (!F) return;
-#if MATX_HAVE_MUMPS
+    if (!F)
+        return;
     matx_factor_sparse_d_i8_mumps_t* ptr = (matx_factor_sparse_d_i8_mumps_t*)F->reserved;
+#if MATX_HAVE_MUMPS
+
     // Cleanup MUMPS internal data
     if (ptr->mumps.comm_fortran != -987654) {
         ptr->mumps.job = -2;
@@ -186,10 +188,11 @@ static matx_status_t mumps_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F, const ma
  */
 static void mumps_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
 {
-    if (!F) return;
+    if (!F)
+        return;
+    matx_factor_sparse_d_i8_mumps_t* ptr = (matx_factor_sparse_d_i8_mumps_t*)F->reserved;
 #if MATX_HAVE_MUMPS
     // Cleanup MUMPS internal data
-    matx_factor_sparse_d_i8_mumps_t* ptr = (matx_factor_sparse_d_i8_mumps_t*)F->reserved;
     if (ptr->mumps.comm_fortran != -987654) {
         ptr->mumps.job = -2;
         dmumps_c(&ptr->mumps);

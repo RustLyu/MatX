@@ -1,4 +1,4 @@
-# =========================================================
+﻿# =========================================================
 # DepSuperLU.cmake
 # Fetch + build SuperLU (when MATX_ENABLE_SUPERLU=ON)
 # =========================================================
@@ -66,15 +66,8 @@ if(MATX_ENABLE_SUPERLU)
         --install ${SUPERLU_BUILD_DIR}
         RESULT_VARIABLE MUMPS_INSTALL_RESULT
     )
-
-    add_library(SUPERLU::SUPERLU STATIC IMPORTED GLOBAL)
-
-    set_target_properties(SUPERLU::SUPERLU PROPERTIES
-        IMPORTED_LOCATION
-        "${DEPEND_LIB_OUTPUT}/superlu_lib/lib/libsuperlu.dll.a"
-
-        INTERFACE_INCLUDE_DIRECTORIES
-        "${DEPEND_LIB_OUTPUT}/superlu_lib/include"
-    )
+    set(superlu_CMAKE_DIR "${DEPEND_LIB_OUTPUT}/superlu_lib/lib/cmake/superlu")
+    set(superlu_DIR "${superlu_CMAKE_DIR}")
+    find_package(superlu REQUIRED)
 
 endif()

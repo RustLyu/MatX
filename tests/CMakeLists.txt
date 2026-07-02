@@ -59,7 +59,7 @@ target_link_libraries(${PROJECT_NAME}
     SuiteSparse::SuiteSparseConfig
 
     #OpenBLAS::OpenBLAS
-    ${mumps_lib}
+    #${mumps_lib}
     pthread
     OpenMP::OpenMP_C
 
