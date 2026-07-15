@@ -605,8 +605,8 @@ static matx_status_t ref_transpose_z_i8(matx_layout_t layout,
     const matx_double alpha[2] = {1.0, 0.0};
     cblas_zomatcopy(order, CblasTrans, rows, cols, alpha, A, lda, out, ldc);
 #elif MATX_ENABLE_BLIS
-    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
-    matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*) out;
+    const matx_complex_d_t* a_data = (const matx_complex_d_t*) A;
+    matx_complex_d_t* o_data = (matx_complex_d_t*) out;
     for (matx_int64_t i = 0; i < rows; ++i)
         for (matx_int64_t j = 0; j < cols; ++j) {
             matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
@@ -643,8 +643,8 @@ static matx_status_t ref_conj_transpose_z_i8(matx_layout_t layout,
     const matx_double alpha[2] = {1.0, 0.0};
     cblas_zomatcopy(order, CblasConjTrans, rows, cols, alpha, A, lda, out, ldc);
 #elif MATX_ENABLE_BLIS
-    const matx_complex_d_i8_t* a_data = (const matx_complex_d_i8_t*) A;
-    matx_complex_d_i8_t* o_data = (matx_complex_d_i8_t*) out;
+    const matx_complex_d_t* a_data = (const matx_complex_d_t*) A;
+    matx_complex_d_t* o_data = (matx_complex_d_t*) out;
     for (matx_int64_t i = 0; i < rows; ++i)
         for (matx_int64_t j = 0; j < cols; ++j) {
             matx_int64_t src = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
