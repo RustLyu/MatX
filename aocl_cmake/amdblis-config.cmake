@@ -7,6 +7,6 @@ set_target_properties(amdblis::amdblis PROPERTIES
 )
 
 set_target_properties(amdblis::amdblis PROPERTIES
-    IMPORTED_LOCATION_DEBUG "${AOCL_ROOT}/lib/libblis-mt.so.5.2.2"
-    IMPORTED_LOCATION_RELEASE "${AOCL_ROOT}/lib/libblis-mt.so.5.2.2"
+    IMPORTED_LOCATION_DEBUG "${AOCL_ROOT}/lib/libblis-mt.so"
+    IMPORTED_LOCATION_RELEASE "${AOCL_ROOT}/lib/libblis-mt.so"
 )

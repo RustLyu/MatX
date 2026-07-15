@@ -7,6 +7,6 @@ set_target_properties(aoclsparse::aoclsparse PROPERTIES
 )
 
 set_target_properties(aoclsparse::aoclsparse PROPERTIES
-    IMPORTED_LOCATION_DEBUG "${AOCL_ROOT}/lib/libaoclsparse.so.5.2.2"
-    IMPORTED_LOCATION_RELEASE "${AOCL_ROOT}/lib/libaoclsparse.so.5.2.2"
+    IMPORTED_LOCATION_DEBUG "${AOCL_ROOT}/lib/libaoclsparse.so"
+    IMPORTED_LOCATION_RELEASE "${AOCL_ROOT}/lib/libaoclsparse.so"
 )
