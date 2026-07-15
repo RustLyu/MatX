@@ -11,7 +11,7 @@ if(MATX_BACKEND STREQUAL "AMD_AOCL")
     FetchContent_Declare(
         aocl-utils
         GIT_REPOSITORY https://github.com/amd/aocl-utils.git
-        GIT_TAG 5.2.2
+        GIT_TAG 5.3
     )
 
     FetchContent_GetProperties(aocl-utils)
@@ -71,7 +71,7 @@ if(MATX_ENABLE_BLIS)
     FetchContent_Declare(
         blis
         GIT_REPOSITORY https://github.com/amd/blis.git
-        GIT_TAG 5.2.2
+        GIT_TAG 5.3
     )
 
     FetchContent_GetProperties(blis)
@@ -146,7 +146,7 @@ if(MATX_ENABLE_LIBFLAME)
         FetchContent_Declare(
             libflame
             GIT_REPOSITORY https://github.com/amd/libflame.git
-            GIT_TAG 5.2.2
+            GIT_TAG 5.3
             BINARY_DIR ${CMAKE_BINARY_DIR}/libflame-build
         )
 
@@ -201,7 +201,7 @@ if(MATX_ENABLE_AOCL_SPARSE)
     FetchContent_Declare(
         aocl-sparse
         GIT_REPOSITORY https://github.com/amd/aocl-sparse.git
-        GIT_TAG 5.2.2
+        GIT_TAG 5.3
     )
     FetchContent_GetProperties(aocl-sparse)
 
@@ -226,17 +226,17 @@ if(MATX_ENABLE_AOCL_SPARSE)
         COMMAND ${CMAKE_COMMAND}
         --build ${aocl-sparse_BINARY_DIR}
         --parallel ${BUILD_JOBS}
-        RESULT_VARIABLE libflame_BUILD_RESULT
+        RESULT_VARIABLE libaoclsparse_BUILD_RESULT
     )
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --install ${aocl-sparse_BINARY_DIR}
-        RESULT VARIABLE LIBFLAME_INSTALL_RESULT
+        RESULT VARIABLE AOCLSPARSE_INSTALL_RESULT
     )
 
     set(AOCLSPARSE_INCLUDE_DIR ${AOCL_ROOT}/include)
-    set(AOCLSPARSE_LIBRARY ${AOCL_ROOT}/lib/libflame.so)
+    set(AOCLSPARSE_LIBRARY ${AOCL_ROOT}/lib/libaoclsparse.so)
 
     add_library(AOCLSPARSE::AOCLSPARSE STATIC IMPORTED GLOBAL)
     set_target_properties(AOCLSPARSE::AOCLSPARSE PROPERTIES
