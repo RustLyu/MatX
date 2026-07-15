@@ -39,7 +39,7 @@ endif()
 
 if(MATX_ENABLE_AOCL_SPARSE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_AOCL_SPARSE=1)
-    target_link_libraries(${PROJECT_NAME} PRIVATE aoclsparse::aoclsparse)
+    target_link_libraries(${PROJECT_NAME} PRIVATE AOCLSPARSE::AOCLSPARSE)
 endif()
 
 target_sources(${PROJECT_NAME}
