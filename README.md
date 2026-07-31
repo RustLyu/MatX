@@ -18,6 +18,29 @@ All third-party dependencies are fetched via CMake **FetchContent** at configure
 - `tests`: GoogleTest-based unit tests.
 - `cmake/`: CMake module files for platform detection, options, CPU vendor auto-detection, backend validation, and per-dependency FetchContent management.
 
+### Module Dependency Graph
+
+```
+types  (leaf — version, ABI types, opaque handle definitions)
+tools  → types          (spdlog logging, timing)
+core   → types, tools   (allocators, container create/destroy/wrap/dup/fill)
+io     → types, core    (MTX format print/read)
+vec_blas      → types, core, tools (+ OpenBLAS/BLIS at link)
+dense_blas    → types, core, tools (+ OpenBLAS/BLIS/libFLAME)
+sparse_blas   → types, core, tools (+ GraphBLAS, AOCL_SPARSE)
+dense_solve   → types, core, tools (+ OpenBLAS/libFLAME via CBLAS/LAPACK)
+sparse_solve  → types, tools, core (+ SuiteSparse, SuperLU, MUMPS)
+tests         → all above + GTest + OpenMP
+```
+
+### Code Conventions
+
+- **Commit messages**: lowercase, terse English sentence fragments
+- **Branch naming**: lowercase with underscores (e.g., `del_3party`)
+- **Core is pure C**, tools/io are C++ (for spdlog integration), tests are C++ with GTest
+- Public API functions follow `matx_<module>_<op>_<precision>` naming (e.g., `matx_gemm_d_i8`)
+- Header-only public API: all headers under `include/matx/`
+
 ## Architecture
 
 ### Opaque Handle + Vtable Dispatch
@@ -90,13 +113,13 @@ ctest --test-dir build --output-on-failure
 ## Public API snapshot
 
 ### Dense compute
-`matx_gemm_*`, `matx_gemv_*`, `matx_geadd_*`, `matx_ger_*`, `matx_trsv_*`, `matx_trsm_*`, `matx_syrk_*`, `matx_herk_*`, `matx_transpose_*`, `matx_conj_transpose_*`, `matx_mat_norm*`
+`matx_gemm_*`, `matx_gemv_*`, `matx_geadd_*`, `matx_ger_*`, `matx_zgerc_*`, `matx_trsv_*`, `matx_trsm_*`, `matx_syrk_*`, `matx_dsyr2k_*`, `matx_herk_*`, `matx_zher2k_*`, `matx_hadamard_*`, `matx_transpose_*`, `matx_conj_transpose_*`, `matx_mat_norm*`
 
 ### Vector compute
 `matx_vec_scal_*`, `matx_vec_copy_*`, `matx_vec_swap_*`, `matx_vec_dot_*`, `matx_vec_nrm2_*`, `matx_vec_asum_*`, `matx_vec_iamax_*`, `matx_vec_axpy_*`, `matx_vec_norm1_*`, `matx_vec_norm2_*`, `matx_vec_norminf_*`
 
 ### Sparse compute
-`matx_spmv_*`, `matx_spmm_*`, `matx_dsp2md_*`, sparse-sparse to dense, transpose/conjugate, sparse matrix norms, sparse addition
+`matx_spmv_*`, `matx_spmm_*`, `matx_dsp2md_*`, `matx_zsp2md_*`, sparse-sparse to dense, transpose/conjugate, sparse matrix norms, sparse addition, row/column NNZ counts (`spnnz_rows`, `spnnz_cols`), row/column sums (`sprowsums`, `spcolsums`), diagonal extraction (`spdiag`), row/column scaling (`scale_rows`, `scale_cols`)
 
 ### Dense solve
 Factor + solve and one-shot solve for d_i8 / z_i8.
@@ -112,7 +135,7 @@ Print/read dense matrices, sparse matrices (COO), and vectors to/from text files
 The `tests` target covers:
 
 - Core object lifecycle (create/destroy/dup/fill) for dense, sparse, and vector containers
-- Dense compute (real + complex)
+- Dense compute (real + complex): gemm, gemv, geadd, ger, zgerc, trsv, trsm, syrk, dsyr2k, herk, zher2k, hadamard, transpose, conj_transpose, norms
 - Vector compute (real + complex)
 - Sparse compute (real + complex)
 - Dense/sparse solve paths (all backends)
@@ -122,7 +145,7 @@ Some tests allow backend-dependent `MATX_ERR_NOT_SUPPORTED` responses for option
 
 ## CI/CD
 
-GitHub Actions runs on push/PR to all branches: configure (Release) → build → run GTest suite. See `.github/workflows/ci.yml`.
+GitHub Actions runs on push/PR to all branches: configure (Release) → build. See `.github/workflows/ci.yml`.
 
 ## Known constraints
 
