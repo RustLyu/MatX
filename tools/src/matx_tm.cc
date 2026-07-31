@@ -10,7 +10,7 @@ matx_int64_t matx_tm_now(matx_tm_unit unit)
 	switch (unit)
 	{
 	case matx_tm_unit::MATX_TM_SECOND:      return count / 1000000000ULL;
-	case matx_tm_unit::MATX_TM_MILISECOND: return count / 1000000ULL;
+	case matx_tm_unit::MATX_TM_MILLISECOND: return count / 1000000ULL;
 	case matx_tm_unit::MATX_TM_MICROSECOND: return count / 1000ULL;
 	case matx_tm_unit::MATX_TM_NANOSECOND:  return count;
 	default: return count;

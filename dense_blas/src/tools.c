@@ -1,4 +1,5 @@
 ﻿#include "matx/matx_dense_compute.h"
+#include "matx/matx_log.h"
 
 #include <suitesparse/GraphBLAS.h>
 
@@ -75,6 +76,7 @@ size_t coo_2_mkl_d_i8(matx_coo_d_i8_t* A)
 	);
 
 	if (st != SPARSE_STATUS_SUCCESS) {
+		MATX_ERROR("mkl_sparse_d_create_coo failed");
 		return (size_t)-1;
 	}
 
@@ -82,6 +84,7 @@ size_t coo_2_mkl_d_i8(matx_coo_d_i8_t* A)
 	mkl_sparse_destroy(coo);
 
 	if (st != SPARSE_STATUS_SUCCESS) {
+		MATX_ERROR("mkl_sparse_convert_csr failed");
 		return (size_t)-1;
 	}
 
@@ -130,14 +133,18 @@ size_t coo_2_mkl_z_i8(matx_coo_z_i8_t* A)
 	//	(MKL_Complex16*)A->values
 	//);
 
-	if (st != SPARSE_STATUS_SUCCESS)
+	if (st != SPARSE_STATUS_SUCCESS) {
+		MATX_ERROR("mkl_sparse_z_create_coo failed");
 		return -1;
+	}
 
 	st = mkl_sparse_convert_csr(coo, SPARSE_OPERATION_NON_TRANSPOSE, &csr);
 	mkl_sparse_destroy(coo);
 
-	if (st != SPARSE_STATUS_SUCCESS)
+	if (st != SPARSE_STATUS_SUCCESS) {
+		MATX_ERROR("mkl_sparse_convert_csr (complex) failed");
 		return -1;
+	}
 
 	mkl_sparse_optimize(csr);
 

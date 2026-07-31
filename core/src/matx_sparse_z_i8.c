@@ -1,8 +1,9 @@
-﻿#include "matx/matx_types.h"
+#include "matx/matx_types.h"
 #include "matx/matx_func.h"
 #include "matx/matx_types_internal.h"
 
 #include <string.h>
+#include "matx/matx_log.h"
 
 matx_status_t matx_coo_sparse_z_i8_create(
     const matx_alloc_t* alloc,
@@ -14,6 +15,7 @@ matx_status_t matx_coo_sparse_z_i8_create(
     matx_int64_t* ai,
     matx_complex_d_t* ax) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
 
@@ -31,6 +33,7 @@ matx_status_t matx_coo_sparse_z_i8_create(
         if (values_buf) 
             matx_free(alloc, values_buf);
         memset(out, 0, sizeof(*out));
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
     if(ap != NULL)
@@ -73,6 +76,7 @@ matx_status_t matx_csc_sparse_z_i8_create(
     matx_int64_t ncols,
     matx_int64_t nnz) {
     if (!out || !alloc || nrows == 0 || ncols == 0 || nnz == 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
 
@@ -88,6 +92,7 @@ matx_status_t matx_csc_sparse_z_i8_create(
         if (row_ind_buf) matx_free(alloc, row_ind_buf);
         if (values_buf) matx_free(alloc, values_buf);
         memset(out, 0, sizeof(*out));
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -122,12 +127,15 @@ matx_status_t matx_coo_sparse_z_i8_wrap(const matx_alloc_t* alloc, matx_coo_z_i8
     const matx_int64_t* cols,
     const matx_complex_d_t* values) {
     if (!out || !rows || !cols || !values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
     if (nrows == 0 || ncols == 0 || nnz == 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
     if (nnz > nrows * ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
 

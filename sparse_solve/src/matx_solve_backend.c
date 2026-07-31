@@ -1,4 +1,5 @@
-﻿#include "matx/matx_sparse_solve.h"
+#include "matx/matx_sparse_solve.h"
+#include "matx/matx_log.h"
 
 // Forward decls
 matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void);
@@ -50,8 +51,14 @@ matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend
 matx_status_t matx_factor_csc_d_i8(const matx_sparse_linsolve_t* ls,
                                   matx_coo_d_i8_t A,
                                   matx_factor_sparse_d_i8_t* out_F) {
-  if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
-  if (!ls->vt.factor_csc_d_i8) return MATX_ERR_NOT_SUPPORTED;
+  if (!ls || !A || !out_F) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
+  if (!ls->vt.factor_csc_d_i8) {
+      MATX_ERROR("%s: operation not supported", __func__);
+      return MATX_ERR_NOT_SUPPORTED;
+  }
   return ls->vt.factor_csc_d_i8(A, out_F);
 }
 
@@ -59,8 +66,14 @@ matx_status_t matx_solve_csc_d_i8_factor(const matx_sparse_linsolve_t* ls,
                                         matx_factor_sparse_d_i8_t* F,
                                         const matx_double* b,
     matx_double* x) {
-  if (!ls || !F || !b || !x) return MATX_ERR_INVALID_ARG;
-  if (!ls->vt.solve_csc_d_i8) return MATX_ERR_NOT_SUPPORTED;
+  if (!ls || !F || !b || !x) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
+  if (!ls->vt.solve_csc_d_i8) {
+      MATX_ERROR("%s: operation not supported", __func__);
+      return MATX_ERR_NOT_SUPPORTED;
+  }
   return ls->vt.solve_csc_d_i8(F, b, x);
 }
 
@@ -76,7 +89,10 @@ matx_status_t matx_solve_csc_d_i8(const matx_sparse_linsolve_t* ls,
                                  matx_coo_d_i8_t A,
                                  const matx_double* b,
     matx_double* x) {
-  if (!ls || !A || !b || !x) return MATX_ERR_INVALID_ARG;
+  if (!ls || !A || !b || !x) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
   matx_factor_sparse_d_i8_t F;
   F.reserved = NULL;
   matx_status_t st = matx_factor_csc_d_i8(ls, A, &F);
@@ -92,8 +108,14 @@ matx_status_t matx_solve_csc_d_i8(const matx_sparse_linsolve_t* ls,
 matx_status_t matx_factor_csc_z_i8(const matx_sparse_linsolve_t* ls,
                                   matx_coo_z_i8_t A,
                                   matx_factor_sparse_z_i8_t* out_F) {
-  if (!ls || !A || !out_F) return MATX_ERR_INVALID_ARG;
-  if (!ls->vt.factor_csc_z_i8) return MATX_ERR_NOT_SUPPORTED;
+  if (!ls || !A || !out_F) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
+  if (!ls->vt.factor_csc_z_i8) {
+      MATX_ERROR("%s: operation not supported", __func__);
+      return MATX_ERR_NOT_SUPPORTED;
+  }
   return ls->vt.factor_csc_z_i8(A, out_F);
 }
 
@@ -101,8 +123,14 @@ matx_status_t matx_solve_csc_z_i8_factor(const matx_sparse_linsolve_t* ls,
                                         matx_factor_sparse_z_i8_t* F,
                                         const matx_vec_z_i8_t b,
                                         matx_vec_z_i8_t x) {
-  if (!ls || !F || !b || !x) return MATX_ERR_INVALID_ARG;
-  if (!ls->vt.solve_csc_z_i8) return MATX_ERR_NOT_SUPPORTED;
+  if (!ls || !F || !b || !x) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
+  if (!ls->vt.solve_csc_z_i8) {
+      MATX_ERROR("%s: operation not supported", __func__);
+      return MATX_ERR_NOT_SUPPORTED;
+  }
   return ls->vt.solve_csc_z_i8(F, b, x);
 }
 
@@ -119,8 +147,10 @@ matx_status_t matx_solve_csc_z_i8(const matx_sparse_linsolve_t* ls,
                                  matx_coo_z_i8_t A,
                                  const matx_vec_z_i8_t b,
                                  matx_vec_z_i8_t x) {
-  if (!ls || !A || !b || !x) 
+  if (!ls || !A || !b || !x) {
+      MATX_ERROR("%s: invalid argument", __func__);
       return MATX_ERR_INVALID_ARG;
+  }
   matx_factor_sparse_z_i8_t F;
   matx_status_t st = matx_factor_csc_z_i8(ls, A, &F);
   if (st != MATX_OK) 

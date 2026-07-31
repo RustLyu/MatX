@@ -1,4 +1,4 @@
-﻿#include "matx/matx_sparse_solve.h"
+#include "matx/matx_sparse_solve.h"
 #include "matx/matx_types_internal.h"
 
 #include <limits.h>
@@ -64,12 +64,16 @@ static matx_status_t ss_factor_csc_d_i8(matx_coo_d_i8_t A,
 		MATX_ERROR("csc pointer is null error");
 		return MATX_ERR_INVALID_ARG;
 	}
-	if (A->nrows != A->ncols) 
+	if (A->nrows != A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
+	}
 
 	const matx_int64_t n = A->nrows;
-	if (n == 0) 
+	if (n == 0) {
+		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
+	}
 	if (n > (matx_int64_t)INT_MAX)
 	{
 		MATX_ERROR("n > INT_MAX");
@@ -174,8 +178,10 @@ static matx_status_t ss_factor_csc_z_i8(
 		MATX_ERROR("csc pointer error");
 		return MATX_ERR_INVALID_ARG;
 	}
-	if (A->nrows != A->ncols)
+	if (A->nrows != A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
+	}
 
 	const matx_int64_t n = A->nrows;
 	if (n > INT_MAX)
@@ -235,6 +241,7 @@ static matx_status_t ss_factor_csc_z_i8(
 fail:
 	klu_l_free_symbolic(&F->S, &F->common);
 	free(F);
+	MATX_ERROR("%s: internal error", __func__);
 	return MATX_ERR_INTERNAL;
 }
 
@@ -243,10 +250,14 @@ static matx_status_t ss_solve_csc_z_i8(
 	const matx_vec_z_i8_t b,
 	matx_vec_z_i8_t x)
 {
-	if (!F || !b || !x)
+	if (!F || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
-	if (b->stride != 1 || x->stride != 1)
+	}
+	if (b->stride != 1 || x->stride != 1) {
+		MATX_ERROR("%s: operation not supported", __func__);
 		return MATX_ERR_NOT_SUPPORTED;
+	}
 	matx_factor_sparse_z_i8_klu_t* ptr = (matx_factor_sparse_z_i8_klu_t*)F->reserved;
 	matx_int64_t n = ptr->n;
 

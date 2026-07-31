@@ -1,15 +1,19 @@
-﻿#include "matx/matx_types.h"
+#include "matx/matx_types.h"
 #include "matx/matx_func.h"
 #include "matx/matx_types_internal.h"
 
 #include <string.h>
+#include "matx/matx_log.h"
 
 matx_status_t matx_vec_d_i8_create(
     const matx_alloc_t* alloc,
     matx_vec_d_i8_t* out,
     matx_double* data,
     matx_int64_t n) {
-  if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
+  if (!out || !alloc || n == 0) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
 
   matx_vec_d_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_d_i8_opaque_t));
   memset(out_value, 0, sizeof(matx_vec_d_i8_opaque_t));
@@ -20,6 +24,7 @@ matx_status_t matx_vec_d_i8_create(
 
   if (!out_value->data) {
       matx_free(alloc, out_value);
+    MATX_ERROR("%s: out of memory", __func__);
     return MATX_ERR_OUT_OF_MEMORY;
   }
   if (data != NULL)
@@ -43,8 +48,10 @@ matx_status_t matx_vec_d_i8_wrap(const matx_alloc_t* alloc, matx_vec_d_i8_t* out
     matx_int64_t n,
     matx_int64_t stride,
     matx_double* data) {
-  if (!out || !data || n == 0 || stride == 0)
-return MATX_ERR_INVALID_ARG;
+  if (!out || !data || n == 0 || stride == 0) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
 
   matx_vec_d_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_d_i8_opaque_t));
   memset(out_value, 0, sizeof(matx_vec_d_i8_opaque_t));
@@ -82,7 +89,10 @@ matx_status_t matx_vec_z_i8_create(const matx_alloc_t* alloc,
     matx_vec_z_i8_t* out,
     matx_complex_d_t* data,
     matx_int64_t n) {
-  if (!out || !alloc || n == 0) return MATX_ERR_INVALID_ARG;
+  if (!out || !alloc || n == 0) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
   matx_vec_z_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_z_i8_opaque_t));
   memset(out_value, 0, sizeof(matx_vec_z_i8_opaque_t));
 
@@ -92,6 +102,7 @@ matx_status_t matx_vec_z_i8_create(const matx_alloc_t* alloc,
   out_value->data = (matx_complex_d_t*)matx_malloc(alloc, n * sizeof(matx_complex_d_t));
   if (!out_value->data) {
     matx_free(alloc, out_value);
+    MATX_ERROR("%s: out of memory", __func__);
     return MATX_ERR_OUT_OF_MEMORY;
   }
 
@@ -116,7 +127,10 @@ matx_status_t matx_vec_z_i8_wrap(const matx_alloc_t* alloc, matx_vec_z_i8_t* out
     matx_int64_t n,
     matx_int64_t stride,
                                 matx_complex_d_t* data) {
-  if (!out || !data || n == 0 || stride == 0) return MATX_ERR_INVALID_ARG;
+  if (!out || !data || n == 0 || stride == 0) {
+      MATX_ERROR("%s: invalid argument", __func__);
+      return MATX_ERR_INVALID_ARG;
+  }
 
   matx_vec_z_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_z_i8_opaque_t));
   memset(out_value, 0, sizeof(matx_vec_z_i8_opaque_t));
@@ -154,21 +168,30 @@ v->data = NULL;
 }
 
 matx_status_t matx_vec_d_i8_fill(matx_vec_d_i8_t v, matx_double val) {
-    if (!v || !v->data) return MATX_ERR_INVALID_ARG;
+    if (!v || !v->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < v->n; ++i)
         v->data[i * v->stride] = val;
     return MATX_OK;
 }
 
 matx_status_t matx_vec_z_i8_fill(matx_vec_z_i8_t v, matx_complex_d_t val) {
-    if (!v || !v->data) return MATX_ERR_INVALID_ARG;
+    if (!v || !v->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < v->n; ++i)
         v->data[i * v->stride] = val;
     return MATX_OK;
 }
 
 matx_status_t matx_vec_d_i8_zeros(matx_vec_d_i8_t v) {
-    if (!v || !v->data) return MATX_ERR_INVALID_ARG;
+    if (!v || !v->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
     if (v->stride == 1)
         memset(v->data, 0, v->n * sizeof(matx_double));
     else
@@ -178,7 +201,10 @@ matx_status_t matx_vec_d_i8_zeros(matx_vec_d_i8_t v) {
 }
 
 matx_status_t matx_vec_z_i8_zeros(matx_vec_z_i8_t v) {
-    if (!v || !v->data) return MATX_ERR_INVALID_ARG;
+    if (!v || !v->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
     if (v->stride == 1)
         memset(v->data, 0, v->n * sizeof(matx_complex_d_t));
     else {

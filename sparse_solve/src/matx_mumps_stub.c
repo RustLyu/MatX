@@ -1,4 +1,4 @@
-﻿#include "matx/matx_sparse_solve.h"
+#include "matx/matx_sparse_solve.h"
 #include "matx/matx_types_internal.h"
 #include "matx/matx_log.h"
 
@@ -71,14 +71,21 @@ static void mumps_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
  */
 static matx_status_t mumps_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
 {
-    if (!A || !out_F) return MATX_ERR_INVALID_ARG;
+    if (!A || !out_F) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
 #if !MATX_HAVE_MUMPS
     (void)A; (void)out_F;
+    MATX_ERROR("%s: operation not supported", __func__);
     return MATX_ERR_NOT_SUPPORTED;
 #else
     if (out_F->reserved)
         mumps_factor_csc_d_i8_destroy(out_F);
-    if (A->nrows != A->ncols || A->nrows <= 0) return MATX_ERR_INVALID_ARG;
+    if (A->nrows != A->ncols || A->nrows <= 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
 
     // Convert to CSC format
     matx_status_t st = coo_to_csc_d_i8(A);
@@ -88,8 +95,10 @@ static matx_status_t mumps_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse
 
     // Allocate factor handle
     matx_factor_sparse_d_i8_mumps_t* F = (matx_factor_sparse_d_i8_mumps_t*)calloc(1, sizeof(*F));
-    if (!F)
-      return MATX_ERR_OUT_OF_MEMORY;
+    if (!F) {
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
     out_F->reserved = F;
     F->n = A->nrows;
     F->nnz = A->nnz;
@@ -100,6 +109,7 @@ static matx_status_t mumps_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse
     F->a = (matx_double*)malloc(sizeof(matx_double) * (size_t)F->nnz);
     if (!F->irn || !F->jcn || !F->a) {
         mumps_factor_csc_d_i8_destroy(out_F);
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -158,9 +168,13 @@ static matx_status_t mumps_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse
  */
 static matx_status_t mumps_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F, const matx_double* b, matx_double* x)
 {
-    if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+    if (!F || !b || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
 #if !MATX_HAVE_MUMPS
     (void)F; (void)b; (void)x;
+    MATX_ERROR("%s: operation not supported", __func__);
     return MATX_ERR_NOT_SUPPORTED;
 #else
     matx_factor_sparse_d_i8_mumps_t* ptr = (matx_factor_sparse_d_i8_mumps_t*)F->reserved;
@@ -213,15 +227,21 @@ static void mumps_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
  */
 static matx_status_t mumps_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
 {
-    if (!A || !out_F) return MATX_ERR_INVALID_ARG;
+    if (!A || !out_F) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
 #if !MATX_HAVE_MUMPS
     (void)A; (void)out_F;
+    MATX_ERROR("%s: operation not supported", __func__);
     return MATX_ERR_NOT_SUPPORTED;
 #else
     if (out_F->reserved)
         mumps_factor_csc_z_i8_destroy(out_F);
-    if (A->nrows != A->ncols || A->nrows <= 0) 
+    if (A->nrows != A->ncols || A->nrows <= 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     // Convert complex COO to CSC
     matx_status_t st = coo_to_csc_z_i8(A);
@@ -231,8 +251,10 @@ static matx_status_t mumps_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse
 
     // Allocate complex factor handle
     matx_factor_sparse_z_i8_mumps_t* F = (matx_factor_sparse_z_i8_mumps_t*)calloc(1, sizeof(*F));
-    if (!F)
-      return MATX_ERR_OUT_OF_MEMORY;
+    if (!F) {
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
     out_F->reserved= F;
     F->n = A->nrows;
     F->nnz = A->nnz;
@@ -243,6 +265,7 @@ static matx_status_t mumps_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse
     F->a = (matx_double*)malloc(sizeof(matx_double) * 2 * (size_t)F->nnz);
     if (!F->irn || !F->jcn || !F->a) {
         mumps_factor_csc_z_i8_destroy(out_F);
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -302,16 +325,22 @@ static matx_status_t mumps_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse
  */
 static matx_status_t mumps_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x)
 {
-    if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+    if (!F || !b || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
 #if !MATX_HAVE_MUMPS
     (void)F; (void)b; (void)x;
+    MATX_ERROR("%s: operation not supported", __func__);
     return MATX_ERR_NOT_SUPPORTED;
 #else
     matx_factor_sparse_z_i8_mumps_t* ptr = (matx_factor_sparse_z_i8_mumps_t*)F->reserved;
     // Allocate interleaved complex RHS buffer for MUMPS
     matx_double* rhs_umf = (matx_double*)malloc(sizeof(matx_double) * 2 * (size_t)ptr->n);
-    if (!rhs_umf)
-      return MATX_ERR_OUT_OF_MEMORY;
+    if (!rhs_umf) {
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
 
     // Pack complex RHS
     // for (matx_int64_t i = 0; i < ptr->n; i++) {

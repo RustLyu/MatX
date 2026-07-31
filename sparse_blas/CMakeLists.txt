@@ -3,7 +3,7 @@
 add_library(${PROJECT_NAME}
   src/matx_sparse_blas_backend.c
   src/matx_graphblas_ref.c
-  src/matx_aocl_cparse_ref.c
+  src/matx_aocl_sparse_ref.c
   src/tools.c
 )
 

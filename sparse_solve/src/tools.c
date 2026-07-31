@@ -1,4 +1,4 @@
-﻿#include "matx/matx_types.h"
+#include "matx/matx_types.h"
 #include "matx/matx_func.h"
 #include "matx/matx_log.h"
 #include "matx/matx_types_internal.h"
@@ -49,14 +49,17 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
     matx_int64_t* Ai,
     matx_int64_t* coo2csc) {
     if (columns == NULL || rows == NULL || Ap == NULL || Ai == NULL || coo2csc == NULL) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return COO2CSC_ERR_NULL_PTR;
     }
     if (nnz < 0 || n < 0) {
+        MATX_ERROR("%s: error", __func__);
         return COO2CSC_ERR_OUT_OF_RANGE;
     }
 
     Entry* entries = (Entry*)malloc(nnz * sizeof(Entry));
     if (entries == NULL) {
+        MATX_ERROR("%s: out of memory", __func__);
         return COO2CSC_ERR_MEMORY;
     }
 
@@ -81,6 +84,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
     MergedEntry* merged = (MergedEntry*)malloc(nnz * sizeof(MergedEntry));
     if (merged == NULL) {
         free(entries);
+        MATX_ERROR("%s: out of memory", __func__);
         return COO2CSC_ERR_MEMORY;
     }
     matx_int64_t merged_len = 0;
@@ -95,6 +99,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
             if (new_coo_indices == NULL) {
                 free_merged_entries(merged, merged_len);
                 free(entries);
+                MATX_ERROR("%s: out of memory", __func__);
                 return COO2CSC_ERR_MEMORY;
             }
             last->coo_indices = new_coo_indices;
@@ -108,6 +113,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
             if (merged[merged_len].coo_indices == NULL) {
                 free_merged_entries(merged, merged_len);
                 free(entries);
+                MATX_ERROR("%s: out of memory", __func__);
                 return COO2CSC_ERR_MEMORY;
             }
             merged[merged_len].coo_indices[0] = e->idx;
@@ -131,6 +137,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
         free(coo2csc);
         free_merged_entries(merged, merged_len);
         free(entries);
+        MATX_ERROR("%s: out of memory", __func__);
         return COO2CSC_ERR_MEMORY;
     }
 
@@ -141,6 +148,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
         free(coo2csc);
         free_merged_entries(merged, merged_len);
         free(entries);
+        MATX_ERROR("%s: out of memory", __func__);
         return COO2CSC_ERR_MEMORY;
     }
     memcpy(next, Ap, final_nnz * sizeof(matx_int64_t));
@@ -167,9 +175,11 @@ int build_Ax_from_coo_z_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len
     const matx_complex_d_t* values,
     matx_complex_d_t* Ax) {
     if (coo2csc == NULL || values == NULL || Ax == NULL) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return COO2CSC_ERR_NULL_PTR;
     }
     if (coo2csc_len <= 0) {
+        MATX_ERROR("%s: error", __func__);
         return COO2CSC_ERR_OUT_OF_RANGE;
     }
 
@@ -193,9 +203,11 @@ int build_Ax_from_coo_d_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len
     const matx_double* values,
     matx_double* Ax) {
     if (coo2csc == NULL || values == NULL || Ax == NULL) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return COO2CSC_ERR_NULL_PTR;
     }
     if (coo2csc_len <= 0) {
+        MATX_ERROR("%s: error", __func__);
         return COO2CSC_ERR_OUT_OF_RANGE;
     }
 

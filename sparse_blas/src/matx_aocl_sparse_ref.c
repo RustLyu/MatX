@@ -1,4 +1,4 @@
-﻿#include "matx/matx_log.h"
+#include "matx/matx_log.h"
 #include "matx/matx_sparse_compute.h"
 
 #include <limits.h>
@@ -20,15 +20,21 @@ static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_t alpha,
                                  matx_vec_z_i8_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
-    if (!A || !x || !y)
+    if (!A || !x || !y) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
-    if (A->ncols != x->n || A->nrows != y->n)
+    if (A->ncols != x->n || A->nrows != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_z_i8(A) != 0)
+        if (coo_2_aocl_z_i8(A) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     aoclsparse_mat_descr descr;
@@ -67,12 +73,16 @@ static matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_t alpha,
                                  matx_dense_z_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_z_i8(A) != 0)
+        if (coo_2_aocl_z_i8(A) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     aoclsparse_mat_descr descr;
@@ -109,12 +119,16 @@ static matx_status_t ref_spmv_d_i8_aocl(
 {
 #if MATX_HAVE_AOCL_SPARSE
 
-    if (!A || !x || !y)
+    if (!A || !x || !y) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_d_i8(A) != 0)
+        if (coo_2_aocl_d_i8(A) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     aoclsparse_mat_descr descr;
@@ -155,12 +169,16 @@ static matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
                                  matx_dense_d_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_d_i8(A) != 0)
+        if (coo_2_aocl_d_i8(A) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     aoclsparse_mat_descr descr;
@@ -196,17 +214,23 @@ static matx_status_t ref_dsp2md_d_i8_aocl(
     matx_double alpha, matx_coo_d_i8_t A, matx_coo_d_i8_t B, matx_double beta, matx_dense_d_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_d_i8(A) != 0)
+        if (coo_2_aocl_d_i8(A) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     if (B->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_d_i8(B) != 0)
+        if (coo_2_aocl_d_i8(B) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     aoclsparse_mat_descr descr;
@@ -245,17 +269,23 @@ static matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_t alpha,
                                    matx_dense_z_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_z_i8(A) != 0)
+        if (coo_2_aocl_z_i8(A) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     if (B->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_z_i8(B) != 0)
+        if (coo_2_aocl_z_i8(B) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     aoclsparse_mat_descr descr;
@@ -291,8 +321,10 @@ static matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_t alpha,
 
 static matx_status_t ref_transpose_d_i8_aocl(matx_coo_d_i8_t A, matx_coo_d_i8_t out)
 {
-    if (!A)
+    if (!A) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     out->nrows = A->ncols;
     out->ncols = A->nrows;
     out->nnz = A->nnz;
@@ -304,8 +336,10 @@ static matx_status_t ref_transpose_d_i8_aocl(matx_coo_d_i8_t A, matx_coo_d_i8_t 
 
 static matx_status_t ref_transpose_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
 {
-    if (!A)
+    if (!A) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     out->nrows = A->ncols;
     out->ncols = A->nrows;
     out->nnz = A->nnz;
@@ -318,12 +352,16 @@ static matx_status_t ref_transpose_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t 
 static matx_status_t ref_conj_trans_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
 {
 #if MATX_HAVE_AOCL_SPARSE
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_aocl.valid <= 0) {
-        if (coo_2_aocl_z_i8(A) != 0)
+        if (coo_2_aocl_z_i8(A) != 0) {
+            MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
+        }
     }
 
     aoclsparse_status status = aoclsparse_convert_csr(A->handle_aocl.impl,
@@ -348,11 +386,15 @@ static matx_status_t ref_finalize_aocl()
 
 static matx_status_t ref_norm1_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     matx_double* col_sums = (matx_double*) calloc((size_t) A->ncols, sizeof(matx_double));
-    if (!col_sums)
+    if (!col_sums) {
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         col_sums[A->columns[i]] += fabs(A->values[i]);
     matx_double max_col = 0.0;
@@ -366,11 +408,15 @@ static matx_status_t ref_norm1_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 
 static matx_status_t ref_norminf_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     matx_double* row_sums = (matx_double*) calloc((size_t) A->nrows, sizeof(matx_double));
-    if (!row_sums)
+    if (!row_sums) {
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         row_sums[A->rows[i]] += fabs(A->values[i]);
     matx_double max_row = 0.0;
@@ -384,8 +430,10 @@ static matx_status_t ref_norminf_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 
 static matx_status_t ref_normfro_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     matx_double sum = 0.0;
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         sum += A->values[i] * A->values[i];
@@ -397,11 +445,15 @@ static matx_status_t ref_normfro_mat_aocl(matx_coo_d_i8_t A, matx_double* out)
 
 static matx_status_t ref_norm1_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     matx_double* col_sums = (matx_double*) calloc((size_t) A->ncols, sizeof(matx_double));
-    if (!col_sums)
+    if (!col_sums) {
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_double re = A->values[i].real;
         matx_double im = A->values[i].imag;
@@ -418,11 +470,15 @@ static matx_status_t ref_norm1_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out
 
 static matx_status_t ref_norminf_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     matx_double* row_sums = (matx_double*) calloc((size_t) A->nrows, sizeof(matx_double));
-    if (!row_sums)
+    if (!row_sums) {
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_double re = A->values[i].real;
         matx_double im = A->values[i].imag;
@@ -439,8 +495,10 @@ static matx_status_t ref_norminf_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* o
 
 static matx_status_t ref_normfro_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     matx_double sum = 0.0;
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_double re = A->values[i].real;
@@ -455,10 +513,14 @@ static matx_status_t ref_normfro_mat_z_i8_aocl(matx_coo_z_i8_t A, matx_double* o
 static matx_status_t ref_spadd_d_i8_aocl(
     matx_double alpha, matx_coo_d_i8_t A, matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out)
 {
-    if (!A || !B || !out)
+    if (!A || !B || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (A->nrows != B->nrows || A->ncols != B->ncols)
+    }
+    if (A->nrows != B->nrows || A->ncols != B->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     out->nrows = A->nrows;
     out->ncols = A->ncols;
@@ -480,10 +542,14 @@ static matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_t alpha,
                                   matx_coo_z_i8_t B,
                                   matx_coo_z_i8_t out)
 {
-    if (!A || !B || !out)
+    if (!A || !B || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (A->nrows != B->nrows || A->ncols != B->ncols)
+    }
+    if (A->nrows != B->nrows || A->ncols != B->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     out->nrows = A->nrows;
     out->ncols = A->ncols;
@@ -509,8 +575,10 @@ static matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_t alpha,
 
 static matx_status_t ref_spnnz_rows_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
 {
-    if (!A || !out || !A->values)
+    if (!A || !out || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t) A->nrows);
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->rows[i]] += 1.0;
@@ -519,8 +587,10 @@ static matx_status_t ref_spnnz_rows_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t
 
 static matx_status_t ref_spnnz_cols_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
 {
-    if (!A || !out || !A->values)
+    if (!A || !out || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t) A->ncols);
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->columns[i]] += 1.0;
@@ -529,8 +599,10 @@ static matx_status_t ref_spnnz_cols_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t
 
 static matx_status_t ref_spnnz_rows_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 {
-    if (!A || !out || !A->values)
+    if (!A || !out || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nrows; ++i) {
         out->data[i].real = 0.0;
         out->data[i].imag = 0.0;
@@ -542,8 +614,10 @@ static matx_status_t ref_spnnz_rows_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t
 
 static matx_status_t ref_spnnz_cols_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 {
-    if (!A || !out || !A->values)
+    if (!A || !out || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t j = 0; j < A->ncols; ++j) {
         out->data[j].real = 0.0;
         out->data[j].imag = 0.0;
@@ -557,8 +631,10 @@ static matx_status_t ref_spnnz_cols_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t
 
 static matx_status_t ref_sprowsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
 {
-    if (!A || !out || !A->values)
+    if (!A || !out || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t) A->nrows);
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->rows[i]] += fabs(A->values[i]);
@@ -567,8 +643,10 @@ static matx_status_t ref_sprowsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t 
 
 static matx_status_t ref_spcolsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t out)
 {
-    if (!A || !out || !A->values)
+    if (!A || !out || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t) A->ncols);
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->columns[i]] += fabs(A->values[i]);
@@ -577,8 +655,10 @@ static matx_status_t ref_spcolsums_d_i8_aocl(matx_coo_d_i8_t A, matx_vec_d_i8_t 
 
 static matx_status_t ref_sprowsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 {
-    if (!A || !out || !A->values)
+    if (!A || !out || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nrows; ++i) {
         out->data[i].real = 0.0;
         out->data[i].imag = 0.0;
@@ -593,8 +673,10 @@ static matx_status_t ref_sprowsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t 
 
 static matx_status_t ref_spcolsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t out)
 {
-    if (!A || !out || !A->values)
+    if (!A || !out || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t j = 0; j < A->ncols; ++j) {
         out->data[j].real = 0.0;
         out->data[j].imag = 0.0;
@@ -611,15 +693,19 @@ static matx_status_t ref_spcolsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t 
 
 static matx_status_t ref_spdiag_d_i8_aocl(matx_coo_d_i8_t A, matx_int64_t offset, matx_vec_d_i8_t out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     matx_int64_t diag_len = (offset >= 0)
                                 ? ((A->ncols - offset < A->nrows) ? A->ncols - offset : A->nrows)
                                 : ((A->nrows + offset < A->ncols) ? A->nrows + offset : A->ncols);
     if (diag_len < 0)
         diag_len = 0;
-    if (out->n < diag_len)
+    if (out->n < diag_len) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t) diag_len);
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_int64_t d = A->rows[i] - A->columns[i];
@@ -634,15 +720,19 @@ static matx_status_t ref_spdiag_d_i8_aocl(matx_coo_d_i8_t A, matx_int64_t offset
 
 static matx_status_t ref_spdiag_z_i8_aocl(matx_coo_z_i8_t A, matx_int64_t offset, matx_vec_z_i8_t out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     matx_int64_t diag_len = (offset >= 0)
                                 ? ((A->ncols - offset < A->nrows) ? A->ncols - offset : A->nrows)
                                 : ((A->nrows + offset < A->ncols) ? A->nrows + offset : A->ncols);
     if (diag_len < 0)
         diag_len = 0;
-    if (out->n < diag_len)
+    if (out->n < diag_len) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < diag_len; ++i) {
         out->data[i].real = 0.0;
         out->data[i].imag = 0.0;
@@ -662,10 +752,14 @@ static matx_status_t ref_spdiag_z_i8_aocl(matx_coo_z_i8_t A, matx_int64_t offset
 
 static matx_status_t ref_scale_rows_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_d_i8_t s)
 {
-    if (!A || !s || !A->values || !s->data)
+    if (!A || !s || !A->values || !s->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (s->n < A->nrows)
+    }
+    if (s->n < A->nrows) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         A->values[i] *= s->data[A->rows[i]];
     return MATX_OK;
@@ -673,10 +767,14 @@ static matx_status_t ref_scale_rows_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_
 
 static matx_status_t ref_scale_cols_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_d_i8_t s)
 {
-    if (!A || !s || !A->values || !s->data)
+    if (!A || !s || !A->values || !s->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (s->n < A->ncols)
+    }
+    if (s->n < A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         A->values[i] *= s->data[A->columns[i]];
     return MATX_OK;
@@ -684,10 +782,14 @@ static matx_status_t ref_scale_cols_d_i8_aocl(matx_coo_d_i8_t A, const matx_vec_
 
 static matx_status_t ref_scale_rows_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_z_i8_t s)
 {
-    if (!A || !s || !A->values || !s->data)
+    if (!A || !s || !A->values || !s->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (s->n < A->nrows)
+    }
+    if (s->n < A->nrows) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_double sr = s->data[A->rows[i]].real;
         matx_double si = s->data[A->rows[i]].imag;
@@ -701,10 +803,14 @@ static matx_status_t ref_scale_rows_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_
 
 static matx_status_t ref_scale_cols_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_z_i8_t s)
 {
-    if (!A || !s || !A->values || !s->data)
+    if (!A || !s || !A->values || !s->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (s->n < A->ncols)
+    }
+    if (s->n < A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_double sr = s->data[A->columns[i]].real;
         matx_double si = s->data[A->columns[i]].imag;

@@ -1,4 +1,4 @@
-﻿#include "matx/matx_dense_solve.h"
+#include "matx/matx_dense_solve.h"
 #include "matx/matx_log.h"
 #include "matx/matx_types_internal.h"
 
@@ -95,11 +95,15 @@ static int ss_layout_to_lapack(matx_layout_t layout) {
 
 static matx_status_t ss_factor_dense_d_i8(const matx_dense_d_i8_t A,
 	matx_factor_dense_d_i8_t** out_F) {
-	if (!A || !out_F)
+	if (!A || !out_F) {
+		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
+	}
 
-	if (A->nrows != A->ncols)
+	if (A->nrows != A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
+	}
 
 	if (*out_F != NULL)
 		ss_factor_dense_d_i8_destroy(*out_F);
@@ -108,7 +112,10 @@ static matx_status_t ss_factor_dense_d_i8(const matx_dense_d_i8_t A,
 	matx_int64_t lda = ss_packed_lda(A->layout, n, n);
 
 	matx_factor_dense_d_i8_t* F = (matx_factor_dense_d_i8_t*)malloc(sizeof(*F));
-	if (!F) return MATX_ERR_OUT_OF_MEMORY;
+	if (!F) {
+		MATX_ERROR("%s: out of memory", __func__);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
 	memset(F, 0, sizeof(*F));
 	F->n = n;
 	F->lda = lda;
@@ -118,6 +125,7 @@ static matx_status_t ss_factor_dense_d_i8(const matx_dense_d_i8_t A,
 	F->piv = (matx_int64_t*)malloc(n * sizeof(matx_int64_t));
 	if (!F->lu || !F->piv) {
 		free(F->lu); free(F->piv); free(F);
+		MATX_ERROR("%s: out of memory", __func__);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -138,7 +146,10 @@ static matx_status_t ss_factor_dense_d_i8(const matx_dense_d_i8_t A,
 static matx_status_t ss_solve_dense_d_i8(const matx_factor_dense_d_i8_t* F,
 	const matx_double* b, matx_double* x)
 {
-	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!F || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	memcpy(x, b, F->n * sizeof(matx_double));
 
 	matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
@@ -157,10 +168,17 @@ static matx_status_t ss_factor_dense_z_i8(const matx_dense_z_i8_t A,
 	matx_factor_dense_z_i8_t** out_F)
 {
 #if !(defined(MATX_HAVE_OPENBLAS) || defined(MATX_HAVE_BLIS))
+	MATX_ERROR("%s: operation not supported", __func__);
 	return MATX_ERR_NOT_SUPPORTED;
 #else
-	if (!A || !out_F) return MATX_ERR_INVALID_ARG;
-	if (A->nrows != A->ncols) return MATX_ERR_INVALID_ARG;
+	if (!A || !out_F) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (A->nrows != A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 
 	if (*out_F != NULL) ss_factor_dense_z_i8_destroy(*out_F);
 
@@ -168,7 +186,10 @@ static matx_status_t ss_factor_dense_z_i8(const matx_dense_z_i8_t A,
 	matx_int64_t lda = ss_packed_lda(A->layout, n, n);
 
 	matx_factor_dense_z_i8_t* F = (matx_factor_dense_z_i8_t*)malloc(sizeof(*F));
-	if (!F) return MATX_ERR_OUT_OF_MEMORY;
+	if (!F) {
+		MATX_ERROR("%s: out of memory", __func__);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
 	memset(F, 0, sizeof(*F));
 	F->n = n;
 	F->lda = lda;
@@ -178,6 +199,7 @@ static matx_status_t ss_factor_dense_z_i8(const matx_dense_z_i8_t A,
 	F->piv = (matx_int64_t*)malloc(n * sizeof(matx_int64_t));
 	if (!F->lu || !F->piv) {
 		free(F->lu); free(F->piv); free(F);
+		MATX_ERROR("%s: out of memory", __func__);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -199,7 +221,10 @@ static matx_status_t ss_factor_dense_z_i8(const matx_dense_z_i8_t A,
 static matx_status_t ss_solve_dense_z_i8(const matx_factor_dense_z_i8_t* F,
 	const matx_vec_z_i8_t b, matx_vec_z_i8_t x)
 {
-	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!F || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	memcpy(x->data, b->data, F->n * sizeof(matx_complex_d_t));
 
 	matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
@@ -216,8 +241,14 @@ static matx_status_t ss_solve_dense_z_i8(const matx_factor_dense_z_i8_t* F,
 // ---- Cholesky ----
 
 static matx_status_t ss_potrf_d_i8(const matx_dense_d_i8_t A, int uplo, matx_factor_dense_d_i8_t** out_F) {
-	if (!A || !out_F) return MATX_ERR_INVALID_ARG;
-	if (A->nrows != A->ncols) return MATX_ERR_INVALID_ARG;
+	if (!A || !out_F) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (A->nrows != A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 
 	if (*out_F) ss_factor_dense_d_i8_destroy(*out_F);
 
@@ -225,7 +256,10 @@ static matx_status_t ss_potrf_d_i8(const matx_dense_d_i8_t A, int uplo, matx_fac
 	matx_int64_t lda = ss_packed_lda(A->layout, n, n);
 
 	matx_factor_dense_d_i8_t* F = (matx_factor_dense_d_i8_t*)malloc(sizeof(*F));
-	if (!F) return MATX_ERR_OUT_OF_MEMORY;
+	if (!F) {
+		MATX_ERROR("%s: out of memory", __func__);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
 	memset(F, 0, sizeof(*F));
 	F->n = n;
 	F->lda = lda;
@@ -233,6 +267,7 @@ static matx_status_t ss_potrf_d_i8(const matx_dense_d_i8_t A, int uplo, matx_fac
 	F->uplo = uplo;
 
 	F->lu = (matx_double*)malloc((size_t)n * (size_t)n * sizeof(matx_double));
+	MATX_ERROR("%s: out of memory", __func__);
 	if (!F->lu) { free(F); return MATX_ERR_OUT_OF_MEMORY; }
 
 	ss_pack_d_i8(A->layout, n, n, A->stride, A->data, F->lu);
@@ -250,7 +285,10 @@ static matx_status_t ss_potrf_d_i8(const matx_dense_d_i8_t A, int uplo, matx_fac
 
 static matx_status_t ss_potrs_d_i8(const matx_factor_dense_d_i8_t* F, const matx_double* b, matx_double* x)
 {
-	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!F || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	memcpy(x, b, F->n * sizeof(matx_double));
 
 	matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
@@ -264,8 +302,14 @@ static matx_status_t ss_potrs_d_i8(const matx_factor_dense_d_i8_t* F, const matx
 }
 
 static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, int uplo, matx_factor_dense_z_i8_t** out_F) {
-	if (!A || !out_F) return MATX_ERR_INVALID_ARG;
-	if (A->nrows != A->ncols) return MATX_ERR_INVALID_ARG;
+	if (!A || !out_F) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (A->nrows != A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 
 	if (*out_F) ss_factor_dense_z_i8_destroy(*out_F);
 
@@ -273,7 +317,10 @@ static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, int uplo, matx_fac
 	matx_int64_t lda = ss_packed_lda(A->layout, n, n);
 
 	matx_factor_dense_z_i8_t* F = (matx_factor_dense_z_i8_t*)malloc(sizeof(*F));
-	if (!F) return MATX_ERR_OUT_OF_MEMORY;
+	if (!F) {
+		MATX_ERROR("%s: out of memory", __func__);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
 	memset(F, 0, sizeof(*F));
 	F->n = n;
 	F->lda = lda;
@@ -281,6 +328,7 @@ static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, int uplo, matx_fac
 	F->uplo = uplo;
 
 	F->lu = (matx_double*)malloc((size_t)n * (size_t)n * sizeof(matx_complex_d_t));
+	MATX_ERROR("%s: out of memory", __func__);
 	if (!F->lu) { free(F); return MATX_ERR_OUT_OF_MEMORY; }
 
 	ss_pack_z_i8(A->layout, n, n, A->stride, A->data, (matx_complex_d_t*)F->lu);
@@ -297,7 +345,10 @@ static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, int uplo, matx_fac
 }
 
 static matx_status_t ss_potrs_z_i8(const matx_factor_dense_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x) {
-	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!F || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	memcpy(x->data, b->data, F->n * sizeof(matx_complex_d_t));
 
 	matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
@@ -314,7 +365,10 @@ static matx_status_t ss_potrs_z_i8(const matx_factor_dense_z_i8_t* F, const matx
 // ---- GELS ----
 
 static matx_status_t ss_gels_d_i8(const matx_dense_d_i8_t A, const matx_double* b, matx_double* x) {
-	if (!A || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!A || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	const matx_int64_t m = A->nrows, n = A->ncols;
 	const matx_int64_t lda = ss_packed_lda(A->layout, m, n);
 	const matx_int64_t blen = (m > n) ? m : n;
@@ -322,6 +376,7 @@ static matx_status_t ss_gels_d_i8(const matx_dense_d_i8_t A, const matx_double* 
 
 	matx_double* Acopy = (matx_double*)malloc((size_t)m * (size_t)n * sizeof(matx_double));
 	matx_double* bcopy = (matx_double*)calloc(blen, sizeof(matx_double));
+	MATX_ERROR("%s: out of memory", __func__);
 	if (!Acopy || !bcopy) { free(Acopy); free(bcopy); return MATX_ERR_OUT_OF_MEMORY; }
 
 	ss_pack_d_i8(A->layout, m, n, A->stride, A->data, Acopy);
@@ -340,7 +395,10 @@ static matx_status_t ss_gels_d_i8(const matx_dense_d_i8_t A, const matx_double* 
 }
 
 static matx_status_t ss_gels_z_i8(const matx_dense_z_i8_t A, const matx_vec_z_i8_t b, matx_vec_z_i8_t x) {
-	if (!A || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!A || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	const matx_int64_t m = A->nrows, n = A->ncols;
 	const matx_int64_t lda = ss_packed_lda(A->layout, m, n);
 	const matx_int64_t blen = (m > n) ? m : n;
@@ -348,6 +406,7 @@ static matx_status_t ss_gels_z_i8(const matx_dense_z_i8_t A, const matx_vec_z_i8
 
 	matx_complex_d_t* Acopy = (matx_complex_d_t*)malloc((size_t)m * (size_t)n * sizeof(matx_complex_d_t));
 	matx_complex_d_t* bcopy = (matx_complex_d_t*)calloc(blen, sizeof(matx_complex_d_t));
+	MATX_ERROR("%s: out of memory", __func__);
 	if (!Acopy || !bcopy) { free(Acopy); free(bcopy); return MATX_ERR_OUT_OF_MEMORY; }
 
 	ss_pack_z_i8(A->layout, m, n, A->stride, A->data, Acopy);
@@ -369,16 +428,28 @@ static matx_status_t ss_gels_z_i8(const matx_dense_z_i8_t A, const matx_vec_z_i8
 // ---- SYEV ----
 
 static matx_status_t ss_syev_d_i8(const matx_dense_d_i8_t A, matx_vec_d_i8_t eigenvalues, matx_dense_d_i8_t* eigenvectors) {
-	if (!A || !eigenvalues) return MATX_ERR_INVALID_ARG;
-	if (A->nrows != A->ncols) return MATX_ERR_INVALID_ARG;
+	if (!A || !eigenvalues) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (A->nrows != A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	const matx_int64_t n = A->nrows;
-	if (eigenvalues->n != n) return MATX_ERR_INVALID_ARG;
+	if (eigenvalues->n != n) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 
 	const char jobz = eigenvectors ? 'V' : 'N';
 	matx_int64_t lda = ss_packed_lda(A->layout, n, n);
 
 	matx_double* Acopy = (matx_double*)malloc((size_t)n * (size_t)n * sizeof(matx_double));
-	if (!Acopy) return MATX_ERR_OUT_OF_MEMORY;
+	if (!Acopy) {
+		MATX_ERROR("%s: out of memory", __func__);
+		return MATX_ERR_OUT_OF_MEMORY;
+	}
 
 	ss_pack_d_i8(A->layout, n, n, A->stride, A->data, Acopy);
 
@@ -391,6 +462,7 @@ static matx_status_t ss_syev_d_i8(const matx_dense_d_i8_t A, matx_vec_d_i8_t eig
 	}
 	if (eigenvectors) {
 		matx_dense_d_i8_opaque_t* ev = (matx_dense_d_i8_opaque_t*)malloc(sizeof(matx_dense_d_i8_opaque_t));
+		MATX_ERROR("%s: out of memory", __func__);
 		if (!ev) { free(Acopy); return MATX_ERR_OUT_OF_MEMORY; }
 		memset(ev, 0, sizeof(*ev));
 		ev->nrows = n; ev->ncols = n;
@@ -412,10 +484,16 @@ static matx_status_t ss_syev_d_i8(const matx_dense_d_i8_t A, matx_vec_d_i8_t eig
 // ---- GESVD ----
 
 static matx_status_t ss_gesvd_d_i8(const matx_dense_d_i8_t A, matx_vec_d_i8_t S, matx_dense_d_i8_t* U, matx_dense_d_i8_t* Vt) {
-	if (!A || !S) return MATX_ERR_INVALID_ARG;
+	if (!A || !S) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	const matx_int64_t m = A->nrows, n = A->ncols;
 	const matx_int64_t k = (m < n) ? m : n;
-	if (S->n != k) return MATX_ERR_INVALID_ARG;
+	if (S->n != k) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 
 	matx_int64_t lda = ss_packed_lda(A->layout, m, n);
 
@@ -425,6 +503,7 @@ static matx_status_t ss_gesvd_d_i8(const matx_dense_d_i8_t A, matx_vec_d_i8_t S,
 	matx_double* superb = (matx_double*)malloc(k * sizeof(matx_double));
 	if (!Acopy || !superb || (U && !u_data) || (Vt && !vt_data)) {
 		free(Acopy); free(u_data); free(vt_data); free(superb);
+		MATX_ERROR("%s: out of memory", __func__);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -445,6 +524,7 @@ static matx_status_t ss_gesvd_d_i8(const matx_dense_d_i8_t A, matx_vec_d_i8_t S,
 	if (U) {
 		matx_int64_t u_lda = ss_packed_lda(A->layout, m, m);
 		matx_dense_d_i8_opaque_t* ev = (matx_dense_d_i8_opaque_t*)malloc(sizeof(matx_dense_d_i8_opaque_t));
+		MATX_ERROR("%s: out of memory", __func__);
 		if (!ev) { free(u_data); free(vt_data); return MATX_ERR_OUT_OF_MEMORY; }
 		memset(ev, 0, sizeof(*ev));
 		ev->nrows = m; ev->ncols = m; ev->layout = A->layout; ev->stride = u_lda; ev->flags = 1u; ev->data = u_data;
@@ -454,6 +534,7 @@ static matx_status_t ss_gesvd_d_i8(const matx_dense_d_i8_t A, matx_vec_d_i8_t S,
 	if (Vt) {
 		matx_int64_t vt_lda = ss_packed_lda(A->layout, n, n);
 		matx_dense_d_i8_opaque_t* ev = (matx_dense_d_i8_opaque_t*)malloc(sizeof(matx_dense_d_i8_opaque_t));
+		MATX_ERROR("%s: out of memory", __func__);
 		if (!ev) { free(vt_data); return MATX_ERR_OUT_OF_MEMORY; }
 		memset(ev, 0, sizeof(*ev));
 		ev->nrows = n; ev->ncols = n; ev->layout = A->layout; ev->stride = vt_lda; ev->flags = 1u; ev->data = vt_data;
@@ -464,10 +545,16 @@ static matx_status_t ss_gesvd_d_i8(const matx_dense_d_i8_t A, matx_vec_d_i8_t S,
 }
 
 static matx_status_t ss_gesvd_z_i8(const matx_dense_z_i8_t A, matx_vec_d_i8_t S, matx_dense_z_i8_t* U, matx_dense_z_i8_t* Vt) {
-	if (!A || !S) return MATX_ERR_INVALID_ARG;
+	if (!A || !S) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	const matx_int64_t m = A->nrows, n = A->ncols;
 	const matx_int64_t k = (m < n) ? m : n;
-	if (S->n != k) return MATX_ERR_INVALID_ARG;
+	if (S->n != k) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 
 	matx_int64_t lda = ss_packed_lda(A->layout, m, n);
 
@@ -477,6 +564,7 @@ static matx_status_t ss_gesvd_z_i8(const matx_dense_z_i8_t A, matx_vec_d_i8_t S,
 	matx_double* superb = (matx_double*)malloc(k * sizeof(matx_double));
 	if (!Acopy || !superb || (U && !u_data) || (Vt && !vt_data)) {
 		free(Acopy); free(u_data); free(vt_data); free(superb);
+		MATX_ERROR("%s: out of memory", __func__);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -498,6 +586,7 @@ static matx_status_t ss_gesvd_z_i8(const matx_dense_z_i8_t A, matx_vec_d_i8_t S,
 	if (U) {
 		matx_int64_t u_lda = ss_packed_lda(A->layout, m, m);
 		matx_dense_z_i8_opaque_t* ev = (matx_dense_z_i8_opaque_t*)malloc(sizeof(matx_dense_z_i8_opaque_t));
+		MATX_ERROR("%s: out of memory", __func__);
 		if (!ev) { free(u_data); free(vt_data); return MATX_ERR_OUT_OF_MEMORY; }
 		memset(ev, 0, sizeof(*ev));
 		ev->nrows = m; ev->ncols = m; ev->layout = A->layout; ev->stride = u_lda; ev->flags = 1u; ev->data = u_data;
@@ -507,6 +596,7 @@ static matx_status_t ss_gesvd_z_i8(const matx_dense_z_i8_t A, matx_vec_d_i8_t S,
 	if (Vt) {
 		matx_int64_t vt_lda = ss_packed_lda(A->layout, n, n);
 		matx_dense_z_i8_opaque_t* ev = (matx_dense_z_i8_opaque_t*)malloc(sizeof(matx_dense_z_i8_opaque_t));
+		MATX_ERROR("%s: out of memory", __func__);
 		if (!ev) { free(vt_data); return MATX_ERR_OUT_OF_MEMORY; }
 		memset(ev, 0, sizeof(*ev));
 		ev->nrows = n; ev->ncols = n; ev->layout = A->layout; ev->stride = vt_lda; ev->flags = 1u; ev->data = vt_data;

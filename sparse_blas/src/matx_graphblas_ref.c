@@ -1,4 +1,4 @@
-﻿#include "matx/matx_types.h"
+#include "matx/matx_types.h"
 #include "matx/matx_func.h"
 #include "matx/matx_types_internal.h"
 #include "matx/matx_sparse_compute.h"
@@ -23,11 +23,15 @@ static matx_status_t ref_spmv_z_i8_grb(
         matx_vec_z_i8_t y)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !x || !y)
+    if (!A || !x || !y) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
-    if (A->ncols != x->n || A->nrows != y->n)
+    if (A->ncols != x->n || A->nrows != y->n) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_grb.valid <= 0)
         coo_2_grb_z_i8(A);
@@ -82,13 +86,17 @@ static matx_status_t ref_spmm_z_i8_grb(
         matx_dense_z_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->ncols != B->nrows ||
             A->nrows != C->nrows ||
-            B->ncols != C->ncols)
+            B->ncols != C->ncols) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     /* build A */
     if (A->handle_grb.valid <= 0)
@@ -151,11 +159,15 @@ static matx_status_t ref_spmv_d_i8_grb(
         matx_vec_d_i8_t y)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !x || !y)
+    if (!A || !x || !y) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
-    if (A->ncols != x->n || A->nrows != y->n)
+    if (A->ncols != x->n || A->nrows != y->n) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (A->handle_grb.valid <= 0)
         coo_2_grb_d_i8(A);
@@ -210,8 +222,10 @@ static matx_status_t ref_spmm_d_i8_grb(
         matx_dense_d_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     /* build A */
     if (A->handle_grb.valid <= 0)
@@ -272,8 +286,10 @@ static matx_status_t ref_dsp2md_d_i8_grb(
         matx_dense_d_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     /* build A */
     if (A->handle_grb.valid <= 0)
@@ -334,8 +350,10 @@ static matx_status_t ref_zsp2md_z_i8_grb(
         matx_dense_z_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     /* build A */
     if (A->handle_grb.valid <= 0)
@@ -394,8 +412,10 @@ static matx_status_t ref_transpose_d_i8_grb(
         matx_coo_d_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A)
+    if (!A) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     /* build A */
     if (A->handle_grb.valid <= 0)
@@ -419,8 +439,10 @@ static matx_status_t ref_transpose_z_i8_grb(
         matx_coo_z_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     /* build A */
     if (A->handle_grb.valid <= 0)
@@ -444,8 +466,10 @@ static matx_status_t ref_conj_trans_z_i8_grb(matx_coo_z_i8_t A,
                                       matx_coo_z_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A)
+    if (!A) {
+        MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
+    }
 
     /* build A */
     if (A->handle_grb.valid <= 0)
@@ -488,7 +512,10 @@ static matx_status_t ref_finalize_grb()
 
 static matx_status_t ref_norm1_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     if (A->handle_grb.valid <= 0) coo_2_grb_d_i8(A);
 
     GrB_Matrix tmp;
@@ -506,7 +533,10 @@ static matx_status_t ref_norm1_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 
 static matx_status_t ref_norminf_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     if (A->handle_grb.valid <= 0) coo_2_grb_d_i8(A);
 
     GrB_Matrix tmp;
@@ -524,7 +554,10 @@ static matx_status_t ref_norminf_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 
 static matx_status_t ref_normfro_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     if (A->handle_grb.valid <= 0) coo_2_grb_d_i8(A);
 
     GrB_Matrix tmp;
@@ -542,7 +575,10 @@ static matx_status_t ref_normfro_mat_grb(matx_coo_d_i8_t A, matx_double* out) {
 
 static matx_status_t ref_norm1_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     if (A->handle_grb.valid <= 0) coo_2_grb_z_i8(A);
 
     GrB_Matrix abs_mat;
@@ -560,7 +596,10 @@ static matx_status_t ref_norm1_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out)
 
 static matx_status_t ref_norminf_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     if (A->handle_grb.valid <= 0) coo_2_grb_z_i8(A);
 
     GrB_Matrix abs_mat;
@@ -578,7 +617,10 @@ static matx_status_t ref_norminf_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* ou
 
 static matx_status_t ref_normfro_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     if (A->handle_grb.valid <= 0) coo_2_grb_z_i8(A);
 
     GrB_Matrix abs_mat;
@@ -598,8 +640,14 @@ static matx_status_t ref_normfro_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* ou
 static matx_status_t ref_spadd_d_i8_grb(matx_double alpha, matx_coo_d_i8_t A,
                                  matx_double beta, matx_coo_d_i8_t B, matx_coo_d_i8_t out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
-    if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
+    if (!A || !B || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != B->nrows || A->ncols != B->ncols) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     if (A->handle_grb.valid <= 0) coo_2_grb_d_i8(A);
     if (B->handle_grb.valid <= 0) coo_2_grb_d_i8(B);
 
@@ -627,8 +675,14 @@ static matx_status_t ref_spadd_d_i8_grb(matx_double alpha, matx_coo_d_i8_t A,
 static matx_status_t ref_spadd_z_i8_grb(matx_complex_d_t alpha, matx_coo_z_i8_t A,
                                  matx_complex_d_t beta, matx_coo_z_i8_t B, matx_coo_z_i8_t out) {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !B || !out) return MATX_ERR_INVALID_ARG;
-    if (A->nrows != B->nrows || A->ncols != B->ncols) return MATX_ERR_INVALID_ARG;
+    if (!A || !B || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != B->nrows || A->ncols != B->ncols) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     if (A->handle_grb.valid <= 0) coo_2_grb_z_i8(A);
     if (B->handle_grb.valid <= 0) coo_2_grb_z_i8(B);
 
@@ -658,7 +712,10 @@ static matx_status_t ref_spadd_z_i8_grb(matx_complex_d_t alpha, matx_coo_z_i8_t 
 // ---- Non-zero count per row/column ----
 
 static matx_status_t ref_spnnz_rows_d_i8_grb(matx_coo_d_i8_t A, matx_vec_d_i8_t out) {
-    if (!A || !out || !A->values) return MATX_ERR_INVALID_ARG;
+    if (!A || !out || !A->values) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t)A->nrows);
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->rows[i]] += 1.0;
@@ -666,7 +723,10 @@ static matx_status_t ref_spnnz_rows_d_i8_grb(matx_coo_d_i8_t A, matx_vec_d_i8_t 
 }
 
 static matx_status_t ref_spnnz_cols_d_i8_grb(matx_coo_d_i8_t A, matx_vec_d_i8_t out) {
-    if (!A || !out || !A->values) return MATX_ERR_INVALID_ARG;
+    if (!A || !out || !A->values) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t)A->ncols);
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->columns[i]] += 1.0;
@@ -674,7 +734,10 @@ static matx_status_t ref_spnnz_cols_d_i8_grb(matx_coo_d_i8_t A, matx_vec_d_i8_t 
 }
 
 static matx_status_t ref_spnnz_rows_z_i8_grb(matx_coo_z_i8_t A, matx_vec_z_i8_t out) {
-    if (!A || !out || !A->values) return MATX_ERR_INVALID_ARG;
+    if (!A || !out || !A->values) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nrows; ++i) { out->data[i].real = 0.0; out->data[i].imag = 0.0; }
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->rows[i]].real += 1.0;
@@ -682,7 +745,10 @@ static matx_status_t ref_spnnz_rows_z_i8_grb(matx_coo_z_i8_t A, matx_vec_z_i8_t 
 }
 
 static matx_status_t ref_spnnz_cols_z_i8_grb(matx_coo_z_i8_t A, matx_vec_z_i8_t out) {
-    if (!A || !out || !A->values) return MATX_ERR_INVALID_ARG;
+    if (!A || !out || !A->values) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t j = 0; j < A->ncols; ++j) { out->data[j].real = 0.0; out->data[j].imag = 0.0; }
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->columns[i]].real += 1.0;
@@ -692,7 +758,10 @@ static matx_status_t ref_spnnz_cols_z_i8_grb(matx_coo_z_i8_t A, matx_vec_z_i8_t 
 // ---- Row / column sums ----
 
 static matx_status_t ref_sprowsums_d_i8_grb(matx_coo_d_i8_t A, matx_vec_d_i8_t out) {
-    if (!A || !out || !A->values) return MATX_ERR_INVALID_ARG;
+    if (!A || !out || !A->values) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t)A->nrows);
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->rows[i]] += fabs(A->values[i]);
@@ -700,7 +769,10 @@ static matx_status_t ref_sprowsums_d_i8_grb(matx_coo_d_i8_t A, matx_vec_d_i8_t o
 }
 
 static matx_status_t ref_spcolsums_d_i8_grb(matx_coo_d_i8_t A, matx_vec_d_i8_t out) {
-    if (!A || !out || !A->values) return MATX_ERR_INVALID_ARG;
+    if (!A || !out || !A->values) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t)A->ncols);
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         out->data[A->columns[i]] += fabs(A->values[i]);
@@ -708,7 +780,10 @@ static matx_status_t ref_spcolsums_d_i8_grb(matx_coo_d_i8_t A, matx_vec_d_i8_t o
 }
 
 static matx_status_t ref_sprowsums_z_i8_grb(matx_coo_z_i8_t A, matx_vec_z_i8_t out) {
-    if (!A || !out || !A->values) return MATX_ERR_INVALID_ARG;
+    if (!A || !out || !A->values) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nrows; ++i) { out->data[i].real = 0.0; out->data[i].imag = 0.0; }
     for (matx_int64_t k = 0; k < A->nnz; ++k) {
         matx_double re = A->values[k].real;
@@ -719,7 +794,10 @@ static matx_status_t ref_sprowsums_z_i8_grb(matx_coo_z_i8_t A, matx_vec_z_i8_t o
 }
 
 static matx_status_t ref_spcolsums_z_i8_grb(matx_coo_z_i8_t A, matx_vec_z_i8_t out) {
-    if (!A || !out || !A->values) return MATX_ERR_INVALID_ARG;
+    if (!A || !out || !A->values) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t j = 0; j < A->ncols; ++j) { out->data[j].real = 0.0; out->data[j].imag = 0.0; }
     for (matx_int64_t k = 0; k < A->nnz; ++k) {
         matx_double re = A->values[k].real;
@@ -732,12 +810,18 @@ static matx_status_t ref_spcolsums_z_i8_grb(matx_coo_z_i8_t A, matx_vec_z_i8_t o
 // ---- Diagonal extraction ----
 
 static matx_status_t ref_spdiag_d_i8_grb(matx_coo_d_i8_t A, matx_int64_t offset, matx_vec_d_i8_t out) {
-    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     matx_int64_t diag_len = (offset >= 0)
             ? ((A->ncols - offset < A->nrows) ? A->ncols - offset : A->nrows)
             : ((A->nrows + offset < A->ncols) ? A->nrows + offset : A->ncols);
     if (diag_len < 0) diag_len = 0;
-    if (out->n < diag_len) return MATX_ERR_INVALID_ARG;
+    if (out->n < diag_len) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     memset(out->data, 0, sizeof(matx_double) * (size_t)diag_len);
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_int64_t d = A->columns[i] - A->rows[i];
@@ -751,12 +835,18 @@ static matx_status_t ref_spdiag_d_i8_grb(matx_coo_d_i8_t A, matx_int64_t offset,
 }
 
 static matx_status_t ref_spdiag_z_i8_grb(matx_coo_z_i8_t A, matx_int64_t offset, matx_vec_z_i8_t out) {
-    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (!A || !out) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     matx_int64_t diag_len = (offset >= 0)
             ? ((A->ncols - offset < A->nrows) ? A->ncols - offset : A->nrows)
             : ((A->nrows + offset < A->ncols) ? A->nrows + offset : A->ncols);
     if (diag_len < 0) diag_len = 0;
-    if (out->n < diag_len) return MATX_ERR_INVALID_ARG;
+    if (out->n < diag_len) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < diag_len; ++i) { out->data[i].real = 0.0; out->data[i].imag = 0.0; }
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_int64_t d = A->columns[i] - A->rows[i];
@@ -771,24 +861,42 @@ static matx_status_t ref_spdiag_z_i8_grb(matx_coo_z_i8_t A, matx_int64_t offset,
 // ---- In-place scaling ----
 
 static matx_status_t ref_scale_rows_d_i8_grb(matx_coo_d_i8_t A, const matx_vec_d_i8_t s) {
-    if (!A || !s || !A->values || !s->data) return MATX_ERR_INVALID_ARG;
-    if (s->n < A->nrows) return MATX_ERR_INVALID_ARG;
+    if (!A || !s || !A->values || !s->data) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (s->n < A->nrows) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         A->values[i] *= s->data[A->rows[i]];
     return MATX_OK;
 }
 
 static matx_status_t ref_scale_cols_d_i8_grb(matx_coo_d_i8_t A, const matx_vec_d_i8_t s) {
-    if (!A || !s || !A->values || !s->data) return MATX_ERR_INVALID_ARG;
-    if (s->n < A->ncols) return MATX_ERR_INVALID_ARG;
+    if (!A || !s || !A->values || !s->data) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (s->n < A->ncols) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i)
         A->values[i] *= s->data[A->columns[i]];
     return MATX_OK;
 }
 
 static matx_status_t ref_scale_rows_z_i8_grb(matx_coo_z_i8_t A, const matx_vec_z_i8_t s) {
-    if (!A || !s || !A->values || !s->data) return MATX_ERR_INVALID_ARG;
-    if (s->n < A->nrows) return MATX_ERR_INVALID_ARG;
+    if (!A || !s || !A->values || !s->data) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (s->n < A->nrows) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_double sr = s->data[A->rows[i]].real;
         matx_double si = s->data[A->rows[i]].imag;
@@ -801,8 +909,14 @@ static matx_status_t ref_scale_rows_z_i8_grb(matx_coo_z_i8_t A, const matx_vec_z
 }
 
 static matx_status_t ref_scale_cols_z_i8_grb(matx_coo_z_i8_t A, const matx_vec_z_i8_t s) {
-    if (!A || !s || !A->values || !s->data) return MATX_ERR_INVALID_ARG;
-    if (s->n < A->ncols) return MATX_ERR_INVALID_ARG;
+    if (!A || !s || !A->values || !s->data) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (s->n < A->ncols) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < A->nnz; ++i) {
         matx_double sr = s->data[A->columns[i]].real;
         matx_double si = s->data[A->columns[i]].imag;

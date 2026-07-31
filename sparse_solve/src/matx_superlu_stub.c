@@ -1,4 +1,4 @@
-﻿#include "matx/matx_sparse_solve.h"
+#include "matx/matx_sparse_solve.h"
 #include "matx/matx_types_internal.h"
 #include "matx/matx_log.h"
 
@@ -80,18 +80,27 @@ static void slu_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
  */
 static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
 {
-	if (!A || !out_F) 
+	if (!A || !out_F) {
+		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
+	}
 #if !MATX_HAVE_SUPERLU
 	(void)A; (void)out_F;
+	MATX_ERROR("%s: operation not supported", __func__);
 	return MATX_ERR_NOT_SUPPORTED;
 #else
 	/* Free existing handle if allocated */
 	if (out_F) slu_factor_csc_d_i8_destroy(out_F);
 
 	/* Validate matrix dimension */
-	if (A->nrows != A->ncols || A->nrows <= 0) return MATX_ERR_INVALID_ARG;
-	if (A->nrows > INT_MAX || A->nnz > INT_MAX) return MATX_ERR_NOT_SUPPORTED;
+	if (A->nrows != A->ncols || A->nrows <= 0) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (A->nrows > INT_MAX || A->nnz > INT_MAX) {
+		MATX_ERROR("%s: operation not supported", __func__);
+		return MATX_ERR_NOT_SUPPORTED;
+	}
 
 	/* Convert COO to CSC format */
 	matx_status_t st = coo_to_csc_d_i8(A);
@@ -101,8 +110,10 @@ static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d
 
 	/* Allocate factorization handle */
         matx_factor_sparse_d_i8_slu_t* F = (matx_factor_sparse_d_i8_slu_t*)calloc(1, sizeof(*F));
-        if (!F)
-          return MATX_ERR_OUT_OF_MEMORY;
+        if (!F) {
+        	MATX_ERROR("%s: out of memory", __func__);
+        	return MATX_ERR_OUT_OF_MEMORY;
+        }
         out_F->reserved = F;
 	F->n = (int)A->nrows;
 
@@ -115,6 +126,7 @@ static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d
 	/* Check memory allocation */
 	if (!F->perm_c || !F->perm_r || !F->etree || !F->rhs) {
                 slu_factor_csc_d_i8_destroy(out_F);
+		MATX_ERROR("%s: out of memory", __func__);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -154,9 +166,13 @@ static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d
  */
 static matx_status_t slu_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F, const matx_double* b, matx_double* x)
 {
-	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!F || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if !MATX_HAVE_SUPERLU
 	(void)F; (void)b; (void)x;
+	MATX_ERROR("%s: operation not supported", __func__);
 	return MATX_ERR_NOT_SUPPORTED;
 #else
       matx_factor_sparse_d_i8_slu_t* ptr = (matx_factor_sparse_d_i8_slu_t*)F->reserved;
@@ -213,9 +229,13 @@ static void slu_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
  */
 static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
 {
-	if (!A || !out_F) return MATX_ERR_INVALID_ARG;
+	if (!A || !out_F) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if !MATX_HAVE_SUPERLU
 	(void)A; (void)out_F;
+	MATX_ERROR("%s: operation not supported", __func__);
 	return MATX_ERR_NOT_SUPPORTED;
 #else
 	/* Free existing handle if allocated */
@@ -223,8 +243,14 @@ static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
           slu_factor_csc_z_i8_destroy(out_F);
 
 	/* Validate square matrix and size limit */
-	if (A->nrows != A->ncols || A->nrows <= 0) return MATX_ERR_INVALID_ARG;
-	if (A->nrows > INT_MAX || A->nnz > INT_MAX) return MATX_ERR_NOT_SUPPORTED;
+	if (A->nrows != A->ncols || A->nrows <= 0) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (A->nrows > INT_MAX || A->nnz > INT_MAX) {
+		MATX_ERROR("%s: operation not supported", __func__);
+		return MATX_ERR_NOT_SUPPORTED;
+	}
 
 	/* Convert complex COO to CSC format */
 	matx_status_t st = coo_to_csc_z_i8(A);
@@ -234,8 +260,10 @@ static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
 
 	/* Allocate complex factorization handle */
         matx_factor_sparse_z_i8_slu_t* F = (matx_factor_sparse_z_i8_slu_t*)calloc(1, sizeof(*F));
-        if (!F)
-          return MATX_ERR_OUT_OF_MEMORY;
+        if (!F) {
+        	MATX_ERROR("%s: out of memory", __func__);
+        	return MATX_ERR_OUT_OF_MEMORY;
+        }
         out_F->reserved = F;
 	F->n = (int)A->nrows;
 
@@ -248,6 +276,7 @@ static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
 	/* Check memory allocation status */
 	if (!F->perm_c || !F->perm_r || !F->etree || !F->rhs) {
                 slu_factor_csc_z_i8_destroy(out_F);
+		MATX_ERROR("%s: out of memory", __func__);
 		return MATX_ERR_OUT_OF_MEMORY;
 	}
 
@@ -289,9 +318,13 @@ static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
  */
 static matx_status_t slu_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x)
 {
-	if (!F || !b || !x) return MATX_ERR_INVALID_ARG;
+	if (!F || !b || !x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if !MATX_HAVE_SUPERLU
 	(void)F; (void)b; (void)x;
+	MATX_ERROR("%s: operation not supported", __func__);
 	return MATX_ERR_NOT_SUPPORTED;
 #else
         matx_factor_sparse_z_i8_slu_t* ptr = (matx_factor_sparse_z_i8_slu_t*)F->reserved;

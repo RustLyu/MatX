@@ -1,4 +1,4 @@
-﻿#if __linux__
+#if __linux__
 	#define _XOPEN_SOURCE 600
 #endif
 
@@ -18,7 +18,10 @@
 // ---- Level 1 implementations ----
 
 static matx_status_t ref_dscal(matx_int64_t n, matx_double alpha, matx_double* x, matx_int64_t incx) {
-	if (!x) return MATX_ERR_INVALID_ARG;
+	if (!x) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_dscal(n, alpha, x, incx);
 #else
@@ -29,7 +32,10 @@ static matx_status_t ref_dscal(matx_int64_t n, matx_double alpha, matx_double* x
 }
 
 static matx_status_t ref_zscal(matx_int64_t n, const void* alpha, void* x, matx_int64_t incx) {
-	if (!x || !alpha) return MATX_ERR_INVALID_ARG;
+	if (!x || !alpha) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zscal(n, alpha, x, incx);
 #else
@@ -45,7 +51,10 @@ static matx_status_t ref_zscal(matx_int64_t n, const void* alpha, void* x, matx_
 }
 
 static matx_status_t ref_dcopy(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
+	if (!x || !y) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_dcopy(n, x, incx, y, incy);
 #else
@@ -56,7 +65,10 @@ static matx_status_t ref_dcopy(matx_int64_t n, const matx_double* x, matx_int64_
 }
 
 static matx_status_t ref_zcopy(matx_int64_t n, const void* x, matx_int64_t incx, void* y, matx_int64_t incy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
+	if (!x || !y) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zcopy(n, x, incx, y, incy);
 #else
@@ -69,7 +81,10 @@ static matx_status_t ref_zcopy(matx_int64_t n, const void* x, matx_int64_t incx,
 }
 
 static matx_status_t ref_dswap(matx_int64_t n, matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
+	if (!x || !y) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_dswap(n, x, incx, y, incy);
 #else
@@ -83,7 +98,10 @@ static matx_status_t ref_dswap(matx_int64_t n, matx_double* x, matx_int64_t incx
 }
 
 static matx_status_t ref_zswap(matx_int64_t n, void* x, matx_int64_t incx, void* y, matx_int64_t incy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
+	if (!x || !y) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zswap(n, x, incx, y, incy);
 #else
@@ -100,7 +118,10 @@ static matx_status_t ref_zswap(matx_int64_t n, void* x, matx_int64_t incx, void*
 
 static matx_status_t ref_ddot(matx_int64_t n, const matx_double* x, matx_int64_t incx,
 	const matx_double* y, matx_int64_t incy, matx_double* result) {
-	if (!x || !y || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !y || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = cblas_ddot(n, x, incx, y, incy);
 #else
@@ -114,7 +135,10 @@ static matx_status_t ref_ddot(matx_int64_t n, const matx_double* x, matx_int64_t
 
 static matx_status_t ref_zdotu(matx_int64_t n, const void* x, matx_int64_t incx,
 	const void* y, matx_int64_t incy, void* result) {
-	if (!x || !y || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !y || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zdotu_sub(n, x, incx, y, incy, result);
 #else
@@ -132,7 +156,10 @@ static matx_status_t ref_zdotu(matx_int64_t n, const void* x, matx_int64_t incx,
 
 static matx_status_t ref_zdotc(matx_int64_t n, const void* x, matx_int64_t incx,
 	const void* y, matx_int64_t incy, void* result) {
-	if (!x || !y || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !y || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zdotc_sub(n, x, incx, y, incy, result);
 #else
@@ -149,7 +176,10 @@ static matx_status_t ref_zdotc(matx_int64_t n, const void* x, matx_int64_t incx,
 }
 
 static matx_status_t ref_dnrm2(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = cblas_dnrm2(n, x, incx);
 #else
@@ -162,7 +192,10 @@ static matx_status_t ref_dnrm2(matx_int64_t n, const matx_double* x, matx_int64_
 }
 
 static matx_status_t ref_dznrm2(matx_int64_t n, const void* x, matx_int64_t incx, matx_double* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = cblas_dznrm2(n, x, incx);
 #else
@@ -179,7 +212,10 @@ static matx_status_t ref_dznrm2(matx_int64_t n, const void* x, matx_int64_t incx
 }
 
 static matx_status_t ref_dasum(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = cblas_dasum(n, x, incx);
 #else
@@ -192,7 +228,10 @@ static matx_status_t ref_dasum(matx_int64_t n, const matx_double* x, matx_int64_
 }
 
 static matx_status_t ref_dzasum(matx_int64_t n, const void* x, matx_int64_t incx, matx_double* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = cblas_dzasum(n, x, incx);
 #else
@@ -206,7 +245,10 @@ static matx_status_t ref_dzasum(matx_int64_t n, const void* x, matx_int64_t incx
 }
 
 static matx_status_t ref_idamax(matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_int64_t* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = (matx_int64_t)cblas_idamax(n, x, incx);
 #else
@@ -222,7 +264,10 @@ static matx_status_t ref_idamax(matx_int64_t n, const matx_double* x, matx_int64
 }
 
 static matx_status_t ref_izamax(matx_int64_t n, const void* x, matx_int64_t incx, matx_int64_t* result) {
-	if (!x || !result) return MATX_ERR_INVALID_ARG;
+	if (!x || !result) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	*result = (matx_int64_t)cblas_izamax(n, x, incx);
 #else
@@ -242,7 +287,10 @@ static matx_status_t ref_izamax(matx_int64_t n, const void* x, matx_int64_t incx
 
 static matx_status_t ref_daxpy(matx_int64_t n, matx_double alpha, const matx_double* x,
 	matx_int64_t lda, void* y, matx_int64_t ldy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
+	if (!x || !y) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_daxpy(n, alpha, x, lda, y, ldy);
 #else
@@ -255,7 +303,10 @@ static matx_status_t ref_daxpy(matx_int64_t n, matx_double alpha, const matx_dou
 
 static matx_status_t ref_zaxpy(matx_int64_t n, const void* alpha, const void* x,
 	matx_int64_t lda, void* y, matx_int64_t ldy) {
-	if (!x || !y) return MATX_ERR_INVALID_ARG;
+	if (!x || !y) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 #if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
 	cblas_zaxpy(n, alpha, x, lda, y, ldy);
 #else
@@ -273,7 +324,10 @@ static matx_status_t ref_zaxpy(matx_int64_t n, const void* alpha, const void* x,
 // ---- Vector norm implementations (pure C loops) ----
 
 static matx_status_t ref_vec_norm1_d_i8(matx_vec_d_i8_t A, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (!A || !out) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i)
 		sum += fabs(A->data[i * A->stride]);
@@ -282,7 +336,10 @@ static matx_status_t ref_vec_norm1_d_i8(matx_vec_d_i8_t A, matx_double* out) {
 }
 
 static matx_status_t ref_vec_norm2_d_i8(matx_vec_d_i8_t A, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (!A || !out) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
 		matx_double v = A->data[i * A->stride];
@@ -293,7 +350,10 @@ static matx_status_t ref_vec_norm2_d_i8(matx_vec_d_i8_t A, matx_double* out) {
 }
 
 static matx_status_t ref_vec_norminf_d_i8(matx_vec_d_i8_t A, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (!A || !out) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	matx_double max_val = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
 		matx_double v = fabs(A->data[i * A->stride]);
@@ -304,7 +364,10 @@ static matx_status_t ref_vec_norminf_d_i8(matx_vec_d_i8_t A, matx_double* out) {
 }
 
 static matx_status_t ref_vec_norm1_z_i8(matx_vec_z_i8_t A, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (!A || !out) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
 		matx_double re = A->data[i * A->stride].real;
@@ -316,7 +379,10 @@ static matx_status_t ref_vec_norm1_z_i8(matx_vec_z_i8_t A, matx_double* out) {
 }
 
 static matx_status_t ref_vec_norm2_z_i8(matx_vec_z_i8_t A, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (!A || !out) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	matx_double sum = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
 		matx_double re = A->data[i * A->stride].real;
@@ -328,7 +394,10 @@ static matx_status_t ref_vec_norm2_z_i8(matx_vec_z_i8_t A, matx_double* out) {
 }
 
 static matx_status_t ref_vec_norminf_z_i8(matx_vec_z_i8_t A, matx_double* out) {
-	if (!A || !out) return MATX_ERR_INVALID_ARG;
+	if (!A || !out) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
 	matx_double max_val = 0.0;
 	for (matx_int64_t i = 0; i < A->n; ++i) {
 		matx_double re = A->data[i * A->stride].real;

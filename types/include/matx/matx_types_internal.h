@@ -1,4 +1,4 @@
-﻿#ifndef MATX_TYPES_INTERNAL_H
+#ifndef MATX_TYPES_INTERNAL_H
 #define MATX_TYPES_INTERNAL_H
 
 #include "matx/matx_types.h"
@@ -22,7 +22,9 @@ typedef struct matx_dense_d_i8_opaque_t
 {
     matx_int64_t nrows;
     matx_int64_t ncols;
-    matx_int64_t stride; // leading dimension: if col-major => ld = stride (>= rows); if row-major => ld = stride (>= cols)
+    matx_int64_t stride;
+    // leading dimension: if col-major => ld = stride (>= rows);
+    //                   if row-major => ld = stride (>= cols);
     matx_layout_t layout;
     matx_double* data;
     matx_int64_t flags; // reserved for future (ownership, alignment, etc.)

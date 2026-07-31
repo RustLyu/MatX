@@ -1,4 +1,4 @@
-﻿#if __linux__
+#if __linux__
 #define _XOPEN_SOURCE 600
 #endif
 
@@ -30,13 +30,18 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
                                matx_double* c,
                                matx_int64_t ldc)
 {
-    if (!a || !b || !c)
+    if (!a || !b || !c) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR)
+    }
+    if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
     if (m > INT_MAX || n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX
         || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
 
@@ -63,11 +68,15 @@ static matx_status_t ref_zgemm(matx_layout_t layout,
                                void* C,
                                matx_int64_t ldc)
 {
-    if (!A || !B || !C || !alpha || !beta)
+    if (!A || !B || !C || !alpha || !beta) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
-    if (m > INT_MAX || n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX)
+    if (m > INT_MAX || n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
@@ -92,11 +101,15 @@ static matx_status_t ref_zgemv(matx_layout_t layout,
                                void* C,
                                matx_int64_t ldc)
 {
-    if (!A || !X || !C || !alpha || !beta)
+    if (!A || !X || !C || !alpha || !beta) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
-    if (m > INT_MAX || n > INT_MAX || lda > INT_MAX || ldx > INT_MAX || ldc > INT_MAX)
+    if (m > INT_MAX || n > INT_MAX || lda > INT_MAX || ldx > INT_MAX || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
@@ -119,11 +132,15 @@ static matx_status_t ref_dgemv(matx_layout_t layout,
                                matx_double* C,
                                matx_int64_t ldc)
 {
-    if (!A || !C)
+    if (!A || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
-    if (m > INT_MAX || n > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
+    if (m > INT_MAX || n > INT_MAX || lda > INT_MAX || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
@@ -144,11 +161,15 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
                                 matx_double* B,
                                 matx_int64_t ldb)
 {
-    if (!A || !B)
+    if (!A || !B) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldb > INT_MAX)
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldb > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
 
 #if MATX_ENABLE_OPENBLAS
     const enum CBLAS_ORDER order = (trans_a == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
@@ -200,11 +221,15 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
                                 void* B,
                                 matx_int64_t ldb)
 {
-    if (!A || !B)
+    if (!A || !B) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
 
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldb > INT_MAX)
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldb > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
 #if MATX_ENABLE_OPENBLAS
     const enum CBLAS_ORDER order = (trans_a == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
@@ -252,12 +277,18 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
                                  const matx_double* A,
                                  matx_double* out_Ainv)
 {
-    if (!A || !out_Ainv)
+    if (!A || !out_Ainv) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows != cols)
+    }
+    if (rows != cols) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (layout != MATX_COL_MAJOR)
+    }
+    if (layout != MATX_COL_MAJOR) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
     memcpy(out_Ainv, A, sizeof(matx_double) * rows * cols);
 
     matx_int64_t N = rows;
@@ -266,6 +297,7 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
 
     matx_int64_t* piv = (matx_int64_t*) malloc(rows * sizeof(matx_int64_t));
     if (!piv) {
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -298,12 +330,18 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
 static matx_status_t ref_inv_dense_z_i8(
     matx_layout_t layout, matx_int64_t rows, matx_int64_t cols, const void* A, void* out_Ainv)
 {
-    if (!A || !out_Ainv)
+    if (!A || !out_Ainv) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows != cols)
+    }
+    if (rows != cols) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (layout != MATX_COL_MAJOR)
+    }
+    if (layout != MATX_COL_MAJOR) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
     memcpy(out_Ainv, A, sizeof(matx_complex_d_t) * rows * cols);
 
     matx_int64_t N = rows;
@@ -312,6 +350,7 @@ static matx_status_t ref_inv_dense_z_i8(
 
     matx_int64_t* piv = (matx_int64_t*) malloc(rows * sizeof(matx_int64_t));
     if (!piv) {
+        MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -354,8 +393,10 @@ static matx_status_t ref_dger(matx_layout_t layout,
                               matx_double* A,
                               matx_int64_t lda)
 {
-    if (!x || !y || !A)
+    if (!x || !y || !A) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_dger(order, m, n, alpha, x, incx, y, incy, A, lda);
     return MATX_OK;
@@ -372,8 +413,10 @@ static matx_status_t ref_zgeru(matx_layout_t layout,
                                void* A,
                                matx_int64_t lda)
 {
-    if (!x || !y || !A || !alpha)
+    if (!x || !y || !A || !alpha) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_zgeru(order, m, n, alpha, x, incx, y, incy, A, lda);
     return MATX_OK;
@@ -390,8 +433,10 @@ static matx_status_t ref_zgerc(matx_layout_t layout,
                                void* A,
                                matx_int64_t lda)
 {
-    if (!x || !y || !A || !alpha)
+    if (!x || !y || !A || !alpha) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_zgerc(order, m, n, alpha, x, incx, y, incy, A, lda);
     return MATX_OK;
@@ -407,8 +452,10 @@ static matx_status_t ref_dtrsv(matx_layout_t layout,
                                matx_double* x,
                                matx_int64_t incx)
 {
-    if (!A || !x)
+    if (!A || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_dtrsv(order, uplo, trans, diag, n, A, lda, x, incx);
     return MATX_OK;
@@ -424,8 +471,10 @@ static matx_status_t ref_ztrsv(matx_layout_t layout,
                                void* x,
                                matx_int64_t incx)
 {
-    if (!A || !x)
+    if (!A || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_ztrsv(order, uplo, trans, diag, n, A, lda, x, incx);
     return MATX_OK;
@@ -446,8 +495,10 @@ static matx_status_t ref_dtrsm(matx_layout_t layout,
                                matx_double* B,
                                matx_int64_t ldb)
 {
-    if (!A || !B)
+    if (!A || !B) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_dtrsm(order, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
     return MATX_OK;
@@ -466,8 +517,10 @@ static matx_status_t ref_ztrsm(matx_layout_t layout,
                                void* B,
                                matx_int64_t ldb)
 {
-    if (!A || !B || !alpha)
+    if (!A || !B || !alpha) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_ztrsm(order, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
     return MATX_OK;
@@ -485,8 +538,10 @@ static matx_status_t ref_dsyrk(matx_layout_t layout,
                                matx_double* C,
                                matx_int64_t ldc)
 {
-    if (!A || !C)
+    if (!A || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_dsyrk(order, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
     return MATX_OK;
@@ -504,8 +559,10 @@ static matx_status_t ref_zherk(matx_layout_t layout,
                                void* C,
                                matx_int64_t ldc)
 {
-    if (!A || !C)
+    if (!A || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_zherk(order, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
     return MATX_OK;
@@ -525,8 +582,10 @@ static matx_status_t ref_dsyr2k(matx_layout_t layout,
                                 matx_double* C,
                                 matx_int64_t ldc)
 {
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_dsyr2k(order, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
     return MATX_OK;
@@ -546,8 +605,10 @@ static matx_status_t ref_zher2k(matx_layout_t layout,
                                 void* C,
                                 matx_int64_t ldc)
 {
-    if (!A || !B || !C || !alpha)
+    if (!A || !B || !C || !alpha) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_zher2k(order, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
     return MATX_OK;
@@ -563,10 +624,14 @@ static matx_status_t ref_transpose_d_i8(matx_layout_t layout,
                                         matx_double* out,
                                         matx_int64_t ldc)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
 #if MATX_ENABLE_OPENBLAS
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_domatcopy(order, CblasTrans, rows, cols, 1.0, A, lda, out, ldc);
@@ -596,10 +661,14 @@ static matx_status_t ref_transpose_z_i8(matx_layout_t layout,
                                         void* out,
                                         matx_int64_t ldc)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
 #if MATX_ENABLE_OPENBLAS
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     const matx_double alpha[2] = {1.0, 0.0};
@@ -634,10 +703,14 @@ static matx_status_t ref_conj_transpose_z_i8(matx_layout_t layout,
                                              void* out,
                                              matx_int64_t ldc)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
 #if MATX_ENABLE_OPENBLAS
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     const matx_double alpha[2] = {1.0, 0.0};
@@ -675,10 +748,14 @@ static matx_status_t ref_norm1_d_i8(matx_layout_t layout,
                                     matx_int64_t lda,
                                     matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
     *out = LAPACKE_dlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
                           '1',
                           (lapack_int) rows,
@@ -695,10 +772,14 @@ static matx_status_t ref_norminf_d_i8(matx_layout_t layout,
                                       matx_int64_t lda,
                                       matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
     *out = LAPACKE_dlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
                           'I',
                           (lapack_int) rows,
@@ -715,10 +796,14 @@ static matx_status_t ref_normfro_d_i8(matx_layout_t layout,
                                       matx_int64_t lda,
                                       matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
     *out = LAPACKE_dlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
                           'F',
                           (lapack_int) rows,
@@ -735,10 +820,14 @@ static matx_status_t ref_norm1_z_i8(matx_layout_t layout,
                                     matx_int64_t lda,
                                     matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
     *out = LAPACKE_zlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
                           '1',
                           (lapack_int) rows,
@@ -755,10 +844,14 @@ static matx_status_t ref_norminf_z_i8(matx_layout_t layout,
                                       matx_int64_t lda,
                                       matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
     *out = LAPACKE_zlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
                           'I',
                           (lapack_int) rows,
@@ -775,10 +868,14 @@ static matx_status_t ref_normfro_z_i8(matx_layout_t layout,
                                       matx_int64_t lda,
                                       matx_double* out)
 {
-    if (!A || !out)
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX)
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
+    }
     *out = LAPACKE_zlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
                           'F',
                           (lapack_int) rows,
@@ -798,8 +895,10 @@ static matx_status_t ref_hadamard_d_i8(matx_layout_t layout,
                                        matx_double* C,
                                        matx_int64_t ldc)
 {
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     for (matx_int64_t i = 0; i < rows; ++i)
         for (matx_int64_t j = 0; j < cols; ++j) {
             matx_int64_t si = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
@@ -820,8 +919,10 @@ static matx_status_t ref_hadamard_z_i8(matx_layout_t layout,
                                        void* C,
                                        matx_int64_t ldc)
 {
-    if (!A || !B || !C)
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
     const matx_complex_d_t* a_data = (const matx_complex_d_t*) A;
     const matx_complex_d_t* b_data = (const matx_complex_d_t*) B;
     matx_complex_d_t* c_data = (matx_complex_d_t*) C;

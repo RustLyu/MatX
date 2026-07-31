@@ -9,7 +9,7 @@ extern "C" {
 	typedef enum
 	{
 		MATX_TM_SECOND = 0,
-		MATX_TM_MILISECOND,
+		MATX_TM_MILLISECOND,
 		MATX_TM_MICROSECOND,
 		MATX_TM_NANOSECOND
 	} matx_tm_unit;
