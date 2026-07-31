@@ -78,6 +78,27 @@ typedef struct matx_alloc_t
 // ---- Layout ----
 typedef enum matx_layout_t { MATX_ROW_MAJOR = 101, MATX_COL_MAJOR = 102 } matx_layout_t;
 
+typedef enum matx_trans_t {
+	MATX_NO_TRANS   = 111,
+	MATX_TRANS      = 112,
+	MATX_CONJ_TRANS = 113
+} matx_trans_t;
+
+typedef enum matx_uplo_t {
+	MATX_UPPER = 121,
+	MATX_LOWER = 122
+} matx_uplo_t;
+
+typedef enum matx_diag_t {
+	MATX_NON_UNIT_DIAG = 131,
+	MATX_UNIT_DIAG     = 132
+} matx_diag_t;
+
+typedef enum matx_side_t {
+	MATX_LEFT  = 141,
+	MATX_RIGHT = 142
+} matx_side_t;
+
 typedef enum matx_handle_type_t {
     MATX_HANDLE_TYPE_GRB_MATRIX = 1,
     MATX_HANDLE_TYPE_GRB_VECTOR = 2,

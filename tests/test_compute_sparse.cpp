@@ -779,3 +779,163 @@ TEST(compute_sparse, scale_cols_coo_z_i8) {
 	matx_coo_sparse_z_i8_destroy(&a, A);
 	matx_finalize(&backend);
 }
+
+TEST(compute_sparse, zsp2md_coo_z_i8_4x4) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t I_A[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+	matx_int64_t J_A[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
+	matx_complex_d_t values_A[16];
+	for (int i = 0; i < 16; ++i) {
+		values_A[i].real = (i % 4 == i / 4) ? 1.0 : 0.0;
+		values_A[i].imag = 0.0;
+	}
+	matx_coo_z_i8_t A = NULL;
+	matx_coo_sparse_z_i8_create(&a, &A, 4, 4, 16, I_A, J_A, values_A);
+
+	matx_int64_t I_B[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+	matx_int64_t J_B[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
+	matx_complex_d_t values_B[16];
+	for (int i = 0; i < 16; ++i) {
+		values_B[i].real = (i % 4 == i / 4) ? 2.0 : 0.5;
+		values_B[i].imag = 0.0;
+	}
+	matx_coo_z_i8_t B = NULL;
+	matx_coo_sparse_z_i8_create(&a, &B, 4, 4, 16, I_B, J_B, values_B);
+
+	matx_dense_z_i8_t C = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+	for (size_t i = 0; i < 16; ++i) C->data[i].real = C->data[i].imag = 0.0;
+
+	matx_complex_d_t alpha = {1.0, 0.0};
+	matx_complex_d_t beta  = {0.0, 0.0};
+	matx_sparse_backend_t backend = matx_sparse_default();
+	matx_status_t st = matx_zsp2md_coo_z_i8(&backend, alpha, A, B, beta, C);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_coo_sparse_z_i8_destroy(&a, A);
+		matx_coo_sparse_z_i8_destroy(&a, B);
+		matx_dense_z_i8_destroy(&a, C);
+		matx_finalize(&backend);
+		return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(C->data[0].real, 2.0, 1e-12);
+	EXPECT_NEAR(C->data[1].real, 0.5, 1e-12);
+	EXPECT_NEAR(C->data[14].real, 0.5, 1e-12);
+	EXPECT_NEAR(C->data[15].real, 2.0, 1e-12);
+
+	matx_coo_sparse_z_i8_destroy(&a, A);
+	matx_coo_sparse_z_i8_destroy(&a, B);
+	matx_dense_z_i8_destroy(&a, C);
+	matx_finalize(&backend);
+}
+
+TEST(compute_sparse, transpose_coo_z_i8_4x4) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t I_A[16] = { 0,1,2,3, 0,1,2,3, 0,1,2,3, 0,1,2,3 };
+	matx_int64_t J_A[16] = { 0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3 };
+	matx_complex_d_t values_A[16];
+	for (int i = 0; i < 16; ++i) {
+		values_A[i].real = i;
+		values_A[i].imag = 0.0;
+	}
+	matx_coo_z_i8_t A = NULL, B = NULL;
+	matx_coo_sparse_z_i8_create(&a, &A, 4, 4, 16, I_A, J_A, values_A);
+	matx_coo_sparse_z_i8_create(&a, &B, 4, 4, 16, NULL, NULL, NULL);
+	matx_sparse_backend_t backend = matx_sparse_default();
+
+	matx_status_t st = matx_transpose_coo_z_i8(&backend, A, B);
+	matx_finalize(&backend);
+	ASSERT_EQ(st, MATX_OK);
+	matx_coo_sparse_z_i8_destroy(&a, A);
+	matx_coo_sparse_z_i8_destroy(&a, B);
+}
+
+TEST(compute_sparse, norm1_mat_coo_z_i8) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t rows[2] = {0, 1}, cols[2] = {0, 1};
+	matx_complex_d_t vals[2] = {{3.0, 4.0}, {4.0, 0.0}};
+	matx_coo_z_i8_t A = NULL;
+	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &A, 2, 2, 2, rows, cols, vals), MATX_OK);
+	auto backend = matx_sparse_default();
+	matx_double out = 0.0;
+	matx_status_t st = matx_norm1_mat_coo_z_i8(&backend, A, &out);
+	if (st == MATX_ERR_NOT_SUPPORTED) { matx_coo_sparse_z_i8_destroy(&a, A); return; }
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(out, 5.0, 1e-12);
+	matx_coo_sparse_z_i8_destroy(&a, A);
+	matx_finalize(&backend);
+}
+
+TEST(compute_sparse, norminf_mat_coo_z_i8) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t rows[2] = {0, 1}, cols[2] = {0, 1};
+	matx_complex_d_t vals[2] = {{3.0, 4.0}, {4.0, 0.0}};
+	matx_coo_z_i8_t A = NULL;
+	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &A, 2, 2, 2, rows, cols, vals), MATX_OK);
+	auto backend = matx_sparse_default();
+	matx_double out = 0.0;
+	matx_status_t st = matx_norminf_mat_coo_z_i8(&backend, A, &out);
+	if (st == MATX_ERR_NOT_SUPPORTED) { matx_coo_sparse_z_i8_destroy(&a, A); return; }
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(out, 5.0, 1e-12);
+	matx_coo_sparse_z_i8_destroy(&a, A);
+	matx_finalize(&backend);
+}
+
+TEST(compute_sparse, normfro_mat_coo_z_i8) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t rows[1] = {0}, cols[1] = {0};
+	matx_complex_d_t vals[1] = {{3.0, 4.0}};
+	matx_coo_z_i8_t A = NULL;
+	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &A, 2, 2, 1, rows, cols, vals), MATX_OK);
+	auto backend = matx_sparse_default();
+	matx_double out = 0.0;
+	matx_status_t st = matx_normfro_mat_coo_z_i8(&backend, A, &out);
+	if (st == MATX_ERR_NOT_SUPPORTED) { matx_coo_sparse_z_i8_destroy(&a, A); return; }
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(out, 5.0, 1e-12);
+	matx_coo_sparse_z_i8_destroy(&a, A);
+	matx_finalize(&backend);
+}
+
+TEST(compute_sparse, spadd_coo_z_i8) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t rows[2] = {0, 1}, cols[2] = {0, 1};
+	matx_complex_d_t valsA[2] = {{1.0, 2.0}, {2.0, 0.0}};
+	matx_complex_d_t valsB[2] = {{3.0, 0.0}, {4.0, 0.0}};
+	matx_coo_z_i8_t A = NULL, B = NULL, C = NULL;
+	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &A, 2, 2, 2, rows, cols, valsA), MATX_OK);
+	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &B, 2, 2, 2, rows, cols, valsB), MATX_OK);
+	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &C, 2, 2, 2, NULL, NULL, NULL), MATX_OK);
+	auto backend = matx_sparse_default();
+	matx_complex_d_t alpha = {2.0, 0.0};
+	matx_complex_d_t beta  = {1.0, 0.0};
+	matx_status_t st = matx_spadd_coo_z_i8(&backend, alpha, A, beta, B, C);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_coo_sparse_z_i8_destroy(&a, A);
+		matx_coo_sparse_z_i8_destroy(&a, B);
+		matx_coo_sparse_z_i8_destroy(&a, C);
+		return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	ASSERT_EQ(C->nnz, 2);
+	bool found5 = false, found8 = false;
+	for (int i = 0; i < C->nnz; ++i) {
+		if (C->rows[i] == 0 && C->columns[i] == 0) {
+			EXPECT_NEAR(C->values[i].real, 5.0, 1e-12);
+			EXPECT_NEAR(C->values[i].imag, 4.0, 1e-12);
+			found5 = true;
+		}
+		if (C->rows[i] == 1 && C->columns[i] == 1) {
+			EXPECT_NEAR(C->values[i].real, 8.0, 1e-12);
+			EXPECT_NEAR(C->values[i].imag, 0.0, 1e-12);
+			found8 = true;
+		}
+	}
+	EXPECT_TRUE(found5);
+	EXPECT_TRUE(found8);
+	matx_coo_sparse_z_i8_destroy(&a, A);
+	matx_coo_sparse_z_i8_destroy(&a, B);
+	matx_coo_sparse_z_i8_destroy(&a, C);
+	matx_finalize(&backend);
+}

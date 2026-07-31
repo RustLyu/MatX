@@ -1,4 +1,4 @@
-#if __linux__
+﻿#if __linux__
 #define _XOPEN_SOURCE 600
 #endif
 
@@ -47,8 +47,8 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-    const enum CBLAS_TRANSPOSE ta = (trans_a != 0) ? CblasTrans : CblasNoTrans;
-    const enum CBLAS_TRANSPOSE tb = (trans_b != 0) ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_TRANS) ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE tb = (trans_b == MATX_TRANS) ? CblasTrans : CblasNoTrans;
     cblas_dgemm(order, ta, tb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
     return MATX_OK;
 }
@@ -443,9 +443,9 @@ static matx_status_t ref_zgerc(matx_layout_t layout,
 }
 
 static matx_status_t ref_dtrsv(matx_layout_t layout,
-                               int uplo,
-                               int trans,
-                               int diag,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
+                               matx_diag_t diag,
                                matx_int64_t n,
                                const matx_double* A,
                                matx_int64_t lda,
@@ -457,14 +457,14 @@ static matx_status_t ref_dtrsv(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_dtrsv(order, uplo, trans, diag, n, A, lda, x, incx);
+    cblas_dtrsv(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, (enum CBLAS_DIAG)diag, n, A, lda, x, incx);
     return MATX_OK;
 }
 
 static matx_status_t ref_ztrsv(matx_layout_t layout,
-                               int uplo,
-                               int trans,
-                               int diag,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
+                               matx_diag_t diag,
                                matx_int64_t n,
                                const void* A,
                                matx_int64_t lda,
@@ -476,17 +476,17 @@ static matx_status_t ref_ztrsv(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_ztrsv(order, uplo, trans, diag, n, A, lda, x, incx);
+    cblas_ztrsv(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, (enum CBLAS_DIAG)diag, n, A, lda, x, incx);
     return MATX_OK;
 }
 
 // ---- Level 3 implementations ----
 
 static matx_status_t ref_dtrsm(matx_layout_t layout,
-                               int side,
-                               int uplo,
-                               int trans,
-                               int diag,
+                               matx_side_t side,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
+                               matx_diag_t diag,
                                matx_int64_t m,
                                matx_int64_t n,
                                matx_double alpha,
@@ -500,15 +500,15 @@ static matx_status_t ref_dtrsm(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_dtrsm(order, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
+    cblas_dtrsm(order, (enum CBLAS_SIDE)side, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, (enum CBLAS_DIAG)diag, m, n, alpha, A, lda, B, ldb);
     return MATX_OK;
 }
 
 static matx_status_t ref_ztrsm(matx_layout_t layout,
-                               int side,
-                               int uplo,
-                               int trans,
-                               int diag,
+                               matx_side_t side,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
+                               matx_diag_t diag,
                                matx_int64_t m,
                                matx_int64_t n,
                                const void* alpha,
@@ -522,13 +522,13 @@ static matx_status_t ref_ztrsm(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_ztrsm(order, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
+    cblas_ztrsm(order, (enum CBLAS_SIDE)side, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, (enum CBLAS_DIAG)diag, m, n, alpha, A, lda, B, ldb);
     return MATX_OK;
 }
 
 static matx_status_t ref_dsyrk(matx_layout_t layout,
-                               int uplo,
-                               int trans,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
                                matx_int64_t n,
                                matx_int64_t k,
                                matx_double alpha,
@@ -543,13 +543,13 @@ static matx_status_t ref_dsyrk(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_dsyrk(order, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
+    cblas_dsyrk(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, n, k, alpha, A, lda, beta, C, ldc);
     return MATX_OK;
 }
 
 static matx_status_t ref_zherk(matx_layout_t layout,
-                               int uplo,
-                               int trans,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
                                matx_int64_t n,
                                matx_int64_t k,
                                matx_double alpha,
@@ -564,13 +564,13 @@ static matx_status_t ref_zherk(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_zherk(order, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
+    cblas_zherk(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, n, k, alpha, A, lda, beta, C, ldc);
     return MATX_OK;
 }
 
 static matx_status_t ref_dsyr2k(matx_layout_t layout,
-                                int uplo,
-                                int trans,
+                                matx_uplo_t uplo,
+                                matx_trans_t trans,
                                 matx_int64_t n,
                                 matx_int64_t k,
                                 matx_double alpha,
@@ -587,13 +587,13 @@ static matx_status_t ref_dsyr2k(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_dsyr2k(order, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    cblas_dsyr2k(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
     return MATX_OK;
 }
 
 static matx_status_t ref_zher2k(matx_layout_t layout,
-                                int uplo,
-                                int trans,
+                                matx_uplo_t uplo,
+                                matx_trans_t trans,
                                 matx_int64_t n,
                                 matx_int64_t k,
                                 const void* alpha,
@@ -610,7 +610,7 @@ static matx_status_t ref_zher2k(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_zher2k(order, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    cblas_zher2k(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
     return MATX_OK;
 }
 

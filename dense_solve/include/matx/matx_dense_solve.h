@@ -34,9 +34,9 @@ extern "C" {
 		void (*factor_dense_z_i8_destroy)(matx_factor_dense_z_i8_t* F);
 
 		// Cholesky
-		matx_status_t(*potrf_d_i8)(const matx_dense_d_i8_t A, int uplo, matx_factor_dense_d_i8_t** out_F);
+		matx_status_t(*potrf_d_i8)(const matx_dense_d_i8_t A, matx_uplo_t uplo, matx_factor_dense_d_i8_t** out_F);
 		matx_status_t(*potrs_d_i8)(const matx_factor_dense_d_i8_t* F, const matx_double* b, matx_double* x);
-		matx_status_t(*potrf_z_i8)(const matx_dense_z_i8_t A, int uplo, matx_factor_dense_z_i8_t** out_F);
+		matx_status_t(*potrf_z_i8)(const matx_dense_z_i8_t A, matx_uplo_t uplo, matx_factor_dense_z_i8_t** out_F);
 		matx_status_t(*potrs_z_i8)(const matx_factor_dense_z_i8_t* F, const matx_vec_z_i8_t b, matx_vec_z_i8_t x);
 
 		// Least squares (GELS)
@@ -138,7 +138,7 @@ extern "C" {
 	 *          A must be symmetric positive-definite.
 	 */
 	MATX_API matx_status_t matx_factor_chol_d_i8(const matx_dense_linsolve_t* ls,
-		const matx_dense_d_i8_t A, int uplo, matx_factor_dense_d_i8_t** out_F);
+		const matx_dense_d_i8_t A, matx_uplo_t uplo, matx_factor_dense_d_i8_t** out_F);
 
 	/**
 	 * @brief Solve a real SPD system using Cholesky factorization (DPOTRS)
@@ -152,7 +152,7 @@ extern "C" {
 	 * @formula A * x = b  =>  x = A^{-1} * b
 	 */
 	MATX_API matx_status_t matx_solve_chol_d_i8_oneshot(const matx_dense_linsolve_t* ls,
-		const matx_dense_d_i8_t A, int uplo, const matx_double* b, matx_double* x);
+		const matx_dense_d_i8_t A, matx_uplo_t uplo, const matx_double* b, matx_double* x);
 
 	/**
 	 * @brief Cholesky factorization of a complex HPD matrix (ZPOTRF)
@@ -161,7 +161,7 @@ extern "C" {
 	 *          A must be Hermitian positive-definite.
 	 */
 	MATX_API matx_status_t matx_factor_chol_z_i8(const matx_dense_linsolve_t* ls,
-		const matx_dense_z_i8_t A, int uplo, matx_factor_dense_z_i8_t** out_F);
+		const matx_dense_z_i8_t A, matx_uplo_t uplo, matx_factor_dense_z_i8_t** out_F);
 
 	/**
 	 * @brief Solve a complex HPD system using Cholesky factorization (ZPOTRS)

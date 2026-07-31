@@ -235,7 +235,7 @@ TEST(solve, chol_d_i8_3x3) {
 	double b[3] = {8.0, 16.0, 14.0};
 	double x[3] = {0.0, 0.0, 0.0};
 	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
-	matx_status_t st = matx_solve_chol_d_i8_oneshot(&ls, A, 'U', b, x);
+	matx_status_t st = matx_solve_chol_d_i8_oneshot(&ls, A, MATX_UPPER, b, x);
 	if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_d_i8_destroy(&a, A); return; }
 	ASSERT_EQ(st, MATX_OK);
 	EXPECT_NEAR(x[0], 1.0, 1e-9);
@@ -320,5 +320,181 @@ TEST(solve, gesvd_d_i8_2x2) {
 	free(U->data); free(U);
 	free(Vt->data); free(Vt);
 	matx_dense_d_i8_destroy(&a, A);
+	matx_vec_d_i8_destroy(&a, S);
+}
+
+TEST(solve, dense_complex_4x4_solve_one_shot) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_z_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+	for (size_t i = 0; i < 4; ++i)
+		for (size_t j = 0; j < 4; ++j) {
+			A->data[i + j * 4].real = (i == j) ? 3.0 : 0.0;
+			A->data[i + j * 4].imag = 0.0;
+		}
+
+	matx_vec_z_i8_t b = NULL, x = NULL;
+	ASSERT_EQ(matx_vec_z_i8_create(&a, &b, NULL, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 4), MATX_OK);
+	b->data[0] = {3.0, 0.0};
+	b->data[1] = {6.0, 0.0};
+	b->data[2] = {9.0, 0.0};
+	b->data[3] = {12.0, 0.0};
+
+	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+	matx_status_t st = matx_solve_dense_z_i8(&ls, A, b, x);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_vec_z_i8_destroy(&a, b);
+		matx_vec_z_i8_destroy(&a, x);
+		matx_dense_z_i8_destroy(&a, A);
+		return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(x->data[0].real, 1.0, 1e-10);
+	EXPECT_NEAR(x->data[3].real, 4.0, 1e-10);
+
+	matx_vec_z_i8_destroy(&a, b);
+	matx_vec_z_i8_destroy(&a, x);
+	matx_dense_z_i8_destroy(&a, A);
+}
+
+TEST(solve, sparse_complex_4x4_solve_one_shot) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_int64_t nnz = 4;
+	matx_int64_t coo_rows[4] = { 0, 1, 2, 3 };
+	matx_int64_t coo_cols[4] = { 0, 1, 2, 3 };
+	matx_complex_d_t coo_values[4] = { {2.0,0.0},{2.0,0.0},{2.0,0.0},{2.0,0.0} };
+
+	matx_coo_z_i8_t coo_A = NULL;
+	matx_coo_sparse_z_i8_create(&a, &coo_A, 4, 4, nnz, coo_rows, coo_cols, coo_values);
+	auto alloc = matx_alloc_default();
+	matx_csc_sparse_z_i8_create(&alloc, &coo_A->handle_csc, 4, 4, nnz);
+
+	matx_vec_z_i8_t b = NULL, x = NULL;
+	ASSERT_EQ(matx_vec_z_i8_create(&alloc, &b, NULL, 4), MATX_OK);
+	ASSERT_EQ(matx_vec_z_i8_create(&alloc, &x, NULL, 4), MATX_OK);
+	b->data[0] = {2.0, 0.0};
+	b->data[1] = {4.0, 0.0};
+	b->data[2] = {6.0, 0.0};
+	b->data[3] = {8.0, 0.0};
+
+	matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
+	matx_status_t st = matx_solve_csc_z_i8(&ls, coo_A, b, x);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_vec_z_i8_destroy(&alloc, b);
+		matx_vec_z_i8_destroy(&alloc, x);
+		matx_coo_sparse_z_i8_destroy(&alloc, coo_A);
+		return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(x->data[0].real, 1.0, 1e-10);
+	EXPECT_NEAR(x->data[1].real, 2.0, 1e-10);
+	EXPECT_NEAR(x->data[2].real, 3.0, 1e-10);
+	EXPECT_NEAR(x->data[3].real, 4.0, 1e-10);
+
+	matx_vec_z_i8_destroy(&alloc, b);
+	matx_vec_z_i8_destroy(&alloc, x);
+	matx_coo_sparse_z_i8_destroy(&alloc, coo_A);
+}
+
+TEST(solve, chol_z_i8_3x3) {
+	// A = [[4,2,0],[2,5,2],[0,2,5]] — Hermitian positive definite (all real)
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_z_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_ROW_MAJOR, 3, 3, NULL), MATX_OK);
+	double Adata[9] = {4,2,0, 2,5,2, 0,2,5};
+	for (int i = 0; i < 9; ++i) {
+		A->data[i].real = Adata[i];
+		A->data[i].imag = 0.0;
+	}
+	matx_vec_z_i8_t b = NULL, x = NULL;
+	ASSERT_EQ(matx_vec_z_i8_create(&a, &b, NULL, 3), MATX_OK);
+	ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 3), MATX_OK);
+	b->data[0] = {8.0, 0.0};
+	b->data[1] = {16.0, 0.0};
+	b->data[2] = {14.0, 0.0};
+
+	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+	matx_factor_dense_z_i8_t* F = NULL;
+	matx_status_t st = matx_factor_chol_z_i8(&ls, A, MATX_UPPER, &F);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_vec_z_i8_destroy(&a, b); matx_vec_z_i8_destroy(&a, x);
+		matx_dense_z_i8_destroy(&a, A); return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	st = matx_solve_chol_z_i8(&ls, F, b, x);
+	matx_factor_dense_z_i8_destroy(&ls, F);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_vec_z_i8_destroy(&a, b); matx_vec_z_i8_destroy(&a, x);
+		matx_dense_z_i8_destroy(&a, A); return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(x->data[0].real, 1.0, 1e-9);
+	EXPECT_NEAR(x->data[1].real, 2.0, 1e-9);
+	EXPECT_NEAR(x->data[2].real, 2.0, 1e-9);
+
+	matx_vec_z_i8_destroy(&a, b);
+	matx_vec_z_i8_destroy(&a, x);
+	matx_dense_z_i8_destroy(&a, A);
+}
+
+TEST(solve, gels_z_i8_overdetermined) {
+	// 3x2 overdetermined: A*x = b, least squares
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_z_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_ROW_MAJOR, 3, 2, NULL), MATX_OK);
+	double Adata[6] = {1,1, 1,2, 1,3};
+	for (int i = 0; i < 6; ++i) {
+		A->data[i].real = Adata[i];
+		A->data[i].imag = 0.0;
+	}
+	matx_vec_z_i8_t b = NULL, x = NULL;
+	ASSERT_EQ(matx_vec_z_i8_create(&a, &b, NULL, 3), MATX_OK);
+	ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 2), MATX_OK);
+	b->data[0] = {6.0, 0.0};
+	b->data[1] = {5.0, 0.0};
+	b->data[2] = {7.0, 0.0};
+
+	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+	matx_status_t st = matx_gels_z_i8(&ls, A, b, x);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_vec_z_i8_destroy(&a, b); matx_vec_z_i8_destroy(&a, x);
+		matx_dense_z_i8_destroy(&a, A); return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(x->data[0].real, 5.0, 1e-8);
+	EXPECT_NEAR(x->data[1].real, 0.5, 1e-8);
+
+	matx_vec_z_i8_destroy(&a, b);
+	matx_vec_z_i8_destroy(&a, x);
+	matx_dense_z_i8_destroy(&a, A);
+}
+
+TEST(solve, gesvd_z_i8_2x2) {
+	// A = [[3,0],[0,2]], singular values = {3, 2}
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_z_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_ROW_MAJOR, 2, 2, NULL), MATX_OK);
+	A->data[0] = {3,0}; A->data[1] = {0,0};
+	A->data[2] = {0,0}; A->data[3] = {2,0};
+
+	matx_vec_d_i8_t S = NULL;
+	ASSERT_EQ(matx_vec_d_i8_create(&a, &S, NULL, 2), MATX_OK);
+	matx_dense_z_i8_t U = NULL, Vt = NULL;
+	matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+	matx_status_t st = matx_gesvd_z_i8(&ls, A, S, &U, &Vt);
+	if (st == MATX_ERR_NOT_SUPPORTED) {
+		matx_dense_z_i8_destroy(&a, A);
+		matx_vec_d_i8_destroy(&a, S);
+		return;
+	}
+	ASSERT_EQ(st, MATX_OK);
+	EXPECT_NEAR(S->data[0], 3.0, 1e-9);
+	EXPECT_NEAR(S->data[1], 2.0, 1e-9);
+	ASSERT_NE(U, nullptr);
+	ASSERT_NE(Vt, nullptr);
+	free(U->data); free(U);
+	free(Vt->data); free(Vt);
+	matx_dense_z_i8_destroy(&a, A);
 	matx_vec_d_i8_destroy(&a, S);
 }

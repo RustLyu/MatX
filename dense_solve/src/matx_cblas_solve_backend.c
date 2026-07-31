@@ -127,7 +127,7 @@ matx_status_t matx_solve_dense_z_i8(const matx_dense_linsolve_t* ls,
 // ---- Cholesky wrappers ----
 
 matx_status_t matx_factor_chol_d_i8(const matx_dense_linsolve_t* ls,
-	const matx_dense_d_i8_t A, int uplo, matx_factor_dense_d_i8_t** out_F)
+	const matx_dense_d_i8_t A, matx_uplo_t uplo, matx_factor_dense_d_i8_t** out_F)
 {
 	if (!ls || !A || !out_F) {
 		MATX_ERROR("%s: invalid argument", __func__);
@@ -155,7 +155,7 @@ matx_status_t matx_solve_chol_d_i8(const matx_dense_linsolve_t* ls,
 }
 
 matx_status_t matx_solve_chol_d_i8_oneshot(const matx_dense_linsolve_t* ls,
-	const matx_dense_d_i8_t A, int uplo, const matx_double* b, matx_double* x) 
+	const matx_dense_d_i8_t A, matx_uplo_t uplo, const matx_double* b, matx_double* x) 
 {
 	if (!ls || !A || !b || !x) {
 		MATX_ERROR("%s: invalid argument", __func__);
@@ -171,7 +171,7 @@ matx_status_t matx_solve_chol_d_i8_oneshot(const matx_dense_linsolve_t* ls,
 }
 
 matx_status_t matx_factor_chol_z_i8(const matx_dense_linsolve_t* ls,
-	const matx_dense_z_i8_t A, int uplo, matx_factor_dense_z_i8_t** out_F) 
+	const matx_dense_z_i8_t A, matx_uplo_t uplo, matx_factor_dense_z_i8_t** out_F) 
 {
 	if (!ls || !A || !out_F) {
 		MATX_ERROR("%s: invalid argument", __func__);

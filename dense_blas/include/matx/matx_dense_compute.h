@@ -111,29 +111,29 @@ extern "C" {
 		matx_status_t(*zgerc)(matx_layout_t layout, matx_int64_t m, matx_int64_t n, const void* alpha,
 			const void* x, matx_int64_t incx, const void* y, matx_int64_t incy,
 			void* A, matx_int64_t lda);
-		matx_status_t(*dtrsv)(matx_layout_t layout, int uplo, int trans, int diag,
+		matx_status_t(*dtrsv)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 			matx_int64_t n, const matx_double* A, matx_int64_t lda, matx_double* x, matx_int64_t incx);
-		matx_status_t(*ztrsv)(matx_layout_t layout, int uplo, int trans, int diag,
+		matx_status_t(*ztrsv)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 			matx_int64_t n, const void* A, matx_int64_t lda, void* x, matx_int64_t incx);
 
 		// ---- Level 3 additions ----
-		matx_status_t(*dtrsm)(matx_layout_t layout, int side, int uplo, int trans, int diag,
+		matx_status_t(*dtrsm)(matx_layout_t layout, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 			matx_int64_t m, matx_int64_t n, matx_double alpha,
 			const matx_double* A, matx_int64_t lda, matx_double* B, matx_int64_t ldb);
-		matx_status_t(*ztrsm)(matx_layout_t layout, int side, int uplo, int trans, int diag,
+		matx_status_t(*ztrsm)(matx_layout_t layout, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 			matx_int64_t m, matx_int64_t n, const void* alpha,
 			const void* A, matx_int64_t lda, void* B, matx_int64_t ldb);
-		matx_status_t(*dsyrk)(matx_layout_t layout, int uplo, int trans,
+		matx_status_t(*dsyrk)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans,
 			matx_int64_t n, matx_int64_t k, matx_double alpha,
 			const matx_double* A, matx_int64_t lda, matx_double beta, matx_double* C, matx_int64_t ldc);
-		matx_status_t(*zherk)(matx_layout_t layout, int uplo, int trans,
+		matx_status_t(*zherk)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans,
 			matx_int64_t n, matx_int64_t k, matx_double alpha,
 			const void* A, matx_int64_t lda, matx_double beta, void* C, matx_int64_t ldc);
-		matx_status_t(*dsyr2k)(matx_layout_t layout, int uplo, int trans,
+		matx_status_t(*dsyr2k)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans,
 			matx_int64_t n, matx_int64_t k, matx_double alpha,
 			const matx_double* A, matx_int64_t lda, const matx_double* B, matx_int64_t ldb,
 			matx_double beta, matx_double* C, matx_int64_t ldc);
-		matx_status_t(*zher2k)(matx_layout_t layout, int uplo, int trans,
+		matx_status_t(*zher2k)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans,
 			matx_int64_t n, matx_int64_t k, const void* alpha,
 			const void* A, matx_int64_t lda, const void* B, matx_int64_t ldb,
 			matx_double beta, void* C, matx_int64_t ldc);
@@ -304,7 +304,7 @@ extern "C" {
 	 * @formula x := op(A)^{-1} * x
 	 *          where op(A) = A, A^T, or A^H; A is n-by-n triangular
 	 */
-	MATX_API matx_status_t matx_trsv_d_i8(const matx_dense_backend_t* blas, int uplo, int trans, int diag,
+	MATX_API matx_status_t matx_trsv_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 		const matx_dense_d_i8_t A, matx_vec_d_i8_t x);
 
 	/**
@@ -312,7 +312,7 @@ extern "C" {
 	 * @formula x := op(A)^{-1} * x
 	 *          where op(A) = A, A^T, or A^H; A is n-by-n triangular
 	 */
-	MATX_API matx_status_t matx_trsv_z_i8(const matx_dense_backend_t* blas, int uplo, int trans, int diag,
+	MATX_API matx_status_t matx_trsv_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 		const matx_dense_z_i8_t A, matx_vec_z_i8_t x);
 
 	// ---- Level 3: triangular solve / symmetric rank-k update ----
@@ -323,7 +323,7 @@ extern "C" {
 	 *          or  B := alpha * B * op(A)^{-1}  (side=R)
 	 *          where op(A) = A, A^T, or A^H; A is triangular
 	 */
-	MATX_API matx_status_t matx_trsm_d_i8(const matx_dense_backend_t* blas, int side, int uplo, int trans, int diag,
+	MATX_API matx_status_t matx_trsm_d_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 		matx_double alpha, const matx_dense_d_i8_t A, matx_dense_d_i8_t B);
 
 	/**
@@ -332,7 +332,7 @@ extern "C" {
 	 *          or  B := alpha * B * op(A)^{-1}  (side=R)
 	 *          where op(A) = A, A^T, or A^H; A is triangular
 	 */
-	MATX_API matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas, int side, int uplo, int trans, int diag,
+	MATX_API matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
         matx_complex_d_t alpha, const matx_dense_z_i8_t A, matx_dense_z_i8_t B);
 
 	/**
@@ -341,7 +341,7 @@ extern "C" {
 	 *          or  C := alpha * A^T * A + beta * C  (trans=T)
 	 *          C is n-by-n symmetric, A is n-by-k or k-by-n
 	 */
-	MATX_API matx_status_t matx_syrk_d_i8(const matx_dense_backend_t* blas, int uplo, int trans,
+	MATX_API matx_status_t matx_syrk_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
 		matx_double alpha, const matx_dense_d_i8_t A, matx_double beta, matx_dense_d_i8_t C);
 
 	/**
@@ -350,7 +350,7 @@ extern "C" {
 	 *          or  C := alpha * A^H * A + beta * C  (trans=T)
 	 *          C is n-by-n Hermitian, A is n-by-k or k-by-n, alpha and beta are real
 	 */
-	MATX_API matx_status_t matx_herk_z_i8(const matx_dense_backend_t* blas, int uplo, int trans,
+	MATX_API matx_status_t matx_herk_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
 		matx_double alpha, const matx_dense_z_i8_t A, matx_double beta, matx_dense_z_i8_t C);
 
 	/**
@@ -359,7 +359,7 @@ extern "C" {
 	 *          or  C := alpha * A^T * B + alpha * B^T * A + beta * C  (trans=T)
 	 *          C is n-by-n symmetric, A and B are n-by-k or k-by-n
 	 */
-	MATX_API matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas, int uplo, int trans,
+	MATX_API matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
 		matx_double alpha, const matx_dense_d_i8_t A, const matx_dense_d_i8_t B,
 		matx_double beta, matx_dense_d_i8_t C);
 
@@ -369,7 +369,7 @@ extern "C" {
 	 *          or  C := alpha * A^H * B + conj(alpha) * B^H * A + beta * C  (trans=T)
 	 *          C is n-by-n Hermitian, A and B are n-by-k or k-by-n, beta is real
 	 */
-	MATX_API matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas, int uplo, int trans,
+	MATX_API matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
         matx_complex_d_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
 		matx_double beta, matx_dense_z_i8_t C);
 

@@ -21,7 +21,7 @@ struct matx_factor_dense_d_i8_t {
 	matx_double* lu;
 	matx_int64_t* piv;
 	matx_layout_t layout;
-	int uplo;
+	matx_uplo_t uplo;
 };
 
 struct matx_factor_dense_z_i8_t {
@@ -30,7 +30,7 @@ struct matx_factor_dense_z_i8_t {
 	matx_double* lu;
 	matx_int64_t* piv;
 	matx_layout_t layout;
-	int uplo;
+	matx_uplo_t uplo;
 };
 
 static void ss_factor_dense_d_i8_destroy(matx_factor_dense_d_i8_t* F) {
@@ -240,7 +240,11 @@ static matx_status_t ss_solve_dense_z_i8(const matx_factor_dense_z_i8_t* F,
 
 // ---- Cholesky ----
 
-static matx_status_t ss_potrf_d_i8(const matx_dense_d_i8_t A, int uplo, matx_factor_dense_d_i8_t** out_F) {
+static inline char matx_uplo_to_lapack(matx_uplo_t uplo) {
+	return (uplo == MATX_UPPER) ? 'U' : 'L';
+}
+
+static matx_status_t ss_potrf_d_i8(const matx_dense_d_i8_t A, matx_uplo_t uplo, matx_factor_dense_d_i8_t** out_F) {
 	if (!A || !out_F) {
 		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
@@ -273,7 +277,7 @@ static matx_status_t ss_potrf_d_i8(const matx_dense_d_i8_t A, int uplo, matx_fac
 	ss_pack_d_i8(A->layout, n, n, A->stride, A->data, F->lu);
 
 	matx_int64_t info = LAPACKE_dpotrf(ss_layout_to_lapack(A->layout),
-		uplo, n, F->lu, lda);
+		matx_uplo_to_lapack(uplo), n, F->lu, lda);
 	if (info != 0) {
 		MATX_ERROR("LAPACKE_dpotrf error: %d", info);
 		free(F->lu); free(F);
@@ -293,7 +297,7 @@ static matx_status_t ss_potrs_d_i8(const matx_factor_dense_d_i8_t* F, const matx
 
 	matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
 	matx_int64_t info = LAPACKE_dpotrs(ss_layout_to_lapack(F->layout),
-		F->uplo, F->n, 1, F->lu, F->lda, x, ldb);
+		matx_uplo_to_lapack(F->uplo), F->n, 1, F->lu, F->lda, x, ldb);
 	if (info != 0) {
 		MATX_ERROR("LAPACKE_dpotrs error: %d", info);
 		return MATX_ERR_INTERNAL;
@@ -301,7 +305,7 @@ static matx_status_t ss_potrs_d_i8(const matx_factor_dense_d_i8_t* F, const matx
 	return MATX_OK;
 }
 
-static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, int uplo, matx_factor_dense_z_i8_t** out_F) {
+static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, matx_uplo_t uplo, matx_factor_dense_z_i8_t** out_F) {
 	if (!A || !out_F) {
 		MATX_ERROR("%s: invalid argument", __func__);
 		return MATX_ERR_INVALID_ARG;
@@ -334,7 +338,7 @@ static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A, int uplo, matx_fac
 	ss_pack_z_i8(A->layout, n, n, A->stride, A->data, (matx_complex_d_t*)F->lu);
 
 	matx_int64_t info = LAPACKE_zpotrf(ss_layout_to_lapack(A->layout),
-		uplo, n, (lapack_complex_double*)F->lu, lda);
+		matx_uplo_to_lapack(uplo), n, (lapack_complex_double*)F->lu, lda);
 	if (info != 0) {
 		MATX_ERROR("LAPACKE_zpotrf error: %d", info);
 		free(F->lu); free(F);
@@ -353,7 +357,7 @@ static matx_status_t ss_potrs_z_i8(const matx_factor_dense_z_i8_t* F, const matx
 
 	matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
 	matx_int64_t info = LAPACKE_zpotrs(ss_layout_to_lapack(F->layout),
-		F->uplo, F->n, 1, (lapack_complex_double*)F->lu, F->lda,
+		matx_uplo_to_lapack(F->uplo), F->n, 1, (lapack_complex_double*)F->lu, F->lda,
 		(lapack_complex_double*)x->data, ldb);
 	if (info != 0) {
 		MATX_ERROR("LAPACKE_zpotrs error: %d", info);

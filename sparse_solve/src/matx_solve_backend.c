@@ -1,4 +1,4 @@
-#include "matx/matx_sparse_solve.h"
+﻿#include "matx/matx_sparse_solve.h"
 #include "matx/matx_log.h"
 
 // Forward decls
@@ -152,6 +152,7 @@ matx_status_t matx_solve_csc_z_i8(const matx_sparse_linsolve_t* ls,
       return MATX_ERR_INVALID_ARG;
   }
   matx_factor_sparse_z_i8_t F;
+  F.reserved = NULL;
   matx_status_t st = matx_factor_csc_z_i8(ls, A, &F);
   if (st != MATX_OK) 
       return st;

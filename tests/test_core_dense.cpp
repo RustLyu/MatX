@@ -99,3 +99,29 @@ TEST(core_dense, f64_trace) {
 	EXPECT_NEAR(tr, 5.0, 1e-12);
 	matx_dense_d_i8_destroy(&a, A);
 }
+
+TEST(core_dense, dense_z_i8_fill_zeros) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_z_i8_t M = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &M, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+	matx_complex_d_t val = { 5.0, 2.0 };
+	ASSERT_EQ(matx_dense_z_i8_fill(M, val), MATX_OK);
+	EXPECT_NEAR(M->data[0].real, 5.0, 1e-12);
+	EXPECT_NEAR(M->data[0].imag, 2.0, 1e-12);
+	ASSERT_EQ(matx_dense_z_i8_zeros(M), MATX_OK);
+	EXPECT_NEAR(M->data[4].real, 0.0, 1e-12);
+	EXPECT_NEAR(M->data[4].imag, 0.0, 1e-12);
+	matx_dense_z_i8_destroy(&a, M);
+}
+
+TEST(core_dense, dense_z_i8_trace) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_complex_d_t data[4] = { {1,0}, {0,0}, {0,0}, {4,0} };
+	matx_dense_z_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, data), MATX_OK);
+	matx_complex_d_t tr = { 0, 0 };
+	ASSERT_EQ(matx_dense_z_i8_trace(A, &tr), MATX_OK);
+	EXPECT_NEAR(tr.real, 5.0, 1e-12);
+	EXPECT_NEAR(tr.imag, 0.0, 1e-12);
+	matx_dense_z_i8_destroy(&a, A);
+}

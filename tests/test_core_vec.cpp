@@ -58,3 +58,19 @@ TEST(core_vec, vec_d_i8_fill_zeros_ones) {
 	EXPECT_NEAR(v->data[2], 1.0, 1e-12);
 	matx_vec_d_i8_destroy(&a, v);
 }
+
+TEST(core_vec, vec_z_i8_fill_zeros) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_vec_z_i8_t v = NULL;
+	ASSERT_EQ(matx_vec_z_i8_create(&a, &v, NULL, 4), MATX_OK);
+	matx_complex_d_t val = { 7.0, 3.0 };
+	ASSERT_EQ(matx_vec_z_i8_fill(v, val), MATX_OK);
+	EXPECT_NEAR(v->data[0].real, 7.0, 1e-12);
+	EXPECT_NEAR(v->data[0].imag, 3.0, 1e-12);
+	EXPECT_NEAR(v->data[3].real, 7.0, 1e-12);
+	EXPECT_NEAR(v->data[3].imag, 3.0, 1e-12);
+	ASSERT_EQ(matx_vec_z_i8_zeros(v), MATX_OK);
+	EXPECT_NEAR(v->data[0].real, 0.0, 1e-12);
+	EXPECT_NEAR(v->data[0].imag, 0.0, 1e-12);
+	matx_vec_z_i8_destroy(&a, v);
+}

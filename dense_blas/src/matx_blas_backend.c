@@ -360,9 +360,9 @@ matx_status_t matx_gerc_z_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_trsv_d_i8(const matx_dense_backend_t* blas,
-                             int uplo,
-                             int trans,
-                             int diag,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
+                             matx_diag_t diag,
                              const matx_dense_d_i8_t A,
                              matx_vec_d_i8_t x)
 {
@@ -383,9 +383,9 @@ matx_status_t matx_trsv_d_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_trsv_z_i8(const matx_dense_backend_t* blas,
-                             int uplo,
-                             int trans,
-                             int diag,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
+                             matx_diag_t diag,
                              const matx_dense_z_i8_t A,
                              matx_vec_z_i8_t x)
 {
@@ -408,10 +408,10 @@ matx_status_t matx_trsv_z_i8(const matx_dense_backend_t* blas,
 // ---- Level 3 wrappers ----
 
 matx_status_t matx_trsm_d_i8(const matx_dense_backend_t* blas,
-                             int side,
-                             int uplo,
-                             int trans,
-                             int diag,
+                             matx_side_t side,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
+                             matx_diag_t diag,
                              matx_double alpha,
                              const matx_dense_d_i8_t A,
                              matx_dense_d_i8_t B)
@@ -443,10 +443,10 @@ matx_status_t matx_trsm_d_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas,
-                             int side,
-                             int uplo,
-                             int trans,
-                             int diag,
+                             matx_side_t side,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
+                             matx_diag_t diag,
                              matx_complex_d_t alpha,
                              const matx_dense_z_i8_t A,
                              matx_dense_z_i8_t B)
@@ -478,8 +478,8 @@ matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_syrk_d_i8(const matx_dense_backend_t* blas,
-                             int uplo,
-                             int trans,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
                              matx_double alpha,
                              const matx_dense_d_i8_t A,
                              matx_double beta,
@@ -508,8 +508,8 @@ matx_status_t matx_syrk_d_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_herk_z_i8(const matx_dense_backend_t* blas,
-                             int uplo,
-                             int trans,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
                              matx_double alpha,
                              const matx_dense_z_i8_t A,
                              matx_double beta,
@@ -538,8 +538,8 @@ matx_status_t matx_herk_z_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas,
-                              int uplo,
-                              int trans,
+                              matx_uplo_t uplo,
+                              matx_trans_t trans,
                               matx_double alpha,
                               const matx_dense_d_i8_t A,
                               const matx_dense_d_i8_t B,
@@ -580,8 +580,8 @@ matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas,
 }
 
 matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas,
-                              int uplo,
-                              int trans,
+                              matx_uplo_t uplo,
+                              matx_trans_t trans,
                               matx_complex_d_t alpha,
                               const matx_dense_z_i8_t A,
                               const matx_dense_z_i8_t B,
