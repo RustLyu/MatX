@@ -406,6 +406,51 @@ MATX_API matx_status_t matx_dense_z_i8_get_diag(const matx_alloc_t* alloc,
                                                 const matx_dense_z_i8_t A,
                                                 matx_vec_z_i8_t* out);
 
+// ---- Submatrix block copy ----
+
+
+/**
+ * @brief Extract a contiguous block from a real dense matrix (deep copy)
+ * @formula out[i][j] := A[rs + i][cs + j],  i = 0,...,(re-rs)-1; j = 0,...,(ce-cs)-1
+ */
+MATX_API matx_status_t matx_dense_d_i8_get_block(const matx_alloc_t* alloc,
+                                                  const matx_dense_d_i8_t A,
+                                                  matx_int64_t rs, matx_int64_t re,
+                                                  matx_int64_t cs, matx_int64_t ce,
+                                                  matx_dense_d_i8_t* out);
+
+/**
+ * @brief Extract a contiguous block from a complex dense matrix (deep copy)
+ * @formula out[i][j] := A[rs + i][cs + j],  i = 0,...,(re-rs)-1; j = 0,...,(ce-cs)-1
+ */
+MATX_API matx_status_t matx_dense_z_i8_get_block(const matx_alloc_t* alloc,
+                                                  const matx_dense_z_i8_t A,
+                                                  matx_int64_t rs, matx_int64_t re,
+                                                  matx_int64_t cs, matx_int64_t ce,
+                                                  matx_dense_z_i8_t* out);
+
+/**
+ * @brief Copy a block from a real dense matrix into another at a target position
+ * @formula B[dr + i][dc + j] := A[rs + i][cs + j],  i = 0,...,(re-rs)-1; j = 0,...,(ce-cs)-1
+ */
+MATX_API matx_status_t matx_dense_d_i8_set_block(
+    const matx_dense_d_i8_t A,
+    matx_int64_t rs, matx_int64_t re,
+    matx_int64_t cs, matx_int64_t ce,
+    matx_dense_d_i8_t B,
+    matx_int64_t dr, matx_int64_t dc);
+
+/**
+ * @brief Copy a block from a complex dense matrix into another at a target position
+ * @formula B[dr + i][dc + j] := A[rs + i][cs + j],  i = 0,...,(re-rs)-1; j = 0,...,(ce-cs)-1
+ */
+MATX_API matx_status_t matx_dense_z_i8_set_block(
+    const matx_dense_z_i8_t A,
+    matx_int64_t rs, matx_int64_t re,
+    matx_int64_t cs, matx_int64_t ce,
+    matx_dense_z_i8_t B,
+    matx_int64_t dr, matx_int64_t dc);
+
 // ---- Cumulative sum ----
 
 MATX_API matx_status_t matx_vec_d_i8_cumsum(const matx_alloc_t* alloc,

@@ -192,6 +192,80 @@ matx_status_t matx_dense_##PREFIX##_get_diag(const matx_alloc_t* alloc,         
     return MATX_OK;                                                            \
 }
 
+#define MATX_DEF_GET_BLOCK(PREFIX, OPAQUE, SCA_TYPE)                         \
+matx_status_t matx_dense_##PREFIX##_get_block(const matx_alloc_t* alloc,       \
+                                               const matx_dense_##PREFIX##_t A,\
+                                               matx_int64_t rs,                \
+                                               matx_int64_t re,                \
+                                               matx_int64_t cs,                \
+                                               matx_int64_t ce,                \
+                                               matx_dense_##PREFIX##_t* out)   \
+{                                                                              \
+    if (!alloc || !A || !out || rs < 0 || re <= rs || cs < 0 || ce <= cs       \
+        || re > A->nrows || ce > A->ncols) {                                   \
+        MATX_ERROR("%s: invalid argument", __func__);                          \
+        return MATX_ERR_INVALID_ARG;                                           \
+    }                                                                          \
+    const matx_int64_t nrows_out = re - rs;                                    \
+    const matx_int64_t ncols_out = ce - cs;                                    \
+    matx_status_t st = matx_dense_##PREFIX##_create(alloc, out,                 \
+                                                     A->layout,                 \
+                                                     nrows_out, ncols_out,      \
+                                                     NULL);                     \
+    if (st != MATX_OK)                                                         \
+        return st;                                                             \
+    for (matx_int64_t j = 0; j < ncols_out; ++j) {                             \
+        for (matx_int64_t i = 0; i < nrows_out; ++i) {                         \
+            matx_int64_t src_idx = (A->layout == MATX_COL_MAJOR)                \
+                ? (rs + i) + (cs + j) * A->stride                               \
+                : (rs + i) * A->stride + (cs + j);                              \
+            matx_int64_t dst_idx = (A->layout == MATX_COL_MAJOR)                \
+                ? i + j * (*out)->stride                                        \
+                : i * (*out)->stride + j;                                       \
+            (*out)->data[dst_idx] = A->data[src_idx];                           \
+        }                                                                      \
+    }                                                                          \
+    return MATX_OK;                                                            \
+}
+
+#define MATX_DEF_SET_BLOCK(PREFIX, OPAQUE, SCA_TYPE)                         \
+matx_status_t matx_dense_##PREFIX##_set_block(                                 \
+    const matx_dense_##PREFIX##_t A,                                           \
+    matx_int64_t rs, matx_int64_t re,                                          \
+    matx_int64_t cs, matx_int64_t ce,                                          \
+    matx_dense_##PREFIX##_t B,                                                 \
+    matx_int64_t dr, matx_int64_t dc)                                          \
+{                                                                              \
+    if (!A || !B || rs < 0 || re <= rs || cs < 0 || ce <= cs                   \
+        || dr < 0 || dc < 0) {                                                 \
+        MATX_ERROR("%s: invalid argument", __func__);                          \
+        return MATX_ERR_INVALID_ARG;                                           \
+    }                                                                          \
+    const matx_int64_t nrows_blk = re - rs;                                    \
+    const matx_int64_t ncols_blk = ce - cs;                                    \
+    if (re > A->nrows || ce > A->ncols                                         \
+        || dr + nrows_blk > B->nrows || dc + ncols_blk > B->ncols) {           \
+        MATX_ERROR("%s: block out of bounds", __func__);                       \
+        return MATX_ERR_INVALID_ARG;                                           \
+    }                                                                          \
+    if (A->layout != B->layout) {                                              \
+        MATX_ERROR("%s: layout mismatch", __func__);                           \
+        return MATX_ERR_INVALID_ARG;                                           \
+    }                                                                          \
+    for (matx_int64_t j = 0; j < ncols_blk; ++j) {                             \
+        for (matx_int64_t i = 0; i < nrows_blk; ++i) {                         \
+            matx_int64_t src_idx = (A->layout == MATX_COL_MAJOR)                \
+                ? (rs + i) + (cs + j) * A->stride                               \
+                : (rs + i) * A->stride + (cs + j);                              \
+            matx_int64_t dst_idx = (B->layout == MATX_COL_MAJOR)                \
+                ? (dr + i) + (dc + j) * B->stride                               \
+                : (dr + i) * B->stride + (dc + j);                              \
+            B->data[dst_idx] = A->data[src_idx];                                \
+        }                                                                      \
+    }                                                                          \
+    return MATX_OK;                                                            \
+}
+
 /* ---- Type-agnostic expansions ---- */
 
 MATX_DEF_DENSE_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double)
@@ -210,6 +284,10 @@ MATX_DEF_DIAG_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double)
 MATX_DEF_DIAG_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
 MATX_DEF_GET_DIAG(d_i8, matx_dense_d_i8_opaque_t, matx_double)
 MATX_DEF_GET_DIAG(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_GET_BLOCK(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_GET_BLOCK(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_SET_BLOCK(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_SET_BLOCK(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
 
 #undef MATX_DEF_DENSE_CREATE
 #undef MATX_DEF_DENSE_DUP
@@ -219,6 +297,8 @@ MATX_DEF_GET_DIAG(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
 #undef MATX_DEF_DENSE_ZEROS
 #undef MATX_DEF_DIAG_CREATE
 #undef MATX_DEF_GET_DIAG
+#undef MATX_DEF_GET_BLOCK
+#undef MATX_DEF_SET_BLOCK
 
 /* ---- Single-type: ones (real only) ---- */
 
