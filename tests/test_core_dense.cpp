@@ -125,3 +125,169 @@ TEST(core_dense, dense_z_i8_trace) {
 	EXPECT_NEAR(tr.imag, 0.0, 1e-12);
 	matx_dense_z_i8_destroy(&a, A);
 }
+
+TEST(core_dense, f64_get_block_col_major) {
+	matx_alloc_t a = matx_alloc_default();
+	/* 4x4 col-major: data[i + j*4] */
+	double data[16] = {
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		9,10,11,12,
+		13,14,15,16
+	};
+	matx_dense_d_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, data), MATX_OK);
+
+	/* extract A[1:3, 1:3] = [ [6,7], [10,11] ] */
+	matx_dense_d_i8_t B = NULL;
+	ASSERT_EQ(matx_dense_d_i8_get_block(&a, A, 1, 3, 1, 3, &B), MATX_OK);
+	EXPECT_EQ(B->nrows, 2u);
+	EXPECT_EQ(B->ncols, 2u);
+	EXPECT_EQ(B->layout, MATX_COL_MAJOR);
+	EXPECT_NEAR(B->data[0 + 0 * B->stride], 6.0, 1e-12);
+	EXPECT_NEAR(B->data[1 + 0 * B->stride], 10.0, 1e-12);
+	EXPECT_NEAR(B->data[0 + 1 * B->stride], 7.0, 1e-12);
+	EXPECT_NEAR(B->data[1 + 1 * B->stride], 11.0, 1e-12);
+
+	matx_dense_d_i8_destroy(&a, A);
+	matx_dense_d_i8_destroy(&a, B);
+}
+
+TEST(core_dense, z64_get_block_col_major) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_z_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+	for (matx_int64_t i = 0; i < 9; ++i) {
+		A->data[i].real = (matx_double)(i + 1);
+		A->data[i].imag = (matx_double)(i + 1) * 0.1;
+	}
+
+	/* extract A[0:2, 0:2] = top-left 2x2 */
+	matx_dense_z_i8_t B = NULL;
+	ASSERT_EQ(matx_dense_z_i8_get_block(&a, A, 0, 2, 0, 2, &B), MATX_OK);
+	EXPECT_EQ(B->nrows, 2u);
+	EXPECT_EQ(B->ncols, 2u);
+	EXPECT_NEAR(B->data[0 + 0 * B->stride].real, 1.0, 1e-12);
+	EXPECT_NEAR(B->data[0 + 0 * B->stride].imag, 0.1, 1e-12);
+	EXPECT_NEAR(B->data[1 + 1 * B->stride].real, 5.0, 1e-12);
+
+	matx_dense_z_i8_destroy(&a, A);
+	matx_dense_z_i8_destroy(&a, B);
+}
+
+TEST(core_dense, f64_get_block_row_major) {
+	matx_alloc_t a = matx_alloc_default();
+	/* 3x3 row-major: data[i*3 + j] */
+	double data[9] = {
+		1, 2, 3,
+		4, 5, 6,
+		7, 8, 9
+	};
+	matx_dense_d_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_ROW_MAJOR, 3, 3, data), MATX_OK);
+
+	/* extract A[0:2, 1:3] = [ [2,3], [5,6] ] */
+	matx_dense_d_i8_t B = NULL;
+	ASSERT_EQ(matx_dense_d_i8_get_block(&a, A, 0, 2, 1, 3, &B), MATX_OK);
+	EXPECT_EQ(B->nrows, 2u);
+	EXPECT_EQ(B->ncols, 2u);
+	EXPECT_EQ(B->layout, MATX_ROW_MAJOR);
+	EXPECT_NEAR(B->data[0 * B->stride + 0], 2.0, 1e-12);
+	EXPECT_NEAR(B->data[0 * B->stride + 1], 3.0, 1e-12);
+	EXPECT_NEAR(B->data[1 * B->stride + 0], 5.0, 1e-12);
+	EXPECT_NEAR(B->data[1 * B->stride + 1], 6.0, 1e-12);
+
+	matx_dense_d_i8_destroy(&a, A);
+	matx_dense_d_i8_destroy(&a, B);
+}
+
+TEST(core_dense, get_block_invalid) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_d_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+
+	matx_dense_d_i8_t B = NULL;
+	EXPECT_NE(matx_dense_d_i8_get_block(&a, A, -1, 2, 0, 2, &B), MATX_OK);
+	EXPECT_NE(matx_dense_d_i8_get_block(&a, A, 2, 1, 0, 2, &B), MATX_OK);
+	EXPECT_NE(matx_dense_d_i8_get_block(&a, A, 0, 5, 0, 2, &B), MATX_OK);
+
+	matx_dense_d_i8_destroy(&a, A);
+}
+
+TEST(core_dense, f64_set_block_col_major) {
+	matx_alloc_t a = matx_alloc_default();
+	/* 3x3 col-major src, fill with 1..9 */
+	matx_dense_d_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+	for (matx_int64_t i = 0; i < 9; ++i)
+		A->data[i] = (matx_double)(i + 1);
+
+	/* 4x4 col-major dst, zeroed */
+	matx_dense_d_i8_t B = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+	ASSERT_EQ(matx_dense_d_i8_zeros(B), MATX_OK);
+
+	/* copy A[0:2, 0:2] = [1,2;4,5] into B at (1,1) */
+	ASSERT_EQ(matx_dense_d_i8_set_block(A, 0, 2, 0, 2, B, 1, 1), MATX_OK);
+
+	EXPECT_NEAR(B->data[1 + 1 * B->stride], 1.0, 1e-12);  /* B(1,1) = A(0,0) */
+	EXPECT_NEAR(B->data[2 + 1 * B->stride], 4.0, 1e-12);  /* B(2,1) = A(1,0) */
+	EXPECT_NEAR(B->data[1 + 2 * B->stride], 2.0, 1e-12);  /* B(1,2) = A(0,1) */
+	EXPECT_NEAR(B->data[0 + 0 * B->stride], 0.0, 1e-12);  /* B(0,0) untouched */
+
+	matx_dense_d_i8_destroy(&a, A);
+	matx_dense_d_i8_destroy(&a, B);
+}
+
+TEST(core_dense, z64_set_block_col_major) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_z_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+	A->data[0].real = 1.0; A->data[0].imag = 0.5;
+	A->data[1].real = 2.0; A->data[1].imag = 0.0;
+	A->data[2].real = 3.0; A->data[2].imag = -0.5;
+	A->data[3].real = 4.0; A->data[3].imag = 0.0;
+
+	matx_dense_z_i8_t B = NULL;
+	ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+	ASSERT_EQ(matx_dense_z_i8_zeros(B), MATX_OK);
+
+	/* copy entire A into B at (0,0) */
+	ASSERT_EQ(matx_dense_z_i8_set_block(A, 0, 2, 0, 2, B, 0, 0), MATX_OK);
+	EXPECT_NEAR(B->data[0 + 0 * B->stride].real, 1.0, 1e-12);
+	EXPECT_NEAR(B->data[0 + 0 * B->stride].imag, 0.5, 1e-12);
+	EXPECT_NEAR(B->data[1 + 1 * B->stride].real, 4.0, 1e-12);
+	EXPECT_NEAR(B->data[1 + 1 * B->stride].imag, 0.0, 1e-12);
+
+	matx_dense_z_i8_destroy(&a, A);
+	matx_dense_z_i8_destroy(&a, B);
+}
+
+TEST(core_dense, set_block_out_of_bounds) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_d_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+
+	matx_dense_d_i8_t B = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+
+	/* A[0:3, 0:3] cannot fit in B at (0,0) since B is only 2x2 */
+	EXPECT_NE(matx_dense_d_i8_set_block(A, 0, 3, 0, 3, B, 0, 0), MATX_OK);
+
+	matx_dense_d_i8_destroy(&a, A);
+	matx_dense_d_i8_destroy(&a, B);
+}
+
+TEST(core_dense, set_block_layout_mismatch) {
+	matx_alloc_t a = matx_alloc_default();
+	matx_dense_d_i8_t A = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+
+	matx_dense_d_i8_t B = NULL;
+	ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_ROW_MAJOR, 4, 4, NULL), MATX_OK);
+
+	EXPECT_NE(matx_dense_d_i8_set_block(A, 0, 2, 0, 2, B, 0, 0), MATX_OK);
+
+	matx_dense_d_i8_destroy(&a, A);
+	matx_dense_d_i8_destroy(&a, B);
+}
