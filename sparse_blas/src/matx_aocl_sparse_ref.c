@@ -1,4 +1,4 @@
-#include "matx/matx_log.h"
+﻿#include "matx/matx_log.h"
 #include "matx/matx_sparse_compute.h"
 
 #include <limits.h>
@@ -14,10 +14,10 @@
 
 // y = \alpha \, op(A) \, x + \beta \, y,
 static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_t alpha,
-                                 matx_coo_z_i8_t A,
-                                 matx_vec_z_i8_t x,
-                                 matx_complex_d_t beta,
-                                 matx_vec_z_i8_t y)
+                                        matx_coo_z_i8_t A,
+                                        matx_vec_z_i8_t x,
+                                        matx_complex_d_t beta,
+                                        matx_vec_z_i8_t y)
 {
 #if MATX_HAVE_AOCL_SPARSE
     if (!A || !x || !y) {
@@ -67,10 +67,10 @@ static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_t alpha,
 
 //    C = \alpha \, op(A) \, B + \beta \, C,
 static matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_t alpha,
-                                 matx_coo_z_i8_t A,
-                                 const matx_dense_z_i8_t B,
-                                 matx_complex_d_t beta,
-                                 matx_dense_z_i8_t C)
+                                        matx_coo_z_i8_t A,
+                                        const matx_dense_z_i8_t B,
+                                        matx_complex_d_t beta,
+                                        matx_dense_z_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
     if (!A || !B || !C) {
@@ -163,10 +163,10 @@ static matx_status_t ref_spmv_d_i8_aocl(
 }
 //C = α * A * B + β * C
 static matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
-                                 matx_coo_d_i8_t A,
-                                 matx_dense_d_i8_t B,
-                                 matx_double beta,
-                                 matx_dense_d_i8_t C)
+                                        matx_coo_d_i8_t A,
+                                        matx_dense_d_i8_t B,
+                                        matx_double beta,
+                                        matx_dense_d_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
     if (!A || !B || !C) {
@@ -263,10 +263,10 @@ static matx_status_t ref_dsp2md_d_i8_aocl(
 
 // C := α · op(A) · op(B) + β · C
 static matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_t alpha,
-                                   matx_coo_z_i8_t A,
-                                   matx_coo_z_i8_t B,
-                                   matx_complex_d_t beta,
-                                   matx_dense_z_i8_t C)
+                                          matx_coo_z_i8_t A,
+                                          matx_coo_z_i8_t B,
+                                          matx_complex_d_t beta,
+                                          matx_dense_z_i8_t C)
 {
 #if MATX_HAVE_AOCL_SPARSE
     if (!A || !B || !C) {
@@ -537,10 +537,10 @@ static matx_status_t ref_spadd_d_i8_aocl(
 }
 
 static matx_status_t ref_spadd_z_i8_aocl(matx_complex_d_t alpha,
-                                  matx_coo_z_i8_t A,
-                                  matx_complex_d_t beta,
-                                  matx_coo_z_i8_t B,
-                                  matx_coo_z_i8_t out)
+                                         matx_coo_z_i8_t A,
+                                         matx_complex_d_t beta,
+                                         matx_coo_z_i8_t B,
+                                         matx_coo_z_i8_t out)
 {
     if (!A || !B || !out) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -691,7 +691,9 @@ static matx_status_t ref_spcolsums_z_i8_aocl(matx_coo_z_i8_t A, matx_vec_z_i8_t 
 
 // ---- Diagonal extraction ----
 
-static matx_status_t ref_spdiag_d_i8_aocl(matx_coo_d_i8_t A, matx_int64_t offset, matx_vec_d_i8_t out)
+static matx_status_t ref_spdiag_d_i8_aocl(matx_coo_d_i8_t A,
+                                          matx_int64_t offset,
+                                          matx_vec_d_i8_t out)
 {
     if (!A || !out) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -718,7 +720,9 @@ static matx_status_t ref_spdiag_d_i8_aocl(matx_coo_d_i8_t A, matx_int64_t offset
     return MATX_OK;
 }
 
-static matx_status_t ref_spdiag_z_i8_aocl(matx_coo_z_i8_t A, matx_int64_t offset, matx_vec_z_i8_t out)
+static matx_status_t ref_spdiag_z_i8_aocl(matx_coo_z_i8_t A,
+                                          matx_int64_t offset,
+                                          matx_vec_z_i8_t out)
 {
     if (!A || !out) {
         MATX_ERROR("%s: invalid argument", __func__);

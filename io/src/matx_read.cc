@@ -4,15 +4,16 @@
 #include "matx/matx_types_internal.h"
 
 #include <fstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
-matx_status_t matx_read_dense_mtx_d_i8(const matx_alloc_t* alloc, matx_dense_d_i8_t* mtx, const char* file)
+matx_status_t matx_read_dense_mtx_d_i8(const matx_alloc_t* alloc,
+                                       matx_dense_d_i8_t* mtx,
+                                       const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
-    if (!is.is_open())
-    {
+    if (!is.is_open()) {
         MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
@@ -22,18 +23,16 @@ matx_status_t matx_read_dense_mtx_d_i8(const matx_alloc_t* alloc, matx_dense_d_i
     matx_int64_t layout = -1;
     is >> m >> n >> layout;
 
-    auto status = matx_dense_d_i8_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
-    if (status != MATX_OK)
-    {
+    auto status = matx_dense_d_i8_create(alloc, mtx, (matx_layout_t) layout, m, n, NULL);
+    if (status != MATX_OK) {
         MATX_ERROR("create dense mtx failed code:%d", status);
         return ret;
     }
     (*mtx)->stride = ((*mtx)->layout == MATX_ROW_MAJOR) ? (*mtx)->ncols : (*mtx)->nrows;
     for (matx_int64_t i = 0; i < (*mtx)->nrows; ++i) {
         for (matx_int64_t j = 0; j < (*mtx)->ncols; ++j) {
-            matx_int64_t idx = ((*mtx)->layout == MATX_ROW_MAJOR)
-                ? i * (*mtx)->stride + j
-                : j * (*mtx)->stride + i;
+            matx_int64_t idx = ((*mtx)->layout == MATX_ROW_MAJOR) ? i * (*mtx)->stride + j
+                                                                  : j * (*mtx)->stride + i;
             is >> (*mtx)->data[idx];
         }
     }
@@ -43,12 +42,13 @@ matx_status_t matx_read_dense_mtx_d_i8(const matx_alloc_t* alloc, matx_dense_d_i
     return ret;
 }
 
-matx_status_t matx_read_dense_mtx_z_i8(const matx_alloc_t* alloc, matx_dense_z_i8_t* mtx, const char* file)
+matx_status_t matx_read_dense_mtx_z_i8(const matx_alloc_t* alloc,
+                                       matx_dense_z_i8_t* mtx,
+                                       const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
-    if (!is.is_open())
-    {
+    if (!is.is_open()) {
         MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
@@ -58,18 +58,16 @@ matx_status_t matx_read_dense_mtx_z_i8(const matx_alloc_t* alloc, matx_dense_z_i
     matx_int64_t layout = -1;
     is >> m >> n >> layout;
 
-    auto status = matx_dense_z_i8_create(alloc, mtx, (matx_layout_t)layout, m, n, NULL);
-    if (status != MATX_OK)
-    {
+    auto status = matx_dense_z_i8_create(alloc, mtx, (matx_layout_t) layout, m, n, NULL);
+    if (status != MATX_OK) {
         MATX_ERROR("create dense mtx failed code:%d", status);
         return ret;
     }
     (*mtx)->stride = ((*mtx)->layout == MATX_ROW_MAJOR) ? (*mtx)->ncols : (*mtx)->nrows;
     for (matx_int64_t i = 0; i < (*mtx)->nrows; ++i) {
         for (matx_int64_t j = 0; j < (*mtx)->ncols; ++j) {
-            matx_int64_t idx = ((*mtx)->layout == MATX_ROW_MAJOR)
-                ? i * (*mtx)->stride + j
-                : j * (*mtx)->stride + i;
+            matx_int64_t idx = ((*mtx)->layout == MATX_ROW_MAJOR) ? i * (*mtx)->stride + j
+                                                                  : j * (*mtx)->stride + i;
             is >> (*mtx)->data[idx].real >> (*mtx)->data[idx].imag;
         }
     }
@@ -79,12 +77,13 @@ matx_status_t matx_read_dense_mtx_z_i8(const matx_alloc_t* alloc, matx_dense_z_i
     return ret;
 }
 
-matx_status_t matx_read_sparse_mtx_d_i8(const matx_alloc_t* alloc, matx_coo_d_i8_t* mtx, const char* file)
+matx_status_t matx_read_sparse_mtx_d_i8(const matx_alloc_t* alloc,
+                                        matx_coo_d_i8_t* mtx,
+                                        const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
-    if (!is.is_open())
-    {
+    if (!is.is_open()) {
         MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
@@ -95,13 +94,11 @@ matx_status_t matx_read_sparse_mtx_d_i8(const matx_alloc_t* alloc, matx_coo_d_i8
     is >> m >> n >> nnz;
 
     auto status = matx_coo_sparse_d_i8_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
-    if (status != MATX_OK)
-    {
+    if (status != MATX_OK) {
         MATX_ERROR("create coo sparse mtx failed code:%d", status);
         return ret;
     }
-    for (matx_int64_t i = 0; i < nnz; ++i) 
-    {
+    for (matx_int64_t i = 0; i < nnz; ++i) {
         is >> (*mtx)->rows[i] >> (*mtx)->columns[i] >> (*mtx)->values[i];
     }
 
@@ -111,12 +108,13 @@ matx_status_t matx_read_sparse_mtx_d_i8(const matx_alloc_t* alloc, matx_coo_d_i8
     return ret;
 }
 
-matx_status_t matx_read_sparse_mtx_z_i8(const matx_alloc_t* alloc, matx_coo_z_i8_t* mtx, const char* file)
+matx_status_t matx_read_sparse_mtx_z_i8(const matx_alloc_t* alloc,
+                                        matx_coo_z_i8_t* mtx,
+                                        const char* file)
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
-    if (!is.is_open())
-    {
+    if (!is.is_open()) {
         MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
@@ -127,14 +125,13 @@ matx_status_t matx_read_sparse_mtx_z_i8(const matx_alloc_t* alloc, matx_coo_z_i8
     is >> m >> n >> nnz;
 
     auto status = matx_coo_sparse_z_i8_create(alloc, mtx, m, n, nnz, NULL, NULL, NULL);
-    if (status != MATX_OK)
-    {
+    if (status != MATX_OK) {
         MATX_ERROR("create coo sparse mtx failed code:%d", status);
         return ret;
     }
-    for (matx_int64_t i = 0; i < nnz; ++i)
-    {
-        is >> (*mtx)->rows[i] >> (*mtx)->columns[i] >> (*mtx)->values[i].real >> (*mtx)->values[i].imag;
+    for (matx_int64_t i = 0; i < nnz; ++i) {
+        is >> (*mtx)->rows[i] >> (*mtx)->columns[i] >> (*mtx)->values[i].real
+            >> (*mtx)->values[i].imag;
     }
 
     is.close();
@@ -147,8 +144,7 @@ matx_status_t matx_read_vec_d_i8(const matx_alloc_t* alloc, matx_vec_d_i8_t* vec
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
-    if (!is.is_open())
-    {
+    if (!is.is_open()) {
         MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
@@ -157,13 +153,11 @@ matx_status_t matx_read_vec_d_i8(const matx_alloc_t* alloc, matx_vec_d_i8_t* vec
     is >> n;
 
     auto status = matx_vec_d_i8_create(alloc, vec, NULL, n);
-    if (status != MATX_OK)
-    {
+    if (status != MATX_OK) {
         MATX_ERROR("create vec failed code:%d", status);
         return ret;
     }
-    for (matx_int64_t i = 0; i < n; ++i)
-    {
+    for (matx_int64_t i = 0; i < n; ++i) {
         is >> (*vec)->data[i];
     }
 
@@ -177,8 +171,7 @@ matx_status_t matx_read_vec_z_i8(const matx_alloc_t* alloc, matx_vec_z_i8_t* vec
 {
     matx_status_t ret = MATX_ERR_INTERNAL;
     std::ifstream is(file);
-    if (!is.is_open())
-    {
+    if (!is.is_open()) {
         MATX_ERROR("open file error. path:%s", file);
         return ret;
     }
@@ -187,13 +180,11 @@ matx_status_t matx_read_vec_z_i8(const matx_alloc_t* alloc, matx_vec_z_i8_t* vec
     is >> n;
 
     auto status = matx_vec_z_i8_create(alloc, vec, NULL, n);
-    if (status != MATX_OK)
-    {
+    if (status != MATX_OK) {
         MATX_ERROR("create vec failed code:%d", status);
         return ret;
     }
-    for (matx_int64_t i = 0; i < n; ++i)
-    {
+    for (matx_int64_t i = 0; i < n; ++i) {
         is >> (*vec)->data[i].real >> (*vec)->data[i].imag;
     }
 

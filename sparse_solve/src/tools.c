@@ -1,6 +1,6 @@
-#include "matx/matx_types.h"
-#include "matx/matx_func.h"
+﻿#include "matx/matx_func.h"
 #include "matx/matx_log.h"
+#include "matx/matx_types.h"
 #include "matx/matx_types_internal.h"
 
 #include <stdlib.h>
@@ -11,23 +11,25 @@
 #define COO2CSC_ERR_MEMORY 2
 #define COO2CSC_ERR_NULL_PTR 3
 
-
-typedef struct {
+typedef struct
+{
     matx_int64_t col;
     matx_int64_t row;
     matx_int64_t idx;
 } Entry;
 
-typedef struct {
+typedef struct
+{
     matx_int64_t col;
     matx_int64_t row;
     matx_int64_t* coo_indices;
     matx_int64_t coo_indices_len;
 } MergedEntry;
 
-static int entry_compare(const void* a, const void* b) {
-    const Entry* entry_a = (const Entry*)a;
-    const Entry* entry_b = (const Entry*)b;
+static int entry_compare(const void* a, const void* b)
+{
+    const Entry* entry_a = (const Entry*) a;
+    const Entry* entry_b = (const Entry*) b;
 
     if (entry_a->col != entry_b->col) {
         return (entry_a->col < entry_b->col) ? -1 : 1;
@@ -35,8 +37,9 @@ static int entry_compare(const void* a, const void* b) {
     return (entry_a->row < entry_b->row) ? -1 : 1;
 }
 
-static void free_merged_entries(MergedEntry* merged, matx_int64_t merged_len) {
-    if (merged == NULL) 
+static void free_merged_entries(MergedEntry* merged, matx_int64_t merged_len)
+{
+    if (merged == NULL)
         return;
     for (matx_int64_t i = 0; i < merged_len; ++i) {
         free(merged[i].coo_indices);
@@ -44,10 +47,14 @@ static void free_merged_entries(MergedEntry* merged, matx_int64_t merged_len) {
     free(merged);
 }
 
-int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, matx_int64_t nnz,
-    matx_int64_t* Ap,
-    matx_int64_t* Ai,
-    matx_int64_t* coo2csc) {
+int coo_2_csc(matx_int64_t* columns,
+              matx_int64_t* rows,
+              const matx_int64_t n,
+              matx_int64_t nnz,
+              matx_int64_t* Ap,
+              matx_int64_t* Ai,
+              matx_int64_t* coo2csc)
+{
     if (columns == NULL || rows == NULL || Ap == NULL || Ai == NULL || coo2csc == NULL) {
         MATX_ERROR("%s: invalid argument", __func__);
         return COO2CSC_ERR_NULL_PTR;
@@ -57,7 +64,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
         return COO2CSC_ERR_OUT_OF_RANGE;
     }
 
-    Entry* entries = (Entry*)malloc(nnz * sizeof(Entry));
+    Entry* entries = (Entry*) malloc(nnz * sizeof(Entry));
     if (entries == NULL) {
         MATX_ERROR("%s: out of memory", __func__);
         return COO2CSC_ERR_MEMORY;
@@ -81,7 +88,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
 
     qsort(entries, nnz, sizeof(Entry), entry_compare);
 
-    MergedEntry* merged = (MergedEntry*)malloc(nnz * sizeof(MergedEntry));
+    MergedEntry* merged = (MergedEntry*) malloc(nnz * sizeof(MergedEntry));
     if (merged == NULL) {
         free(entries);
         MATX_ERROR("%s: out of memory", __func__);
@@ -91,11 +98,12 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
 
     for (matx_int64_t k = 0; k < nnz; ++k) {
         const Entry* e = &entries[k];
-        if (merged_len > 0 &&
-            merged[merged_len - 1].col == e->col &&
-            merged[merged_len - 1].row == e->row) {
+        if (merged_len > 0 && merged[merged_len - 1].col == e->col
+            && merged[merged_len - 1].row == e->row) {
             MergedEntry* last = &merged[merged_len - 1];
-            matx_int64_t* new_coo_indices = (matx_int64_t*)realloc(last->coo_indices, (last->coo_indices_len + 1) * sizeof(matx_int64_t));
+            matx_int64_t* new_coo_indices = (matx_int64_t*) realloc(last->coo_indices,
+                                                                    (last->coo_indices_len + 1)
+                                                                        * sizeof(matx_int64_t));
             if (new_coo_indices == NULL) {
                 free_merged_entries(merged, merged_len);
                 free(entries);
@@ -105,11 +113,10 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
             last->coo_indices = new_coo_indices;
             last->coo_indices[last->coo_indices_len] = e->idx;
             last->coo_indices_len++;
-        }
-        else {
+        } else {
             merged[merged_len].col = e->col;
             merged[merged_len].row = e->row;
-            merged[merged_len].coo_indices = (matx_int64_t*)malloc(1 * sizeof(matx_int64_t));
+            merged[merged_len].coo_indices = (matx_int64_t*) malloc(1 * sizeof(matx_int64_t));
             if (merged[merged_len].coo_indices == NULL) {
                 free_merged_entries(merged, merged_len);
                 free(entries);
@@ -123,7 +130,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
     }
     const matx_int64_t final_nnz = merged_len;
 
-	memset(Ap, 0, (n + 1) * sizeof(matx_int64_t));
+    memset(Ap, 0, (n + 1) * sizeof(matx_int64_t));
     for (matx_int64_t k = 0; k < merged_len; ++k) {
         Ap[merged[k].col + 1]++;
     }
@@ -141,7 +148,7 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
         return COO2CSC_ERR_MEMORY;
     }
 
-    matx_int64_t* next = (matx_int64_t*)malloc(final_nnz * sizeof(matx_int64_t));
+    matx_int64_t* next = (matx_int64_t*) malloc(final_nnz * sizeof(matx_int64_t));
     if (next == NULL) {
         free(Ap);
         free(Ai);
@@ -171,9 +178,11 @@ int coo_2_csc(matx_int64_t* columns, matx_int64_t* rows, const matx_int64_t n, m
     return COO2CSC_SUCCESS;
 }
 
-int build_Ax_from_coo_z_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
-    const matx_complex_d_t* values,
-    matx_complex_d_t* Ax) {
+int build_Ax_from_coo_z_i8(const matx_int64_t* coo2csc,
+                           matx_int64_t coo2csc_len,
+                           const matx_complex_d_t* values,
+                           matx_complex_d_t* Ax)
+{
     if (coo2csc == NULL || values == NULL || Ax == NULL) {
         MATX_ERROR("%s: invalid argument", __func__);
         return COO2CSC_ERR_NULL_PTR;
@@ -199,9 +208,11 @@ int build_Ax_from_coo_z_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len
     return COO2CSC_SUCCESS;
 }
 
-int build_Ax_from_coo_d_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len,
-    const matx_double* values,
-    matx_double* Ax) {
+int build_Ax_from_coo_d_i8(const matx_int64_t* coo2csc,
+                           matx_int64_t coo2csc_len,
+                           const matx_double* values,
+                           matx_double* Ax)
+{
     if (coo2csc == NULL || values == NULL || Ax == NULL) {
         MATX_ERROR("%s: invalid argument", __func__);
         return COO2CSC_ERR_NULL_PTR;
@@ -220,24 +231,38 @@ int build_Ax_from_coo_d_i8(const matx_int64_t* coo2csc, matx_int64_t coo2csc_len
     return COO2CSC_SUCCESS;
 }
 
-
 matx_status_t coo_to_csc_d_i8(matx_coo_d_i8_t coo)
 {
-    int s = coo_2_csc(coo->columns, coo->rows, coo->ncols, coo->nnz, coo->handle_csc->col_ptr, coo->handle_csc->row_ind, (matx_int64_t*)coo->handle_csc->coo_csc_index_map);
+    int s = coo_2_csc(coo->columns,
+                      coo->rows,
+                      coo->ncols,
+                      coo->nnz,
+                      coo->handle_csc->col_ptr,
+                      coo->handle_csc->row_ind,
+                      (matx_int64_t*) coo->handle_csc->coo_csc_index_map);
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
 }
 
 matx_status_t coo_to_csc_z_i8(matx_coo_z_i8_t coo)
 {
-    coo_2_csc(coo->columns, coo->rows, coo->ncols, coo->nnz, coo->handle_csc->col_ptr, coo->handle_csc->row_ind, (matx_int64_t*)coo->handle_csc->coo_csc_index_map);
+    coo_2_csc(coo->columns,
+              coo->rows,
+              coo->ncols,
+              coo->nnz,
+              coo->handle_csc->col_ptr,
+              coo->handle_csc->row_ind,
+              (matx_int64_t*) coo->handle_csc->coo_csc_index_map);
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
 }
 
 matx_status_t coo_to_csc_z_i8_value_remap(matx_coo_z_i8_t coo)
 {
-    build_Ax_from_coo_z_i8((matx_int64_t*)coo->handle_csc->coo_csc_index_map, coo->nnz, coo->values, coo->handle_csc->values);
+    build_Ax_from_coo_z_i8((matx_int64_t*) coo->handle_csc->coo_csc_index_map,
+                           coo->nnz,
+                           coo->values,
+                           coo->handle_csc->values);
     coo->handle_csc->only_value_update = 0;
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
@@ -245,7 +270,10 @@ matx_status_t coo_to_csc_z_i8_value_remap(matx_coo_z_i8_t coo)
 
 matx_status_t coo_to_csc_d_i8_value_remap(matx_coo_d_i8_t coo)
 {
-    build_Ax_from_coo_d_i8((matx_int64_t*)coo->handle_csc->coo_csc_index_map, coo->nnz, coo->values, coo->handle_csc->values);
+    build_Ax_from_coo_d_i8((matx_int64_t*) coo->handle_csc->coo_csc_index_map,
+                           coo->nnz,
+                           coo->values,
+                           coo->handle_csc->values);
     coo->handle_csc->only_value_update = 0;
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
