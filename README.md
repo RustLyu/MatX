@@ -113,22 +113,26 @@ ctest --test-dir build --output-on-failure
 ## Public API snapshot
 
 ### Dense compute
-`matx_gemm_*`, `matx_gemv_*`, `matx_geadd_*`, `matx_ger_*`, `matx_zgerc_*`, `matx_trsv_*`, `matx_trsm_*`, `matx_syrk_*`, `matx_dsyr2k_*`, `matx_herk_*`, `matx_zher2k_*`, `matx_hadamard_*`, `matx_transpose_*`, `matx_conj_transpose_*`, `matx_mat_norm*`
+`matx_gemm_*`, `matx_gemv_*`, `matx_geadd_*`, `matx_ger_*`, `matx_zgerc_*`, `matx_trsv_*`, `matx_trsm_*`, `matx_syrk_*`, `matx_dsyr2k_*`, `matx_herk_*`, `matx_zher2k_*`, `matx_hadamard_*`, `matx_transpose_*`, `matx_conj_transpose_*`, `matx_mat_norm*`, `matx_inv_dense_*`, `matx_expm_dense_d_i8`, `matx_diag_create_*`, `matx_get_diag_*`
+### Dense element-wise math
+`matx_dense_*_{exp,log,sqrt,sin,cos,abs,pow}`, `matx_dense_*_{add,sub,mul,div}`, `matx_dense_*_add_scalar`, `matx_dense_*_mul_scalar`
 
 ### Vector compute
-`matx_vec_scal_*`, `matx_vec_copy_*`, `matx_vec_swap_*`, `matx_vec_dot_*`, `matx_vec_nrm2_*`, `matx_vec_asum_*`, `matx_vec_iamax_*`, `matx_vec_axpy_*`, `matx_vec_norm1_*`, `matx_vec_norm2_*`, `matx_vec_norminf_*`
+`matx_vec_scal_*`, `matx_vec_copy_*`, `matx_vec_swap_*`, `matx_vec_dot_*`, `matx_vec_nrm2_*`, `matx_vec_asum_*`, `matx_vec_iamax_*`, `matx_vec_axpy_*`, `matx_vec_norm1_*`, `matx_vec_norm2_*`, `matx_vec_norminf_*`, `matx_vec_cross_*`
+### Vector element-wise math
+`matx_vec_*_{exp,log,sqrt,sin,cos,abs,pow}`, `matx_vec_*_{add,sub,mul,div}`, `matx_vec_*_add_scalar`, `matx_vec_*_mul_scalar`, `matx_vec_*_cumsum`
 
 ### Sparse compute
-`matx_spmv_*`, `matx_spmm_*`, `matx_dsp2md_*`, `matx_zsp2md_*`, sparse-sparse to dense, transpose/conjugate, sparse matrix norms, sparse addition, row/column NNZ counts (`spnnz_rows`, `spnnz_cols`), row/column sums (`sprowsums`, `spcolsums`), diagonal extraction (`spdiag`), row/column scaling (`scale_rows`, `scale_cols`)
+`matx_spmv_*`, `matx_spmm_*`, `matx_dsp2md_*`, `matx_zsp2md_*`, sparse-sparse to dense, transpose/conjugate, sparse matrix norms, sparse addition, row/column NNZ counts (`spnnz_rows`, `spnnz_cols`), row/column sums (`sprowsums`, `spcolsums`), diagonal extraction (`spdiag`), row/column scaling (`scale_rows`, `scale_cols`), COO helpers (`matx_coo_*_get_row`, `matx_coo_*_get_col`, `matx_coo_*_to_dense`)
 
 ### Dense solve
-Factor + solve and one-shot solve for d_i8 / z_i8.
+Factor + solve and one-shot solve for d_i8 / z_i8. Eigenvalue solvers (`matx_syev_*`, `matx_geev_*`), QR factorization (`matx_qr_*`), determinant (`matx_det_dense_*`), condition number (`matx_cond_dense_*`).
 
 ### Sparse solve
-Factor + solve and one-shot solve for COO/CSC pathways. Backends: **KLU**, **UMFPACK**, **SuperLU**, **MUMPS**.
+Factor + solve and one-shot solve for COO/CSC pathways (LU and Cholesky). Backends: **KLU**, **UMFPACK**, **SuperLU**, **MUMPS**.
 
-### IO
-Print/read dense matrices, sparse matrices (COO), and vectors to/from text files (MTX format).
+### Random
+`matx_vec_rand_uniform_*`, `matx_vec_rand_normal_*`, `matx_dense_rand_uniform_*`
 
 ## Test coverage
 
@@ -152,3 +156,7 @@ GitHub Actions runs on push/PR to all branches: configure (Release) → build. S
 - Several solve and compute code paths assume/optimize for column-major memory layout
 - Sparse solve workflows rely on COO→CSC conversion cached inside COO handle fields
 - Certain complex sparse solve functions are API placeholders depending on backend availability
+
+## License
+
+MatX is licensed under the BSD 3-Clause License. See [LICENSE](LICENSE) for the full text.
