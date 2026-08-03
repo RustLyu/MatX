@@ -41,7 +41,8 @@ target_compile_definitions(${PROJECT_NAME}
 if(MATX_ENABLE_SUITESPARSE)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_SUITESPARSE=1)
   target_link_libraries(${PROJECT_NAME} PRIVATE SuiteSparse::KLU
-    SuiteSparse::AMD
+    SuiteSparse::CHOLMOD
+	    SuiteSparse::AMD
     SuiteSparse::COLAMD
     SuiteSparse::BTF
     SuiteSparse::SuiteSparseConfig)

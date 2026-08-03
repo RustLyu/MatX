@@ -20,6 +20,7 @@ add_executable(${PROJECT_NAME}
   main.cpp
   test_core_dense.cpp
   test_core_vec.cpp
+  test_core_math.cpp
   test_compute_dgemm.cpp
   test_compute_vec.cpp
   test_compute_vec_blas.cpp

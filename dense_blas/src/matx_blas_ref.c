@@ -73,7 +73,8 @@ static matx_status_t ref_zgemm(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (m > INT_MAX || n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX) {
+    if (m > INT_MAX || n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX
+        || ldc > INT_MAX) {
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
@@ -272,10 +273,10 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
 }
 
 static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
-                                 matx_int64_t rows,
-                                 matx_int64_t cols,
-                                 const matx_double* A,
-                                 matx_double* out_Ainv)
+                                        matx_int64_t rows,
+                                        matx_int64_t cols,
+                                        const matx_double* A,
+                                        matx_double* out_Ainv)
 {
     if (!A || !out_Ainv) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -380,6 +381,257 @@ static matx_status_t ref_inv_dense_z_i8(
     return MATX_OK;
 }
 
+// ---- Matrix exponential (scaling-and-squaring, Pade(6,6)) ----
+
+static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
+                                         matx_int64_t n,
+                                         const matx_double* A,
+                                         matx_double* out)
+{
+    if (!A || !out || n <= 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (layout != MATX_COL_MAJOR) {
+        MATX_ERROR("%s: only column-major supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    if (n > INT_MAX) {
+        MATX_ERROR("%s: matrix too large", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+
+    const matx_int64_t lda = n;
+    const matx_int64_t total = n * n;
+    const size_t sz = (size_t) total * sizeof(matx_double);
+    const int lapack_layout = LAPACK_COL_MAJOR;
+    const matx_int64_t n_int = n;
+
+    /* 1. Compute ||A||_1 */
+    matx_double anorm = LAPACKE_dlange(lapack_layout, '1', n_int, n_int, A, lda);
+    if (anorm == 0.0) {
+        /* exp(0) = I */
+        memset(out, 0, sz);
+        for (matx_int64_t i = 0; i < n; ++i)
+            out[i + i * lda] = 1.0;
+        return MATX_OK;
+    }
+
+    /* 2. Determine scaling factor */
+    const matx_double theta6 = 3.014350724601486; /* threshold for Pade degree 6 */
+    matx_int64_t s = 0;
+    matx_double scaled_norm = anorm;
+    while (scaled_norm > theta6) {
+        scaled_norm /= 2.0;
+        ++s;
+    }
+
+    /* 3. Allocate working buffers: As, A2, A3, A4, A5, A6, N, D, work */
+    matx_double* As = (matx_double*) malloc(sz);
+    matx_double* A2 = (matx_double*) malloc(sz);
+    matx_double* A3 = (matx_double*) malloc(sz);
+    matx_double* A4 = (matx_double*) malloc(sz);
+    matx_double* A5 = (matx_double*) malloc(sz);
+    matx_double* A6 = (matx_double*) malloc(sz);
+    matx_double* N_mat = (matx_double*) malloc(sz);
+    matx_double* D_mat = (matx_double*) malloc(sz);
+    if (!As || !A2 || !A3 || !A4 || !A5 || !A6 || !N_mat || !D_mat) {
+        MATX_ERROR("%s: out of memory", __func__);
+        free(As);
+        free(A2);
+        free(A3);
+        free(A4);
+        free(A5);
+        free(A6);
+        free(N_mat);
+        free(D_mat);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+
+    /* 4. Scale A: As = A / 2^s */
+    matx_double scale = 1.0;
+    for (matx_int64_t j = 0; j < s; ++j)
+        scale /= 2.0;
+    for (matx_int64_t i = 0; i < total; ++i)
+        As[i] = A[i] * scale;
+
+    /* 5. Compute powers: A2=As*As, A3=A2*As, A4=A3*As, A5=A4*As, A6=A5*As */
+    cblas_dgemm(CblasColMajor,
+                CblasNoTrans,
+                CblasNoTrans,
+                n_int,
+                n_int,
+                n_int,
+                1.0,
+                As,
+                lda,
+                As,
+                lda,
+                0.0,
+                A2,
+                lda);
+    cblas_dgemm(CblasColMajor,
+                CblasNoTrans,
+                CblasNoTrans,
+                n_int,
+                n_int,
+                n_int,
+                1.0,
+                A2,
+                lda,
+                As,
+                lda,
+                0.0,
+                A3,
+                lda);
+    cblas_dgemm(CblasColMajor,
+                CblasNoTrans,
+                CblasNoTrans,
+                n_int,
+                n_int,
+                n_int,
+                1.0,
+                A3,
+                lda,
+                As,
+                lda,
+                0.0,
+                A4,
+                lda);
+    cblas_dgemm(CblasColMajor,
+                CblasNoTrans,
+                CblasNoTrans,
+                n_int,
+                n_int,
+                n_int,
+                1.0,
+                A4,
+                lda,
+                As,
+                lda,
+                0.0,
+                A5,
+                lda);
+    cblas_dgemm(CblasColMajor,
+                CblasNoTrans,
+                CblasNoTrans,
+                n_int,
+                n_int,
+                n_int,
+                1.0,
+                A5,
+                lda,
+                As,
+                lda,
+                0.0,
+                A6,
+                lda);
+
+    /* 6. Pade(6,6) coefficients */
+    {
+        const matx_double c0 = 1.0;
+        const matx_double c1 = 1.0 / 2.0;
+        const matx_double c2 = 5.0 / 44.0;
+        const matx_double c3 = 1.0 / 66.0;
+        const matx_double c4 = 1.0 / 792.0;
+        const matx_double c5 = 1.0 / 15840.0;
+        const matx_double c6 = 1.0 / 665280.0;
+
+        /* N = c0*I + c1*As + c2*A2 + c3*A3 + c4*A4 + c5*A5 + c6*A6 */
+        /* D = c0*I - c1*As + c2*A2 - c3*A3 + c4*A4 - c5*A5 + c6*A6 */
+        for (matx_int64_t i = 0; i < total; ++i) {
+            matx_double t2 = c2 * A2[i];
+            matx_double t4 = c4 * A4[i];
+            matx_double t6 = c6 * A6[i];
+            matx_double odd = c1 * As[i] + c3 * A3[i] + c5 * A5[i];
+            matx_double even = c0 * (i % (n + 1) == 0 ? 1.0 : 0.0) + t2 + t4 + t6;
+            N_mat[i] = even + odd;
+            D_mat[i] = even - odd;
+        }
+    }
+
+    /* 7. Solve D * X = N by LU factorization */
+    {
+        matx_int64_t* piv = (matx_int64_t*) malloc((size_t) n * sizeof(matx_int64_t));
+        if (!piv) {
+            MATX_ERROR("%s: out of memory", __func__);
+            free(As);
+            free(A2);
+            free(A3);
+            free(A4);
+            free(A5);
+            free(A6);
+            free(N_mat);
+            free(D_mat);
+            return MATX_ERR_OUT_OF_MEMORY;
+        }
+        matx_int64_t info = LAPACKE_dgetrf(lapack_layout, n_int, n_int, D_mat, lda, piv);
+        if (info != 0) {
+            MATX_ERROR("%s: dgetrf failed, info=%d", __func__, (int) info);
+            free(piv);
+            free(As);
+            free(A2);
+            free(A3);
+            free(A4);
+            free(A5);
+            free(A6);
+            free(N_mat);
+            free(D_mat);
+            return MATX_ERR_INTERNAL;
+        }
+        /* D_mat now contains LU, N_mat is the RHS; solve in-place */
+        matx_int64_t nrhs = n_int;
+        info = LAPACKE_dgetrs(lapack_layout, 'N', n_int, nrhs, D_mat, lda, piv, N_mat, lda);
+        if (info != 0) {
+            MATX_ERROR("%s: dgetrs failed, info=%d", __func__, (int) info);
+            free(piv);
+            free(As);
+            free(A2);
+            free(A3);
+            free(A4);
+            free(A5);
+            free(A6);
+            free(N_mat);
+            free(D_mat);
+            return MATX_ERR_INTERNAL;
+        }
+        free(piv);
+    }
+
+    /* 8. Square s times: N_mat = N_mat * N_mat repeatedly */
+    for (matx_int64_t k = 0; k < s; ++k) {
+        /* Copy N_mat to D_mat as source */
+        memcpy(D_mat, N_mat, sz);
+        cblas_dgemm(CblasColMajor,
+                    CblasNoTrans,
+                    CblasNoTrans,
+                    n_int,
+                    n_int,
+                    n_int,
+                    1.0,
+                    D_mat,
+                    lda,
+                    D_mat,
+                    lda,
+                    0.0,
+                    N_mat,
+                    lda);
+    }
+
+    /* 9. Copy result to output */
+    memcpy(out, N_mat, sz);
+
+    free(As);
+    free(A2);
+    free(A3);
+    free(A4);
+    free(A5);
+    free(A6);
+    free(N_mat);
+    free(D_mat);
+    return MATX_OK;
+}
+
 // ---- Level 2 implementations ----
 
 static matx_status_t ref_dger(matx_layout_t layout,
@@ -457,7 +709,15 @@ static matx_status_t ref_dtrsv(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_dtrsv(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, (enum CBLAS_DIAG)diag, n, A, lda, x, incx);
+    cblas_dtrsv(order,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                (enum CBLAS_DIAG) diag,
+                n,
+                A,
+                lda,
+                x,
+                incx);
     return MATX_OK;
 }
 
@@ -476,7 +736,15 @@ static matx_status_t ref_ztrsv(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_ztrsv(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, (enum CBLAS_DIAG)diag, n, A, lda, x, incx);
+    cblas_ztrsv(order,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                (enum CBLAS_DIAG) diag,
+                n,
+                A,
+                lda,
+                x,
+                incx);
     return MATX_OK;
 }
 
@@ -500,7 +768,18 @@ static matx_status_t ref_dtrsm(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_dtrsm(order, (enum CBLAS_SIDE)side, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, (enum CBLAS_DIAG)diag, m, n, alpha, A, lda, B, ldb);
+    cblas_dtrsm(order,
+                (enum CBLAS_SIDE) side,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                (enum CBLAS_DIAG) diag,
+                m,
+                n,
+                alpha,
+                A,
+                lda,
+                B,
+                ldb);
     return MATX_OK;
 }
 
@@ -522,7 +801,18 @@ static matx_status_t ref_ztrsm(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_ztrsm(order, (enum CBLAS_SIDE)side, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, (enum CBLAS_DIAG)diag, m, n, alpha, A, lda, B, ldb);
+    cblas_ztrsm(order,
+                (enum CBLAS_SIDE) side,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                (enum CBLAS_DIAG) diag,
+                m,
+                n,
+                alpha,
+                A,
+                lda,
+                B,
+                ldb);
     return MATX_OK;
 }
 
@@ -543,7 +833,17 @@ static matx_status_t ref_dsyrk(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_dsyrk(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, n, k, alpha, A, lda, beta, C, ldc);
+    cblas_dsyrk(order,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                n,
+                k,
+                alpha,
+                A,
+                lda,
+                beta,
+                C,
+                ldc);
     return MATX_OK;
 }
 
@@ -564,7 +864,17 @@ static matx_status_t ref_zherk(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_zherk(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, n, k, alpha, A, lda, beta, C, ldc);
+    cblas_zherk(order,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                n,
+                k,
+                alpha,
+                A,
+                lda,
+                beta,
+                C,
+                ldc);
     return MATX_OK;
 }
 
@@ -587,7 +897,19 @@ static matx_status_t ref_dsyr2k(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_dsyr2k(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    cblas_dsyr2k(order,
+                 (enum CBLAS_UPLO) uplo,
+                 (enum CBLAS_TRANSPOSE) trans,
+                 n,
+                 k,
+                 alpha,
+                 A,
+                 lda,
+                 B,
+                 ldb,
+                 beta,
+                 C,
+                 ldc);
     return MATX_OK;
 }
 
@@ -610,7 +932,19 @@ static matx_status_t ref_zher2k(matx_layout_t layout,
         return MATX_ERR_INVALID_ARG;
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
-    cblas_zher2k(order, (enum CBLAS_UPLO)uplo, (enum CBLAS_TRANSPOSE)trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    cblas_zher2k(order,
+                 (enum CBLAS_UPLO) uplo,
+                 (enum CBLAS_TRANSPOSE) trans,
+                 n,
+                 k,
+                 alpha,
+                 A,
+                 lda,
+                 B,
+                 ldb,
+                 beta,
+                 C,
+                 ldc);
     return MATX_OK;
 }
 
@@ -956,6 +1290,7 @@ matx_dense_backend_t matx_blas_make_reference(void)
         .zgeadd = &ref_zgeadd,
         .inv_dense_d_i8 = &ref_inv_dense_d_i8,
         .inv_dense_z_i8 = &ref_inv_dense_z_i8,
+        .expm_dense_d_i8 = &ref_expm_dense_d_i8,
         .dger = &ref_dger,
         .zgeru = &ref_zgeru,
         .zgerc = &ref_zgerc,

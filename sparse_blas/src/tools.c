@@ -508,3 +508,113 @@ size_t grb_2_vec_z_i8(matx_vec_z_i8_t v)
 	v->handle_grb.custom_free_func = NULL;
 	return 0;
 }
+
+// ---- COO extraction helpers ----
+
+matx_status_t matx_coo_get_row_d_i8(matx_coo_d_i8_t A, matx_int64_t row_idx, matx_vec_d_i8_t out)
+{
+	if (!A || !out || !out->data || row_idx < 0 || row_idx >= A->nrows) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	for (matx_int64_t j = 0; j < A->ncols; ++j)
+		out->data[j * out->stride] = 0.0;
+	for (matx_int64_t k = 0; k < A->nnz; ++k) {
+		if (A->rows[k] == row_idx)
+			out->data[A->columns[k] * out->stride] = A->values[k];
+	}
+	return MATX_OK;
+}
+
+matx_status_t matx_coo_get_row_z_i8(matx_coo_z_i8_t A, matx_int64_t row_idx, matx_vec_z_i8_t out)
+{
+	if (!A || !out || !out->data || row_idx < 0 || row_idx >= A->nrows) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	for (matx_int64_t j = 0; j < A->ncols; ++j) {
+		out->data[j * out->stride].real = 0.0;
+		out->data[j * out->stride].imag = 0.0;
+	}
+	for (matx_int64_t k = 0; k < A->nnz; ++k) {
+		if (A->rows[k] == row_idx)
+			out->data[A->columns[k] * out->stride] = A->values[k];
+	}
+	return MATX_OK;
+}
+
+matx_status_t matx_coo_get_col_d_i8(matx_coo_d_i8_t A, matx_int64_t col_idx, matx_vec_d_i8_t out)
+{
+	if (!A || !out || !out->data || col_idx < 0 || col_idx >= A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	for (matx_int64_t i = 0; i < A->nrows; ++i)
+		out->data[i * out->stride] = 0.0;
+	for (matx_int64_t k = 0; k < A->nnz; ++k) {
+		if (A->columns[k] == col_idx)
+			out->data[A->rows[k] * out->stride] = A->values[k];
+	}
+	return MATX_OK;
+}
+
+matx_status_t matx_coo_get_col_z_i8(matx_coo_z_i8_t A, matx_int64_t col_idx, matx_vec_z_i8_t out)
+{
+	if (!A || !out || !out->data || col_idx < 0 || col_idx >= A->ncols) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	for (matx_int64_t i = 0; i < A->nrows; ++i) {
+		out->data[i * out->stride].real = 0.0;
+		out->data[i * out->stride].imag = 0.0;
+	}
+	for (matx_int64_t k = 0; k < A->nnz; ++k) {
+		if (A->columns[k] == col_idx)
+			out->data[A->rows[k] * out->stride] = A->values[k];
+	}
+	return MATX_OK;
+}
+
+matx_status_t matx_coo_to_dense_d_i8(matx_coo_d_i8_t A, matx_dense_d_i8_t out)
+{
+	if (!A || !out || !out->data) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (out->nrows != A->nrows || out->ncols != A->ncols) {
+		MATX_ERROR("%s: dimension mismatch", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	matx_int64_t total = out->nrows * out->ncols;
+	for (matx_int64_t i = 0; i < total; ++i)
+		out->data[i] = 0.0;
+	for (matx_int64_t k = 0; k < A->nnz; ++k) {
+		matx_int64_t r = A->rows[k];
+		matx_int64_t c = A->columns[k];
+		out->data[r + c * out->nrows] = A->values[k];
+	}
+	return MATX_OK;
+}
+
+matx_status_t matx_coo_to_dense_z_i8(matx_coo_z_i8_t A, matx_dense_z_i8_t out)
+{
+	if (!A || !out || !out->data) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (out->nrows != A->nrows || out->ncols != A->ncols) {
+		MATX_ERROR("%s: dimension mismatch", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	matx_int64_t total = out->nrows * out->ncols;
+	for (matx_int64_t i = 0; i < total; ++i) {
+		out->data[i].real = 0.0;
+		out->data[i].imag = 0.0;
+	}
+	for (matx_int64_t k = 0; k < A->nnz; ++k) {
+		matx_int64_t r = A->rows[k];
+		matx_int64_t c = A->columns[k];
+		out->data[r + c * out->nrows] = A->values[k];
+	}
+	return MATX_OK;
+}

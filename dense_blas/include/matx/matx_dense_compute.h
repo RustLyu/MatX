@@ -101,6 +101,10 @@ extern "C" {
 			const void* A,
 			void* out_Ainv);
 
+		// ---- Matrix exponential ----
+		matx_status_t(*expm_dense_d_i8)(matx_layout_t layout, matx_int64_t n,
+			const matx_double* A, matx_double* out);
+
 		// ---- Level 2 additions ----
 		matx_status_t(*dger)(matx_layout_t layout, matx_int64_t m, matx_int64_t n, matx_double alpha,
 			const matx_double* x, matx_int64_t incx, const matx_double* y, matx_int64_t incy,
@@ -455,6 +459,18 @@ extern "C" {
 	 */
 	MATX_API matx_status_t matx_mat_normfro_z_i8(const matx_dense_backend_t* blas,
 		const matx_dense_z_i8_t A, matx_double* out);
+
+	// ---- Matrix inverse ----
+
+	MATX_API matx_status_t matx_inv_dense_d_i8(const matx_dense_backend_t* blas,
+		const matx_dense_d_i8_t A, matx_dense_d_i8_t out);
+	MATX_API matx_status_t matx_inv_dense_z_i8(const matx_dense_backend_t* blas,
+		const matx_dense_z_i8_t A, matx_dense_z_i8_t out);
+
+	// ---- Matrix exponential ----
+
+	MATX_API matx_status_t matx_expm_dense_d_i8(const matx_dense_backend_t* blas,
+		const matx_dense_d_i8_t A, matx_dense_d_i8_t out);
 
 #ifdef __cplusplus
 }

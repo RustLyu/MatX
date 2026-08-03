@@ -343,3 +343,39 @@ matx_status_t matx_vec_norminf_z_i8(const matx_vec_backend_t* backend, matx_vec_
 	}
 	return backend->vt.norminf_z_i8(A, out);
 }
+
+// ---- Cross product wrappers ----
+
+matx_status_t matx_vec_cross_d_i8(const matx_vec_backend_t* blas,
+	matx_vec_d_i8_t x, matx_vec_d_i8_t y, matx_vec_d_i8_t out) {
+	if (!blas || !x || !y || !out || !x->data || !y->data || !out->data) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (x->n != 3 || y->n != 3 || out->n != 3) {
+		MATX_ERROR("%s: cross product requires vectors of length 3", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (!blas->vt.cross_d_i8) {
+		MATX_ERROR("%s: operation not supported", __func__);
+		return MATX_ERR_NOT_SUPPORTED;
+	}
+	return blas->vt.cross_d_i8(x, y, out);
+}
+
+matx_status_t matx_vec_cross_z_i8(const matx_vec_backend_t* blas,
+	matx_vec_z_i8_t x, matx_vec_z_i8_t y, matx_vec_z_i8_t out) {
+	if (!blas || !x || !y || !out || !x->data || !y->data || !out->data) {
+		MATX_ERROR("%s: invalid argument", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (x->n != 3 || y->n != 3 || out->n != 3) {
+		MATX_ERROR("%s: cross product requires vectors of length 3", __func__);
+		return MATX_ERR_INVALID_ARG;
+	}
+	if (!blas->vt.cross_z_i8) {
+		MATX_ERROR("%s: operation not supported", __func__);
+		return MATX_ERR_NOT_SUPPORTED;
+	}
+	return blas->vt.cross_z_i8(x, y, out);
+}

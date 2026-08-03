@@ -1,6 +1,6 @@
-#include "matx/matx_dense_compute.h"
-#include "matx/matx_types_internal.h"
+﻿#include "matx/matx_dense_compute.h"
 #include "matx/matx_log.h"
+#include "matx/matx_types_internal.h"
 
 // Forward decls
 matx_dense_backend_t matx_blas_make_reference(void);
@@ -803,7 +803,8 @@ matx_status_t matx_hadamard_d_i8(const matx_dense_backend_t* blas,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->nrows != B->nrows || A->ncols != B->ncols || A->nrows != C->nrows || A->ncols != C->ncols) {
+    if (A->nrows != B->nrows || A->ncols != B->ncols || A->nrows != C->nrows
+        || A->ncols != C->ncols) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -835,7 +836,8 @@ matx_status_t matx_hadamard_z_i8(const matx_dense_backend_t* blas,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->nrows != B->nrows || A->ncols != B->ncols || A->nrows != C->nrows || A->ncols != C->ncols) {
+    if (A->nrows != B->nrows || A->ncols != B->ncols || A->nrows != C->nrows
+        || A->ncols != C->ncols) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -856,4 +858,77 @@ matx_status_t matx_hadamard_z_i8(const matx_dense_backend_t* blas,
                                   B->stride,
                                   C->data,
                                   C->stride);
+}
+
+// ---- Matrix inverse ----
+
+matx_status_t matx_inv_dense_d_i8(const matx_dense_backend_t* blas,
+                                  const matx_dense_d_i8_t A,
+                                  matx_dense_d_i8_t out)
+{
+    if (!blas || !A || !out || !A->data || !out->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.inv_dense_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    if (A->nrows != A->ncols || out->nrows != out->ncols || A->nrows != out->nrows) {
+        MATX_ERROR("%s: matrix must be square and same size", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != out->layout) {
+        MATX_ERROR("%s: layout mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    return blas->vt.inv_dense_d_i8(A->layout, A->nrows, A->ncols, A->data, out->data);
+}
+
+matx_status_t matx_inv_dense_z_i8(const matx_dense_backend_t* blas,
+                                  const matx_dense_z_i8_t A,
+                                  matx_dense_z_i8_t out)
+{
+    if (!blas || !A || !out || !A->data || !out->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.inv_dense_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    if (A->nrows != A->ncols || out->nrows != out->ncols || A->nrows != out->nrows) {
+        MATX_ERROR("%s: matrix must be square and same size", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != out->layout) {
+        MATX_ERROR("%s: layout mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    return blas->vt.inv_dense_z_i8(A->layout, A->nrows, A->ncols, A->data, out->data);
+}
+
+// ---- Matrix exponential ----
+
+matx_status_t matx_expm_dense_d_i8(const matx_dense_backend_t* blas,
+                                   const matx_dense_d_i8_t A,
+                                   matx_dense_d_i8_t out)
+{
+    if (!blas || !A || !out || !A->data || !out->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.expm_dense_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    if (A->nrows != A->ncols || out->nrows != out->ncols || A->nrows != out->nrows) {
+        MATX_ERROR("%s: matrix must be square and same size", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != out->layout) {
+        MATX_ERROR("%s: layout mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    return blas->vt.expm_dense_d_i8(A->layout, A->nrows, A->data, out->data);
 }
