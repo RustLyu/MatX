@@ -2,12 +2,10 @@
 
 add_library(${PROJECT_NAME}
   src/matx_alloc.c
-  src/matx_dense_d_i8.c
+  src/matx_dense.c
   src/matx_error.c
   src/matx_vec.c
-  src/matx_dense_z_i8.c
-  src/matx_sparse_d_i8.c
-  src/matx_sparse_z_i8.c
+  src/matx_sparse.c
 )
 
 add_library(MatX::core ALIAS ${PROJECT_NAME})

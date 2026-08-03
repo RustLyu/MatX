@@ -1,4 +1,4 @@
-﻿#include "matx/matx_func.h"
+#include "matx/matx_func.h"
 #include "matx/matx_types.h"
 #include "matx/matx_types_internal.h"
 
@@ -7,215 +7,141 @@
 #include <string.h>
 #include <math.h>
 
-matx_status_t matx_vec_d_i8_create(const matx_alloc_t* alloc,
-                                   matx_vec_d_i8_t* out,
-                                   matx_double* data,
-                                   matx_int64_t n)
-{
-    if (!out || !alloc || n == 0) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
+/* ---- Macro generators for type-agnostic vector functions ---- */
 
-    matx_vec_d_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_d_i8_opaque_t));
-    memset(out_value, 0, sizeof(matx_vec_d_i8_opaque_t));
-    out_value->n = n;
-    out_value->stride = 1;
-    out_value->flags = 1u; // owns data
-    out_value->data = (matx_double*) matx_malloc(alloc, n * sizeof(matx_double));
-
-    if (!out_value->data) {
-        matx_free(alloc, out_value);
-        MATX_ERROR("%s: out of memory", __func__);
-        return MATX_ERR_OUT_OF_MEMORY;
-    }
-    if (data != NULL) {
-        memcpy(out_value->data, data, sizeof(matx_double) * out_value->n);
-    }
-    if (*out != NULL) {
-        matx_vec_d_i8_destroy(alloc, *out);
-    }
-    *out = out_value;
-    return MATX_OK;
+#define MATX_DEF_VEC_CREATE(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)               \
+matx_status_t matx_vec_##PREFIX##_create(const matx_alloc_t* alloc,             \
+                                         matx_vec_##PREFIX##_t* out,            \
+                                         SCA_TYPE* data,                        \
+                                         matx_int64_t n)                        \
+{                                                                               \
+    if (!out || !alloc || n == 0) {                                             \
+        MATX_ERROR("%s: invalid argument", __func__);                           \
+        return MATX_ERR_INVALID_ARG;                                            \
+    }                                                                           \
+    OPAQUE* out_value = matx_malloc(alloc, sizeof(OPAQUE));                     \
+    memset(out_value, 0, sizeof(OPAQUE));                                       \
+    out_value->n = n;                                                           \
+    out_value->stride = 1;                                                      \
+    out_value->flags = 1u;                                                      \
+    out_value->data = (SCA_TYPE*) matx_malloc(alloc, n * sizeof(SCA_TYPE));     \
+    if (!out_value->data) {                                                     \
+        matx_free(alloc, out_value);                                            \
+        MATX_ERROR("%s: out of memory", __func__);                              \
+        return MATX_ERR_OUT_OF_MEMORY;                                          \
+    }                                                                           \
+    if (data != NULL) {                                                         \
+        memcpy(out_value->data, data, sizeof(SCA_TYPE) * out_value->n);         \
+    }                                                                           \
+    if (*out != NULL) {                                                         \
+        matx_vec_##PREFIX##_destroy(alloc, *out);                                \
+    }                                                                           \
+    *out = out_value;                                                           \
+    return MATX_OK;                                                             \
 }
 
-matx_status_t matx_vec_d_i8_dup(const matx_alloc_t* alloc,
-                                const matx_vec_d_i8_t in,
-                                matx_vec_d_i8_t* out)
-{
-    return matx_vec_d_i8_create(alloc, out, in->data, in->n);
+#define MATX_DEF_VEC_DUP(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                   \
+matx_status_t matx_vec_##PREFIX##_dup(const matx_alloc_t* alloc,                \
+                                      const matx_vec_##PREFIX##_t in,            \
+                                      matx_vec_##PREFIX##_t* out)                \
+{                                                                               \
+    return matx_vec_##PREFIX##_create(alloc, out, in->data, in->n);              \
 }
 
-matx_status_t matx_vec_d_i8_wrap(const matx_alloc_t* alloc,
-                                 matx_vec_d_i8_t* out,
-                                 matx_int64_t n,
-                                 matx_int64_t stride,
-                                 matx_double* data)
-{
-    if (!out || !data || n == 0 || stride == 0) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-
-    matx_vec_d_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_d_i8_opaque_t));
-    memset(out_value, 0, sizeof(matx_vec_d_i8_opaque_t));
-
-    out_value->n = n;
-    out_value->stride = stride;
-    out_value->data = data;
-    out_value->flags = 0u;
-    if (*out != NULL) {
-        matx_vec_d_i8_destroy(alloc, *out);
-    }
-    *out = out_value;
-    return MATX_OK;
+#define MATX_DEF_VEC_WRAP(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                  \
+matx_status_t matx_vec_##PREFIX##_wrap(const matx_alloc_t* alloc,               \
+                                        matx_vec_##PREFIX##_t* out,              \
+                                        matx_int64_t n,                          \
+                                        matx_int64_t stride,                     \
+                                        SCA_TYPE* data)                          \
+{                                                                               \
+    if (!out || !data || n == 0 || stride == 0) {                               \
+        MATX_ERROR("%s: invalid argument", __func__);                           \
+        return MATX_ERR_INVALID_ARG;                                            \
+    }                                                                           \
+    OPAQUE* out_value = matx_malloc(alloc, sizeof(OPAQUE));                     \
+    memset(out_value, 0, sizeof(OPAQUE));                                       \
+    out_value->n = n;                                                           \
+    out_value->stride = stride;                                                 \
+    out_value->data = data;                                                     \
+    out_value->flags = 0u;                                                      \
+    if (*out != NULL) {                                                         \
+        matx_vec_##PREFIX##_destroy(alloc, *out);                                \
+    }                                                                           \
+    *out = out_value;                                                           \
+    return MATX_OK;                                                             \
 }
 
-void matx_vec_d_i8_destroy(const matx_alloc_t* alloc, matx_vec_d_i8_t v)
-{
-    if (!v)
-        return;
-    if ((v->flags & 1u) != 0u && v->data && alloc) {
-        matx_free(alloc, v->data);
-    }
-    matx_handles_destroy(v->backend_handles, &v->num_backend_handles);
-    matx_free(alloc, v);
+#define MATX_DEF_VEC_DESTROY(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)               \
+void matx_vec_##PREFIX##_destroy(const matx_alloc_t* alloc,                      \
+                                  matx_vec_##PREFIX##_t v)                       \
+{                                                                               \
+    if (!v)                                                                     \
+        return;                                                                 \
+    if ((v->flags & 1u) != 0u && v->data && alloc) {                            \
+        matx_free(alloc, v->data);                                              \
+    }                                                                           \
+    matx_handles_destroy(v->backend_handles, &v->num_backend_handles);          \
+    matx_free(alloc, v);                                                        \
 }
 
-matx_status_t matx_vec_z_i8_create(const matx_alloc_t* alloc,
-                                   matx_vec_z_i8_t* out,
-                                   matx_complex_d_t* data,
-                                   matx_int64_t n)
-{
-    if (!out || !alloc || n == 0) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    matx_vec_z_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_z_i8_opaque_t));
-    memset(out_value, 0, sizeof(matx_vec_z_i8_opaque_t));
-
-    out_value->n = n;
-    out_value->stride = 1;
-    out_value->flags = 1u;
-    out_value->data = (matx_complex_d_t*) matx_malloc(alloc, n * sizeof(matx_complex_d_t));
-    if (!out_value->data) {
-        matx_free(alloc, out_value);
-        MATX_ERROR("%s: out of memory", __func__);
-        return MATX_ERR_OUT_OF_MEMORY;
-    }
-
-    if (data != NULL) {
-        memcpy(out_value->data, data, sizeof(matx_complex_d_t) * out_value->n);
-    }
-    if (*out != NULL) {
-        matx_vec_z_i8_destroy(alloc, *out);
-    }
-    *out = out_value;
-    return MATX_OK;
+#define MATX_DEF_VEC_FILL(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                  \
+matx_status_t matx_vec_##PREFIX##_fill(matx_vec_##PREFIX##_t v, SCA_TYPE val)    \
+{                                                                               \
+    if (!v || !v->data) {                                                       \
+        MATX_ERROR("%s: invalid argument", __func__);                           \
+        return MATX_ERR_INVALID_ARG;                                            \
+    }                                                                           \
+    for (matx_int64_t i = 0; i < v->n; ++i)                                     \
+        v->data[i * v->stride] = val;                                           \
+    return MATX_OK;                                                             \
 }
 
-matx_status_t matx_vec_z_i8_dup(const matx_alloc_t* alloc, matx_vec_z_i8_t in, matx_vec_z_i8_t* out)
-{
-    return matx_vec_z_i8_create(alloc, out, in->data, in->n);
+#define MATX_DEF_VEC_ZEROS(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                 \
+matx_status_t matx_vec_##PREFIX##_zeros(matx_vec_##PREFIX##_t v)                 \
+{                                                                               \
+    if (!v || !v->data) {                                                       \
+        MATX_ERROR("%s: invalid argument", __func__);                           \
+        return MATX_ERR_INVALID_ARG;                                            \
+    }                                                                           \
+    if (v->stride == 1)                                                         \
+        memset(v->data, 0, v->n * sizeof(SCA_TYPE));                            \
+    else                                                                        \
+        for (matx_int64_t i = 0; i < v->n; ++i)                                 \
+            v->data[i * v->stride] = ZERO_VAL;                                  \
+    return MATX_OK;                                                             \
 }
 
-matx_status_t matx_vec_z_i8_wrap(const matx_alloc_t* alloc,
-                                 matx_vec_z_i8_t* out,
-                                 matx_int64_t n,
-                                 matx_int64_t stride,
-                                 matx_complex_d_t* data)
-{
-    if (!out || !data || n == 0 || stride == 0) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
+/* ---- Type-agnostic expansions ---- */
 
-    matx_vec_z_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_vec_z_i8_opaque_t));
-    memset(out_value, 0, sizeof(matx_vec_z_i8_opaque_t));
+MATX_DEF_VEC_CREATE(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
+MATX_DEF_VEC_CREATE(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
+MATX_DEF_VEC_DUP(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
+MATX_DEF_VEC_DUP(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
+MATX_DEF_VEC_WRAP(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
+MATX_DEF_VEC_WRAP(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
+MATX_DEF_VEC_DESTROY(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
+MATX_DEF_VEC_DESTROY(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
+MATX_DEF_VEC_FILL(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
+MATX_DEF_VEC_FILL(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
+MATX_DEF_VEC_ZEROS(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
+MATX_DEF_VEC_ZEROS(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
 
-    out_value->n = n;
-    out_value->stride = stride;
-    out_value->data = data;
-    out_value->flags = 0u;
-    if (*out != NULL) {
-        matx_vec_z_i8_destroy(alloc, *out);
-    }
-    *out = out_value;
-    return MATX_OK;
-}
+#undef MATX_DEF_VEC_CREATE
+#undef MATX_DEF_VEC_DUP
+#undef MATX_DEF_VEC_WRAP
+#undef MATX_DEF_VEC_DESTROY
+#undef MATX_DEF_VEC_FILL
+#undef MATX_DEF_VEC_ZEROS
 
-void matx_vec_z_i8_destroy(const matx_alloc_t* alloc, matx_vec_z_i8_t v)
-{
-    if (!v)
-        return;
-    if ((v->flags & 1u) != 0u && v->data && alloc) {
-        matx_free(alloc, v->data);
-        v->data = NULL;
-    }
-
-    matx_handles_destroy(v->backend_handles, &v->num_backend_handles);
-    matx_free(alloc, v);
-    //memset(v, 0, sizeof(*v));
-}
-
-matx_status_t matx_vec_d_i8_fill(matx_vec_d_i8_t v, matx_double val)
-{
-    if (!v || !v->data) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    for (matx_int64_t i = 0; i < v->n; ++i)
-        v->data[i * v->stride] = val;
-    return MATX_OK;
-}
-
-matx_status_t matx_vec_z_i8_fill(matx_vec_z_i8_t v, matx_complex_d_t val)
-{
-    if (!v || !v->data) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    for (matx_int64_t i = 0; i < v->n; ++i)
-        v->data[i * v->stride] = val;
-    return MATX_OK;
-}
-
-matx_status_t matx_vec_d_i8_zeros(matx_vec_d_i8_t v)
-{
-    if (!v || !v->data) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    if (v->stride == 1)
-        memset(v->data, 0, v->n * sizeof(matx_double));
-    else
-        for (matx_int64_t i = 0; i < v->n; ++i)
-            v->data[i * v->stride] = 0.0;
-    return MATX_OK;
-}
-
-matx_status_t matx_vec_z_i8_zeros(matx_vec_z_i8_t v)
-{
-    if (!v || !v->data) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    if (v->stride == 1)
-        memset(v->data, 0, v->n * sizeof(matx_complex_d_t));
-    else {
-        matx_complex_d_t zero = {0.0, 0.0};
-        for (matx_int64_t i = 0; i < v->n; ++i)
-            v->data[i * v->stride] = zero;
-    }
-    return MATX_OK;
-}
+/* ---- Single-type: ones (real only) ---- */
 
 matx_status_t matx_vec_d_i8_ones(matx_vec_d_i8_t v)
 {
     return matx_vec_d_i8_fill(v, 1.0);
 }
 
-// ---- Element-wise math: vectors ----
+/* ---- Element-wise math: vectors ---- */
 
 matx_status_t matx_vec_d_i8_exp(const matx_alloc_t* alloc,
                                 const matx_vec_d_i8_t v,
@@ -496,7 +422,7 @@ matx_status_t matx_vec_z_i8_pow(const matx_alloc_t* alloc,
     return MATX_OK;
 }
 
-// ---- Vector element-wise arithmetic ----
+/* ---- Vector element-wise arithmetic ---- */
 
 matx_status_t matx_vec_d_i8_add(const matx_alloc_t* alloc,
                                 const matx_vec_d_i8_t a,
@@ -690,7 +616,7 @@ matx_status_t matx_vec_z_i8_div(const matx_alloc_t* alloc,
     return MATX_OK;
 }
 
-// ---- In-place scalar operations ----
+/* ---- In-place scalar operations ---- */
 
 matx_status_t matx_vec_d_i8_add_scalar(matx_vec_d_i8_t v, matx_double val)
 {
@@ -742,7 +668,7 @@ matx_status_t matx_vec_z_i8_mul_scalar(matx_vec_z_i8_t v, matx_complex_d_t val)
     return MATX_OK;
 }
 
-// ---- Cumulative sum ----
+/* ---- Cumulative sum ---- */
 
 matx_status_t matx_vec_d_i8_cumsum(const matx_alloc_t* alloc,
                                    const matx_vec_d_i8_t v,
