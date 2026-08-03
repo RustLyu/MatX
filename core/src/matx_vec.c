@@ -78,7 +78,7 @@ void matx_vec_d_i8_destroy(const matx_alloc_t* alloc, matx_vec_d_i8_t v)
     if ((v->flags & 1u) != 0u && v->data && alloc) {
         matx_free(alloc, v->data);
     }
-    matx_handles_destroy(&v->backend_handles, &v->num_backend_handles);
+    matx_handles_destroy(v->backend_handles, &v->num_backend_handles);
     matx_free(alloc, v);
 }
 
@@ -153,7 +153,7 @@ void matx_vec_z_i8_destroy(const matx_alloc_t* alloc, matx_vec_z_i8_t v)
         v->data = NULL;
     }
 
-    matx_handles_destroy(&v->backend_handles, &v->num_backend_handles);
+    matx_handles_destroy(v->backend_handles, &v->num_backend_handles);
     matx_free(alloc, v);
     //memset(v, 0, sizeof(*v));
 }

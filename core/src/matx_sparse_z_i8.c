@@ -201,7 +201,7 @@ void matx_coo_sparse_z_i8_destroy(const matx_alloc_t* alloc, matx_coo_z_i8_t m)
         m->values = NULL;
     }
 
-    matx_handles_destroy(&m->backend_handles, &m->num_backend_handles);
+    matx_handles_destroy(m->backend_handles, &m->num_backend_handles);
     if (m->handle_csc != NULL) {
         matx_csc_sparse_z_i8_destroy(alloc, m->handle_csc);
         matx_free(alloc, m->handle_csc);

@@ -127,7 +127,7 @@ void matx_dense_d_i8_destroy(const matx_alloc_t* alloc, matx_dense_d_i8_t m)
         m->data = NULL;
     }
 
-    matx_handles_destroy(&m->backend_handles, &m->num_backend_handles);
+    matx_handles_destroy(m->backend_handles, &m->num_backend_handles);
     matx_free(alloc, m);
 }
 
