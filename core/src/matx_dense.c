@@ -194,22 +194,22 @@ matx_status_t matx_dense_##PREFIX##_get_diag(const matx_alloc_t* alloc,         
 
 /* ---- Type-agnostic expansions ---- */
 
-MATX_DEF_DENSE_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double
-MATX_DEF_DENSE_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
-MATX_DEF_DENSE_DUP(d_i8, matx_dense_d_i8_opaque_t, matx_double
-MATX_DEF_DENSE_DUP(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
-MATX_DEF_DENSE_WRAP(d_i8, matx_dense_d_i8_opaque_t, matx_double
-MATX_DEF_DENSE_WRAP(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
-MATX_DEF_DENSE_DESTROY(d_i8, matx_dense_d_i8_opaque_t, matx_double
-MATX_DEF_DENSE_DESTROY(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
-MATX_DEF_DENSE_FILL(d_i8, matx_dense_d_i8_opaque_t, matx_double
-MATX_DEF_DENSE_FILL(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
-MATX_DEF_DENSE_ZEROS(d_i8, matx_dense_d_i8_opaque_t, matx_double
-MATX_DEF_DENSE_ZEROS(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
-MATX_DEF_DIAG_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double
-MATX_DEF_DIAG_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
-MATX_DEF_GET_DIAG(d_i8, matx_dense_d_i8_opaque_t, matx_double
-MATX_DEF_GET_DIAG(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_DENSE_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_DENSE_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_DENSE_DUP(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_DENSE_DUP(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_DENSE_WRAP(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_DENSE_WRAP(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_DENSE_DESTROY(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_DENSE_DESTROY(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_DENSE_FILL(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_DENSE_FILL(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_DENSE_ZEROS(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_DENSE_ZEROS(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_DIAG_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_DIAG_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_GET_DIAG(d_i8, matx_dense_d_i8_opaque_t, matx_double)
+MATX_DEF_GET_DIAG(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
 
 #undef MATX_DEF_DENSE_CREATE
 #undef MATX_DEF_DENSE_DUP
