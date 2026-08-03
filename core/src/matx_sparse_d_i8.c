@@ -199,29 +199,7 @@ void matx_coo_sparse_d_i8_destroy(const matx_alloc_t* alloc, matx_coo_d_i8_t m)
         m->values = NULL;
     }
 
-    if (m->handle_grb.valid > 0) {
-        if (m->handle_grb.custom_free_func && m->handle_grb.impl) {
-            m->handle_grb.custom_free_func(m->handle_grb.impl);
-        }
-        m->handle_grb.impl = NULL;
-        m->handle_grb.valid = -1;
-    }
-
-    if (m->handle_mkl.valid > 0) {
-        if (m->handle_mkl.custom_free_func && m->handle_mkl.impl) {
-            m->handle_mkl.custom_free_func(m->handle_mkl.impl);
-        }
-        m->handle_mkl.impl = NULL;
-        m->handle_mkl.valid = -1;
-    }
-
-    if (m->handle_aocl.valid > 0) {
-        if (m->handle_aocl.custom_free_func && m->handle_aocl.impl) {
-            m->handle_aocl.custom_free_func(m->handle_aocl.impl);
-        }
-        m->handle_aocl.impl = NULL;
-        m->handle_aocl.valid = -1;
-    }
+    matx_handles_destroy(&m->backend_handles, &m->num_backend_handles);
     if (m->handle_csc != NULL) {
         matx_csc_sparse_d_i8_destroy(alloc, m->handle_csc);
         matx_free(alloc, m->handle_csc);

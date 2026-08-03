@@ -127,13 +127,7 @@ void matx_dense_d_i8_destroy(const matx_alloc_t* alloc, matx_dense_d_i8_t m)
         m->data = NULL;
     }
 
-    if (m->handle_grb.valid > 0) {
-        if (m->handle_grb.custom_free_func && m->handle_grb.impl) {
-            m->handle_grb.custom_free_func(m->handle_grb.impl);
-        }
-        m->handle_grb.impl = NULL;
-        m->handle_grb.valid = -1;
-    }
+    matx_handles_destroy(&m->backend_handles, &m->num_backend_handles);
     matx_free(alloc, m);
 }
 

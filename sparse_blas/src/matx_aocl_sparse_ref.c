@@ -30,7 +30,7 @@ static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_t alpha,
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_z_i8(A) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
@@ -48,7 +48,7 @@ static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_t alpha,
 
     aoclsparse_status status = aoclsparse_zmv(aoclsparse_operation_none,
                                               &a,
-                                              (aoclsparse_matrix) A->handle_aocl.impl,
+                                              (aoclsparse_matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                               descr,
                                               (aoclsparse_double_complex*) x->data,
                                               &b,
@@ -78,7 +78,7 @@ static matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_t alpha,
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_z_i8(A) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
@@ -95,7 +95,7 @@ static matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_t alpha,
 
     aoclsparse_status status = aoclsparse_zcsrmm(aoclsparse_operation_none,
                                                  a,
-                                                 (aoclsparse_matrix) A->handle_aocl.impl,
+                                                 (aoclsparse_matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                                  descr,
                                                  aoclsparse_order_row,
                                                  (aoclsparse_double_complex*) B->data,
@@ -124,7 +124,7 @@ static matx_status_t ref_spmv_d_i8_aocl(
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_d_i8(A) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
@@ -137,7 +137,7 @@ static matx_status_t ref_spmv_d_i8_aocl(
     aoclsparse_set_mat_type(descr, aoclsparse_matrix_type_general);
     aoclsparse_set_mat_diag_type(descr, aoclsparse_diag_type_non_unit);
 
-    aoclsparse_status status = aoclsparse_set_mv_hint(A->handle_aocl.impl,
+    aoclsparse_status status = aoclsparse_set_mv_hint(MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                                       aoclsparse_operation_none,
                                                       descr,
                                                       1);
@@ -147,7 +147,7 @@ static matx_status_t ref_spmv_d_i8_aocl(
     }
     status = aoclsparse_dmv(aoclsparse_operation_none,
                             &alpha,
-                            (aoclsparse_matrix) A->handle_aocl.impl,
+                            (aoclsparse_matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                             descr,
                             x->data,
                             &beta,
@@ -174,7 +174,7 @@ static matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_d_i8(A) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
@@ -189,7 +189,7 @@ static matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
 
     aoclsparse_status status = aoclsparse_dcsrmm(aoclsparse_operation_none,
                                                  alpha,
-                                                 (aoclsparse_matrix) A->handle_aocl.impl,
+                                                 (aoclsparse_matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                                  descr,
                                                  aoclsparse_order_row,
                                                  B->data,
@@ -219,14 +219,14 @@ static matx_status_t ref_dsp2md_d_i8_aocl(
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_d_i8(A) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
         }
     }
 
-    if (B->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_d_i8(B) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
@@ -241,10 +241,10 @@ static matx_status_t ref_dsp2md_d_i8_aocl(
 
     aoclsparse_status status = aoclsparse_dsp2md(aoclsparse_operation_none,
                                                  descr,
-                                                 (aoclsparse_matrix) A->handle_aocl.impl,
+                                                 (aoclsparse_matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                                  aoclsparse_operation_none,
                                                  descr,
-                                                 (aoclsparse_matrix) B->handle_aocl.impl,
+                                                 (aoclsparse_matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                                  alpha,
                                                  beta,
                                                  C->data,
@@ -274,14 +274,14 @@ static matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_t alpha,
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_z_i8(A) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
         }
     }
 
-    if (B->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_z_i8(B) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
@@ -299,10 +299,10 @@ static matx_status_t ref_zsp2md_z_i8_aocl(matx_complex_d_t alpha,
 
     aoclsparse_status status = aoclsparse_zsp2md(aoclsparse_operation_none,
                                                  descr,
-                                                 (aoclsparse_matrix) A->handle_aocl.impl,
+                                                 (aoclsparse_matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                                  aoclsparse_operation_none,
                                                  descr,
-                                                 (aoclsparse_matrix) B->handle_aocl.impl,
+                                                 (aoclsparse_matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                                  a,
                                                  b,
                                                  (void*) C->data,
@@ -357,16 +357,16 @@ static matx_status_t ref_conj_trans_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_aocl.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
         if (coo_2_aocl_z_i8(A) != 0) {
             MATX_ERROR("%s: internal error", __func__);
             return MATX_ERR_INTERNAL;
         }
     }
 
-    aoclsparse_status status = aoclsparse_convert_csr(A->handle_aocl.impl,
+    aoclsparse_status status = aoclsparse_convert_csr(MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
                                                       aoclsparse_operation_conjugate_transpose,
-                                                      out->handle_aocl.impl);
+                                                      MATX_HANDLE(out, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl);
 
     if (status != aoclsparse_status_success) {
         MATX_ERROR("aoclsparse_convert_csr error: %d", status);

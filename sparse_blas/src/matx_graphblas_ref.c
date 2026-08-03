@@ -31,22 +31,22 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(A);
-    if (x->handle_grb.valid <= 0)
+    if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0)
         vec_2_grb_z_i8(x);
-    if (y->handle_grb.valid <= 0)
+    if (MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0)
         vec_2_grb_z_i8(y);
 
     GxB_FC64_t a = {alpha.real, alpha.imag};
     GxB_FC64_t b = {beta.real, beta.imag};
 
     // gy = beta * gy
-    GrB_Info info = GrB_apply((GrB_Vector) y->handle_grb.impl,
+    GrB_Info info = GrB_apply((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                               NULL,
                               NULL,
                               GxB_TIMES_FC64,
-                              (GrB_Vector) y->handle_grb.impl,
+                              (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                               b,
                               NULL);
     if (info != GrB_SUCCESS) {
@@ -60,8 +60,8 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
                    NULL,
                    NULL,
                    GxB_PLUS_TIMES_FC64,
-                   (GrB_Matrix) A->handle_grb.impl,
-                   (GrB_Vector) x->handle_grb.impl,
+                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+                   (GrB_Vector) MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                    NULL);
     if (info != GrB_SUCCESS) {
         GrB_Vector_free(&temp);
@@ -74,11 +74,11 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
         MATX_ERROR("GrB_apply alpha*temp error: %d", info);
         return MATX_ERR_INTERNAL;
     }
-    info = GrB_eWiseAdd((GrB_Vector) y->handle_grb.impl,
+    info = GrB_eWiseAdd((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                         NULL,
                         NULL,
                         GxB_PLUS_FC64,
-                        (GrB_Vector) y->handle_grb.impl,
+                        (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                         temp,
                         NULL);
     GrB_Vector_free(&temp);
@@ -109,13 +109,13 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
     }
 
     /* build A */
-    if (A->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_z_i8(A);
     }
-    if (B->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         dense_2_grb_z_i8(B);
     }
-    if (C->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         dense_2_grb_z_i8(C);
     }
 
@@ -130,8 +130,8 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
                             NULL,
                             NULL,
                             GxB_PLUS_TIMES_FC64,
-                            (GrB_Matrix) A->handle_grb.impl,
-                            (GrB_Matrix) B->handle_grb.impl,
+                            (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+                            (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                             NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_mxm error: %d", info);
@@ -143,11 +143,11 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
         return MATX_ERR_INTERNAL;
     }
     //2. gC = beta * gC
-    info = GrB_apply((GrB_Matrix) C->handle_grb.impl,
+    info = GrB_apply((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                      NULL,
                      NULL,
                      GxB_TIMES_FC64,
-                     (GrB_Matrix) C->handle_grb.impl,
+                     (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                      b,
                      NULL);
     if (info != GrB_SUCCESS) {
@@ -155,12 +155,12 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
         return MATX_ERR_INTERNAL;
     }
     //3. gC = temp + gC
-    info = GrB_eWiseAdd((GrB_Matrix) C->handle_grb.impl,
+    info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL,
                         NULL,
                         GxB_PLUS_FC64,
                         temp,
-                        (GrB_Matrix) C->handle_grb.impl,
+                        (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
@@ -186,19 +186,19 @@ static matx_status_t ref_spmv_d_i8_grb(
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(A);
-    if (x->handle_grb.valid <= 0)
+    if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0)
         vec_2_grb_d_i8(x);
-    if (y->handle_grb.valid <= 0)
+    if (MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0)
         vec_2_grb_d_i8(y);
 
     // gy = beta * gy
-    GrB_Info info = GrB_apply((GrB_Vector) y->handle_grb.impl,
+    GrB_Info info = GrB_apply((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                               NULL,
                               NULL,
                               GrB_TIMES_FP64,
-                              (GrB_Vector) y->handle_grb.impl,
+                              (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                               beta,
                               NULL);
     if (info != GrB_SUCCESS) {
@@ -213,8 +213,8 @@ static matx_status_t ref_spmv_d_i8_grb(
                    NULL,
                    NULL,
                    GxB_PLUS_TIMES_FP64,
-                   (GrB_Matrix) A->handle_grb.impl,
-                   (GrB_Vector) x->handle_grb.impl,
+                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+                   (GrB_Vector) MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                    NULL);
     if (info != GrB_SUCCESS) {
         GrB_Vector_free(&temp);
@@ -227,11 +227,11 @@ static matx_status_t ref_spmv_d_i8_grb(
         MATX_ERROR("GrB_apply alpha*temp error: %d", info);
         return MATX_ERR_INTERNAL;
     }
-    info = GrB_eWiseAdd((GrB_Vector) y->handle_grb.impl,
+    info = GrB_eWiseAdd((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                         NULL,
                         NULL,
                         GrB_PLUS_FP64,
-                        (GrB_Vector) y->handle_grb.impl,
+                        (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
                         temp,
                         NULL);
     GrB_Vector_free(&temp);
@@ -259,13 +259,13 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
     }
 
     /* build A */
-    if (A->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_d_i8(A);
     }
-    if (B->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         dense_2_grb_d_i8(B);
     }
-    if (C->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         dense_2_grb_d_i8(C);
     }
 
@@ -278,8 +278,8 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
                    NULL,
                    NULL,
                    GxB_PLUS_TIMES_FP64,
-                   (GrB_Matrix) A->handle_grb.impl,
-                   (GrB_Matrix) B->handle_grb.impl,
+                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+                   (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                    NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
@@ -291,11 +291,11 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
         return MATX_ERR_INTERNAL;
     }
     //2. gC = beta * gC
-    info = GrB_apply((GrB_Matrix) C->handle_grb.impl,
+    info = GrB_apply((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                      NULL,
                      NULL,
                      GrB_TIMES_FP64,
-                     (GrB_Matrix) C->handle_grb.impl,
+                     (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                      beta,
                      NULL);
     if (info != GrB_SUCCESS) {
@@ -303,12 +303,12 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
         return MATX_ERR_INTERNAL;
     }
     //3. gC = temp + gC
-    info = GrB_eWiseAdd((GrB_Matrix) C->handle_grb.impl,
+    info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL,
                         NULL,
                         GrB_PLUS_FP64,
                         temp,
-                        (GrB_Matrix) C->handle_grb.impl,
+                        (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
@@ -330,13 +330,13 @@ static matx_status_t ref_dsp2md_d_i8_grb(
     }
 
     /* build A */
-    if (A->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_d_i8(A);
     }
-    if (B->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_d_i8(B);
     }
-    if (C->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         dense_2_grb_d_i8(C);
     }
 
@@ -349,8 +349,8 @@ static matx_status_t ref_dsp2md_d_i8_grb(
                    NULL,
                    NULL,
                    GxB_PLUS_TIMES_FP64,
-                   (GrB_Matrix) A->handle_grb.impl,
-                   (GrB_Matrix) B->handle_grb.impl,
+                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+                   (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                    NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
@@ -362,11 +362,11 @@ static matx_status_t ref_dsp2md_d_i8_grb(
         return MATX_ERR_INTERNAL;
     }
     //2. gC = beta * gC
-    info = GrB_apply((GrB_Matrix) C->handle_grb.impl,
+    info = GrB_apply((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                      NULL,
                      NULL,
                      GrB_TIMES_FP64,
-                     (GrB_Matrix) C->handle_grb.impl,
+                     (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                      beta,
                      NULL);
     if (info != GrB_SUCCESS) {
@@ -374,12 +374,12 @@ static matx_status_t ref_dsp2md_d_i8_grb(
         return MATX_ERR_INTERNAL;
     }
     //3. gC = temp + gC
-    info = GrB_eWiseAdd((GrB_Matrix) C->handle_grb.impl,
+    info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL,
                         NULL,
                         GrB_PLUS_FP64,
                         temp,
-                        (GrB_Matrix) C->handle_grb.impl,
+                        (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
@@ -404,13 +404,13 @@ static matx_status_t ref_zsp2md_z_i8_grb(matx_complex_d_t alpha,
     }
 
     /* build A */
-    if (A->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_z_i8(A);
     }
-    if (B->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_z_i8(B);
     }
-    if (C->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         dense_2_grb_z_i8(C);
     }
 
@@ -424,8 +424,8 @@ static matx_status_t ref_zsp2md_z_i8_grb(matx_complex_d_t alpha,
                    NULL,
                    NULL,
                    GxB_PLUS_TIMES_FC64,
-                   (GrB_Matrix) A->handle_grb.impl,
-                   (GrB_Matrix) B->handle_grb.impl,
+                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+                   (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                    NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
@@ -437,11 +437,11 @@ static matx_status_t ref_zsp2md_z_i8_grb(matx_complex_d_t alpha,
         return MATX_ERR_INTERNAL;
     }
     //2. gC = beta * gC
-    info = GrB_apply((GrB_Matrix) C->handle_grb.impl,
+    info = GrB_apply((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                      NULL,
                      NULL,
                      GxB_TIMES_FC64,
-                     (GrB_Matrix) C->handle_grb.impl,
+                     (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                      b,
                      NULL);
     if (info != GrB_SUCCESS) {
@@ -449,12 +449,12 @@ static matx_status_t ref_zsp2md_z_i8_grb(matx_complex_d_t alpha,
         return MATX_ERR_INTERNAL;
     }
     //3. gC = temp + gC
-    info = GrB_eWiseAdd((GrB_Matrix) C->handle_grb.impl,
+    info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL,
                         NULL,
                         GxB_PLUS_FC64,
                         temp,
-                        (GrB_Matrix) C->handle_grb.impl,
+                        (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
@@ -475,14 +475,14 @@ static matx_status_t ref_transpose_d_i8_grb(matx_coo_d_i8_t A, matx_coo_d_i8_t o
     }
 
     /* build A */
-    if (A->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_d_i8(A);
     }
     create_empty_grb_d_i8(out);
-    GrB_Info info = GrB_transpose((GrB_Matrix) out->handle_grb.impl,
+    GrB_Info info = GrB_transpose((GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                                   NULL,
                                   NULL,
-                                  (GrB_Matrix) A->handle_grb.impl,
+                                  (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                                   NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_transpose error: %d", info);
@@ -502,15 +502,15 @@ static matx_status_t ref_transpose_z_i8_grb(matx_coo_z_i8_t A, matx_coo_z_i8_t o
     }
 
     /* build A */
-    if (A->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_z_i8(A);
     }
-    if (!out->handle_grb.impl)
+    if (!MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl)
         create_empty_grb_z_i8(out);
-    GrB_Info info = GrB_transpose((GrB_Matrix) (out->handle_grb.impl),
+    GrB_Info info = GrB_transpose((GrB_Matrix) (MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl),
                                   NULL,
                                   NULL,
-                                  (GrB_Matrix) (A->handle_grb.impl),
+                                  (GrB_Matrix) (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl),
                                   NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_transpose error: %d", info);
@@ -530,10 +530,10 @@ static matx_status_t ref_conj_trans_z_i8_grb(matx_coo_z_i8_t A, matx_coo_z_i8_t 
     }
 
     /* build A */
-    if (A->handle_grb.valid <= 0) {
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
         coo_2_grb_z_i8(A);
     }
-    if (!out->handle_grb.impl)
+    if (!MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl)
         create_empty_grb_z_i8(out);
     //1. transpose
     matx_status_t trans_status = ref_transpose_z_i8_grb(A, out);
@@ -542,11 +542,11 @@ static matx_status_t ref_conj_trans_z_i8_grb(matx_coo_z_i8_t A, matx_coo_z_i8_t 
         return MATX_ERR_INTERNAL;
     }
     //2.  conj
-    GrB_Info info = GrB_apply((GrB_Matrix) out->handle_grb.impl,
+    GrB_Info info = GrB_apply((GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                               NULL,
                               NULL,
                               GxB_CONJ_FC64,
-                              (GrB_Matrix) out->handle_grb.impl,
+                              (GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                               NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_CONJ error: %d", info);
@@ -574,11 +574,11 @@ static matx_status_t ref_norm1_mat_grb(matx_coo_d_i8_t A, matx_double* out)
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(A);
 
     GrB_Matrix tmp;
-    GrB_Matrix_dup(&tmp, (GrB_Matrix) A->handle_grb.impl);
+    GrB_Matrix_dup(&tmp, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
     GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
     GrB_Vector col_sums;
     GrB_Vector_new(&col_sums, GrB_FP64, A->ncols);
@@ -597,11 +597,11 @@ static matx_status_t ref_norminf_mat_grb(matx_coo_d_i8_t A, matx_double* out)
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(A);
 
     GrB_Matrix tmp;
-    GrB_Matrix_dup(&tmp, (GrB_Matrix) A->handle_grb.impl);
+    GrB_Matrix_dup(&tmp, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
     GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
     GrB_Vector row_sums;
     GrB_Vector_new(&row_sums, GrB_FP64, A->nrows);
@@ -620,11 +620,11 @@ static matx_status_t ref_normfro_mat_grb(matx_coo_d_i8_t A, matx_double* out)
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(A);
 
     GrB_Matrix tmp;
-    GrB_Matrix_dup(&tmp, (GrB_Matrix) A->handle_grb.impl);
+    GrB_Matrix_dup(&tmp, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
     GrB_eWiseMult(tmp, NULL, NULL, GrB_TIMES_FP64, tmp, tmp, NULL);
     double sumsq = 0.0;
     GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
@@ -643,12 +643,12 @@ static matx_status_t ref_norm1_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out)
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(A);
 
     GrB_Matrix abs_mat;
     GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
-    GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix) A->handle_grb.impl, NULL);
+    GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl, NULL);
     GrB_Vector col_sums;
     GrB_Vector_new(&col_sums, GrB_FP64, A->ncols);
     GrB_reduce(col_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, abs_mat, NULL);
@@ -666,12 +666,12 @@ static matx_status_t ref_norminf_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* ou
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(A);
 
     GrB_Matrix abs_mat;
     GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
-    GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix) A->handle_grb.impl, NULL);
+    GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl, NULL);
     GrB_Vector row_sums;
     GrB_Vector_new(&row_sums, GrB_FP64, A->nrows);
     GrB_reduce(row_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, abs_mat, GrB_DESC_T0);
@@ -689,12 +689,12 @@ static matx_status_t ref_normfro_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* ou
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(A);
 
     GrB_Matrix abs_mat;
     GrB_Matrix_new(&abs_mat, GrB_FP64, A->nrows, A->ncols);
-    GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix) A->handle_grb.impl, NULL);
+    GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl, NULL);
     GrB_eWiseMult(abs_mat, NULL, NULL, GrB_TIMES_FP64, abs_mat, abs_mat, NULL);
     double sumsq = 0.0;
     GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, abs_mat, NULL);
@@ -718,20 +718,20 @@ static matx_status_t ref_spadd_d_i8_grb(
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(A);
-    if (B->handle_grb.valid <= 0)
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(B);
 
     GrB_Matrix temp_a;
-    GrB_Matrix_dup(&temp_a, (GrB_Matrix) A->handle_grb.impl);
+    GrB_Matrix_dup(&temp_a, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
     GrB_apply(temp_a, NULL, NULL, GrB_TIMES_FP64, temp_a, alpha, NULL);
     GrB_Matrix temp_b;
-    GrB_Matrix_dup(&temp_b, (GrB_Matrix) B->handle_grb.impl);
+    GrB_Matrix_dup(&temp_b, (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
     GrB_apply(temp_b, NULL, NULL, GrB_TIMES_FP64, temp_b, beta, NULL);
 
     create_empty_grb_d_i8(out);
-    GrB_Info info = GrB_eWiseAdd((GrB_Matrix) out->handle_grb.impl,
+    GrB_Info info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                                  NULL,
                                  NULL,
                                  GrB_PLUS_FP64,
@@ -764,22 +764,22 @@ static matx_status_t ref_spadd_z_i8_grb(matx_complex_d_t alpha,
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->handle_grb.valid <= 0)
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(A);
-    if (B->handle_grb.valid <= 0)
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(B);
 
     GxB_FC64_t a = {alpha.real, alpha.imag};
     GxB_FC64_t b = {beta.real, beta.imag};
     GrB_Matrix temp_a;
-    GrB_Matrix_dup(&temp_a, (GrB_Matrix) A->handle_grb.impl);
+    GrB_Matrix_dup(&temp_a, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
     GrB_apply(temp_a, NULL, NULL, GxB_TIMES_FC64, temp_a, a, NULL);
     GrB_Matrix temp_b;
-    GrB_Matrix_dup(&temp_b, (GrB_Matrix) B->handle_grb.impl);
+    GrB_Matrix_dup(&temp_b, (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
     GrB_apply(temp_b, NULL, NULL, GxB_TIMES_FC64, temp_b, b, NULL);
 
     create_empty_grb_z_i8(out);
-    GrB_Info info = GrB_eWiseAdd((GrB_Matrix) out->handle_grb.impl,
+    GrB_Info info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                                  NULL,
                                  NULL,
                                  GxB_PLUS_FC64,

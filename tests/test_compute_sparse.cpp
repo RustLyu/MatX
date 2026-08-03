@@ -213,8 +213,8 @@ TEST(compute_sparse, spmm_csc_z_i8_4x4) {
 	matx_dense_z_i8_t B = NULL, C = NULL;
 	ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
 	ASSERT_EQ(matx_dense_z_i8_create(&a, &C, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
-	B->handle_grb.valid = -1;
-	C->handle_grb.valid = -1;
+	MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = -1;
+	MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = -1;
 	for (size_t i = 0; i < 16; ++i) {
 		B->data[i].real = (i % 4 == i / 4) ? 1.0 : 0.0;
 		B->data[i].imag = 0.0;
@@ -319,7 +319,7 @@ TEST(compute_sparse, conj_z_i8_4x4) {
 	matx_coo_sparse_z_i8_create(&a, &A, 4, 4, nnz, rows, cols, values);
 	matx_coo_z_i8_t B = NULL;
 	ASSERT_EQ(matx_coo_sparse_z_i8_create(&a, &B, 4, 4, 16, NULL, NULL, NULL), MATX_OK);
-	B->handle_grb.valid = -1;
+	MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = -1;
 	for (size_t i = 0; i < 16; ++i) {
 		B->values[i].real = 0.0;
 		B->values[i].imag = 0.0;
