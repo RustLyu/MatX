@@ -1,4 +1,4 @@
-#include "matx/matx_func.h"
+﻿#include "matx/matx_func.h"
 #include "matx/matx_types.h"
 #include "matx/matx_types_internal.h"
 
@@ -7,7 +7,7 @@
 
 /* ---- Macro generators for type-agnostic sparse functions ---- */
 
-#define MATX_DEF_COO_CREATE(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)               \
+#define MATX_DEF_COO_CREATE(PREFIX, OPAQUE, SCA_TYPE)               \
 matx_status_t matx_coo_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      \
                                                  matx_coo_##PREFIX##_t* out,     \
                                                  matx_int64_t nrows,             \
@@ -61,7 +61,7 @@ matx_status_t matx_coo_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      
     return MATX_OK;                                                             \
 }
 
-#define MATX_DEF_COO_DUP(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                   \
+#define MATX_DEF_COO_DUP(PREFIX, OPAQUE, SCA_TYPE)                   \
 matx_status_t matx_coo_##PREFIX##_dup(const matx_alloc_t* alloc,                \
                                        const matx_coo_##PREFIX##_t in,           \
                                        matx_coo_##PREFIX##_t* out)               \
@@ -72,7 +72,7 @@ matx_status_t matx_coo_##PREFIX##_dup(const matx_alloc_t* alloc,                
                                               in->values);                      \
 }
 
-#define MATX_DEF_CSC_CREATE(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)               \
+#define MATX_DEF_CSC_CREATE(PREFIX, OPAQUE, SCA_TYPE)               \
 matx_status_t matx_csc_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      \
                                                  matx_csc_##PREFIX##_t* out,     \
                                                  matx_int64_t nrows,             \
@@ -122,7 +122,7 @@ matx_status_t matx_csc_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      
     return MATX_OK;                                                             \
 }
 
-#define MATX_DEF_CSC_DESTROY(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)              \
+#define MATX_DEF_CSC_DESTROY(PREFIX, OPAQUE, SCA_TYPE)              \
 void matx_csc_sparse_##PREFIX##_destroy(const matx_alloc_t* alloc,              \
                                          matx_csc_##PREFIX##_t m)                \
 {                                                                               \
@@ -138,7 +138,7 @@ void matx_csc_sparse_##PREFIX##_destroy(const matx_alloc_t* alloc,              
     memset(m, 0, sizeof(*m));                                                   \
 }
 
-#define MATX_DEF_COO_DESTROY(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)              \
+#define MATX_DEF_COO_DESTROY(PREFIX, OPAQUE, SCA_TYPE)              \
 void matx_coo_sparse_##PREFIX##_destroy(const matx_alloc_t* alloc,              \
                                          matx_coo_##PREFIX##_t m)                \
 {                                                                               \
@@ -163,16 +163,16 @@ void matx_coo_sparse_##PREFIX##_destroy(const matx_alloc_t* alloc,              
 
 /* ---- Type-agnostic expansions ---- */
 
-MATX_DEF_COO_CREATE(d_i8, matx_coo_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_COO_CREATE(z_i8, matx_coo_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_COO_DUP(d_i8, matx_coo_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_COO_DUP(z_i8, matx_coo_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_CSC_CREATE(d_i8, matx_csc_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_CSC_CREATE(z_i8, matx_csc_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_CSC_DESTROY(d_i8, matx_csc_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_CSC_DESTROY(z_i8, matx_csc_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_COO_DESTROY(d_i8, matx_coo_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_COO_DESTROY(z_i8, matx_coo_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
+MATX_DEF_COO_CREATE(d_i8, matx_coo_d_i8_opaque_t, matx_double
+MATX_DEF_COO_CREATE(z_i8, matx_coo_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_COO_DUP(d_i8, matx_coo_d_i8_opaque_t, matx_double
+MATX_DEF_COO_DUP(z_i8, matx_coo_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_CSC_CREATE(d_i8, matx_csc_d_i8_opaque_t, matx_double
+MATX_DEF_CSC_CREATE(z_i8, matx_csc_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_CSC_DESTROY(d_i8, matx_csc_d_i8_opaque_t, matx_double
+MATX_DEF_CSC_DESTROY(z_i8, matx_csc_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_COO_DESTROY(d_i8, matx_coo_d_i8_opaque_t, matx_double
+MATX_DEF_COO_DESTROY(z_i8, matx_coo_z_i8_opaque_t, matx_complex_d_t
 
 #undef MATX_DEF_COO_CREATE
 #undef MATX_DEF_COO_DUP

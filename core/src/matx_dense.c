@@ -1,4 +1,4 @@
-#include "matx/matx_func.h"
+﻿#include "matx/matx_func.h"
 #include "matx/matx_types.h"
 #include "matx/matx_types_internal.h"
 
@@ -11,7 +11,7 @@
 
 /* ---- Macro generators for type-agnostic dense matrix functions ---- */
 
-#define MATX_DEF_DENSE_CREATE(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)            \
+#define MATX_DEF_DENSE_CREATE(PREFIX, OPAQUE, SCA_TYPE)            \
 matx_status_t matx_dense_##PREFIX##_create(const matx_alloc_t* alloc,          \
                                            matx_dense_##PREFIX##_t* out,       \
                                            matx_layout_t layout,               \
@@ -55,7 +55,7 @@ matx_status_t matx_dense_##PREFIX##_create(const matx_alloc_t* alloc,          \
     return MATX_OK;                                                            \
 }
 
-#define MATX_DEF_DENSE_DUP(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                \
+#define MATX_DEF_DENSE_DUP(PREFIX, OPAQUE, SCA_TYPE)                \
 matx_status_t matx_dense_##PREFIX##_dup(const matx_alloc_t* alloc,             \
                                         const matx_dense_##PREFIX##_t in,       \
                                         matx_dense_##PREFIX##_t* out)           \
@@ -64,7 +64,7 @@ matx_status_t matx_dense_##PREFIX##_dup(const matx_alloc_t* alloc,             \
                                         in->ncols, in->data);                  \
 }
 
-#define MATX_DEF_DENSE_WRAP(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)               \
+#define MATX_DEF_DENSE_WRAP(PREFIX, OPAQUE, SCA_TYPE)               \
 matx_status_t matx_dense_##PREFIX##_wrap(const matx_alloc_t* alloc,            \
                                           matx_dense_##PREFIX##_t* out,         \
                                           matx_int64_t rows,                    \
@@ -111,7 +111,7 @@ matx_status_t matx_dense_##PREFIX##_wrap(const matx_alloc_t* alloc,            \
     return MATX_OK;                                                            \
 }
 
-#define MATX_DEF_DENSE_DESTROY(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)            \
+#define MATX_DEF_DENSE_DESTROY(PREFIX, OPAQUE, SCA_TYPE)            \
 void matx_dense_##PREFIX##_destroy(const matx_alloc_t* alloc,                   \
                                     matx_dense_##PREFIX##_t m)                  \
 {                                                                              \
@@ -125,7 +125,7 @@ void matx_dense_##PREFIX##_destroy(const matx_alloc_t* alloc,                   
     matx_free(alloc, m);                                                       \
 }
 
-#define MATX_DEF_DENSE_FILL(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)               \
+#define MATX_DEF_DENSE_FILL(PREFIX, OPAQUE, SCA_TYPE)               \
 matx_status_t matx_dense_##PREFIX##_fill(matx_dense_##PREFIX##_t m,             \
                                           SCA_TYPE val)                         \
 {                                                                              \
@@ -139,7 +139,7 @@ matx_status_t matx_dense_##PREFIX##_fill(matx_dense_##PREFIX##_t m,             
     return MATX_OK;                                                            \
 }
 
-#define MATX_DEF_DENSE_ZEROS(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)              \
+#define MATX_DEF_DENSE_ZEROS(PREFIX, OPAQUE, SCA_TYPE)              \
 matx_status_t matx_dense_##PREFIX##_zeros(matx_dense_##PREFIX##_t m)            \
 {                                                                              \
     if (!m || !m->data) {                                                      \
@@ -150,7 +150,7 @@ matx_status_t matx_dense_##PREFIX##_zeros(matx_dense_##PREFIX##_t m)            
     return MATX_OK;                                                            \
 }
 
-#define MATX_DEF_DIAG_CREATE(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)              \
+#define MATX_DEF_DIAG_CREATE(PREFIX, OPAQUE, SCA_TYPE)              \
 matx_status_t matx_diag_##PREFIX##_create(const matx_alloc_t* alloc,            \
                                            const matx_vec_##PREFIX##_t diag,    \
                                            matx_dense_##PREFIX##_t* out)        \
@@ -170,7 +170,7 @@ matx_status_t matx_diag_##PREFIX##_create(const matx_alloc_t* alloc,            
     return MATX_OK;                                                            \
 }
 
-#define MATX_DEF_GET_DIAG(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                 \
+#define MATX_DEF_GET_DIAG(PREFIX, OPAQUE, SCA_TYPE)                 \
 matx_status_t matx_dense_##PREFIX##_get_diag(const matx_alloc_t* alloc,         \
                                               const matx_dense_##PREFIX##_t A,  \
                                               matx_vec_##PREFIX##_t* out)       \
@@ -194,22 +194,22 @@ matx_status_t matx_dense_##PREFIX##_get_diag(const matx_alloc_t* alloc,         
 
 /* ---- Type-agnostic expansions ---- */
 
-MATX_DEF_DENSE_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_DENSE_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_DENSE_DUP(d_i8, matx_dense_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_DENSE_DUP(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_DENSE_WRAP(d_i8, matx_dense_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_DENSE_WRAP(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_DENSE_DESTROY(d_i8, matx_dense_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_DENSE_DESTROY(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_DENSE_FILL(d_i8, matx_dense_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_DENSE_FILL(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_DENSE_ZEROS(d_i8, matx_dense_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_DENSE_ZEROS(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_DIAG_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_DIAG_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_GET_DIAG(d_i8, matx_dense_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_GET_DIAG(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
+MATX_DEF_DENSE_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double
+MATX_DEF_DENSE_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_DENSE_DUP(d_i8, matx_dense_d_i8_opaque_t, matx_double
+MATX_DEF_DENSE_DUP(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_DENSE_WRAP(d_i8, matx_dense_d_i8_opaque_t, matx_double
+MATX_DEF_DENSE_WRAP(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_DENSE_DESTROY(d_i8, matx_dense_d_i8_opaque_t, matx_double
+MATX_DEF_DENSE_DESTROY(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_DENSE_FILL(d_i8, matx_dense_d_i8_opaque_t, matx_double
+MATX_DEF_DENSE_FILL(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_DENSE_ZEROS(d_i8, matx_dense_d_i8_opaque_t, matx_double
+MATX_DEF_DENSE_ZEROS(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_DIAG_CREATE(d_i8, matx_dense_d_i8_opaque_t, matx_double
+MATX_DEF_DIAG_CREATE(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
+MATX_DEF_GET_DIAG(d_i8, matx_dense_d_i8_opaque_t, matx_double
+MATX_DEF_GET_DIAG(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t
 
 #undef MATX_DEF_DENSE_CREATE
 #undef MATX_DEF_DENSE_DUP

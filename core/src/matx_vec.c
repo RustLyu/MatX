@@ -9,7 +9,7 @@
 
 /* ---- Macro generators for type-agnostic vector functions ---- */
 
-#define MATX_DEF_VEC_CREATE(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)               \
+#define MATX_DEF_VEC_CREATE(PREFIX, OPAQUE, SCA_TYPE)               \
 matx_status_t matx_vec_##PREFIX##_create(const matx_alloc_t* alloc,             \
                                          matx_vec_##PREFIX##_t* out,            \
                                          SCA_TYPE* data,                        \
@@ -40,7 +40,7 @@ matx_status_t matx_vec_##PREFIX##_create(const matx_alloc_t* alloc,             
     return MATX_OK;                                                             \
 }
 
-#define MATX_DEF_VEC_DUP(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                   \
+#define MATX_DEF_VEC_DUP(PREFIX, OPAQUE, SCA_TYPE)                   \
 matx_status_t matx_vec_##PREFIX##_dup(const matx_alloc_t* alloc,                \
                                       const matx_vec_##PREFIX##_t in,            \
                                       matx_vec_##PREFIX##_t* out)                \
@@ -48,7 +48,7 @@ matx_status_t matx_vec_##PREFIX##_dup(const matx_alloc_t* alloc,                
     return matx_vec_##PREFIX##_create(alloc, out, in->data, in->n);              \
 }
 
-#define MATX_DEF_VEC_WRAP(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                  \
+#define MATX_DEF_VEC_WRAP(PREFIX, OPAQUE, SCA_TYPE)                  \
 matx_status_t matx_vec_##PREFIX##_wrap(const matx_alloc_t* alloc,               \
                                         matx_vec_##PREFIX##_t* out,              \
                                         matx_int64_t n,                          \
@@ -72,7 +72,7 @@ matx_status_t matx_vec_##PREFIX##_wrap(const matx_alloc_t* alloc,               
     return MATX_OK;                                                             \
 }
 
-#define MATX_DEF_VEC_DESTROY(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)               \
+#define MATX_DEF_VEC_DESTROY(PREFIX, OPAQUE, SCA_TYPE)               \
 void matx_vec_##PREFIX##_destroy(const matx_alloc_t* alloc,                      \
                                   matx_vec_##PREFIX##_t v)                       \
 {                                                                               \
@@ -85,7 +85,7 @@ void matx_vec_##PREFIX##_destroy(const matx_alloc_t* alloc,                     
     matx_free(alloc, v);                                                        \
 }
 
-#define MATX_DEF_VEC_FILL(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                  \
+#define MATX_DEF_VEC_FILL(PREFIX, OPAQUE, SCA_TYPE)                  \
 matx_status_t matx_vec_##PREFIX##_fill(matx_vec_##PREFIX##_t v, SCA_TYPE val)    \
 {                                                                               \
     if (!v || !v->data) {                                                       \
@@ -97,35 +97,35 @@ matx_status_t matx_vec_##PREFIX##_fill(matx_vec_##PREFIX##_t v, SCA_TYPE val)   
     return MATX_OK;                                                             \
 }
 
-#define MATX_DEF_VEC_ZEROS(PREFIX, OPAQUE, SCA_TYPE, ZERO_VAL)                 \
-matx_status_t matx_vec_##PREFIX##_zeros(matx_vec_##PREFIX##_t v)                 \
-{                                                                               \
-    if (!v || !v->data) {                                                       \
-        MATX_ERROR("%s: invalid argument", __func__);                           \
-        return MATX_ERR_INVALID_ARG;                                            \
-    }                                                                           \
-    if (v->stride == 1)                                                         \
-        memset(v->data, 0, v->n * sizeof(SCA_TYPE));                            \
-    else                                                                        \
-        for (matx_int64_t i = 0; i < v->n; ++i)                                 \
-            v->data[i * v->stride] = ZERO_VAL;                                  \
-    return MATX_OK;                                                             \
+#define MATX_DEF_VEC_ZEROS(PREFIX, OPAQUE, SCA_TYPE)                       \
+matx_status_t matx_vec_##PREFIX##_zeros(matx_vec_##PREFIX##_t v)            \
+{                                                                           \
+    if (!v || !v->data) {                                                   \
+        MATX_ERROR("%s: invalid argument", __func__);                       \
+        return MATX_ERR_INVALID_ARG;                                        \
+    }                                                                       \
+    if (v->stride == 1)                                                     \
+        memset(v->data, 0, v->n * sizeof(SCA_TYPE));                        \
+    else                                                                    \
+        for (matx_int64_t i = 0; i < v->n; ++i)                             \
+            memset(&v->data[i * v->stride], 0, sizeof(SCA_TYPE));           \
+    return MATX_OK;                                                         \
 }
 
 /* ---- Type-agnostic expansions ---- */
 
-MATX_DEF_VEC_CREATE(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_VEC_CREATE(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_VEC_DUP(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_VEC_DUP(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_VEC_WRAP(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_VEC_WRAP(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_VEC_DESTROY(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_VEC_DESTROY(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_VEC_FILL(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_VEC_FILL(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
-MATX_DEF_VEC_ZEROS(d_i8, matx_vec_d_i8_opaque_t, matx_double, 0.0)
-MATX_DEF_VEC_ZEROS(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t, {0.0, 0.0})
+MATX_DEF_VEC_CREATE(d_i8, matx_vec_d_i8_opaque_t, matx_double)
+MATX_DEF_VEC_CREATE(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_VEC_DUP(d_i8, matx_vec_d_i8_opaque_t, matx_double)
+MATX_DEF_VEC_DUP(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_VEC_WRAP(d_i8, matx_vec_d_i8_opaque_t, matx_double)
+MATX_DEF_VEC_WRAP(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_VEC_DESTROY(d_i8, matx_vec_d_i8_opaque_t, matx_double)
+MATX_DEF_VEC_DESTROY(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_VEC_FILL(d_i8, matx_vec_d_i8_opaque_t, matx_double)
+MATX_DEF_VEC_FILL(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t)
+MATX_DEF_VEC_ZEROS(d_i8, matx_vec_d_i8_opaque_t, matx_double)
+MATX_DEF_VEC_ZEROS(z_i8, matx_vec_z_i8_opaque_t, matx_complex_d_t)
 
 #undef MATX_DEF_VEC_CREATE
 #undef MATX_DEF_VEC_DUP
