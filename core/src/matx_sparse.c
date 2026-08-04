@@ -21,7 +21,6 @@ matx_status_t matx_coo_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      
         MATX_ERROR("%s: invalid argument", __func__);                           \
         return MATX_ERR_INVALID_ARG;                                            \
     }                                                                           \
-    memset(out, 0, sizeof(*out));                                               \
     matx_int64_t* rows = (matx_int64_t*) matx_malloc(alloc,                      \
                                                       nnz * sizeof(matx_int64_t)); \
     matx_int64_t* cols = (matx_int64_t*) matx_malloc(alloc,                      \
@@ -83,7 +82,6 @@ matx_status_t matx_csc_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      
         MATX_ERROR("%s: invalid argument", __func__);                           \
         return MATX_ERR_INVALID_ARG;                                            \
     }                                                                           \
-    memset(out, 0, sizeof(*out));                                               \
     matx_int64_t* col_ptr_buf = (matx_int64_t*) matx_malloc(alloc,               \
                                              (ncols + 1) * sizeof(matx_int64_t)); \
     matx_int64_t* row_ind_buf = (matx_int64_t*) matx_malloc(alloc,               \
@@ -99,7 +97,6 @@ matx_status_t matx_csc_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      
             matx_free(alloc, row_ind_buf);                                      \
         if (values_buf)                                                         \
             matx_free(alloc, values_buf);                                       \
-        memset(out, 0, sizeof(*out));                                           \
         MATX_ERROR("%s: out of memory", __func__);                              \
         return MATX_ERR_OUT_OF_MEMORY;                                          \
     }                                                                           \
@@ -200,8 +197,6 @@ matx_status_t matx_csc_sparse_d_i8_wrap(const matx_alloc_t* alloc,
         return MATX_ERR_INVALID_ARG;
     }
 
-    memset(out, 0, sizeof(*out));
-
     matx_csc_d_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_csc_d_i8_opaque_t));
     memset(out_value, 0, sizeof(matx_csc_d_i8_opaque_t));
 
@@ -212,6 +207,8 @@ matx_status_t matx_csc_sparse_d_i8_wrap(const matx_alloc_t* alloc,
     out_value->row_ind = row_ind;
     out_value->values = values;
     out_value->flags = 0u;
+    out_value->struct_update = -1;
+    out_value->only_value_update = -1;
 
     if (*out != NULL) {
         matx_csc_sparse_d_i8_destroy(alloc, *out);
@@ -243,8 +240,6 @@ matx_status_t matx_coo_sparse_z_i8_wrap(const matx_alloc_t* alloc,
         return MATX_ERR_INVALID_ARG;
     }
 
-    memset(out, 0, sizeof(*out));
-
     matx_coo_z_i8_opaque_t* out_value = matx_malloc(alloc, sizeof(matx_coo_z_i8_opaque_t));
     memset(out_value, 0, sizeof(matx_coo_z_i8_opaque_t));
 
@@ -255,6 +250,10 @@ matx_status_t matx_coo_sparse_z_i8_wrap(const matx_alloc_t* alloc,
     out_value->columns = cols;
     out_value->values = values;
     out_value->flags = 0u;
+
+    if (*out != NULL) {
+        matx_coo_sparse_z_i8_destroy(alloc, *out);
+    }
 
     *out = out_value;
     return MATX_OK;
