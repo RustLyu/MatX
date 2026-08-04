@@ -208,7 +208,7 @@ TEST(compute_sparse, spmm_csc_z_i8_4x4) {
 		values[i].imag = 0.0;
 	}
 
-	matx_coo_z_i8_t A;
+    matx_coo_z_i8_t A = NULL;
 	matx_coo_sparse_z_i8_create(&a, &A, 4, 4, nnz, rows, cols, values);
 	matx_dense_z_i8_t B = NULL, C = NULL;
 	ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
