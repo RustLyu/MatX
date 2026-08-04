@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
 extern "C" {
 #include "matx/matx_func.h"
@@ -24,13 +24,13 @@ TEST(core_sparse, coo_d_i8_create_destroy)
     EXPECT_NE(A->rows, nullptr);
     EXPECT_NE(A->columns, nullptr);
     EXPECT_NE(A->values, nullptr);
-    EXPECT_NE(A->rows, rows);        /* deep copy, not alias */
+    EXPECT_NE(A->rows, rows); /* deep copy, not alias */
     EXPECT_NE(A->columns, cols);
     EXPECT_NE(A->values, vals);
     EXPECT_EQ(A->rows[0], 0);
     EXPECT_EQ(A->columns[1], 1);
     EXPECT_NEAR(A->values[2], 3.0, 1e-12);
-    EXPECT_NE(A->flags & 1u, 0u);    /* ownership flag set */
+    EXPECT_NE(A->flags & 1u, 0u); /* ownership flag set */
     matx_coo_sparse_d_i8_destroy(&a, A);
 }
 
@@ -75,7 +75,7 @@ TEST(core_sparse, coo_d_i8_dup)
     EXPECT_EQ(B->nrows, 2u);
     EXPECT_EQ(B->ncols, 2u);
     EXPECT_EQ(B->nnz, 2u);
-    EXPECT_NE(B->rows, A->rows);          /* deep copy */
+    EXPECT_NE(B->rows, A->rows); /* deep copy */
     EXPECT_NE(B->columns, A->columns);
     EXPECT_NE(B->values, A->values);
     EXPECT_EQ(B->rows[0], 0);
@@ -92,7 +92,7 @@ TEST(core_sparse, coo_d_i8_dup)
 TEST(core_sparse, coo_d_i8_destroy_null_safe)
 {
     matx_alloc_t a = matx_alloc_default();
-    matx_coo_sparse_d_i8_destroy(&a, NULL);  /* must not crash */
+    matx_coo_sparse_d_i8_destroy(&a, NULL); /* must not crash */
     matx_coo_sparse_d_i8_destroy(NULL, NULL);
 }
 
@@ -156,10 +156,10 @@ TEST(core_sparse, coo_z_i8_wrap)
     EXPECT_EQ(A->nrows, 2u);
     EXPECT_EQ(A->ncols, 2u);
     EXPECT_EQ(A->nnz, 3u);
-    EXPECT_EQ(A->rows, rows);          /* wrap: no copy */
+    EXPECT_EQ(A->rows, rows); /* wrap: no copy */
     EXPECT_EQ(A->columns, cols);
     EXPECT_EQ(A->values, vals);
-    EXPECT_EQ(A->flags & 1u, 0u);      /* no ownership */
+    EXPECT_EQ(A->flags & 1u, 0u); /* no ownership */
     matx_coo_sparse_z_i8_destroy(&a, A);
 }
 
@@ -205,17 +205,17 @@ TEST(core_sparse, csc_d_i8_wrap)
     EXPECT_EQ(A->nrows, 2u);
     EXPECT_EQ(A->ncols, 3u);
     EXPECT_EQ(A->nnz, 4u);
-    EXPECT_EQ(A->col_ptr, col_ptr);    /* wrap: no copy */
+    EXPECT_EQ(A->col_ptr, col_ptr); /* wrap: no copy */
     EXPECT_EQ(A->row_ind, row_ind);
     EXPECT_EQ(A->values, vals);
-    EXPECT_EQ(A->flags & 1u, 0u);      /* no ownership */
+    EXPECT_EQ(A->flags & 1u, 0u); /* no ownership */
     matx_csc_sparse_d_i8_destroy(&a, A);
 }
 
 TEST(core_sparse, csc_d_i8_destroy_null_safe)
 {
     matx_alloc_t a = matx_alloc_default();
-    matx_csc_sparse_d_i8_destroy(&a, NULL);  /* must not crash */
+    matx_csc_sparse_d_i8_destroy(&a, NULL); /* must not crash */
     matx_csc_sparse_d_i8_destroy(NULL, NULL);
 }
 
