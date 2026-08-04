@@ -21,6 +21,7 @@ add_executable(${PROJECT_NAME}
   test_core_dense.cpp
   test_core_vec.cpp
   test_core_math.cpp
+  test_core_sparse.cpp
   test_compute_dgemm.cpp
   test_compute_vec.cpp
   test_compute_vec_blas.cpp
