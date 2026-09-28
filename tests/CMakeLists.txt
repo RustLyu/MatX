@@ -35,8 +35,6 @@ find_package(OpenMP REQUIRED)
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
 
-    "-Wl,--start-group"
-
     GTest::gtest_main
 
     MatX::types
@@ -49,24 +47,52 @@ target_link_libraries(${PROJECT_NAME}
     MatX::tools
     MatX::io
 
-    SuiteSparse::UMFPACK
-    SuiteSparse::CHOLMOD
-    SuiteSparse::KLU
-    SuiteSparse::AMD
-    SuiteSparse::CAMD
-    SuiteSparse::COLAMD
-    SuiteSparse::CCOLAMD
-    SuiteSparse::BTF
-    SuiteSparse::CXSparse
-    SuiteSparse::SuiteSparseConfig
-
-    #OpenBLAS::OpenBLAS
-    #${mumps_lib}
-    pthread
     OpenMP::OpenMP_C
-
-    "-Wl,--end-group"
 )
 
 include(GoogleTest)
-#gtest_discover_tests(matx_tests)
+if(WIN32)
+  # Copy runtime DLLs so gtest_discover_tests can run during build
+  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/openblas/bin/libopenblas_64.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libsuitesparseconfig.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libgraphblas.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libklu.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libklu_cholmod.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libumfpack.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libcxsparse.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libamd.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libbtf.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libcamd.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libccolamd.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libcholmod.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libcolamd.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+  )
+endif()
+gtest_discover_tests(matx_tests)

@@ -30,14 +30,18 @@ if(MATX_ENABLE_SUITESPARSE)
     message(STATUS "OPENBLAS:${LAPACK_LIBRARIES}")
 
 if(MATX_BACKEND STREQUAL "OPENBLAS")
+    set(SUITESPARSE_PROJECTS "suitesparse_config;amd;btf;camd;ccolamd;colamd;cholmod;klu;umfpack;cxsparse;graphblas")
     execute_process(
         COMMAND
         ${CMAKE_COMMAND}
+        -G ${CMAKE_GENERATOR}
         -S ${suitesparse_SOURCE_DIR}
         -B ${SUITESPARSE_BUILD_DIR}
+        -DCMAKE_BUILD_TYPE=Release
         -DBLA_VENDOR=FLAME
         -DBLAS_LIBRARIES=${BLAS_LIBRARIES}
         -DLAPACK_LIBRARIES=${LAPACK_LIBRARIES}
+        "-DSUITESPARSE_ENABLE_PROJECTS=${SUITESPARSE_PROJECTS}"
         -DSUITESPARSE_USE_64BIT_BLAS=ON
         -DCMAKE_INCLUDE_PATH=${OPENBLAS_INCLUDE_DIR}
         -DCMAKE_LIBRARY_PATH=${DEPEND_LIB_OUTPUT}/openblas/lib
@@ -49,18 +53,23 @@ if(MATX_BACKEND STREQUAL "OPENBLAS")
         -DBLAS64=ON
         -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON
         -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/suitesparse
+        -DCMAKE_C_FLAGS=-fopenmp
 
         RESULT_VARIABLE SUITESPARSE_CONFIG_RESULT
     )
 elseif(MATX_BACKEND STREQUAL "AMD_AOCL")
+    set(SUITESPARSE_PROJECTS "suitesparse_config;amd;btf;camd;ccolamd;colamd;cholmod;klu;umfpack;cxsparse;graphblas")
     execute_process(
         COMMAND
         ${CMAKE_COMMAND}
+        -G ${CMAKE_GENERATOR}
         -S ${suitesparse_SOURCE_DIR}
         -B ${SUITESPARSE_BUILD_DIR}
+        -DCMAKE_BUILD_TYPE=Release
         -DBLA_VENDOR=FLAME
         -DBLAS_LIBRARIES=${BLAS_LIBRARIES}\;${AOCL_ROOT}/lib/libaoclutils.so
         -DLAPACK_LIBRARIES=${LAPACK_LIBRARIES}
+        "-DSUITESPARSE_ENABLE_PROJECTS=${SUITESPARSE_PROJECTS}"
         -DSUITESPARSE_USE_64BIT_BLAS=ON
         -DCMAKE_INCLUDE_PATH=${OPENBLAS_INCLUDE_DIR}
         -DCMAKE_LIBRARY_PATH=${OPENBLAS_LIB_DIR}\;${AOCL_ROOT}/lib

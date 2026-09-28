@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(MatX LANGUAGES C CXX)
 
+include(GNUInstallDirs)
+
 include(ProcessorCount)
 ProcessorCount(NPROC)
 if(NPROC GREATER 0)

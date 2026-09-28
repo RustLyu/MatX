@@ -26,6 +26,7 @@ file(MAKE_DIRECTORY ${OPENBLAS_BUILD_DIR})
 execute_process(
     COMMAND
     ${CMAKE_COMMAND}
+    -G ${CMAKE_GENERATOR}
     -S ${openblas_SOURCE_DIR}
     -B ${OPENBLAS_BUILD_DIR}
     -DBUILD_SHARED_LIBS=ON
@@ -44,7 +45,6 @@ execute_process(
     COMMAND
     ${CMAKE_COMMAND}
     --build ${OPENBLAS_BUILD_DIR}
-    --config Release
     --parallel ${BUILD_JOBS}
 
     RESULT_VARIABLE OPENBLAS_BUILD_RESULT
@@ -72,6 +72,13 @@ if(MATX_ENABLE_OPENBLAS)
     get_target_property(OPENBLAS_LIB OpenBLAS64::OpenBLAS IMPORTED_LOCATION_RELEASE)
     if(NOT OPENBLAS_LIB)
         get_target_property(OPENBLAS_LIB OpenBLAS64::OpenBLAS IMPORTED_LOCATION)
+    endif()
+
+    if(WIN32)
+        get_target_property(OPENBLAS_IMPLIB OpenBLAS64::OpenBLAS IMPORTED_IMPLIB_RELEASE)
+        if(NOT OPENBLAS_IMPLIB)
+            get_target_property(OPENBLAS_IMPLIB OpenBLAS64::OpenBLAS IMPORTED_IMPLIB)
+        endif()
     endif()
 
     message(STATUS "OpenBLAS library: ${OPENBLAS_LIB}")

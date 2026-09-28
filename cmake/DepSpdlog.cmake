@@ -13,22 +13,22 @@ function(matx_spdlog)
 
     FetchContent_GetProperties(spdlog)
 
-    if(NOT blis_POPULATED)
+    if(NOT spdlog_POPULATED)
         FetchContent_Populate(spdlog)
     endif()
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
+        -G ${CMAKE_GENERATOR}
         -S ${spdlog_SOURCE_DIR}
         -B ${spdlog_BINARY_DIR}
-		-DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_BUILD_TYPE=Release
         -DCMAKE_INSTALL_PREFIX=${DEPEND_LIB_OUTPUT}/spdlog
     )
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --build ${spdlog_BINARY_DIR}
-		--config Release
         --parallel ${BUILD_JOBS}
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )

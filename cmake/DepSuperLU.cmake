@@ -23,12 +23,18 @@ if(MATX_ENABLE_SUPERLU)
     file(MAKE_DIRECTORY
         ${SUPERLU_BUILD_DIR})
 
+    if(WIN32 AND OPENBLAS_IMPLIB)
+        set(_superlu_blas_lib ${OPENBLAS_IMPLIB})
+    else()
+        set(_superlu_blas_lib ${OPENBLAS_LIB})
+    endif()
+
     execute_process(
         COMMAND
         ${CMAKE_COMMAND}
         -S ${superlu_SOURCE_DIR}
         -B ${SUPERLU_BUILD_DIR}
-        -DTPL_BLAS_LIBRARIES=${OPENBLAS_LIB}
+        -DTPL_BLAS_LIBRARIES=${_superlu_blas_lib}
         -Denable_tests=OFF
         -Denable_examples=OFF
         -DBUILD_SHARED_LIBS=ON
