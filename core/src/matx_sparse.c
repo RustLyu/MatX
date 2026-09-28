@@ -90,13 +90,15 @@ matx_status_t matx_csc_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      
                                                     nnz * sizeof(SCA_TYPE));     \
     matx_int64_t* coo_2_csc_id_map = (matx_int64_t*) matx_malloc(alloc,          \
                                                   nnz * sizeof(matx_int64_t));    \
-    if (!col_ptr_buf || !row_ind_buf || !values_buf) {                          \
+    if (!col_ptr_buf || !row_ind_buf || !values_buf || !coo_2_csc_id_map) {      \
         if (col_ptr_buf)                                                        \
             matx_free(alloc, col_ptr_buf);                                      \
         if (row_ind_buf)                                                        \
             matx_free(alloc, row_ind_buf);                                      \
         if (values_buf)                                                         \
             matx_free(alloc, values_buf);                                       \
+        if (coo_2_csc_id_map)                                                   \
+            matx_free(alloc, coo_2_csc_id_map);                                 \
         MATX_ERROR("%s: out of memory", __func__);                              \
         return MATX_ERR_OUT_OF_MEMORY;                                          \
     }                                                                           \
@@ -188,7 +190,7 @@ matx_status_t matx_csc_sparse_d_i8_wrap(const matx_alloc_t* alloc,
                                         const matx_int64_t* row_ind,
                                         const matx_double* values)
 {
-    if (!out || !col_ptr || !row_ind || !values) {
+    if (!out || !alloc || !col_ptr || !row_ind || !values) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
