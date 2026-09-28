@@ -3,6 +3,7 @@
 #include "matx/matx_types_internal.h"
 
 #include <limits.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -1522,7 +1523,7 @@ static matx_status_t ss_cond_dense_d_i8(const matx_dense_d_i8_t A, matx_double* 
         return MATX_ERR_INTERNAL;
     }
 
-    *cond = (rcond > 0.0) ? (1.0 / rcond) : 1.0 / 0.0;
+    *cond = (rcond > 0.0) ? (1.0 / rcond) : (matx_double)INFINITY;
     free(Acopy);
     free(piv);
     return MATX_OK;
@@ -1590,7 +1591,7 @@ static matx_status_t ss_cond_dense_z_i8(const matx_dense_z_i8_t A, matx_double* 
         return MATX_ERR_INTERNAL;
     }
 
-    *cond = (rcond > 0.0) ? (1.0 / rcond) : 1.0 / 0.0;
+    *cond = (rcond > 0.0) ? (1.0 / rcond) : (matx_double)INFINITY;
     free(Acopy);
     free(piv);
     return MATX_OK;
