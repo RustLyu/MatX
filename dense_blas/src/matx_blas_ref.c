@@ -81,9 +81,9 @@ static matx_status_t ref_zgemm(matx_layout_t layout,
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-    const enum CBLAS_TRANSPOSE ta = trans_a ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_TRANS) ? CblasTrans : CblasNoTrans;
 
-    const enum CBLAS_TRANSPOSE tb = trans_b ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE tb = (trans_b == MATX_TRANS) ? CblasTrans : CblasNoTrans;
     cblas_zgemm(order, ta, tb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 
     return MATX_OK;
@@ -114,7 +114,7 @@ static matx_status_t ref_zgemv(matx_layout_t layout,
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-    const enum CBLAS_TRANSPOSE ta = trans_a ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_TRANS) ? CblasTrans : CblasNoTrans;
     cblas_zgemv(order, ta, m, n, alpha, A, lda, X, ldx, beta, C, ldc);
 
     return MATX_OK;
@@ -145,7 +145,7 @@ static matx_status_t ref_dgemv(matx_layout_t layout,
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-    const enum CBLAS_TRANSPOSE ta = trans_a ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_TRANS) ? CblasTrans : CblasNoTrans;
 
     cblas_dgemv(order, ta, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
 
@@ -322,6 +322,7 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
                             piv);
     if (status != 0) {
         MATX_ERROR("LAPACKE_dgetri error:%d", status);
+        free(piv);
         return MATX_ERR_INTERNAL;
     }
     free(piv);
@@ -374,7 +375,8 @@ static matx_status_t ref_inv_dense_z_i8(
                             lda,
                             piv);
     if (status != 0) {
-        MATX_ERROR("LAPACKE_dgetri error:%d", status);
+        MATX_ERROR("LAPACKE_zgetri error:%d", status);
+        free(piv);
         return MATX_ERR_INTERNAL;
     }
     free(piv);
@@ -1237,7 +1239,7 @@ static matx_status_t ref_hadamard_d_i8(matx_layout_t layout,
         for (matx_int64_t j = 0; j < cols; ++j) {
             matx_int64_t si = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
             matx_int64_t bi = (layout == MATX_COL_MAJOR) ? i + j * ldb : i * ldb + j;
-            matx_int64_t di = (layout == MATX_COL_MAJOR) ? i + j * ldc : j * ldc + i;
+            matx_int64_t di = (layout == MATX_COL_MAJOR) ? i + j * ldc : i * ldc + j;
             C[di] = A[si] * B[bi];
         }
     return MATX_OK;
@@ -1264,7 +1266,7 @@ static matx_status_t ref_hadamard_z_i8(matx_layout_t layout,
         for (matx_int64_t j = 0; j < cols; ++j) {
             matx_int64_t si = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
             matx_int64_t bi = (layout == MATX_COL_MAJOR) ? i + j * ldb : i * ldb + j;
-            matx_int64_t di = (layout == MATX_COL_MAJOR) ? i + j * ldc : j * ldc + i;
+            matx_int64_t di = (layout == MATX_COL_MAJOR) ? i + j * ldc : i * ldc + j;
             c_data[di].real = a_data[si].real * b_data[bi].real - a_data[si].imag * b_data[bi].imag;
             c_data[di].imag = a_data[si].real * b_data[bi].imag + a_data[si].imag * b_data[bi].real;
         }

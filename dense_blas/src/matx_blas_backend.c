@@ -61,10 +61,10 @@ matx_status_t matx_gemm_d_i8(const matx_dense_backend_t* blas,
     const matx_int64_t b_rows = B->nrows;
     const matx_int64_t b_cols = B->ncols;
 
-    const matx_int64_t m = (trans_a ? a_cols : a_rows);
-    const matx_int64_t kA = (trans_a ? a_rows : a_cols);
-    const matx_int64_t kB = (trans_b ? b_cols : b_rows);
-    const matx_int64_t n = (trans_b ? b_rows : b_cols);
+    const matx_int64_t m = (trans_a == MATX_TRANS) ? a_cols : a_rows;
+    const matx_int64_t kA = (trans_a == MATX_TRANS) ? a_rows : a_cols;
+    const matx_int64_t kB = (trans_b == MATX_TRANS) ? b_cols : b_rows;
+    const matx_int64_t n = (trans_b == MATX_TRANS) ? b_rows : b_cols;
 
     if (kA != kB) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -113,10 +113,10 @@ matx_status_t matx_gemm_z_i8(const matx_dense_backend_t* blas,
     const matx_int64_t a_cols = A->ncols;
     const matx_int64_t b_rows = B->nrows;
     const matx_int64_t b_cols = B->ncols;
-    const matx_int64_t m = trans_a ? a_cols : a_rows;
-    const matx_int64_t kA = trans_a ? a_rows : a_cols;
-    const matx_int64_t kB = trans_b ? b_cols : b_rows;
-    const matx_int64_t n = trans_b ? b_rows : b_cols;
+    const matx_int64_t m = (trans_a == MATX_TRANS) ? a_cols : a_rows;
+    const matx_int64_t kA = (trans_a == MATX_TRANS) ? a_rows : a_cols;
+    const matx_int64_t kB = (trans_b == MATX_TRANS) ? b_cols : b_rows;
+    const matx_int64_t n = (trans_b == MATX_TRANS) ? b_rows : b_cols;
 
     if (kA != kB) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -159,8 +159,8 @@ matx_status_t matx_gemv_z_i8(const matx_dense_backend_t* blas,
 
     const matx_int64_t m = A->nrows;
     const matx_int64_t n = A->ncols;
-    const matx_int64_t len_x = trans_a ? m : n;
-    const matx_int64_t len_y = trans_a ? n : m;
+    const matx_int64_t len_x = (trans_a == MATX_TRANS) ? m : n;
+    const matx_int64_t len_y = (trans_a == MATX_TRANS) ? n : m;
 
     if (x->n != len_x || y->n != len_y) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -197,8 +197,8 @@ matx_status_t matx_gemv_d_i8(const matx_dense_backend_t* blas,
 
     const size_t m = A->nrows;
     const size_t n = A->ncols;
-    const size_t len_x = trans_a ? m : n;
-    const size_t len_y = trans_a ? n : m;
+    const size_t len_x = (trans_a == MATX_TRANS) ? m : n;
+    const size_t len_y = (trans_a == MATX_TRANS) ? n : m;
 
     if (x->n != len_x || y->n != len_y) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -502,7 +502,7 @@ matx_status_t matx_syrk_d_i8(const matx_dense_backend_t* blas,
         return MATX_ERR_NOT_SUPPORTED;
     }
     const matx_int64_t n = C->nrows;
-    const matx_int64_t k = trans ? A->nrows : A->ncols;
+    const matx_int64_t k = (trans == MATX_TRANS) ? A->nrows : A->ncols;
     return blas->vt
         .dsyrk(A->layout, uplo, trans, n, k, alpha, A->data, A->stride, beta, C->data, C->stride);
 }
@@ -532,7 +532,7 @@ matx_status_t matx_herk_z_i8(const matx_dense_backend_t* blas,
         return MATX_ERR_NOT_SUPPORTED;
     }
     const matx_int64_t n = C->nrows;
-    const matx_int64_t k = trans ? A->nrows : A->ncols;
+    const matx_int64_t k = (trans == MATX_TRANS) ? A->nrows : A->ncols;
     return blas->vt
         .zherk(A->layout, uplo, trans, n, k, alpha, A->data, A->stride, beta, C->data, C->stride);
 }
@@ -563,7 +563,7 @@ matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas,
         return MATX_ERR_NOT_SUPPORTED;
     }
     const matx_int64_t n = C->nrows;
-    const matx_int64_t k = trans ? A->nrows : A->ncols;
+    const matx_int64_t k = (trans == MATX_TRANS) ? A->nrows : A->ncols;
     return blas->vt.dsyr2k(A->layout,
                            uplo,
                            trans,
@@ -605,7 +605,7 @@ matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas,
         return MATX_ERR_NOT_SUPPORTED;
     }
     const matx_int64_t n = C->nrows;
-    const matx_int64_t k = trans ? A->nrows : A->ncols;
+    const matx_int64_t k = (trans == MATX_TRANS) ? A->nrows : A->ncols;
     return blas->vt.zher2k(A->layout,
                            uplo,
                            trans,

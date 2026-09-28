@@ -102,7 +102,7 @@ TEST(compute_dense, gemv_d_i8_4x4)
     }
     ASSERT_EQ(st, MATX_OK);
     EXPECT_NEAR(y->data[0], A->data[0], 1e-12);
-    EXPECT_NEAR(y->data[1], A->data[0 + A->stride], 1e-12);
+    EXPECT_NEAR(y->data[1], A->data[1], 1e-12);
 
     matx_dense_d_i8_destroy(&a, A);
     matx_vec_d_i8_destroy(&a, x);
@@ -637,6 +637,8 @@ TEST(compute_dense, geru_z_i8_3x2)
     ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 3), MATX_OK);
     ASSERT_EQ(matx_vec_z_i8_create(&a, &y, NULL, 2), MATX_OK);
     matx_complex_d_t alpha = {1.0, 0.0};
+    for (size_t i = 0; i < 6; ++i)
+        A->data[i].real = A->data[i].imag = 0.0;
     x->data[0] = {1, 1};
     x->data[1] = {2, 0};
     x->data[2] = {3, 0};
