@@ -32,8 +32,10 @@ if(MATX_ENABLE_SUPERLU)
     execute_process(
         COMMAND
         ${CMAKE_COMMAND}
+        -G ${CMAKE_GENERATOR}
         -S ${superlu_SOURCE_DIR}
         -B ${SUPERLU_BUILD_DIR}
+        -DCMAKE_BUILD_TYPE=Release
         -DTPL_BLAS_LIBRARIES=${_superlu_blas_lib}
         -Denable_tests=OFF
         -Denable_examples=OFF
