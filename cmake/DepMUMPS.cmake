@@ -27,10 +27,10 @@ execute_process(
 
     COMMAND
     ${CMAKE_COMMAND}
-
+    -G ${CMAKE_GENERATOR}
     -S ${mumps_SOURCE_DIR}
     -B ${MUMPS_BUILD_DIR}
-
+    -DCMAKE_BUILD_TYPE=Release
     -DBUILD_SHARED_LIBS=OFF
     -DMUMPS_parallel=OFF
     -DBLAS_LIBRARIES=${BLAS_LIBRARIES}
