@@ -84,7 +84,7 @@ void matx_print_vec_d_i8(const matx_vec_d_i8_t& vec, const char* file)
     os << std::fixed << std::setprecision(15);
 
     for (matx_int64_t i = 0; i < vec->n; ++i) {
-        os << vec->data[i] << std::endl;
+        os << vec->data[i * vec->stride] << std::endl;
     }
     os.close();
 }
@@ -98,7 +98,7 @@ void matx_print_vec_z_i8(const matx_vec_z_i8_t& vec, const char* file)
     os << vec->n << std::endl;
     os << std::fixed << std::setprecision(15);
     for (matx_int64_t i = 0; i < vec->n; ++i) {
-        os << vec->data[i].real << " " << vec->data[i].imag << std::endl;
+        os << vec->data[i * vec->stride].real << " " << vec->data[i * vec->stride].imag << std::endl;
     }
     os.close();
 }
