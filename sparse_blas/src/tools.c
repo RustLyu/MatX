@@ -4,11 +4,15 @@
 #include "matx/matx_types.h"
 #include "matx/matx_types_internal.h"
 
+#if MATX_HAVE_GRAPHBLAS
 #include <GraphBLAS.h>
+#endif
 
 #if MATX_HAVE_AOCL_SPARSE
 #include <aoclsparse.h>
 #endif
+
+#if MATX_HAVE_GRAPHBLAS
 
 void free_grb_matrix(void* impl)
 {
@@ -21,12 +25,16 @@ void free_grb_vector(void* impl)
     GrB_Vector_free((GrB_Vector*) &impl);
 }
 
+#endif /* MATX_HAVE_GRAPHBLAS */
+
 void free_aocl_matrix(void* impl)
 {
 #if MATX_HAVE_AOCL_SPARSE
     aoclsparse_destroy((void*) &impl);
 #endif
 }
+
+#if MATX_HAVE_GRAPHBLAS
 
 size_t coo_2_grb_d_i8(matx_coo_d_i8_t A)
 {
@@ -87,6 +95,8 @@ size_t create_empty_grb_z_i8(matx_coo_z_i8_t A)
     MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = &free_grb_matrix;
     return 0;
 }
+
+#endif /* MATX_HAVE_GRAPHBLAS */
 
 typedef struct
 {
@@ -366,6 +376,8 @@ size_t aocl_2_coo_z_i8(matx_coo_z_i8_t A)
     return 0;
 }
 
+#if MATX_HAVE_GRAPHBLAS
+
 size_t dense_2_grb_d_i8(matx_dense_d_i8_t A)
 {
     GrB_Matrix_free(MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
@@ -597,6 +609,8 @@ size_t grb_2_vec_z_i8(matx_vec_z_i8_t v)
     MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->custom_free_func = NULL;
     return 0;
 }
+
+#endif /* MATX_HAVE_GRAPHBLAS */
 
 // ---- COO extraction helpers ----
 

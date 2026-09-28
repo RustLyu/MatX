@@ -3,9 +3,13 @@
 
 #include <limits.h>
 
+#if MATX_HAVE_SUITESPARSE
 #include "cholmod.h"
 #include "klu.h"
+#endif
 #include "matx/matx_log.h"
+
+#if MATX_HAVE_SUITESPARSE
 
 typedef struct matx_factor_sparse_d_i8_klu
 {
@@ -387,3 +391,13 @@ matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void)
                   .factor_chol_csc_d_i8_destroy = &ss_factor_chol_csc_d_i8_destroy}};
     return ls;
 }
+
+#else
+
+matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void)
+{
+    matx_sparse_linsolve_t ls = {.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU, .vt = {0}};
+    return ls;
+}
+
+#endif /* MATX_HAVE_SUITESPARSE */

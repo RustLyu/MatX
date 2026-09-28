@@ -3,7 +3,9 @@
 #include "matx/matx_types_internal.h"
 
 // Forward decls
+#if MATX_HAVE_GRAPHBLAS
 matx_sparse_backend_t matx_sparse_make_reference_grb(void);
+#endif
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void);
 
 const char* matx_sparse_backend_name(matx_sparse_backend_kind_t k)
@@ -20,7 +22,12 @@ const char* matx_sparse_backend_name(matx_sparse_backend_kind_t k)
 
 static matx_sparse_backend_t choose_default_backend(void)
 {
+#if MATX_HAVE_GRAPHBLAS
     return matx_sparse_make_reference_grb();
+#else
+    matx_sparse_backend_t be = {0};
+    return be;
+#endif
 }
 
 matx_sparse_backend_t matx_sparse_default(void)
@@ -34,7 +41,14 @@ MATX_API matx_sparse_backend_t matx_sparse_by_type(matx_sparse_backend_kind_t k)
     case MATX_SPARSE_BACKEND_AOCL_CPARSE:
         return matx_sparse_make_reference_aocl();
     default:
+#if MATX_HAVE_GRAPHBLAS
         return matx_sparse_make_reference_grb();
+#else
+        {
+            matx_sparse_backend_t be = {0};
+            return be;
+        }
+#endif
     }
 }
 

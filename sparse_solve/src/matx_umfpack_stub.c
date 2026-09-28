@@ -46,8 +46,8 @@ static void umf_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
 {
     if (!F)
         return;
-#if MATX_HAVE_UMFPACK
     matx_factor_sparse_d_i8_umfpack_t* ptr = (matx_factor_sparse_d_i8_umfpack_t*) F->reserved;
+#if MATX_HAVE_UMFPACK
     if (ptr->numeric)
         umfpack_dl_free_numeric(&ptr->numeric);
     if (ptr->symbolic)
@@ -203,9 +203,11 @@ static void umf_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
     if (ptr->symbolic)
         umfpack_zl_free_symbolic(&ptr->symbolic);
 #endif
+    #if MATX_HAVE_UMFPACK
     free(ptr->Ap);
     free(ptr->Ai);
     free(ptr->Az);
+#endif
     free(ptr);
 }
 

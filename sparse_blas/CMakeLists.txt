@@ -2,10 +2,15 @@
 
 add_library(${PROJECT_NAME}
   src/matx_sparse_blas_backend.c
-  src/matx_graphblas_ref.c
   src/matx_aocl_sparse_ref.c
   src/tools.c
 )
+
+if(MATX_ENABLE_GRAPHBLAS)
+  target_sources(${PROJECT_NAME} PRIVATE
+    src/matx_graphblas_ref.c
+  )
+endif()
 
 add_library(MatX::sparse_blas ALIAS ${PROJECT_NAME})
 

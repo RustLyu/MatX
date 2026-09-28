@@ -38,7 +38,7 @@ matx_sparse_linsolve_t matx_sparse_linsolve_default(void)
 #elif MATX_HAVE_MUMPS
     return matx_linsolve_make_mumps();
 #else
-    return matx_linsolve_make_suitesparse();
+    return matx_linsolve_make_suitesparse_klu();
 #endif
 }
 
