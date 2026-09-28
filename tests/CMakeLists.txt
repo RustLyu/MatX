@@ -93,6 +93,51 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
       "${DEPEND_LIB_OUTPUT}/suitesparse/bin/libcolamd.dll"
       "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/superlu_lib/bin/libsuperlu.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libdmumps.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libzmumps.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libmumps_common.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libmpiseq_fortran.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libmpiseq_c.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libpord.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libcmumps.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libsmumps.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEPEND_LIB_OUTPUT}/mumps/bin/libmpiseq.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "C:/msys64/ucrt64/bin/libstdc++-6.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "C:/msys64/ucrt64/bin/libwinpthread-1.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "C:/msys64/ucrt64/bin/libgfortran-5.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "C:/msys64/ucrt64/bin/libgomp-1.dll"
+      "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
   )
 endif()
 gtest_discover_tests(matx_tests)

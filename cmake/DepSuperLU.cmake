@@ -81,9 +81,9 @@ if(MATX_ENABLE_SUPERLU)
         NO_DEFAULT_PATH
     )
 
-    add_library(SUPERLU::SUPERLU UNKNOWN IMPORTED)
+    add_library(superlu UNKNOWN IMPORTED)
 
-    set_target_properties(SUPERLU::SUPERLU PROPERTIES
+    set_target_properties(superlu PROPERTIES
         IMPORTED_LOCATION "${SUPERLU_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES
         "${DEPEND_LIB_OUTPUT}/superlu_lib/include"
