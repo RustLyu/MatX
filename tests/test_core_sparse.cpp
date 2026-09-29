@@ -1,4 +1,4 @@
-﻿#include <gtest/gtest.h>
+﻿#include "matx_test_harness.h"
 
 extern "C" {
 #include "matx/matx_func.h"

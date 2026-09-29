@@ -1,19 +1,3 @@
-﻿set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-set(INSTALL_GMOCK OFF CACHE BOOL "" FORCE)
-
-include(FetchContent)
-
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-)
-
-set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-set(INSTALL_GMOCK OFF CACHE BOOL "" FORCE)
-set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
-set(BUILD_GTEST ON CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(googletest)
 project (matx_tests CXX)
 
 add_executable(${PROJECT_NAME}
@@ -35,8 +19,6 @@ find_package(OpenMP REQUIRED)
 target_link_libraries(${PROJECT_NAME}
   PRIVATE
 
-    GTest::gtest_main
-
     MatX::types
     MatX::core
     MatX::vec_blas
@@ -50,7 +32,6 @@ target_link_libraries(${PROJECT_NAME}
     OpenMP::OpenMP_C
 )
 
-include(GoogleTest)
 if(WIN32)
   # Collect dependency and toolchain runtime DLLs at configure time.
   # Uses file(GLOB) so DLL names can vary across versions/toolchains.
@@ -102,4 +83,6 @@ if(WIN32)
     ${DLL_COPY_COMMANDS}
   )
 endif()
-gtest_discover_tests(matx_tests)
+
+include(CTest)
+add_test(NAME matx_tests COMMAND matx_tests)

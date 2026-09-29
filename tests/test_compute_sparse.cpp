@@ -1,7 +1,7 @@
 ﻿#include <cmath>
 #include <filesystem>
 #include <fstream>
-#include <gtest/gtest.h>
+#include "matx_test_harness.h"
 
 extern "C" {
 #include "matx/matx_func.h"
@@ -158,8 +158,8 @@ TEST(compute_sparse, spmv_csc_z_i8_4x4)
     const double eps = 1e-12;
 
     for (int i = 0; i < rows; ++i) {
-        EXPECT_NEAR(y->data[i].real, expected_real, eps) << "y[" << i << "] real part error";
-        EXPECT_NEAR(y->data[i].imag, expected_imag, eps) << "y[" << i << "] imag part error";
+        EXPECT_NEAR(y->data[i].real, expected_real, eps);
+        EXPECT_NEAR(y->data[i].imag, expected_imag, eps);
     }
     matx_coo_sparse_z_i8_destroy(&a, A);
     matx_vec_z_i8_destroy(&a, x);

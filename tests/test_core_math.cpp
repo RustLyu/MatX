@@ -1,5 +1,5 @@
 ﻿#define _USE_MATH_DEFINES
-#include <gtest/gtest.h>
+#include "matx_test_harness.h"
 #include <math.h>
 
 extern "C" {
