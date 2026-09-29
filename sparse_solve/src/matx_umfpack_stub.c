@@ -206,6 +206,7 @@ static void umf_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
     #if MATX_HAVE_UMFPACK
     free(ptr->Ap);
     free(ptr->Ai);
+    free(ptr->Ax);
     free(ptr->Az);
 #endif
     free(ptr);
@@ -255,7 +256,7 @@ static matx_status_t umf_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
     F->n = A->nrows;
     F->nnz = A->nnz;
     // Allocate CSC arrays
-    F->Ap = (matx_int64_t*) malloc(sizeof(matx_int64_t) * (size_t) (F->nnz + 1));
+    F->Ap = (matx_int64_t*) malloc(sizeof(matx_int64_t) * (size_t) (F->n + 1));
     F->Ai = (matx_int64_t*) malloc(sizeof(matx_int64_t) * (size_t) F->nnz);
     F->Ax = (matx_double*) malloc(sizeof(matx_double) * (size_t) F->nnz);
     F->Az = (matx_double*) malloc(sizeof(matx_double) * (size_t) F->nnz);
@@ -266,7 +267,7 @@ static matx_status_t umf_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
     }
 
     // Copy indices
-    memcpy(F->Ap, A->handle_csc->col_ptr, sizeof(matx_int64_t) * (size_t) (F->nnz + 1));
+    memcpy(F->Ap, A->handle_csc->col_ptr, sizeof(matx_int64_t) * (size_t) (F->n + 1));
     memcpy(F->Ai, A->handle_csc->row_ind, sizeof(matx_int64_t) * (size_t) F->nnz);
 
     // Copy complex values (interleave real/imag for UMFPACK)
@@ -334,10 +335,10 @@ static matx_status_t umf_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F,
 #else
     matx_factor_sparse_z_i8_umfpack_t* ptr = (matx_factor_sparse_z_i8_umfpack_t*) F->reserved;
     // UMFPACK complex vectors: interleaved [real0, imag0, real1, imag1...]
-    matx_double* b_umf_x = (matx_double*) malloc(sizeof(matx_double) * (size_t) ptr->nnz);
-    matx_double* b_umf_z = (matx_double*) malloc(sizeof(matx_double) * (size_t) ptr->nnz);
-    matx_double* x_umf_x = (matx_double*) malloc(sizeof(matx_double) * (size_t) ptr->nnz);
-    matx_double* x_umf_z = (matx_double*) malloc(sizeof(matx_double) * (size_t) ptr->nnz);
+    matx_double* b_umf_x = (matx_double*) malloc(sizeof(matx_double) * (size_t) ptr->n);
+    matx_double* b_umf_z = (matx_double*) malloc(sizeof(matx_double) * (size_t) ptr->n);
+    matx_double* x_umf_x = (matx_double*) malloc(sizeof(matx_double) * (size_t) ptr->n);
+    matx_double* x_umf_z = (matx_double*) malloc(sizeof(matx_double) * (size_t) ptr->n);
     if (!b_umf_x || !b_umf_z || !x_umf_x || !x_umf_z) {
         free(b_umf_x);
         free(x_umf_x);
@@ -348,7 +349,7 @@ static matx_status_t umf_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F,
     }
 
     // Pack input b
-    for (matx_int64_t i = 0; i < ptr->nnz; i++) {
+    for (matx_int64_t i = 0; i < ptr->n; i++) {
         b_umf_x[i] = b->data[i].real;
         b_umf_z[i] = b->data[i].imag;
     }
@@ -377,7 +378,7 @@ static matx_status_t umf_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F,
     }
 
     // Unpack solution x
-    for (matx_int64_t i = 0; i < ptr->nnz; i++) {
+    for (matx_int64_t i = 0; i < ptr->n; i++) {
         x->data[i].real = x_umf_x[i];
         x->data[i].imag = x_umf_z[i];
     }

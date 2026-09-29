@@ -102,6 +102,7 @@ matx_status_t matx_csc_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      
         MATX_ERROR("%s: out of memory", __func__);                              \
         return MATX_ERR_OUT_OF_MEMORY;                                          \
     }                                                                           \
+    memset(values_buf, 0, nnz * sizeof(SCA_TYPE));                              \
     OPAQUE* out_value = matx_malloc(alloc, sizeof(OPAQUE));                     \
     memset(out_value, 0, sizeof(OPAQUE));                                       \
     out_value->nrows = nrows;                                                   \
