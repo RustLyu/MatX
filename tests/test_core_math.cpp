@@ -541,7 +541,7 @@ TEST(solve, qr_d_i8)
     A->data[3] = 1.0;
     A->data[4] = 1.0;
     A->data[5] = 0.0;
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_qr_d_i8(&ls, A, &Q, &R);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_dense_d_i8_destroy(&a, A);
@@ -564,7 +564,7 @@ TEST(solve, det_dense_d_i8)
     A->data[1] = 3.0;
     A->data[2] = 3.0;
     A->data[3] = 2.0;
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_double det = 0.0;
     matx_status_t st = matx_det_dense_d_i8(&ls, A, &det);
     if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -585,7 +585,7 @@ TEST(solve, cond_dense_d_i8)
     A->data[1] = 0.0;
     A->data[2] = 0.0;
     A->data[3] = 1.0;
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_double cond = 0.0;
     matx_status_t st = matx_cond_dense_d_i8(&ls, A, &cond);
     if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -656,7 +656,7 @@ TEST(solve, sparse_chol_d_i8)
     matx_csc_sparse_d_i8_create(&alloc, &A->handle_csc, 4, 4, nnz);
     double b[4] = {4.0, 8.0, 12.0, 16.0};
     double x[4] = {0.0, 0.0, 0.0, 0.0};
-    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
+    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_solve_chol_coo_d_i8(&ls, A, b, x);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_coo_sparse_d_i8_destroy(&alloc, A);

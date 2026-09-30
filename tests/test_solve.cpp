@@ -29,7 +29,7 @@ TEST(solve, sparse_real_4x4_factor_solve)
     double b[4] = {4.0, 6.0, 8.0, 10.0};
     double x[4] = {0.0, 0.0, 0.0, 0.0};
 
-    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
+    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default(matx_alloc_default());
     matx_factor_sparse_d_i8_t F; // = NULL;
     F.reserved = NULL;
     matx_status_t st = matx_factor_csc_d_i8(&ls, coo_A, &F);
@@ -72,7 +72,7 @@ TEST(solve, sparse_real_4x4_solve_one_shot)
     double b[4] = {2.0, 4.0, 6.0, 8.0};
     double x[4] = {0.0, 0.0, 0.0, 0.0};
 
-    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
+    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_solve_csc_d_i8(&ls, coo_A, b, x);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         return;
@@ -98,7 +98,7 @@ TEST(solve, dense_real_4x4_factor_solve)
     double b[4] = {2.0, 4.0, 6.0, 8.0};
     double x[4] = {0.0, 0.0, 0.0, 0.0};
 
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_factor_dense_d_i8_t* F = NULL;
     matx_status_t st = matx_factor_dense_d_i8(&ls, A, &F);
     if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -133,7 +133,7 @@ TEST(solve, dense_real_4x4_solve_one_shot)
     double b[4] = {3.0, 6.0, 9.0, 12.0};
     double x[4] = {0.0, 0.0, 0.0, 0.0};
 
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_solve_dense_d_i8(&ls, A, b, x);
     matx_dense_d_i8_destroy(&a, A);
     if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -164,7 +164,7 @@ TEST(solve, dense_complex_4x4_factor_solve)
     b->data[2] = {8.0, 0.0};
     b->data[3] = {10.0, 0.0};
 
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_factor_dense_z_i8_t* F = NULL;
     matx_status_t st = matx_factor_dense_z_i8(&ls, A, &F);
     if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -207,7 +207,7 @@ TEST(solve, sparse_complex_4x4_factor_solve)
     b->data[2] = {8.0, 0.0};
     b->data[3] = {10.0, 0.0};
 
-    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
+    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default(matx_alloc_default());
     matx_factor_sparse_z_i8_t F;
     F.reserved = NULL;
     matx_status_t st = matx_factor_csc_z_i8(&ls, coo_A, &F);
@@ -241,7 +241,7 @@ TEST(solve, chol_d_i8_3x3)
     ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_ROW_MAJOR, 3, 3, Adata), MATX_OK);
     double b[3] = {8.0, 16.0, 14.0};
     double x[3] = {0.0, 0.0, 0.0};
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_solve_chol_d_i8_oneshot(&ls, A, MATX_UPPER, b, x);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_dense_d_i8_destroy(&a, A);
@@ -266,7 +266,7 @@ TEST(solve, gels_d_i8_overdetermined)
     ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_ROW_MAJOR, 3, 2, Adata), MATX_OK);
     double b[3] = {6.0, 5.0, 7.0};
     double x[2] = {0.0, 0.0};
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_gels_d_i8(&ls, A, b, x);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_dense_d_i8_destroy(&a, A);
@@ -291,7 +291,7 @@ TEST(solve, syev_d_i8_2x2)
     matx_vec_d_i8_t evals = NULL;
     ASSERT_EQ(matx_vec_d_i8_create(&a, &evals, NULL, 2), MATX_OK);
     matx_dense_d_i8_t evecs = NULL;
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_syev_d_i8(&ls, A, evals, &evecs);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_dense_d_i8_destroy(&a, A);
@@ -302,9 +302,7 @@ TEST(solve, syev_d_i8_2x2)
     EXPECT_NEAR(evals->data[0], 1.0, 1e-9);
     EXPECT_NEAR(evals->data[1], 3.0, 1e-9);
     ASSERT_NE(evecs, nullptr);
-    // free evecs with default alloc (allocated with malloc)
-    free(evecs->data);
-    free(evecs);
+    matx_dense_d_i8_destroy(&ls.alloc, evecs);
     matx_dense_d_i8_destroy(&a, A);
     matx_vec_d_i8_destroy(&a, evals);
 }
@@ -321,7 +319,7 @@ TEST(solve, gesvd_d_i8_2x2)
     matx_vec_d_i8_t S = NULL;
     ASSERT_EQ(matx_vec_d_i8_create(&a, &S, NULL, 2), MATX_OK);
     matx_dense_d_i8_t U = NULL, Vt = NULL;
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_gesvd_d_i8(&ls, A, S, &U, &Vt);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_dense_d_i8_destroy(&a, A);
@@ -333,10 +331,8 @@ TEST(solve, gesvd_d_i8_2x2)
     EXPECT_NEAR(S->data[1], 2.0, 1e-9);
     ASSERT_NE(U, nullptr);
     ASSERT_NE(Vt, nullptr);
-    free(U->data);
-    free(U);
-    free(Vt->data);
-    free(Vt);
+    matx_dense_d_i8_destroy(&ls.alloc, U);
+    matx_dense_d_i8_destroy(&ls.alloc, Vt);
     matx_dense_d_i8_destroy(&a, A);
     matx_vec_d_i8_destroy(&a, S);
 }
@@ -360,7 +356,7 @@ TEST(solve, dense_complex_4x4_solve_one_shot)
     b->data[2] = {9.0, 0.0};
     b->data[3] = {12.0, 0.0};
 
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_solve_dense_z_i8(&ls, A, b, x);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_vec_z_i8_destroy(&a, b);
@@ -398,7 +394,7 @@ TEST(solve, sparse_complex_4x4_solve_one_shot)
     b->data[2] = {6.0, 0.0};
     b->data[3] = {8.0, 0.0};
 
-    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default();
+    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_solve_csc_z_i8(&ls, coo_A, b, x);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_vec_z_i8_destroy(&alloc, b);
@@ -435,7 +431,7 @@ TEST(solve, chol_z_i8_3x3)
     b->data[1] = {16.0, 0.0};
     b->data[2] = {14.0, 0.0};
 
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_factor_dense_z_i8_t* F = NULL;
     matx_status_t st = matx_factor_chol_z_i8(&ls, A, MATX_UPPER, &F);
     if (st == MATX_ERR_NOT_SUPPORTED) {
@@ -481,7 +477,7 @@ TEST(solve, gels_z_i8_overdetermined)
     b->data[1] = {5.0, 0.0};
     b->data[2] = {7.0, 0.0};
 
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_gels_z_i8(&ls, A, b, x);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_vec_z_i8_destroy(&a, b);
@@ -512,7 +508,7 @@ TEST(solve, gesvd_z_i8_2x2)
     matx_vec_d_i8_t S = NULL;
     ASSERT_EQ(matx_vec_d_i8_create(&a, &S, NULL, 2), MATX_OK);
     matx_dense_z_i8_t U = NULL, Vt = NULL;
-    matx_dense_linsolve_t ls = matx_dense_linsolve_default();
+    matx_dense_linsolve_t ls = matx_dense_linsolve_default(matx_alloc_default());
     matx_status_t st = matx_gesvd_z_i8(&ls, A, S, &U, &Vt);
     if (st == MATX_ERR_NOT_SUPPORTED) {
         matx_dense_z_i8_destroy(&a, A);
@@ -524,10 +520,8 @@ TEST(solve, gesvd_z_i8_2x2)
     EXPECT_NEAR(S->data[1], 2.0, 1e-9);
     ASSERT_NE(U, nullptr);
     ASSERT_NE(Vt, nullptr);
-    free(U->data);
-    free(U);
-    free(Vt->data);
-    free(Vt);
+    matx_dense_z_i8_destroy(&ls.alloc, U);
+    matx_dense_z_i8_destroy(&ls.alloc, Vt);
     matx_dense_z_i8_destroy(&a, A);
     matx_vec_d_i8_destroy(&a, S);
 }
