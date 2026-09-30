@@ -71,14 +71,14 @@ int coo_2_csc(matx_int64_t* columns,
     }
 
     for (matx_int64_t k = 0; k < nnz; ++k) {
-        if (columns[k] < 0 || (columns[k] - 1) >= n) {
-            MATX_ERROR("column index biger than row. index:%d", k);
+        if (columns[k] < 0 || columns[k] >= n) {
+            MATX_ERROR("column index out of range. index:%d", (int) k);
             free(entries);
             return COO2CSC_ERR_OUT_OF_RANGE;
         }
         if (rows[k] < 0) {
             free(entries);
-            MATX_ERROR("row index less than 0. index:%d", k);
+            MATX_ERROR("row index less than 0. index:%d", (int) k);
             return COO2CSC_ERR_OUT_OF_RANGE;
         }
         entries[k].col = columns[k];
@@ -138,17 +138,7 @@ int coo_2_csc(matx_int64_t* columns,
         Ap[j + 1] += Ap[j];
     }
 
-    if (Ai == NULL || coo2csc == NULL) {
-        free(Ap);
-        free(Ai);
-        free(coo2csc);
-        free_merged_entries(merged, merged_len);
-        free(entries);
-        MATX_ERROR("%s: out of memory", __func__);
-        return COO2CSC_ERR_MEMORY;
-    }
-
-    matx_int64_t* next = (matx_int64_t*) malloc(final_nnz * sizeof(matx_int64_t));
+    matx_int64_t* next = (matx_int64_t*) malloc((n + 1) * sizeof(matx_int64_t));
     if (next == NULL) {
         free(Ap);
         free(Ai);
@@ -158,7 +148,7 @@ int coo_2_csc(matx_int64_t* columns,
         MATX_ERROR("%s: out of memory", __func__);
         return COO2CSC_ERR_MEMORY;
     }
-    memcpy(next, Ap, final_nnz * sizeof(matx_int64_t));
+    memcpy(next, Ap, (n + 1) * sizeof(matx_int64_t));
 
     for (matx_int64_t k = 0; k < merged_len; ++k) {
         const MergedEntry* e = &merged[k];
@@ -199,6 +189,7 @@ int build_Ax_from_coo_z_i8(const matx_int64_t* coo2csc,
         }
     }
 
+    memset(Ax, 0, sizeof(matx_complex_d_t) * ((size_t) max_idx + 1));
     for (matx_int64_t i = 0; i < coo2csc_len; ++i) {
         matx_int64_t idx = coo2csc[i];
         Ax[idx].real += values[i].real;
@@ -240,19 +231,27 @@ matx_status_t coo_to_csc_d_i8(matx_coo_d_i8_t coo)
                       coo->handle_csc->col_ptr,
                       coo->handle_csc->row_ind,
                       (matx_int64_t*) coo->handle_csc->coo_csc_index_map);
+    if (s != COO2CSC_SUCCESS) {
+        MATX_ERROR("%s: coo_2_csc failed with code %d", __func__, s);
+        return MATX_ERR_INTERNAL;
+    }
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
 }
 
 matx_status_t coo_to_csc_z_i8(matx_coo_z_i8_t coo)
 {
-    coo_2_csc(coo->columns,
+    int s = coo_2_csc(coo->columns,
               coo->rows,
               coo->ncols,
               coo->nnz,
               coo->handle_csc->col_ptr,
               coo->handle_csc->row_ind,
               (matx_int64_t*) coo->handle_csc->coo_csc_index_map);
+    if (s != COO2CSC_SUCCESS) {
+        MATX_ERROR("%s: coo_2_csc failed with code %d", __func__, s);
+        return MATX_ERR_INTERNAL;
+    }
     coo->handle_csc->struct_update = 0;
     return MATX_OK;
 }

@@ -2,6 +2,8 @@
 #include "matx/matx_sparse_solve.h"
 #include "matx/matx_types_internal.h"
 
+#include <stdlib.h>
+
 #if MATX_HAVE_UMFPACK
 #include "umfpack.h"
 #endif

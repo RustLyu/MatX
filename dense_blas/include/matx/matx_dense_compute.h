@@ -93,17 +93,21 @@ extern "C" {
 			matx_int64_t rows,
 			matx_int64_t cols,
 			const matx_double* A,
-			matx_double* out_Ainv);
+			matx_int64_t lda,
+			matx_double* out_Ainv,
+			matx_int64_t ldout);
 
 		matx_status_t(*inv_dense_z_i8)(matx_layout_t layout,
 			matx_int64_t rows,
 			matx_int64_t cols,
 			const void* A,
-			void* out_Ainv);
+			matx_int64_t lda,
+			void* out_Ainv,
+			matx_int64_t ldout);
 
 		// ---- Matrix exponential ----
 		matx_status_t(*expm_dense_d_i8)(matx_layout_t layout, matx_int64_t n,
-			const matx_double* A, matx_double* out);
+			const matx_double* A, matx_int64_t lda, matx_double* out, matx_int64_t ldout);
 
 		// ---- Level 2 additions ----
 		matx_status_t(*dger)(matx_layout_t layout, matx_int64_t m, matx_int64_t n, matx_double alpha,

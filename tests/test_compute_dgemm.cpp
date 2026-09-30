@@ -30,7 +30,7 @@ TEST(compute, dgemm_reference)
         C->data[i] = 0.0;
 
     matx_dense_backend_t blas = matx_blas_default();
-    ASSERT_EQ(matx_gemm_d_i8(&blas, 0, 0, 1.0, A, B, 0.0, C), MATX_OK);
+    ASSERT_EQ(matx_gemm_d_i8(&blas, MATX_NO_TRANS, MATX_NO_TRANS, 1.0, A, B, 0.0, C), MATX_OK);
 
     // Spot-check a couple values against manual computation.
     // C(0,0) = sum_{p=0..2} A(0,p)*B(p,0)

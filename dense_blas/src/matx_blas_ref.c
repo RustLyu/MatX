@@ -47,8 +47,8 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_TRANS) ? CblasTrans : CblasNoTrans;
-    const enum CBLAS_TRANSPOSE tb = (trans_b == MATX_TRANS) ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_NO_TRANS) ? CblasNoTrans : CblasTrans;
+    const enum CBLAS_TRANSPOSE tb = (trans_b == MATX_NO_TRANS) ? CblasNoTrans : CblasTrans;
     cblas_dgemm(order, ta, tb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc);
     return MATX_OK;
 }
@@ -81,9 +81,9 @@ static matx_status_t ref_zgemm(matx_layout_t layout,
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_TRANS) ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = (enum CBLAS_TRANSPOSE) trans_a;
 
-    const enum CBLAS_TRANSPOSE tb = (trans_b == MATX_TRANS) ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE tb = (enum CBLAS_TRANSPOSE) trans_b;
     cblas_zgemm(order, ta, tb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 
     return MATX_OK;
@@ -114,7 +114,7 @@ static matx_status_t ref_zgemv(matx_layout_t layout,
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_TRANS) ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = (enum CBLAS_TRANSPOSE) trans_a;
     cblas_zgemv(order, ta, m, n, alpha, A, lda, X, ldx, beta, C, ldc);
 
     return MATX_OK;
@@ -145,7 +145,7 @@ static matx_status_t ref_dgemv(matx_layout_t layout,
 
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
 
-    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_TRANS) ? CblasTrans : CblasNoTrans;
+    const enum CBLAS_TRANSPOSE ta = (trans_a == MATX_NO_TRANS) ? CblasNoTrans : CblasTrans;
 
     cblas_dgemv(order, ta, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
 
@@ -276,7 +276,9 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
                                         matx_int64_t rows,
                                         matx_int64_t cols,
                                         const matx_double* A,
-                                        matx_double* out_Ainv)
+                                        matx_int64_t lda,
+                                        matx_double* out_Ainv,
+                                        matx_int64_t ldout)
 {
     if (!A || !out_Ainv) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -290,10 +292,13 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    memcpy(out_Ainv, A, sizeof(matx_double) * rows * cols);
+    // Copy with stride-awareness
+    for (matx_int64_t j = 0; j < cols; ++j)
+        for (matx_int64_t i = 0; i < rows; ++i) {
+            out_Ainv[i + j * ldout] = A[i + j * lda];
+        }
 
     matx_int64_t N = rows;
-    matx_int64_t lda = rows;
     matx_int64_t info = 0;
 
     matx_int64_t* piv = (matx_int64_t*) malloc(rows * sizeof(matx_int64_t));
@@ -307,7 +312,7 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
                                          rows,
                                          cols,
                                          out_Ainv,
-                                         lda,
+                                         ldout,
                                          piv);
     if (status != 0) {
         MATX_ERROR("LAPACKE_dgetrf error:%d", status);
@@ -318,7 +323,7 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
     status = LAPACKE_dgetri(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
                             rows,
                             out_Ainv,
-                            lda,
+                            ldout,
                             piv);
     if (status != 0) {
         MATX_ERROR("LAPACKE_dgetri error:%d", status);
@@ -330,7 +335,8 @@ static matx_status_t ref_inv_dense_d_i8(matx_layout_t layout,
 }
 
 static matx_status_t ref_inv_dense_z_i8(
-    matx_layout_t layout, matx_int64_t rows, matx_int64_t cols, const void* A, void* out_Ainv)
+    matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
+    const void* A, matx_int64_t lda, void* out_Ainv, matx_int64_t ldout)
 {
     if (!A || !out_Ainv) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -344,10 +350,15 @@ static matx_status_t ref_inv_dense_z_i8(
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    memcpy(out_Ainv, A, sizeof(matx_complex_d_t) * rows * cols);
+    // Copy with stride-awareness
+    matx_complex_d_t* out = (matx_complex_d_t*) out_Ainv;
+    const matx_complex_d_t* in = (const matx_complex_d_t*) A;
+    for (matx_int64_t j = 0; j < cols; ++j)
+        for (matx_int64_t i = 0; i < rows; ++i) {
+            out[i + j * ldout] = in[i + j * lda];
+        }
 
     matx_int64_t N = rows;
-    matx_int64_t lda = rows;
     matx_int64_t info = 0;
 
     matx_int64_t* piv = (matx_int64_t*) malloc(rows * sizeof(matx_int64_t));
@@ -361,10 +372,10 @@ static matx_status_t ref_inv_dense_z_i8(
                                          rows,
                                          cols,
                                          out_Ainv,
-                                         lda,
+                                         ldout,
                                          piv);
     if (status != 0) {
-        MATX_ERROR("LAPACKE_dgetrf error:%d", status);
+        MATX_ERROR("LAPACKE_zgetrf error:%d", status);
         free(piv);
         return MATX_ERR_INTERNAL;
     }
@@ -372,7 +383,7 @@ static matx_status_t ref_inv_dense_z_i8(
     status = LAPACKE_zgetri(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
                             rows,
                             out_Ainv,
-                            lda,
+                            ldout,
                             piv);
     if (status != 0) {
         MATX_ERROR("LAPACKE_zgetri error:%d", status);
@@ -388,7 +399,9 @@ static matx_status_t ref_inv_dense_z_i8(
 static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
                                          matx_int64_t n,
                                          const matx_double* A,
-                                         matx_double* out)
+                                         matx_int64_t lda,
+                                         matx_double* out,
+                                         matx_int64_t ldout)
 {
     if (!A || !out || n <= 0) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -403,19 +416,19 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
         return MATX_ERR_NOT_SUPPORTED;
     }
 
-    const matx_int64_t lda = n;
     const matx_int64_t total = n * n;
     const size_t sz = (size_t) total * sizeof(matx_double);
     const int lapack_layout = LAPACK_COL_MAJOR;
     const matx_int64_t n_int = n;
+    const matx_int64_t work_lda = n; /* leading dim for contiguous working buffers */
 
     /* 1. Compute ||A||_1 */
     matx_double anorm = LAPACKE_dlange(lapack_layout, '1', n_int, n_int, A, lda);
     if (anorm == 0.0) {
         /* exp(0) = I */
-        memset(out, 0, sz);
-        for (matx_int64_t i = 0; i < n; ++i)
-            out[i + i * lda] = 1.0;
+        for (matx_int64_t j = 0; j < n; ++j)
+            for (matx_int64_t i = 0; i < n; ++i)
+                out[i + j * ldout] = (i == j) ? 1.0 : 0.0;
         return MATX_OK;
     }
 
@@ -454,8 +467,9 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
     matx_double scale = 1.0;
     for (matx_int64_t j = 0; j < s; ++j)
         scale /= 2.0;
-    for (matx_int64_t i = 0; i < total; ++i)
-        As[i] = A[i] * scale;
+    for (matx_int64_t j = 0; j < n; ++j)
+        for (matx_int64_t i = 0; i < n; ++i)
+            As[i + j * work_lda] = A[i + j * lda] * scale;
 
     /* 5. Compute powers: A2=As*As, A3=A2*As, A4=A3*As, A5=A4*As, A6=A5*As */
     cblas_dgemm(CblasColMajor,
@@ -466,12 +480,12 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
                 n_int,
                 1.0,
                 As,
-                lda,
+                work_lda,
                 As,
-                lda,
+                work_lda,
                 0.0,
                 A2,
-                lda);
+                work_lda);
     cblas_dgemm(CblasColMajor,
                 CblasNoTrans,
                 CblasNoTrans,
@@ -480,12 +494,12 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
                 n_int,
                 1.0,
                 A2,
-                lda,
+                work_lda,
                 As,
-                lda,
+                work_lda,
                 0.0,
                 A3,
-                lda);
+                work_lda);
     cblas_dgemm(CblasColMajor,
                 CblasNoTrans,
                 CblasNoTrans,
@@ -494,12 +508,12 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
                 n_int,
                 1.0,
                 A3,
-                lda,
+                work_lda,
                 As,
-                lda,
+                work_lda,
                 0.0,
                 A4,
-                lda);
+                work_lda);
     cblas_dgemm(CblasColMajor,
                 CblasNoTrans,
                 CblasNoTrans,
@@ -508,12 +522,12 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
                 n_int,
                 1.0,
                 A4,
-                lda,
+                work_lda,
                 As,
-                lda,
+                work_lda,
                 0.0,
                 A5,
-                lda);
+                work_lda);
     cblas_dgemm(CblasColMajor,
                 CblasNoTrans,
                 CblasNoTrans,
@@ -522,12 +536,12 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
                 n_int,
                 1.0,
                 A5,
-                lda,
+                work_lda,
                 As,
-                lda,
+                work_lda,
                 0.0,
                 A6,
-                lda);
+                work_lda);
 
     /* 6. Pade(6,6) coefficients */
     {
@@ -567,7 +581,7 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
             free(D_mat);
             return MATX_ERR_OUT_OF_MEMORY;
         }
-        matx_int64_t info = LAPACKE_dgetrf(lapack_layout, n_int, n_int, D_mat, lda, piv);
+        matx_int64_t info = LAPACKE_dgetrf(lapack_layout, n_int, n_int, D_mat, work_lda, piv);
         if (info != 0) {
             MATX_ERROR("%s: dgetrf failed, info=%d", __func__, (int) info);
             free(piv);
@@ -583,7 +597,7 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
         }
         /* D_mat now contains LU, N_mat is the RHS; solve in-place */
         matx_int64_t nrhs = n_int;
-        info = LAPACKE_dgetrs(lapack_layout, 'N', n_int, nrhs, D_mat, lda, piv, N_mat, lda);
+        info = LAPACKE_dgetrs(lapack_layout, 'N', n_int, nrhs, D_mat, work_lda, piv, N_mat, work_lda);
         if (info != 0) {
             MATX_ERROR("%s: dgetrs failed, info=%d", __func__, (int) info);
             free(piv);
@@ -612,16 +626,18 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
                     n_int,
                     1.0,
                     D_mat,
-                    lda,
+                    work_lda,
                     D_mat,
-                    lda,
+                    work_lda,
                     0.0,
                     N_mat,
-                    lda);
+                    work_lda);
     }
 
-    /* 9. Copy result to output */
-    memcpy(out, N_mat, sz);
+    /* 9. Copy result to output (stride-aware) */
+    for (matx_int64_t j = 0; j < n; ++j)
+        for (matx_int64_t i = 0; i < n; ++i)
+            out[i + j * ldout] = N_mat[i + j * work_lda];
 
     free(As);
     free(A2);

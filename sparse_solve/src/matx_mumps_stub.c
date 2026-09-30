@@ -214,12 +214,12 @@ static void mumps_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
 {
     if (!F)
         return;
-    matx_factor_sparse_d_i8_mumps_t* ptr = (matx_factor_sparse_d_i8_mumps_t*) F->reserved;
+    matx_factor_sparse_z_i8_mumps_t* ptr = (matx_factor_sparse_z_i8_mumps_t*) F->reserved;
 #if MATX_HAVE_MUMPS
     // Cleanup MUMPS internal data
     if (ptr->mumps.comm_fortran != -987654) {
         ptr->mumps.job = -2;
-        dmumps_c(&ptr->mumps);
+        zmumps_c(&ptr->mumps);
     }
     // Free allocated arrays
     free(ptr->irn);
@@ -379,7 +379,7 @@ static matx_status_t mumps_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F,
     }
 
     // Unpack solution
-    memcpy(x->data, rhs_umf, sizeof(matx_double) * 2);
+    memcpy(x->data, rhs_umf, sizeof(matx_double) * ptr->n * 2);
     //for (matx_int64_t i = 0; i < F->n; i++) {
     //    x[i].r = rhs_umf[2 * i];
     //    x[i].i = rhs_umf[2 * i + 1];

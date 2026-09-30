@@ -4,6 +4,8 @@
 #include "matx/matx_types.h"
 #include "matx/matx_types_internal.h"
 
+#include <stdlib.h>
+
 #if MATX_HAVE_GRAPHBLAS
 #include <GraphBLAS.h>
 #endif

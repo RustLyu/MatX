@@ -135,7 +135,7 @@ void matx_csc_sparse_##PREFIX##_destroy(const matx_alloc_t* alloc,              
         matx_free(alloc, m->values);                                            \
         matx_free(alloc, m->coo_csc_index_map);                                 \
     }                                                                           \
-    memset(m, 0, sizeof(*m));                                                   \
+    matx_free(alloc, m);                                                       \
 }
 
 #define MATX_DEF_COO_DESTROY(PREFIX, OPAQUE, SCA_TYPE)              \
@@ -156,7 +156,6 @@ void matx_coo_sparse_##PREFIX##_destroy(const matx_alloc_t* alloc,              
     matx_handles_destroy(m->backend_handles, &m->num_backend_handles);          \
     if (m->handle_csc != NULL) {                                                \
         matx_csc_sparse_##PREFIX##_destroy(alloc, m->handle_csc);               \
-        matx_free(alloc, m->handle_csc);                                        \
     }                                                                           \
     matx_free(alloc, m);                                                        \
 }

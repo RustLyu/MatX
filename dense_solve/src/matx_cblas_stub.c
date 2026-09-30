@@ -191,7 +191,7 @@ static matx_status_t ss_solve_dense_d_i8(const matx_factor_dense_d_i8_t* F,
 static matx_status_t ss_factor_dense_z_i8(const matx_dense_z_i8_t A,
                                           matx_factor_dense_z_i8_t** out_F)
 {
-#if !(defined(MATX_HAVE_OPENBLAS) || defined(MATX_HAVE_BLIS))
+#if !(defined(MATX_HAVE_OPENBLAS) || defined(MATX_HAVE_LIBFLAME))
     MATX_ERROR("%s: operation not supported", __func__);
     return MATX_ERR_NOT_SUPPORTED;
 #else
@@ -316,8 +316,8 @@ static matx_status_t ss_potrf_d_i8(const matx_dense_d_i8_t A,
     F->uplo = uplo;
 
     F->lu = (matx_double*) malloc((size_t) n * (size_t) n * sizeof(matx_double));
-    MATX_ERROR("%s: out of memory", __func__);
     if (!F->lu) {
+        MATX_ERROR("%s: out of memory", __func__);
         free(F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
@@ -396,8 +396,8 @@ static matx_status_t ss_potrf_z_i8(const matx_dense_z_i8_t A,
     F->uplo = uplo;
 
     F->lu = (matx_double*) malloc((size_t) n * (size_t) n * sizeof(matx_complex_d_t));
-    MATX_ERROR("%s: out of memory", __func__);
     if (!F->lu) {
+        MATX_ERROR("%s: out of memory", __func__);
         free(F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
@@ -460,8 +460,8 @@ static matx_status_t ss_gels_d_i8(const matx_dense_d_i8_t A, const matx_double* 
 
     matx_double* Acopy = (matx_double*) malloc((size_t) m * (size_t) n * sizeof(matx_double));
     matx_double* bcopy = (matx_double*) calloc(blen, sizeof(matx_double));
-    MATX_ERROR("%s: out of memory", __func__);
     if (!Acopy || !bcopy) {
+        MATX_ERROR("%s: out of memory", __func__);
         free(Acopy);
         free(bcopy);
         return MATX_ERR_OUT_OF_MEMORY;
@@ -500,8 +500,8 @@ static matx_status_t ss_gels_z_i8(const matx_dense_z_i8_t A,
     matx_complex_d_t* Acopy = (matx_complex_d_t*) malloc((size_t) m * (size_t) n
                                                          * sizeof(matx_complex_d_t));
     matx_complex_d_t* bcopy = (matx_complex_d_t*) calloc(blen, sizeof(matx_complex_d_t));
-    MATX_ERROR("%s: out of memory", __func__);
     if (!Acopy || !bcopy) {
+        MATX_ERROR("%s: out of memory", __func__);
         free(Acopy);
         free(bcopy);
         return MATX_ERR_OUT_OF_MEMORY;
@@ -572,8 +572,8 @@ static matx_status_t ss_syev_d_i8(const matx_dense_d_i8_t A,
     if (eigenvectors) {
         matx_dense_d_i8_opaque_t* ev = (matx_dense_d_i8_opaque_t*) malloc(
             sizeof(matx_dense_d_i8_opaque_t));
-        MATX_ERROR("%s: out of memory", __func__);
         if (!ev) {
+            MATX_ERROR("%s: out of memory", __func__);
             free(Acopy);
             return MATX_ERR_OUT_OF_MEMORY;
         }
@@ -661,8 +661,8 @@ static matx_status_t ss_gesvd_d_i8(const matx_dense_d_i8_t A,
         matx_int64_t u_lda = ss_packed_lda(A->layout, m, m);
         matx_dense_d_i8_opaque_t* ev = (matx_dense_d_i8_opaque_t*) malloc(
             sizeof(matx_dense_d_i8_opaque_t));
-        MATX_ERROR("%s: out of memory", __func__);
         if (!ev) {
+            MATX_ERROR("%s: out of memory", __func__);
             free(u_data);
             free(vt_data);
             return MATX_ERR_OUT_OF_MEMORY;
@@ -685,8 +685,8 @@ static matx_status_t ss_gesvd_d_i8(const matx_dense_d_i8_t A,
         matx_int64_t vt_lda = ss_packed_lda(A->layout, n, n);
         matx_dense_d_i8_opaque_t* ev = (matx_dense_d_i8_opaque_t*) malloc(
             sizeof(matx_dense_d_i8_opaque_t));
-        MATX_ERROR("%s: out of memory", __func__);
         if (!ev) {
+            MATX_ERROR("%s: out of memory", __func__);
             free(vt_data);
             return MATX_ERR_OUT_OF_MEMORY;
         }
@@ -773,8 +773,8 @@ static matx_status_t ss_gesvd_z_i8(const matx_dense_z_i8_t A,
         matx_int64_t u_lda = ss_packed_lda(A->layout, m, m);
         matx_dense_z_i8_opaque_t* ev = (matx_dense_z_i8_opaque_t*) malloc(
             sizeof(matx_dense_z_i8_opaque_t));
-        MATX_ERROR("%s: out of memory", __func__);
         if (!ev) {
+            MATX_ERROR("%s: out of memory", __func__);
             free(u_data);
             free(vt_data);
             return MATX_ERR_OUT_OF_MEMORY;
@@ -797,8 +797,8 @@ static matx_status_t ss_gesvd_z_i8(const matx_dense_z_i8_t A,
         matx_int64_t vt_lda = ss_packed_lda(A->layout, n, n);
         matx_dense_z_i8_opaque_t* ev = (matx_dense_z_i8_opaque_t*) malloc(
             sizeof(matx_dense_z_i8_opaque_t));
-        MATX_ERROR("%s: out of memory", __func__);
         if (!ev) {
+            MATX_ERROR("%s: out of memory", __func__);
             free(vt_data);
             return MATX_ERR_OUT_OF_MEMORY;
         }
