@@ -49,6 +49,7 @@ typedef struct matx_vec_d_i8_opaque_t
     matx_int64_t stride;
     matx_double* data;
     matx_int64_t flags;
+    matx_alloc_t alloc;
     matx_handle_t backend_handles[MATX_MAX_BACKEND_HANDLES];
     matx_int64_t num_backend_handles;
 } matx_vec_d_i8_opaque_t;
@@ -64,6 +65,7 @@ typedef struct matx_dense_d_i8_opaque_t
     matx_layout_t layout;
     matx_double* data;
     matx_int64_t flags; // reserved for future (ownership, alignment, etc.)
+    matx_alloc_t alloc;
     matx_handle_t backend_handles[MATX_MAX_BACKEND_HANDLES];
     matx_int64_t num_backend_handles;
 } matx_dense_d_i8_opaque_t;
@@ -75,6 +77,7 @@ typedef struct matx_vec_z_i8_opaque_t
     matx_int64_t stride;
     matx_complex_d_t* data;
     matx_int64_t flags;
+    matx_alloc_t alloc;
     matx_handle_t backend_handles[MATX_MAX_BACKEND_HANDLES];
     matx_int64_t num_backend_handles;
 } matx_vec_z_i8_opaque_t;
@@ -88,6 +91,7 @@ typedef struct matx_dense_z_i8_opaque_t
     matx_layout_t layout;
     matx_complex_d_t* data;
     matx_int64_t flags;
+    matx_alloc_t alloc;
     matx_handle_t backend_handles[MATX_MAX_BACKEND_HANDLES];
     matx_int64_t num_backend_handles;
 } matx_dense_z_i8_opaque_t;
