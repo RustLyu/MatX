@@ -20,35 +20,37 @@ typedef enum matx_linsolve_backend_kind_t {
 typedef struct matx_factor_sparse_d_i8_t
 {
     void* reserved;
+    matx_alloc_t alloc;
 } matx_factor_sparse_d_i8_t;
 
 typedef struct matx_factor_sparse_z_i8_t
 {
     void* reserved;
+    matx_alloc_t alloc;
 } matx_factor_sparse_z_i8_t;
 
 typedef struct matx_sparse_linsolve_vtable_t
 {
     // Sparse real
-    matx_status_t (*factor_csc_d_i8)(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F);
-    matx_status_t (*solve_csc_d_i8)(matx_factor_sparse_d_i8_t* F,
+    matx_status_t (*factor_csc_d_i8)(const matx_alloc_t* alloc, matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F);
+    matx_status_t (*solve_csc_d_i8)(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F,
                                     const matx_double* b,
                                     matx_double* x);
-    void (*factor_csc_d_i8_destroy)(matx_factor_sparse_d_i8_t* F);
+    void (*factor_csc_d_i8_destroy)(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F);
 
     // Sparse complex
-    matx_status_t (*factor_csc_z_i8)(matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F);
-    matx_status_t (*solve_csc_z_i8)(matx_factor_sparse_z_i8_t* F,
+    matx_status_t (*factor_csc_z_i8)(const matx_alloc_t* alloc, matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F);
+    matx_status_t (*solve_csc_z_i8)(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F,
                                     const matx_vec_z_i8_t b,
                                     matx_vec_z_i8_t x);
-    void (*factor_csc_z_i8_destroy)(matx_factor_sparse_z_i8_t* F);
+    void (*factor_csc_z_i8_destroy)(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F);
 
     // Sparse Cholesky (real SPD)
-    matx_status_t (*factor_chol_csc_d_i8)(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F);
-    matx_status_t (*solve_chol_csc_d_i8)(matx_factor_sparse_d_i8_t* F,
+    matx_status_t (*factor_chol_csc_d_i8)(const matx_alloc_t* alloc, matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F);
+    matx_status_t (*solve_chol_csc_d_i8)(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F,
                                          const matx_double* b,
                                          matx_double* x);
-    void (*factor_chol_csc_d_i8_destroy)(matx_factor_sparse_d_i8_t* F);
+    void (*factor_chol_csc_d_i8_destroy)(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F);
 
 } matx_sparse_linsolve_vtable_t;
 
@@ -56,10 +58,11 @@ typedef struct matx_sparse_linsolve_t
 {
     matx_sparse_linsolve_backend_kind_t kind;
     matx_sparse_linsolve_vtable_t vt;
+    matx_alloc_t alloc;
 } matx_sparse_linsolve_t;
 
-MATX_API matx_sparse_linsolve_t matx_sparse_linsolve_default(void);
-MATX_API matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend_kind_t k);
+MATX_API matx_sparse_linsolve_t matx_sparse_linsolve_default(matx_alloc_t alloc);
+MATX_API matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend_kind_t k, matx_alloc_t alloc);
 MATX_API const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_t k);
 
 // High-level API (thin wrappers over vtable) -------------------------------

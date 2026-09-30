@@ -2,6 +2,7 @@
 #include "matx/matx_types_internal.h"
 
 #include <limits.h>
+#include <string.h>
 
 #if MATX_HAVE_SUITESPARSE
 #include "cholmod.h"
@@ -27,35 +28,35 @@ typedef struct matx_factor_sparse_z_i8_klu
     matx_int64_t n;
 } matx_factor_sparse_z_i8_klu_t;
 
-static void ss_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
+static void ss_factor_csc_d_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F)
 {
     if (!F || !F->reserved)
         return;
     matx_factor_sparse_d_i8_klu_t* ptr = (matx_factor_sparse_d_i8_klu_t*) F->reserved;
     klu_l_free_numeric(&ptr->N, &ptr->common);
     klu_l_free_symbolic(&ptr->S, &ptr->common);
-    free(ptr);
+    matx_free(alloc, ptr);
 }
 
-static void ss_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
+static void ss_factor_csc_z_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F)
 {
     if (!F || !F->reserved)
         return;
     matx_factor_sparse_z_i8_klu_t* ptr = (matx_factor_sparse_z_i8_klu_t*) F->reserved;
     klu_zl_free_numeric(&ptr->N, &ptr->common);
     klu_l_free_symbolic(&ptr->S, &ptr->common);
-    free(ptr);
+    matx_free(alloc, ptr);
 }
 
 // Sparse real: KLU-based ---------------------------------------------------
-static matx_status_t ss_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
+static matx_status_t ss_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
 {
     if (!A || !out_F) {
         MATX_ERROR("input pointer is null error");
         return MATX_ERR_INVALID_ARG;
     }
     if (out_F != NULL) {
-        ss_factor_csc_d_i8_destroy(out_F);
+        ss_factor_csc_d_i8_destroy(alloc, out_F);
     }
 
     matx_status_t st = coo_to_csc_d_i8(A);
@@ -82,7 +83,7 @@ static matx_status_t ss_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_
         return MATX_ERR_NOT_SUPPORTED;
     }
 
-    matx_factor_sparse_d_i8_klu_t* F = (matx_factor_sparse_d_i8_klu_t*) malloc(sizeof(*F));
+    matx_factor_sparse_d_i8_klu_t* F = (matx_factor_sparse_d_i8_klu_t*) matx_malloc(alloc, sizeof(*F));
     if (!F) {
         MATX_ERROR("malloc Factor handle error");
         return MATX_ERR_OUT_OF_MEMORY;
@@ -95,7 +96,7 @@ static matx_status_t ss_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_
     F->S = klu_l_analyze(F->n, A->handle_csc->col_ptr, A->handle_csc->row_ind, &F->common);
     if (!F->S) {
         MATX_ERROR("call klu_l_analyze error:%d", F->common.status);
-        free(F);
+        matx_free(alloc, F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -104,7 +105,7 @@ static matx_status_t ss_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_
     if (st != MATX_OK) {
         MATX_ERROR("call coo_to_csc_d_i8_value_remap error:%d", F->common.status);
         klu_l_free_symbolic(&F->S, &F->common);
-        free(F);
+        matx_free(alloc, F);
         return st;
     }
 
@@ -117,7 +118,7 @@ static matx_status_t ss_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_
     if (!F->N) {
         MATX_ERROR("call klu_l_factor error:%d", F->common.status);
         klu_l_free_symbolic(&F->S, &F->common);
-        free(F);
+        matx_free(alloc, F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -125,7 +126,8 @@ static matx_status_t ss_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_
     return MATX_OK;
 }
 
-static matx_status_t ss_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F,
+static matx_status_t ss_solve_csc_d_i8(const matx_alloc_t* alloc,
+                                       matx_factor_sparse_d_i8_t* F,
                                        const matx_double* b,
                                        matx_double* x)
 {
@@ -147,7 +149,7 @@ static matx_status_t ss_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F,
     return MATX_OK;
 }
 
-static matx_status_t ss_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
+static matx_status_t ss_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
 {
     if (!A || !out_F) {
         MATX_ERROR("input pointer is null");
@@ -155,7 +157,7 @@ static matx_status_t ss_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_
     }
 
     if (out_F != NULL) {
-        ss_factor_csc_z_i8_destroy(out_F);
+        ss_factor_csc_z_i8_destroy(alloc, out_F);
     }
 
     matx_status_t st = coo_to_csc_z_i8(A);
@@ -179,7 +181,7 @@ static matx_status_t ss_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_
         return MATX_ERR_NOT_SUPPORTED;
     }
 
-    matx_factor_sparse_z_i8_klu_t* F = (matx_factor_sparse_z_i8_klu_t*) malloc(sizeof(*F));
+    matx_factor_sparse_z_i8_klu_t* F = (matx_factor_sparse_z_i8_klu_t*) matx_malloc(alloc, sizeof(*F));
     if (!F) {
         MATX_ERROR("malloc F failed");
         return MATX_ERR_OUT_OF_MEMORY;
@@ -219,12 +221,13 @@ static matx_status_t ss_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_
 
 fail:
     klu_l_free_symbolic(&F->S, &F->common);
-    free(F);
+    matx_free(alloc, F);
     MATX_ERROR("%s: internal error", __func__);
     return MATX_ERR_INTERNAL;
 }
 
-static matx_status_t ss_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F,
+static matx_status_t ss_solve_csc_z_i8(const matx_alloc_t* alloc,
+                                       matx_factor_sparse_z_i8_t* F,
                                        const matx_vec_z_i8_t b,
                                        matx_vec_z_i8_t x)
 {
@@ -260,7 +263,7 @@ typedef struct matx_factor_sparse_d_i8_cholmod
     matx_int64_t n;
 } matx_factor_sparse_d_i8_cholmod_t;
 
-static void ss_factor_chol_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
+static void ss_factor_chol_csc_d_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F)
 {
     if (!F || !F->reserved)
         return;
@@ -269,10 +272,10 @@ static void ss_factor_chol_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
         cholmod_l_free_factor(&ptr->L, &ptr->common);
     }
     cholmod_l_finish(&ptr->common);
-    free(ptr);
+    matx_free(alloc, ptr);
 }
 
-static matx_status_t ss_factor_chol_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
+static matx_status_t ss_factor_chol_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
 {
     if (!A || !out_F) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -292,7 +295,7 @@ static matx_status_t ss_factor_chol_csc_d_i8(matx_coo_d_i8_t A, matx_factor_spar
     const matx_int64_t n = A->nrows;
     const matx_int64_t nnz = A->handle_csc->nnz;
 
-    matx_factor_sparse_d_i8_cholmod_t* F = (matx_factor_sparse_d_i8_cholmod_t*) malloc(sizeof(*F));
+    matx_factor_sparse_d_i8_cholmod_t* F = (matx_factor_sparse_d_i8_cholmod_t*) matx_malloc(alloc, sizeof(*F));
     if (!F) {
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
@@ -306,7 +309,7 @@ static matx_status_t ss_factor_chol_csc_d_i8(matx_coo_d_i8_t A, matx_factor_spar
     if (!A_chol) {
         MATX_ERROR("%s: cholmod_l_allocate_sparse failed", __func__);
         cholmod_l_finish(&F->common);
-        free(F);
+        matx_free(alloc, F);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
@@ -327,7 +330,7 @@ static matx_status_t ss_factor_chol_csc_d_i8(matx_coo_d_i8_t A, matx_factor_spar
         MATX_ERROR("%s: cholmod_l_analyze failed", __func__);
         cholmod_l_free_sparse(&A_chol, &F->common);
         cholmod_l_finish(&F->common);
-        free(F);
+        matx_free(alloc, F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -335,7 +338,7 @@ static matx_status_t ss_factor_chol_csc_d_i8(matx_coo_d_i8_t A, matx_factor_spar
     if (F->common.status != CHOLMOD_OK) {
         MATX_ERROR("%s: cholmod_l_factorize failed, status=%d", __func__, F->common.status);
         cholmod_l_free_sparse(&A_chol, &F->common);
-        ss_factor_chol_csc_d_i8_destroy(out_F);
+        ss_factor_chol_csc_d_i8_destroy(alloc, out_F);
         out_F->reserved = NULL;
         return MATX_ERR_INTERNAL;
     }
@@ -345,7 +348,8 @@ static matx_status_t ss_factor_chol_csc_d_i8(matx_coo_d_i8_t A, matx_factor_spar
     return MATX_OK;
 }
 
-static matx_status_t ss_solve_chol_csc_d_i8(matx_factor_sparse_d_i8_t* F,
+static matx_status_t ss_solve_chol_csc_d_i8(const matx_alloc_t* alloc,
+                                            matx_factor_sparse_d_i8_t* F,
                                             const matx_double* b,
                                             matx_double* x)
 {
@@ -376,10 +380,11 @@ static matx_status_t ss_solve_chol_csc_d_i8(matx_factor_sparse_d_i8_t* F,
     return MATX_OK;
 }
 
-matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void)
+matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(matx_alloc_t alloc)
 {
     matx_sparse_linsolve_t ls
         = {.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU,
+           .alloc = alloc,
            .vt = {.factor_csc_d_i8 = &ss_factor_csc_d_i8,
                   .solve_csc_d_i8 = &ss_solve_csc_d_i8,
                   .factor_csc_d_i8_destroy = &ss_factor_csc_d_i8_destroy,
@@ -394,9 +399,9 @@ matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void)
 
 #else
 
-matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void)
+matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(matx_alloc_t alloc)
 {
-    matx_sparse_linsolve_t ls = {.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU, .vt = {0}};
+    matx_sparse_linsolve_t ls = {.kind = MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU, .alloc = alloc, .vt = {0}};
     return ls;
 }
 

@@ -19,75 +19,75 @@ typedef struct matx_factor_dense_z_i8_t matx_factor_dense_z_i8_t;
 typedef struct matx_dense_linsolve_vtable_t
 {
     // Dense real LU
-    matx_status_t (*factor_dense_d_i8)(const matx_dense_d_i8_t A, matx_factor_dense_d_i8_t** out_F);
-    matx_status_t (*solve_dense_d_i8)(const matx_factor_dense_d_i8_t* F, const double* b, double* x);
-    void (*factor_dense_d_i8_destroy)(matx_factor_dense_d_i8_t* F);
+    matx_status_t (*factor_dense_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, matx_factor_dense_d_i8_t** out_F);
+    matx_status_t (*solve_dense_d_i8)(const matx_alloc_t* alloc, const matx_factor_dense_d_i8_t* F, const double* b, double* x);
+    void (*factor_dense_d_i8_destroy)(const matx_alloc_t* alloc, matx_factor_dense_d_i8_t* F);
 
     // Dense complex LU
-    matx_status_t (*factor_dense_z_i8)(const matx_dense_z_i8_t A, matx_factor_dense_z_i8_t** out_F);
-    matx_status_t (*solve_dense_z_i8)(const matx_factor_dense_z_i8_t* F,
+    matx_status_t (*factor_dense_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A, matx_factor_dense_z_i8_t** out_F);
+    matx_status_t (*solve_dense_z_i8)(const matx_alloc_t* alloc, const matx_factor_dense_z_i8_t* F,
                                       const matx_vec_z_i8_t b,
                                       matx_vec_z_i8_t x);
-    void (*factor_dense_z_i8_destroy)(matx_factor_dense_z_i8_t* F);
+    void (*factor_dense_z_i8_destroy)(const matx_alloc_t* alloc, matx_factor_dense_z_i8_t* F);
 
     // Cholesky
-    matx_status_t (*potrf_d_i8)(const matx_dense_d_i8_t A,
+    matx_status_t (*potrf_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A,
                                 matx_uplo_t uplo,
                                 matx_factor_dense_d_i8_t** out_F);
-    matx_status_t (*potrs_d_i8)(const matx_factor_dense_d_i8_t* F,
+    matx_status_t (*potrs_d_i8)(const matx_alloc_t* alloc, const matx_factor_dense_d_i8_t* F,
                                 const matx_double* b,
                                 matx_double* x);
-    matx_status_t (*potrf_z_i8)(const matx_dense_z_i8_t A,
+    matx_status_t (*potrf_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A,
                                 matx_uplo_t uplo,
                                 matx_factor_dense_z_i8_t** out_F);
-    matx_status_t (*potrs_z_i8)(const matx_factor_dense_z_i8_t* F,
+    matx_status_t (*potrs_z_i8)(const matx_alloc_t* alloc, const matx_factor_dense_z_i8_t* F,
                                 const matx_vec_z_i8_t b,
                                 matx_vec_z_i8_t x);
 
     // Least squares (GELS)
-    matx_status_t (*gels_d_i8)(const matx_dense_d_i8_t A, const matx_double* b, matx_double* x);
-    matx_status_t (*gels_z_i8)(const matx_dense_z_i8_t A,
+    matx_status_t (*gels_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, const matx_double* b, matx_double* x);
+    matx_status_t (*gels_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A,
                                const matx_vec_z_i8_t b,
                                matx_vec_z_i8_t x);
 
     // Symmetric eigenvalue (real only)
-    matx_status_t (*syev_d_i8)(const matx_dense_d_i8_t A,
+    matx_status_t (*syev_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A,
                                matx_vec_d_i8_t eigenvalues,
                                matx_dense_d_i8_t* eigenvectors);
 
     // Hermitian eigenvalue (complex)
-    matx_status_t (*syev_z_i8)(const matx_dense_z_i8_t A,
+    matx_status_t (*syev_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A,
                                matx_vec_d_i8_t eigenvalues,
                                matx_dense_z_i8_t* eigenvectors);
 
     // General non-symmetric eigenvalues
-    matx_status_t (*geev_d_i8)(const matx_dense_d_i8_t A,
+    matx_status_t (*geev_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A,
                                matx_vec_z_i8_t eigenvalues,
                                matx_dense_d_i8_t* vr,
                                matx_dense_d_i8_t* vl);
-    matx_status_t (*geev_z_i8)(const matx_dense_z_i8_t A,
+    matx_status_t (*geev_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A,
                                matx_vec_z_i8_t eigenvalues,
                                matx_dense_z_i8_t* vr,
                                matx_dense_z_i8_t* vl);
 
     // QR factorization
-    matx_status_t (*qr_d_i8)(const matx_dense_d_i8_t A, matx_dense_d_i8_t* Q, matx_dense_d_i8_t* R);
-    matx_status_t (*qr_z_i8)(const matx_dense_z_i8_t A, matx_dense_z_i8_t* Q, matx_dense_z_i8_t* R);
+    matx_status_t (*qr_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, matx_dense_d_i8_t* Q, matx_dense_d_i8_t* R);
+    matx_status_t (*qr_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A, matx_dense_z_i8_t* Q, matx_dense_z_i8_t* R);
 
     // Determinant
-    matx_status_t (*det_dense_d_i8)(const matx_dense_d_i8_t A, matx_double* det);
-    matx_status_t (*det_dense_z_i8)(const matx_dense_z_i8_t A, matx_complex_d_t* det);
+    matx_status_t (*det_dense_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, matx_double* det);
+    matx_status_t (*det_dense_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A, matx_complex_d_t* det);
 
     // Condition number (1-norm)
-    matx_status_t (*cond_dense_d_i8)(const matx_dense_d_i8_t A, matx_double* cond);
-    matx_status_t (*cond_dense_z_i8)(const matx_dense_z_i8_t A, matx_double* cond);
+    matx_status_t (*cond_dense_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, matx_double* cond);
+    matx_status_t (*cond_dense_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A, matx_double* cond);
 
     // SVD
-    matx_status_t (*gesvd_d_i8)(const matx_dense_d_i8_t A,
+    matx_status_t (*gesvd_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A,
                                 matx_vec_d_i8_t S,
                                 matx_dense_d_i8_t* U,
                                 matx_dense_d_i8_t* Vt);
-    matx_status_t (*gesvd_z_i8)(const matx_dense_z_i8_t A,
+    matx_status_t (*gesvd_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A,
                                 matx_vec_d_i8_t S,
                                 matx_dense_z_i8_t* U,
                                 matx_dense_z_i8_t* Vt);
@@ -97,9 +97,10 @@ typedef struct matx_dense_linsolve_t
 {
     matx_dense_linsolve_backend_kind_t kind;
     matx_dense_linsolve_vtable_t vt;
+    matx_alloc_t alloc;
 } matx_dense_linsolve_t;
 
-MATX_API matx_dense_linsolve_t matx_dense_linsolve_default(void);
+MATX_API matx_dense_linsolve_t matx_dense_linsolve_default(matx_alloc_t alloc);
 MATX_API const char* matx_dense_linsolve_backend_name(matx_dense_linsolve_backend_kind_t k);
 
 // High-level API (thin wrappers over vtable) -------------------------------

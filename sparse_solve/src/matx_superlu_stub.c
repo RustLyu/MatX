@@ -3,6 +3,7 @@
 #include "matx/matx_types_internal.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #if MATX_HAVE_SUPERLU
 #include "slu_ddefs.h"
@@ -55,7 +56,7 @@ typedef struct matx_factor_sparse_z_i8_slu
  * @brief Destroy double precision sparse factorization handle and free resources
  * @param F Factor handle to destroy
  */
-static void slu_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
+static void slu_factor_csc_d_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F)
 {
     if (!F)
         return;
@@ -66,12 +67,12 @@ static void slu_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
     Destroy_CompCol_Matrix(&ptr->A);
     Destroy_Dense_Matrix(&ptr->B);
     StatFree(&ptr->stat);
-    free(ptr->perm_c);
-    free(ptr->perm_r);
-    free(ptr->etree);
-    free(ptr->rhs);
+    matx_free(alloc, ptr->perm_c);
+    matx_free(alloc, ptr->perm_r);
+    matx_free(alloc, ptr->etree);
+    matx_free(alloc, ptr->rhs);
 #endif
-    free(ptr);
+    matx_free(alloc, ptr);
 }
 
 /**
@@ -80,13 +81,14 @@ static void slu_factor_csc_d_i8_destroy(matx_factor_sparse_d_i8_t* F)
  * @param out_F Output factorization handle
  * @return MATX_OK on success, error code otherwise
  */
-static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
+static matx_status_t slu_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* out_F)
 {
     if (!A || !out_F) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
 #if !MATX_HAVE_SUPERLU
+    (void) alloc;
     (void) A;
     (void) out_F;
     MATX_ERROR("%s: operation not supported", __func__);
@@ -94,7 +96,7 @@ static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d
 #else
     /* Free existing handle if allocated */
     if (out_F)
-        slu_factor_csc_d_i8_destroy(out_F);
+        slu_factor_csc_d_i8_destroy(alloc, out_F);
 
     /* Validate matrix dimension */
     if (A->nrows != A->ncols || A->nrows <= 0) {
@@ -115,23 +117,24 @@ static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d
         return st;
 
     /* Allocate factorization handle */
-    matx_factor_sparse_d_i8_slu_t* F = (matx_factor_sparse_d_i8_slu_t*) calloc(1, sizeof(*F));
+    matx_factor_sparse_d_i8_slu_t* F = (matx_factor_sparse_d_i8_slu_t*) matx_malloc(alloc, sizeof(*F));
     if (!F) {
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    memset(F, 0, sizeof(*F));
     out_F->reserved = F;
     F->n = (int) A->nrows;
 
     /* Allocate permutation and working arrays */
-    F->perm_c = (int*) malloc(sizeof(int) * (size_t) F->n);
-    F->perm_r = (int*) malloc(sizeof(int) * (size_t) F->n);
-    F->etree = (int*) malloc(sizeof(int) * (size_t) F->n);
-    F->rhs = (double*) malloc(sizeof(double) * (size_t) F->n);
+    F->perm_c = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
+    F->perm_r = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
+    F->etree = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
+    F->rhs = (double*) matx_malloc(alloc, sizeof(double) * (size_t) F->n);
 
     /* Check memory allocation */
     if (!F->perm_c || !F->perm_r || !F->etree || !F->rhs) {
-        slu_factor_csc_d_i8_destroy(out_F);
+        slu_factor_csc_d_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
@@ -160,7 +163,7 @@ static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d
     dgssv(&F->options, &F->A, F->perm_c, F->perm_r, &F->L, &F->U, &F->B, &F->stat, &info);
     if (info != 0) {
         MATX_ERROR("dgssv factor failed info=%d", info);
-        slu_factor_csc_d_i8_destroy(out_F);
+        slu_factor_csc_d_i8_destroy(alloc, out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -177,7 +180,7 @@ static matx_status_t slu_factor_csc_d_i8(matx_coo_d_i8_t A, matx_factor_sparse_d
  * @param x Solution output vector
  * @return MATX_OK on success, error code otherwise
  */
-static matx_status_t slu_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F,
+static matx_status_t slu_solve_csc_d_i8(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F,
                                         const matx_double* b,
                                         matx_double* x)
 {
@@ -186,6 +189,7 @@ static matx_status_t slu_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F,
         return MATX_ERR_INVALID_ARG;
     }
 #if !MATX_HAVE_SUPERLU
+    (void) alloc;
     (void) F;
     (void) b;
     (void) x;
@@ -216,7 +220,7 @@ static matx_status_t slu_solve_csc_d_i8(matx_factor_sparse_d_i8_t* F,
  * @brief Destroy complex sparse factorization handle and release all resources
  * @param F Complex factor handle to destroy
  */
-static void slu_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
+static void slu_factor_csc_z_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F)
 {
     if (!F)
         return;
@@ -230,12 +234,12 @@ static void slu_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
 
     /* Free solver stat and working arrays */
     StatFree(&ptr->stat);
-    free(ptr->perm_c);
-    free(ptr->perm_r);
-    free(ptr->etree);
-    free(ptr->rhs);
+    matx_free(alloc, ptr->perm_c);
+    matx_free(alloc, ptr->perm_r);
+    matx_free(alloc, ptr->etree);
+    matx_free(alloc, ptr->rhs);
 #endif
-    free(ptr);
+    matx_free(alloc, ptr);
 }
 
 /**
@@ -244,13 +248,14 @@ static void slu_factor_csc_z_i8_destroy(matx_factor_sparse_z_i8_t* F)
  * @param out_F Output complex factorization handle
  * @return MATX_OK on success, error code otherwise
  */
-static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
+static matx_status_t slu_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F)
 {
     if (!A || !out_F) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
 #if !MATX_HAVE_SUPERLU
+    (void) alloc;
     (void) A;
     (void) out_F;
     MATX_ERROR("%s: operation not supported", __func__);
@@ -258,7 +263,7 @@ static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
 #else
     /* Free existing handle if allocated */
     if (out_F->reserved)
-        slu_factor_csc_z_i8_destroy(out_F);
+        slu_factor_csc_z_i8_destroy(alloc, out_F);
 
     /* Validate square matrix and size limit */
     if (A->nrows != A->ncols || A->nrows <= 0) {
@@ -279,23 +284,24 @@ static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
         return st;
 
     /* Allocate complex factorization handle */
-    matx_factor_sparse_z_i8_slu_t* F = (matx_factor_sparse_z_i8_slu_t*) calloc(1, sizeof(*F));
+    matx_factor_sparse_z_i8_slu_t* F = (matx_factor_sparse_z_i8_slu_t*) matx_malloc(alloc, sizeof(*F));
     if (!F) {
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    memset(F, 0, sizeof(*F));
     out_F->reserved = F;
     F->n = (int) A->nrows;
 
     /* Allocate permutation and complex RHS buffer */
-    F->perm_c = (int*) malloc(sizeof(int) * (size_t) F->n);
-    F->perm_r = (int*) malloc(sizeof(int) * (size_t) F->n);
-    F->etree = (int*) malloc(sizeof(int) * (size_t) F->n);
-    F->rhs = (doublecomplex*) malloc(sizeof(doublecomplex) * (size_t) F->n);
+    F->perm_c = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
+    F->perm_r = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
+    F->etree = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
+    F->rhs = (doublecomplex*) matx_malloc(alloc, sizeof(doublecomplex) * (size_t) F->n);
 
     /* Check memory allocation status */
     if (!F->perm_c || !F->perm_r || !F->etree || !F->rhs) {
-        slu_factor_csc_z_i8_destroy(out_F);
+        slu_factor_csc_z_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
@@ -325,7 +331,7 @@ static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
     zgssv(&F->options, &F->A, F->perm_c, F->perm_r, &F->L, &F->U, &F->B, &F->stat, &info);
     if (info != 0) {
         MATX_ERROR("zgssv complex factor failed info=%d", info);
-        slu_factor_csc_z_i8_destroy(out_F);
+        slu_factor_csc_z_i8_destroy(alloc, out_F);
         return MATX_ERR_INTERNAL;
     }
 
@@ -343,7 +349,7 @@ static matx_status_t slu_factor_csc_z_i8(matx_coo_z_i8_t A, matx_factor_sparse_z
  * @param x Complex solution vector
  * @return MATX_OK on success, error code otherwise
  */
-static matx_status_t slu_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F,
+static matx_status_t slu_solve_csc_z_i8(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F,
                                         const matx_vec_z_i8_t b,
                                         matx_vec_z_i8_t x)
 {
@@ -352,6 +358,7 @@ static matx_status_t slu_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F,
         return MATX_ERR_INVALID_ARG;
     }
 #if !MATX_HAVE_SUPERLU
+    (void) alloc;
     (void) F;
     (void) b;
     (void) x;
@@ -387,9 +394,10 @@ static matx_status_t slu_solve_csc_z_i8(matx_factor_sparse_z_i8_t* F,
  * @brief Create SuperLU linear solver backend interface
  * @return Initialized solver dispatch table
  */
-matx_sparse_linsolve_t matx_linsolve_make_superlu(void)
+matx_sparse_linsolve_t matx_linsolve_make_superlu(matx_alloc_t alloc)
 {
     matx_sparse_linsolve_t ls = {.kind = MATX_LINSOLVE_BACKEND_SUPERLU,
+                                 .alloc = alloc,
                                  .vt = {.factor_csc_d_i8 = &slu_factor_csc_d_i8,
                                         .solve_csc_d_i8 = &slu_solve_csc_d_i8,
                                         .factor_csc_d_i8_destroy = &slu_factor_csc_d_i8_destroy,

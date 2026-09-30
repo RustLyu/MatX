@@ -2,11 +2,11 @@
 #include "matx/matx_sparse_solve.h"
 
 // Forward decls
-matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(void);
-matx_sparse_linsolve_t matx_linsolve_make_umfpack(void);
-matx_sparse_linsolve_t matx_linsolve_make_cxsparse(void);
-matx_sparse_linsolve_t matx_linsolve_make_superlu(void);
-matx_sparse_linsolve_t matx_linsolve_make_mumps(void);
+matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(matx_alloc_t alloc);
+matx_sparse_linsolve_t matx_linsolve_make_umfpack(matx_alloc_t alloc);
+matx_sparse_linsolve_t matx_linsolve_make_cxsparse(matx_alloc_t alloc);
+matx_sparse_linsolve_t matx_linsolve_make_superlu(matx_alloc_t alloc);
+matx_sparse_linsolve_t matx_linsolve_make_mumps(matx_alloc_t alloc);
 
 const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_t k)
 {
@@ -26,36 +26,36 @@ const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_
     }
 }
 
-matx_sparse_linsolve_t matx_sparse_linsolve_default(void)
+matx_sparse_linsolve_t matx_sparse_linsolve_default(matx_alloc_t alloc)
 {
 #if MATX_HAVE_UMFPACK
     //return matx_linsolve_make_mumps();
-    return matx_linsolve_make_umfpack();
+    return matx_linsolve_make_umfpack(alloc);
 #elif MATX_HAVE_CXSPARSE
-    return matx_linsolve_make_cxsparse();
+    return matx_linsolve_make_cxsparse(alloc);
 #elif MATX_HAVE_SUPERLU
-    return matx_linsolve_make_superlu();
+    return matx_linsolve_make_superlu(alloc);
 #elif MATX_HAVE_MUMPS
-    return matx_linsolve_make_mumps();
+    return matx_linsolve_make_mumps(alloc);
 #else
-    return matx_linsolve_make_suitesparse_klu();
+    return matx_linsolve_make_suitesparse_klu(alloc);
 #endif
 }
 
-matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend_kind_t k)
+matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend_kind_t k, matx_alloc_t alloc)
 {
     switch (k) {
     case MATX_LINSOLVE_BACKEND_UMFPACK:
-        return matx_linsolve_make_umfpack();
+        return matx_linsolve_make_umfpack(alloc);
     case MATX_LINSOLVE_BACKEND_CXSPARSE:
-        return matx_linsolve_make_cxsparse();
+        return matx_linsolve_make_cxsparse(alloc);
     case MATX_LINSOLVE_BACKEND_SUPERLU:
-        return matx_linsolve_make_superlu();
+        return matx_linsolve_make_superlu(alloc);
     case MATX_LINSOLVE_BACKEND_MUMPS:
-        return matx_linsolve_make_mumps();
+        return matx_linsolve_make_mumps(alloc);
     case MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU:
     default:
-        return matx_linsolve_make_suitesparse_klu();
+        return matx_linsolve_make_suitesparse_klu(alloc);
     }
 }
 
@@ -74,7 +74,8 @@ matx_status_t matx_factor_csc_d_i8(const matx_sparse_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.factor_csc_d_i8(A, out_F);
+    out_F->alloc = ls->alloc;
+    return ls->vt.factor_csc_d_i8(&ls->alloc, A, out_F);
 }
 
 matx_status_t matx_solve_csc_d_i8_factor(const matx_sparse_linsolve_t* ls,
@@ -90,7 +91,7 @@ matx_status_t matx_solve_csc_d_i8_factor(const matx_sparse_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.solve_csc_d_i8(F, b, x);
+    return ls->vt.solve_csc_d_i8(&ls->alloc, F, b, x);
 }
 
 void matx_factor_csc_d_i8_destroy(const matx_sparse_linsolve_t* ls, matx_factor_sparse_d_i8_t* F)
@@ -98,7 +99,7 @@ void matx_factor_csc_d_i8_destroy(const matx_sparse_linsolve_t* ls, matx_factor_
     if (!ls || !F)
         return;
     if (ls->vt.factor_csc_d_i8_destroy) {
-        ls->vt.factor_csc_d_i8_destroy(F);
+        ls->vt.factor_csc_d_i8_destroy(&ls->alloc, F);
     }
 }
 
@@ -113,6 +114,7 @@ matx_status_t matx_solve_csc_d_i8(const matx_sparse_linsolve_t* ls,
     }
     matx_factor_sparse_d_i8_t F;
     F.reserved = NULL;
+    F.alloc = ls->alloc;
     matx_status_t st = matx_factor_csc_d_i8(ls, A, &F);
     if (st != MATX_OK)
         return st;
@@ -134,7 +136,8 @@ matx_status_t matx_factor_csc_z_i8(const matx_sparse_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.factor_csc_z_i8(A, out_F);
+    out_F->alloc = ls->alloc;
+    return ls->vt.factor_csc_z_i8(&ls->alloc, A, out_F);
 }
 
 matx_status_t matx_solve_csc_z_i8_factor(const matx_sparse_linsolve_t* ls,
@@ -150,7 +153,7 @@ matx_status_t matx_solve_csc_z_i8_factor(const matx_sparse_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.solve_csc_z_i8(F, b, x);
+    return ls->vt.solve_csc_z_i8(&ls->alloc, F, b, x);
 }
 
 void matx_factor_csc_z_i8_destroy(const matx_sparse_linsolve_t* ls, matx_factor_sparse_z_i8_t* F)
@@ -158,7 +161,7 @@ void matx_factor_csc_z_i8_destroy(const matx_sparse_linsolve_t* ls, matx_factor_
     if (!ls || !F)
         return;
     if (ls->vt.factor_csc_z_i8_destroy) {
-        ls->vt.factor_csc_z_i8_destroy(F);
+        ls->vt.factor_csc_z_i8_destroy(&ls->alloc, F);
     }
 }
 
@@ -173,6 +176,7 @@ matx_status_t matx_solve_csc_z_i8(const matx_sparse_linsolve_t* ls,
     }
     matx_factor_sparse_z_i8_t F;
     F.reserved = NULL;
+    F.alloc = ls->alloc;
     matx_status_t st = matx_factor_csc_z_i8(ls, A, &F);
     if (st != MATX_OK)
         return st;
@@ -195,7 +199,8 @@ matx_status_t matx_factor_chol_coo_d_i8(const matx_sparse_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.factor_chol_csc_d_i8(A, out_F);
+    out_F->alloc = ls->alloc;
+    return ls->vt.factor_chol_csc_d_i8(&ls->alloc, A, out_F);
 }
 
 matx_status_t matx_solve_chol_coo_d_i8_factor(const matx_sparse_linsolve_t* ls,
@@ -211,7 +216,7 @@ matx_status_t matx_solve_chol_coo_d_i8_factor(const matx_sparse_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.solve_chol_csc_d_i8(F, b, x);
+    return ls->vt.solve_chol_csc_d_i8(&ls->alloc, F, b, x);
 }
 
 void matx_factor_chol_coo_d_i8_destroy(const matx_sparse_linsolve_t* ls,
@@ -220,7 +225,7 @@ void matx_factor_chol_coo_d_i8_destroy(const matx_sparse_linsolve_t* ls,
     if (!ls || !F)
         return;
     if (ls->vt.factor_chol_csc_d_i8_destroy) {
-        ls->vt.factor_chol_csc_d_i8_destroy(F);
+        ls->vt.factor_chol_csc_d_i8_destroy(&ls->alloc, F);
     }
 }
 
@@ -235,6 +240,7 @@ matx_status_t matx_solve_chol_coo_d_i8(const matx_sparse_linsolve_t* ls,
     }
     matx_factor_sparse_d_i8_t F;
     F.reserved = NULL;
+    F.alloc = ls->alloc;
     matx_status_t st = matx_factor_chol_coo_d_i8(ls, A, &F);
     if (st != MATX_OK)
         return st;

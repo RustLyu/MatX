@@ -2,7 +2,7 @@
 #include "matx/matx_log.h"
 
 // Forward decls
-matx_dense_linsolve_t matx_dense_linsolve_make_cblas(void);
+matx_dense_linsolve_t matx_dense_linsolve_make_cblas(matx_alloc_t alloc);
 
 const char* matx_dense_linsolve_backend_name(matx_dense_linsolve_backend_kind_t k)
 {
@@ -14,9 +14,9 @@ const char* matx_dense_linsolve_backend_name(matx_dense_linsolve_backend_kind_t 
     }
 }
 
-matx_dense_linsolve_t matx_dense_linsolve_default(void)
+matx_dense_linsolve_t matx_dense_linsolve_default(matx_alloc_t alloc)
 {
-    return matx_dense_linsolve_make_cblas();
+    return matx_dense_linsolve_make_cblas(alloc);
 }
 
 // High-level wrappers ------------------------------------------------------
@@ -34,7 +34,7 @@ matx_status_t matx_factor_dense_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.factor_dense_d_i8(A, out_F);
+    return ls->vt.factor_dense_d_i8(&ls->alloc, A, out_F);
 }
 
 matx_status_t matx_solve_dense_d_i8_factor(const matx_dense_linsolve_t* ls,
@@ -50,7 +50,7 @@ matx_status_t matx_solve_dense_d_i8_factor(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.solve_dense_d_i8(F, b, x);
+    return ls->vt.solve_dense_d_i8(&ls->alloc, F, b, x);
 }
 
 void matx_factor_dense_d_i8_destroy(const matx_dense_linsolve_t* ls, matx_factor_dense_d_i8_t* F)
@@ -58,7 +58,7 @@ void matx_factor_dense_d_i8_destroy(const matx_dense_linsolve_t* ls, matx_factor
     if (!ls || !F)
         return;
     if (ls->vt.factor_dense_d_i8_destroy) {
-        ls->vt.factor_dense_d_i8_destroy(F);
+        ls->vt.factor_dense_d_i8_destroy(&ls->alloc, F);
     }
 }
 
@@ -92,7 +92,7 @@ matx_status_t matx_factor_dense_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.factor_dense_z_i8(A, out_F);
+    return ls->vt.factor_dense_z_i8(&ls->alloc, A, out_F);
 }
 
 matx_status_t matx_solve_dense_z_i8_factor(const matx_dense_linsolve_t* ls,
@@ -108,7 +108,7 @@ matx_status_t matx_solve_dense_z_i8_factor(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.solve_dense_z_i8(F, b, x);
+    return ls->vt.solve_dense_z_i8(&ls->alloc, F, b, x);
 }
 
 void matx_factor_dense_z_i8_destroy(const matx_dense_linsolve_t* ls, matx_factor_dense_z_i8_t* F)
@@ -116,7 +116,7 @@ void matx_factor_dense_z_i8_destroy(const matx_dense_linsolve_t* ls, matx_factor
     if (!ls || !F)
         return;
     if (ls->vt.factor_dense_z_i8_destroy) {
-        ls->vt.factor_dense_z_i8_destroy(F);
+        ls->vt.factor_dense_z_i8_destroy(&ls->alloc, F);
     }
 }
 
@@ -153,7 +153,7 @@ matx_status_t matx_factor_chol_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.potrf_d_i8(A, uplo, out_F);
+    return ls->vt.potrf_d_i8(&ls->alloc, A, uplo, out_F);
 }
 
 matx_status_t matx_solve_chol_d_i8(const matx_dense_linsolve_t* ls,
@@ -169,7 +169,7 @@ matx_status_t matx_solve_chol_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.potrs_d_i8(F, b, x);
+    return ls->vt.potrs_d_i8(&ls->alloc, F, b, x);
 }
 
 matx_status_t matx_solve_chol_d_i8_oneshot(const matx_dense_linsolve_t* ls,
@@ -204,7 +204,7 @@ matx_status_t matx_factor_chol_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.potrf_z_i8(A, uplo, out_F);
+    return ls->vt.potrf_z_i8(&ls->alloc, A, uplo, out_F);
 }
 
 matx_status_t matx_solve_chol_z_i8(const matx_dense_linsolve_t* ls,
@@ -220,7 +220,7 @@ matx_status_t matx_solve_chol_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.potrs_z_i8(F, b, x);
+    return ls->vt.potrs_z_i8(&ls->alloc, F, b, x);
 }
 
 // ---- GELS wrappers ----
@@ -238,7 +238,7 @@ matx_status_t matx_gels_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.gels_d_i8(A, b, x);
+    return ls->vt.gels_d_i8(&ls->alloc, A, b, x);
 }
 
 matx_status_t matx_gels_z_i8(const matx_dense_linsolve_t* ls,
@@ -254,7 +254,7 @@ matx_status_t matx_gels_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.gels_z_i8(A, b, x);
+    return ls->vt.gels_z_i8(&ls->alloc, A, b, x);
 }
 
 // ---- SYEV wrapper ----
@@ -272,7 +272,7 @@ matx_status_t matx_syev_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.syev_d_i8(A, eigenvalues, eigenvectors);
+    return ls->vt.syev_d_i8(&ls->alloc, A, eigenvalues, eigenvectors);
 }
 
 // ---- GESVD wrappers ----
@@ -291,7 +291,7 @@ matx_status_t matx_gesvd_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.gesvd_d_i8(A, S, U, Vt);
+    return ls->vt.gesvd_d_i8(&ls->alloc, A, S, U, Vt);
 }
 
 matx_status_t matx_gesvd_z_i8(const matx_dense_linsolve_t* ls,
@@ -308,7 +308,7 @@ matx_status_t matx_gesvd_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.gesvd_z_i8(A, S, U, Vt);
+    return ls->vt.gesvd_z_i8(&ls->alloc, A, S, U, Vt);
 }
 
 // ---- Hermitian eigenvalue (complex) ----
@@ -326,7 +326,7 @@ matx_status_t matx_syev_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.syev_z_i8(A, eigenvalues, eigenvectors);
+    return ls->vt.syev_z_i8(&ls->alloc, A, eigenvalues, eigenvectors);
 }
 
 // ---- General eigenvalues (real) ----
@@ -345,7 +345,7 @@ matx_status_t matx_geev_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.geev_d_i8(A, eigenvalues, eigenvectors_right, eigenvectors_left);
+    return ls->vt.geev_d_i8(&ls->alloc, A, eigenvalues, eigenvectors_right, eigenvectors_left);
 }
 
 // ---- General eigenvalues (complex) ----
@@ -364,7 +364,7 @@ matx_status_t matx_geev_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.geev_z_i8(A, eigenvalues, eigenvectors_right, eigenvectors_left);
+    return ls->vt.geev_z_i8(&ls->alloc, A, eigenvalues, eigenvectors_right, eigenvectors_left);
 }
 
 // ---- QR factorization ----
@@ -382,7 +382,7 @@ matx_status_t matx_qr_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.qr_d_i8(A, Q, R);
+    return ls->vt.qr_d_i8(&ls->alloc, A, Q, R);
 }
 
 matx_status_t matx_qr_z_i8(const matx_dense_linsolve_t* ls,
@@ -398,7 +398,7 @@ matx_status_t matx_qr_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.qr_z_i8(A, Q, R);
+    return ls->vt.qr_z_i8(&ls->alloc, A, Q, R);
 }
 
 // ---- Determinant ----
@@ -415,7 +415,7 @@ matx_status_t matx_det_dense_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.det_dense_d_i8(A, det);
+    return ls->vt.det_dense_d_i8(&ls->alloc, A, det);
 }
 
 matx_status_t matx_det_dense_z_i8(const matx_dense_linsolve_t* ls,
@@ -430,7 +430,7 @@ matx_status_t matx_det_dense_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.det_dense_z_i8(A, det);
+    return ls->vt.det_dense_z_i8(&ls->alloc, A, det);
 }
 
 // ---- Condition number ----
@@ -447,7 +447,7 @@ matx_status_t matx_cond_dense_d_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.cond_dense_d_i8(A, cond);
+    return ls->vt.cond_dense_d_i8(&ls->alloc, A, cond);
 }
 
 matx_status_t matx_cond_dense_z_i8(const matx_dense_linsolve_t* ls,
@@ -462,5 +462,5 @@ matx_status_t matx_cond_dense_z_i8(const matx_dense_linsolve_t* ls,
         MATX_ERROR("%s: operation not supported", __func__);
         return MATX_ERR_NOT_SUPPORTED;
     }
-    return ls->vt.cond_dense_z_i8(A, cond);
+    return ls->vt.cond_dense_z_i8(&ls->alloc, A, cond);
 }
