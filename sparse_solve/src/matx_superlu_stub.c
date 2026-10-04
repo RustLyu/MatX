@@ -27,6 +27,7 @@ typedef struct matx_factor_sparse_d_i8_slu
     int* etree;
     int n;
     double* rhs;
+    int stat_initialized;
 #endif
     int place_holder;
 } matx_factor_sparse_d_i8_slu_t;
@@ -48,6 +49,7 @@ typedef struct matx_factor_sparse_z_i8_slu
     int* etree;
     int n;
     doublecomplex* rhs;
+    int stat_initialized;
 #endif
     int unused;
 } matx_factor_sparse_z_i8_slu_t;
@@ -58,22 +60,55 @@ typedef struct matx_factor_sparse_z_i8_slu
  */
 static void slu_factor_csc_d_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F)
 {
-    if (!F)
+    if (!F || !F->reserved)
         return;
     matx_factor_sparse_d_i8_slu_t* ptr = (matx_factor_sparse_d_i8_slu_t*) F->reserved;
+    F->reserved = NULL;
 #if MATX_HAVE_SUPERLU
-    Destroy_SuperNode_Matrix(&ptr->L);
-    Destroy_CompCol_Matrix(&ptr->U);
-    Destroy_CompCol_Matrix(&ptr->A);
-    Destroy_Dense_Matrix(&ptr->B);
-    StatFree(&ptr->stat);
+    if (ptr->L.Store) Destroy_SuperNode_Matrix(&ptr->L);
+    if (ptr->U.Store) Destroy_CompCol_Matrix(&ptr->U);
+    if (ptr->A.Store) Destroy_CompCol_Matrix(&ptr->A);
+    if (ptr->B.Store) Destroy_Dense_Matrix(&ptr->B);
+    else if (ptr->rhs) SUPERLU_FREE(ptr->rhs);
+    if (ptr->stat_initialized) StatFree(&ptr->stat);
     matx_free(alloc, ptr->perm_c);
     matx_free(alloc, ptr->perm_r);
     matx_free(alloc, ptr->etree);
-    matx_free(alloc, ptr->rhs);
 #endif
     matx_free(alloc, ptr);
 }
+
+#if MATX_HAVE_SUPERLU
+static int superlu_index_fits(matx_int64_t value)
+{
+    if (value < 0) return 0;
+    return sizeof(int_t) >= sizeof(matx_int64_t) || value <= INT_MAX;
+}
+
+static int superlu_csc_indices_fit(matx_csc_d_i8_t csc)
+{
+    if (!csc || !superlu_index_fits(csc->nnz)) return 0;
+    for (matx_int64_t i = 0; i <= csc->ncols; ++i) {
+        if (!superlu_index_fits(csc->col_ptr[i])) return 0;
+    }
+    for (matx_int64_t i = 0; i < csc->nnz; ++i) {
+        if (!superlu_index_fits(csc->row_ind[i])) return 0;
+    }
+    return 1;
+}
+
+static int superlu_csc_indices_fit_z(matx_csc_z_i8_t csc)
+{
+    if (!csc || !superlu_index_fits(csc->nnz)) return 0;
+    for (matx_int64_t i = 0; i <= csc->ncols; ++i) {
+        if (!superlu_index_fits(csc->col_ptr[i])) return 0;
+    }
+    for (matx_int64_t i = 0; i < csc->nnz; ++i) {
+        if (!superlu_index_fits(csc->row_ind[i])) return 0;
+    }
+    return 1;
+}
+#endif
 
 /**
  * @brief Perform LU factorization for real double CSC matrix via SuperLU
@@ -95,7 +130,7 @@ static matx_status_t slu_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
     return MATX_ERR_NOT_SUPPORTED;
 #else
     /* Free existing handle if allocated */
-    if (out_F)
+    if (out_F->reserved)
         slu_factor_csc_d_i8_destroy(alloc, out_F);
 
     /* Validate matrix dimension */
@@ -103,11 +138,6 @@ static matx_status_t slu_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->nrows > INT_MAX || A->nnz > INT_MAX) {
-        MATX_ERROR("%s: operation not supported", __func__);
-        return MATX_ERR_NOT_SUPPORTED;
-    }
-
     /* Convert COO to CSC format */
     matx_status_t st = coo_to_csc_d_i8(A);
     if (st != MATX_OK)
@@ -115,6 +145,12 @@ static matx_status_t slu_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
     st = coo_to_csc_d_i8_value_remap(A);
     if (st != MATX_OK)
         return st;
+    if (A->nrows > INT_MAX
+        || (sizeof(int_t) < sizeof(matx_int64_t) && A->nrows >= INT_MAX)
+        || !superlu_csc_indices_fit(A->handle_csc)) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
 
     /* Allocate factorization handle */
     matx_factor_sparse_d_i8_slu_t* F = (matx_factor_sparse_d_i8_slu_t*) matx_malloc(alloc, sizeof(*F));
@@ -123,30 +159,49 @@ static matx_status_t slu_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
         return MATX_ERR_OUT_OF_MEMORY;
     }
     memset(F, 0, sizeof(*F));
-    out_F->reserved = F;
     F->n = (int) A->nrows;
+    out_F->reserved = F;
 
     /* Allocate permutation and working arrays */
     F->perm_c = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
     F->perm_r = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
     F->etree = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
-    F->rhs = (double*) matx_malloc(alloc, sizeof(double) * (size_t) F->n);
+    F->rhs = doubleMalloc((size_t) F->n);
+    if (F->rhs) memset(F->rhs, 0, (size_t) F->n * sizeof(double));
 
-    /* Check memory allocation */
     if (!F->perm_c || !F->perm_r || !F->etree || !F->rhs) {
         slu_factor_csc_d_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
+    int_t* row_ind = intMalloc((int_t) A->handle_csc->nnz);
+    int_t* col_ptr = intMalloc((int_t) (F->n + 1));
+    double* values = doubleMalloc((size_t) A->handle_csc->nnz);
+    if (!row_ind || !col_ptr || !values) {
+        if (row_ind) SUPERLU_FREE(row_ind);
+        if (col_ptr) SUPERLU_FREE(col_ptr);
+        if (values) SUPERLU_FREE(values);
+        slu_factor_csc_d_i8_destroy(alloc, out_F);
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t i = 0; i < A->handle_csc->nnz; ++i) {
+        row_ind[i] = (int_t) A->handle_csc->row_ind[i];
+        values[i] = A->handle_csc->values[i];
+    }
+    for (matx_int64_t i = 0; i <= A->ncols; ++i) {
+        col_ptr[i] = (int_t) A->handle_csc->col_ptr[i];
+    }
+
     /* Create SuperLU CSC matrix and dense RHS matrix */
     dCreate_CompCol_Matrix(&F->A,
                            F->n,
                            F->n,
-                           (int) A->nnz,
-                           A->handle_csc->values,
-                           (int*) A->handle_csc->row_ind,
-                           (int*) A->handle_csc->col_ptr,
+                           (int_t) A->handle_csc->nnz,
+                           values,
+                           row_ind,
+                           col_ptr,
                            SLU_NC,
                            SLU_D,
                            SLU_GE);
@@ -157,6 +212,7 @@ static matx_status_t slu_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
     set_default_options(&F->options);
     F->options.ColPerm = COLAMD;
     StatInit(&F->stat);
+    F->stat_initialized = 1;
 
     /* Perform LU factorization with partial pivoting */
     int info = 0;
@@ -184,7 +240,7 @@ static matx_status_t slu_solve_csc_d_i8(const matx_alloc_t* alloc, matx_factor_s
                                         const matx_double* b,
                                         matx_double* x)
 {
-    if (!F || !b || !x) {
+    if (!F || !F->reserved || !b || !x) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -222,22 +278,23 @@ static matx_status_t slu_solve_csc_d_i8(const matx_alloc_t* alloc, matx_factor_s
  */
 static void slu_factor_csc_z_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F)
 {
-    if (!F)
+    if (!F || !F->reserved)
         return;
     matx_factor_sparse_z_i8_slu_t* ptr = (matx_factor_sparse_z_i8_slu_t*) F->reserved;
+    F->reserved = NULL;
 #if MATX_HAVE_SUPERLU
     /* Release SuperLU internal matrices */
-    Destroy_SuperNode_Matrix(&ptr->L);
-    Destroy_CompCol_Matrix(&ptr->U);
-    Destroy_CompCol_Matrix(&ptr->A);
-    Destroy_Dense_Matrix(&ptr->B);
+    if (ptr->L.Store) Destroy_SuperNode_Matrix(&ptr->L);
+    if (ptr->U.Store) Destroy_CompCol_Matrix(&ptr->U);
+    if (ptr->A.Store) Destroy_CompCol_Matrix(&ptr->A);
+    if (ptr->B.Store) Destroy_Dense_Matrix(&ptr->B);
+    else if (ptr->rhs) SUPERLU_FREE(ptr->rhs);
 
     /* Free solver stat and working arrays */
-    StatFree(&ptr->stat);
+    if (ptr->stat_initialized) StatFree(&ptr->stat);
     matx_free(alloc, ptr->perm_c);
     matx_free(alloc, ptr->perm_r);
     matx_free(alloc, ptr->etree);
-    matx_free(alloc, ptr->rhs);
 #endif
     matx_free(alloc, ptr);
 }
@@ -270,11 +327,6 @@ static matx_status_t slu_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    if (A->nrows > INT_MAX || A->nnz > INT_MAX) {
-        MATX_ERROR("%s: operation not supported", __func__);
-        return MATX_ERR_NOT_SUPPORTED;
-    }
-
     /* Convert complex COO to CSC format */
     matx_status_t st = coo_to_csc_z_i8(A);
     if (st != MATX_OK)
@@ -282,6 +334,12 @@ static matx_status_t slu_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
     st = coo_to_csc_z_i8_value_remap(A);
     if (st != MATX_OK)
         return st;
+    if (A->nrows > INT_MAX
+        || (sizeof(int_t) < sizeof(matx_int64_t) && A->nrows >= INT_MAX)
+        || !superlu_csc_indices_fit_z(A->handle_csc)) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
 
     /* Allocate complex factorization handle */
     matx_factor_sparse_z_i8_slu_t* F = (matx_factor_sparse_z_i8_slu_t*) matx_malloc(alloc, sizeof(*F));
@@ -290,30 +348,50 @@ static matx_status_t slu_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
         return MATX_ERR_OUT_OF_MEMORY;
     }
     memset(F, 0, sizeof(*F));
-    out_F->reserved = F;
     F->n = (int) A->nrows;
+    out_F->reserved = F;
 
     /* Allocate permutation and complex RHS buffer */
     F->perm_c = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
     F->perm_r = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
     F->etree = (int*) matx_malloc(alloc, sizeof(int) * (size_t) F->n);
-    F->rhs = (doublecomplex*) matx_malloc(alloc, sizeof(doublecomplex) * (size_t) F->n);
+    F->rhs = doublecomplexMalloc((size_t) F->n);
+    if (F->rhs) memset(F->rhs, 0, (size_t) F->n * sizeof(doublecomplex));
 
-    /* Check memory allocation status */
     if (!F->perm_c || !F->perm_r || !F->etree || !F->rhs) {
         slu_factor_csc_z_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
+    int_t* row_ind = intMalloc((int_t) A->handle_csc->nnz);
+    int_t* col_ptr = intMalloc((int_t) (F->n + 1));
+    doublecomplex* values = doublecomplexMalloc((size_t) A->handle_csc->nnz);
+    if (!row_ind || !col_ptr || !values) {
+        if (row_ind) SUPERLU_FREE(row_ind);
+        if (col_ptr) SUPERLU_FREE(col_ptr);
+        if (values) SUPERLU_FREE(values);
+        slu_factor_csc_z_i8_destroy(alloc, out_F);
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t i = 0; i < A->handle_csc->nnz; ++i) {
+        row_ind[i] = (int_t) A->handle_csc->row_ind[i];
+        values[i].r = A->handle_csc->values[i].real;
+        values[i].i = A->handle_csc->values[i].imag;
+    }
+    for (matx_int64_t i = 0; i <= A->ncols; ++i) {
+        col_ptr[i] = (int_t) A->handle_csc->col_ptr[i];
+    }
+
     /* Create SuperLU complex CSC matrix */
     zCreate_CompCol_Matrix(&F->A,
                            F->n,
                            F->n,
-                           (int) A->nnz,
-                           (doublecomplex*) A->handle_csc->values,
-                           (int*) A->handle_csc->row_ind,
-                           (int*) A->handle_csc->col_ptr,
+                           (int_t) A->handle_csc->nnz,
+                           values,
+                           row_ind,
+                           col_ptr,
                            SLU_NC,
                            SLU_Z,
                            SLU_GE);
@@ -325,6 +403,7 @@ static matx_status_t slu_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
     set_default_options(&F->options);
     F->options.ColPerm = COLAMD;
     StatInit(&F->stat);
+    F->stat_initialized = 1;
 
     /* Complex LU factorization via zgssv */
     int info = 0;
@@ -353,7 +432,8 @@ static matx_status_t slu_solve_csc_z_i8(const matx_alloc_t* alloc, matx_factor_s
                                         const matx_vec_z_i8_t b,
                                         matx_vec_z_i8_t x)
 {
-    if (!F || !b || !x) {
+    if (!F || !F->reserved || !b || !x || !b->data || !x->data
+        || b->stride <= 0 || x->stride <= 0) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -366,12 +446,14 @@ static matx_status_t slu_solve_csc_z_i8(const matx_alloc_t* alloc, matx_factor_s
     return MATX_ERR_NOT_SUPPORTED;
 #else
     matx_factor_sparse_z_i8_slu_t* ptr = (matx_factor_sparse_z_i8_slu_t*) F->reserved;
-    /* Copy complex RHS (real + imaginary part) */
-    //        for (int i = 0; i < ptr->n; ++i) {
-    //                ptr->rhs[i].r = b[i].r;
-    //                ptr->rhs[i].i = b[i].i;
-    // }
-    memcpy(ptr->rhs, b->data, sizeof(matx_double) * ptr->n * 2);
+    if (ptr->n <= 0 || b->n < ptr->n || x->n < ptr->n) {
+        MATX_ERROR("%s: vector length mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    for (int i = 0; i < ptr->n; ++i) {
+        ptr->rhs[i].r = b->data[(matx_int64_t) i * b->stride].real;
+        ptr->rhs[i].i = b->data[(matx_int64_t) i * b->stride].imag;
+    }
     /* Complex triangular solve with LU factors */
     int info = 0;
     zgstrs(NOTRANS, &ptr->L, &ptr->U, ptr->perm_c, ptr->perm_r, &ptr->B, &ptr->stat, &info);
@@ -380,12 +462,10 @@ static matx_status_t slu_solve_csc_z_i8(const matx_alloc_t* alloc, matx_factor_s
         return MATX_ERR_INTERNAL;
     }
 
-    /* Copy complex solution back to output */
-    // for (int i = 0; i < F->n; ++i) {
-    // 	x[i].r = F->rhs[i].r;
-    // 	x[i].i = F->rhs[i].i;
-    // }
-    memcpy(x->data, ptr->rhs, sizeof(matx_double) * ptr->n * 2);
+    for (int i = 0; i < ptr->n; ++i) {
+        x->data[(matx_int64_t) i * x->stride].real = ptr->rhs[i].r;
+        x->data[(matx_int64_t) i * x->stride].imag = ptr->rhs[i].i;
+    }
     return MATX_OK;
 #endif
 }

@@ -184,8 +184,8 @@ extern "C" {
 	} matx_dense_backend_t;
 
 	// Initialize default backend based on MATX_BLAS_BACKEND (AUTO picks a reasonable default at build time).
-	MATX_API  matx_dense_backend_t matx_blas_default(void);
-	MATX_API  const char* matx_blas_backend_name(matx_dense_backend_kind_t k);
+	MATX_DENSE_BLAS_API  matx_dense_backend_t matx_blas_default(void);
+	MATX_DENSE_BLAS_API  const char* matx_blas_backend_name(matx_dense_backend_kind_t k);
 
 	// Convenience API operating on MatX dense types.
 
@@ -194,7 +194,7 @@ extern "C" {
 	 * @formula C := alpha * op(A) * op(B) + beta * C
 	 *          where op(X) = X, X^T, or X^H depending on trans_a/trans_b
 	 */
-	MATX_API  matx_status_t matx_gemm_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API  matx_status_t matx_gemm_d_i8(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_int64_t trans_b,
 		matx_double alpha,
@@ -208,7 +208,7 @@ extern "C" {
 	 * @formula C := alpha * op(A) * op(B) + beta * C
 	 *          where op(X) = X, X^T, or X^H depending on trans_a/trans_b
 	 */
-	MATX_API matx_status_t matx_gemm_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_gemm_z_i8(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_int64_t trans_b,
         matx_complex_d_t alpha,
@@ -224,7 +224,7 @@ extern "C" {
 	 * @formula y := alpha * op(A) * x + beta * y
 	 *          where op(A) = A or A^T depending on trans_a
 	 */
-	MATX_API matx_status_t matx_gemv_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_gemv_d_i8(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_double alpha,
 		const matx_dense_d_i8_t A,
@@ -237,7 +237,7 @@ extern "C" {
 	 * @formula y := alpha * op(A) * x + beta * y
 	 *          where op(A) = A, A^T, or A^H depending on trans_a
 	 */
-	MATX_API matx_status_t matx_gemv_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_gemv_z_i8(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
         matx_complex_d_t alpha,
 		const matx_dense_z_i8_t A,
@@ -252,7 +252,7 @@ extern "C" {
 	 * @formula C := alpha * op(A) * op(B) + beta * C
 	 *          where op(X) = X, X^T depending on trans_a/trans_b
 	 */
-	MATX_API matx_status_t matx_gemm_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_gemm_d_i8(const matx_dense_backend_t* blas,
 		matx_int64_t trans_a,
 		matx_int64_t trans_b,
 		matx_double alpha,
@@ -265,7 +265,7 @@ extern "C" {
 	 * @brief General matrix addition for complex matrices (ZGEADD)
 	 * @formula B := alpha * A + beta * B
 	 */
-	MATX_API matx_status_t matx_geadd_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_geadd_z_i8(const matx_dense_backend_t* blas,
         matx_complex_d_t alpha,
 		const matx_dense_z_i8_t A,
         matx_complex_d_t beta,
@@ -275,7 +275,7 @@ extern "C" {
 	 * @brief General matrix addition for real matrices (DGEADD)
 	 * @formula B := alpha * A + beta * B
 	 */
-	MATX_API matx_status_t matx_geadd_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_geadd_d_i8(const matx_dense_backend_t* blas,
 		matx_double alpha,
 		const matx_dense_d_i8_t A,
 		matx_double beta,
@@ -288,7 +288,7 @@ extern "C" {
 	 * @formula A := alpha * x * y^T + A
 	 *          A is m-by-n, x is m-by-1, y is n-by-1
 	 */
-	MATX_API matx_status_t matx_ger_d_i8(const matx_dense_backend_t* blas, matx_double alpha,
+	MATX_DENSE_BLAS_API matx_status_t matx_ger_d_i8(const matx_dense_backend_t* blas, matx_double alpha,
 		const matx_vec_d_i8_t x, const matx_vec_d_i8_t y, matx_dense_d_i8_t A);
 
 	/**
@@ -296,7 +296,7 @@ extern "C" {
 	 * @formula A := alpha * x * y^T + A
 	 *          A is m-by-n, x is m-by-1, y is n-by-1
 	 */
-    MATX_API matx_status_t matx_geru_z_i8(const matx_dense_backend_t* blas, matx_complex_d_t alpha,
+    MATX_DENSE_BLAS_API matx_status_t matx_geru_z_i8(const matx_dense_backend_t* blas, matx_complex_d_t alpha,
 		const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_dense_z_i8_t A);
 
 	/**
@@ -304,7 +304,7 @@ extern "C" {
 	 * @formula A := alpha * x * y^H + A
 	 *          A is m-by-n, x is m-by-1, y is n-by-1
 	 */
-    MATX_API matx_status_t matx_gerc_z_i8(const matx_dense_backend_t* blas, matx_complex_d_t alpha,
+    MATX_DENSE_BLAS_API matx_status_t matx_gerc_z_i8(const matx_dense_backend_t* blas, matx_complex_d_t alpha,
 		const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_dense_z_i8_t A);
 
 	/**
@@ -312,7 +312,7 @@ extern "C" {
 	 * @formula x := op(A)^{-1} * x
 	 *          where op(A) = A, A^T, or A^H; A is n-by-n triangular
 	 */
-	MATX_API matx_status_t matx_trsv_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+	MATX_DENSE_BLAS_API matx_status_t matx_trsv_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 		const matx_dense_d_i8_t A, matx_vec_d_i8_t x);
 
 	/**
@@ -320,7 +320,7 @@ extern "C" {
 	 * @formula x := op(A)^{-1} * x
 	 *          where op(A) = A, A^T, or A^H; A is n-by-n triangular
 	 */
-	MATX_API matx_status_t matx_trsv_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+	MATX_DENSE_BLAS_API matx_status_t matx_trsv_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 		const matx_dense_z_i8_t A, matx_vec_z_i8_t x);
 
 	// ---- Level 3: triangular solve / symmetric rank-k update ----
@@ -331,7 +331,7 @@ extern "C" {
 	 *          or  B := alpha * B * op(A)^{-1}  (side=R)
 	 *          where op(A) = A, A^T, or A^H; A is triangular
 	 */
-	MATX_API matx_status_t matx_trsm_d_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+	MATX_DENSE_BLAS_API matx_status_t matx_trsm_d_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 		matx_double alpha, const matx_dense_d_i8_t A, matx_dense_d_i8_t B);
 
 	/**
@@ -340,7 +340,7 @@ extern "C" {
 	 *          or  B := alpha * B * op(A)^{-1}  (side=R)
 	 *          where op(A) = A, A^T, or A^H; A is triangular
 	 */
-	MATX_API matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+	MATX_DENSE_BLAS_API matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
         matx_complex_d_t alpha, const matx_dense_z_i8_t A, matx_dense_z_i8_t B);
 
 	/**
@@ -349,7 +349,7 @@ extern "C" {
 	 *          or  C := alpha * A^T * A + beta * C  (trans=T)
 	 *          C is n-by-n symmetric, A is n-by-k or k-by-n
 	 */
-	MATX_API matx_status_t matx_syrk_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
+	MATX_DENSE_BLAS_API matx_status_t matx_syrk_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
 		matx_double alpha, const matx_dense_d_i8_t A, matx_double beta, matx_dense_d_i8_t C);
 
 	/**
@@ -358,7 +358,7 @@ extern "C" {
 	 *          or  C := alpha * A^H * A + beta * C  (trans=T)
 	 *          C is n-by-n Hermitian, A is n-by-k or k-by-n, alpha and beta are real
 	 */
-	MATX_API matx_status_t matx_herk_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
+	MATX_DENSE_BLAS_API matx_status_t matx_herk_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
 		matx_double alpha, const matx_dense_z_i8_t A, matx_double beta, matx_dense_z_i8_t C);
 
 	/**
@@ -367,7 +367,7 @@ extern "C" {
 	 *          or  C := alpha * A^T * B + alpha * B^T * A + beta * C  (trans=T)
 	 *          C is n-by-n symmetric, A and B are n-by-k or k-by-n
 	 */
-	MATX_API matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
+	MATX_DENSE_BLAS_API matx_status_t matx_syr2k_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
 		matx_double alpha, const matx_dense_d_i8_t A, const matx_dense_d_i8_t B,
 		matx_double beta, matx_dense_d_i8_t C);
 
@@ -377,7 +377,7 @@ extern "C" {
 	 *          or  C := alpha * A^H * B + conj(alpha) * B^H * A + beta * C  (trans=T)
 	 *          C is n-by-n Hermitian, A and B are n-by-k or k-by-n, beta is real
 	 */
-	MATX_API matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
+	MATX_DENSE_BLAS_API matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
         matx_complex_d_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
 		matx_double beta, matx_dense_z_i8_t C);
 
@@ -387,14 +387,14 @@ extern "C" {
 	 * @brief Real element-wise matrix multiply (Hadamard product)
 	 * @formula C = A .⊙ B  (element-wise)
 	 */
-	MATX_API matx_status_t matx_hadamard_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_hadamard_d_i8(const matx_dense_backend_t* blas,
 		const matx_dense_d_i8_t A, const matx_dense_d_i8_t B, matx_dense_d_i8_t C);
 
 	/**
 	 * @brief Complex element-wise matrix multiply (Hadamard product)
 	 * @formula C = A .⊙ B  (element-wise)
 	 */
-	MATX_API matx_status_t matx_hadamard_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_hadamard_z_i8(const matx_dense_backend_t* blas,
 		const matx_dense_z_i8_t A, const matx_dense_z_i8_t B, matx_dense_z_i8_t C);
 
 	// ---- Transpose ----
@@ -403,21 +403,21 @@ extern "C" {
 	 * @brief Transpose a real dense matrix
 	 * @formula out[i][j] = A[j][i]
 	 */
-	MATX_API matx_status_t matx_transpose_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_transpose_d_i8(const matx_dense_backend_t* blas,
 		const matx_dense_d_i8_t A, matx_dense_d_i8_t out);
 
 	/**
 	 * @brief Transpose a complex dense matrix (no conjugation)
 	 * @formula out[i][j] = A[j][i]
 	 */
-	MATX_API matx_status_t matx_transpose_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_transpose_z_i8(const matx_dense_backend_t* blas,
 		const matx_dense_z_i8_t A, matx_dense_z_i8_t out);
 
 	/**
 	 * @brief Conjugate transpose of a complex dense matrix (Hermitian transpose)
 	 * @formula out[i][j] = conj(A[j][i])
 	 */
-	MATX_API matx_status_t matx_conj_transpose_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_conj_transpose_z_i8(const matx_dense_backend_t* blas,
 		const matx_dense_z_i8_t A, matx_dense_z_i8_t out);
 
 	// ---- Matrix norms ----
@@ -426,54 +426,54 @@ extern "C" {
 	 * @brief 1-norm of a real dense matrix (max column sum)
 	 * @formula ||A||_1 = max_{j=0,...,n-1} sum_{i=0}^{m-1} |A[i][j]|
 	 */
-	MATX_API matx_status_t matx_mat_norm1_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_mat_norm1_d_i8(const matx_dense_backend_t* blas,
 		const matx_dense_d_i8_t A, matx_double* out);
 
 	/**
 	 * @brief Infinity-norm of a real dense matrix (max row sum)
 	 * @formula ||A||_inf = max_{i=0,...,m-1} sum_{j=0}^{n-1} |A[i][j]|
 	 */
-	MATX_API matx_status_t matx_mat_norminf_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_mat_norminf_d_i8(const matx_dense_backend_t* blas,
 		const matx_dense_d_i8_t A, matx_double* out);
 
 	/**
 	 * @brief Frobenius norm of a real dense matrix
 	 * @formula ||A||_F = sqrt( sum_{i=0}^{m-1} sum_{j=0}^{n-1} A[i][j]^2 )
 	 */
-	MATX_API matx_status_t matx_mat_normfro_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_mat_normfro_d_i8(const matx_dense_backend_t* blas,
 		const matx_dense_d_i8_t A, matx_double* out);
 
 	/**
 	 * @brief 1-norm of a complex dense matrix (max column sum)
 	 * @formula ||A||_1 = max_{j=0,...,n-1} sum_{i=0}^{m-1} |A[i][j]|
 	 */
-	MATX_API matx_status_t matx_mat_norm1_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_mat_norm1_z_i8(const matx_dense_backend_t* blas,
 		const matx_dense_z_i8_t A, matx_double* out);
 
 	/**
 	 * @brief Infinity-norm of a complex dense matrix (max row sum)
 	 * @formula ||A||_inf = max_{i=0,...,m-1} sum_{j=0}^{n-1} |A[i][j]|
 	 */
-	MATX_API matx_status_t matx_mat_norminf_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_mat_norminf_z_i8(const matx_dense_backend_t* blas,
 		const matx_dense_z_i8_t A, matx_double* out);
 
 	/**
 	 * @brief Frobenius norm of a complex dense matrix
 	 * @formula ||A||_F = sqrt( sum_{i=0}^{m-1} sum_{j=0}^{n-1} |A[i][j]|^2 )
 	 */
-	MATX_API matx_status_t matx_mat_normfro_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_mat_normfro_z_i8(const matx_dense_backend_t* blas,
 		const matx_dense_z_i8_t A, matx_double* out);
 
 	// ---- Matrix inverse ----
 
-	MATX_API matx_status_t matx_inv_dense_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_inv_dense_d_i8(const matx_dense_backend_t* blas,
 		const matx_dense_d_i8_t A, matx_dense_d_i8_t out);
-	MATX_API matx_status_t matx_inv_dense_z_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_inv_dense_z_i8(const matx_dense_backend_t* blas,
 		const matx_dense_z_i8_t A, matx_dense_z_i8_t out);
 
 	// ---- Matrix exponential ----
 
-	MATX_API matx_status_t matx_expm_dense_d_i8(const matx_dense_backend_t* blas,
+	MATX_DENSE_BLAS_API matx_status_t matx_expm_dense_d_i8(const matx_dense_backend_t* blas,
 		const matx_dense_d_i8_t A, matx_dense_d_i8_t out);
 
 #ifdef __cplusplus

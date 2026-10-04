@@ -27,14 +27,14 @@ matx_alloc_t matx_alloc_default(void)
 
 void* matx_malloc(const matx_alloc_t* a, size_t size)
 {
-    if (!a || !a->malloc_fn)
+    if (!a || !a->malloc_fn || !a->free_fn)
         return NULL;
     return a->malloc_fn(size, a->user);
 }
 
 void matx_free(const matx_alloc_t* a, void* ptr)
 {
-    if (!a || !a->free_fn)
+    if (!ptr || !a || !a->free_fn)
         return;
     a->free_fn(ptr, a->user);
 }

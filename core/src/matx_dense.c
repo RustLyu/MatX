@@ -19,10 +19,21 @@ matx_status_t matx_dense_##PREFIX##_create(const matx_alloc_t* alloc,          \
                                            matx_int64_t cols,                  \
                                            SCA_TYPE* data)                     \
 {                                                                              \
-    if (!out || !alloc || rows == 0 || cols == 0) {                            \
+    if (!out || !alloc || !alloc->malloc_fn || !alloc->free_fn                 \
+        || rows <= 0 || cols <= 0) {                                           \
         MATX_ERROR("%s: invalid argument", __func__);                          \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
+    if ((uint64_t) rows > SIZE_MAX / (uint64_t) cols) {                        \
+        MATX_ERROR("%s: matrix size overflow", __func__);                     \
+        return MATX_ERR_INVALID_ARG;                                           \
+    }                                                                          \
+    const size_t element_count = (size_t) rows * (size_t) cols;                \
+    if (element_count > SIZE_MAX / sizeof(SCA_TYPE)) {                         \
+        MATX_ERROR("%s: matrix byte size overflow", __func__);                \
+        return MATX_ERR_INVALID_ARG;                                           \
+    }                                                                          \
+    const size_t data_bytes = element_count * sizeof(SCA_TYPE);                \
     if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) {                \
         MATX_ERROR("%s: invalid argument", __func__);                          \
         return MATX_ERR_INVALID_ARG;                                           \
@@ -38,15 +49,15 @@ matx_status_t matx_dense_##PREFIX##_create(const matx_alloc_t* alloc,          \
     out_value->layout = layout;                                                \
     out_value->stride = (layout == MATX_COL_MAJOR) ? rows : cols;              \
     out_value->flags = 1u;                                                     \
-    const size_t n = rows * cols;                                              \
-    out_value->data = (SCA_TYPE*) matx_malloc(alloc, n * sizeof(SCA_TYPE));    \
+    out_value->alloc = *alloc;                                                 \
+    out_value->data = (SCA_TYPE*) matx_malloc(alloc, data_bytes);              \
     if (!out_value->data) {                                                    \
         matx_free(alloc, out_value);                                           \
         MATX_ERROR("%s: out of memory", __func__);                             \
         return MATX_ERR_OUT_OF_MEMORY;                                         \
     }                                                                          \
     if (data != NULL) {                                                        \
-        memcpy(out_value->data, data, sizeof(SCA_TYPE) * n);                   \
+        memcpy(out_value->data, data, data_bytes);                             \
     }                                                                          \
     if (*out != NULL) {                                                        \
         matx_dense_##PREFIX##_destroy(alloc, *out);                             \
@@ -60,8 +71,26 @@ matx_status_t matx_dense_##PREFIX##_dup(const matx_alloc_t* alloc,             \
                                         const matx_dense_##PREFIX##_t in,       \
                                         matx_dense_##PREFIX##_t* out)           \
 {                                                                              \
-    return matx_dense_##PREFIX##_create(alloc, out, in->layout, in->nrows,      \
-                                        in->ncols, in->data);                  \
+    if (!in || !in->data || !out || in->nrows <= 0 || in->ncols <= 0          \
+        || in->stride <= 0) {                                                  \
+        MATX_ERROR("%s: invalid argument", __func__);                         \
+        return MATX_ERR_INVALID_ARG;                                           \
+    }                                                                          \
+    matx_dense_##PREFIX##_t copy = NULL;                                       \
+    matx_status_t st = matx_dense_##PREFIX##_create(                           \
+        alloc, &copy, in->layout, in->nrows, in->ncols, NULL);                  \
+    if (st != MATX_OK) return st;                                              \
+    for (matx_int64_t j = 0; j < in->ncols; ++j)                               \
+        for (matx_int64_t i = 0; i < in->nrows; ++i) {                          \
+            const matx_int64_t src = (in->layout == MATX_COL_MAJOR)            \
+                ? i + j * in->stride : i * in->stride + j;                     \
+            const matx_int64_t dst = (copy->layout == MATX_COL_MAJOR)          \
+                ? i + j * copy->stride : i * copy->stride + j;                 \
+            copy->data[dst] = in->data[src];                                   \
+        }                                                                      \
+    if (*out != NULL) matx_dense_##PREFIX##_destroy(alloc, *out);              \
+    *out = copy;                                                               \
+    return MATX_OK;                                                            \
 }
 
 #define MATX_DEF_DENSE_WRAP(PREFIX, OPAQUE, SCA_TYPE)               \
@@ -73,7 +102,8 @@ matx_status_t matx_dense_##PREFIX##_wrap(const matx_alloc_t* alloc,            \
                                           matx_layout_t layout,                 \
                                           SCA_TYPE* data)                       \
 {                                                                              \
-    if (!out || !data || rows == 0 || cols == 0) {                             \
+    if (!out || !alloc || !alloc->malloc_fn || !alloc->free_fn || !data        \
+        || rows <= 0 || cols <= 0) {                                          \
         MATX_ERROR("%s: invalid argument", __func__);                          \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
@@ -81,6 +111,8 @@ matx_status_t matx_dense_##PREFIX##_wrap(const matx_alloc_t* alloc,            \
         MATX_ERROR("%s: invalid argument", __func__);                          \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
+    const matx_int64_t major = (layout == MATX_COL_MAJOR) ? cols : rows;        \
+    const matx_int64_t minor = (layout == MATX_COL_MAJOR) ? rows : cols;        \
     if (layout == MATX_COL_MAJOR) {                                            \
         if (stride < rows) {                                                   \
             MATX_ERROR("%s: invalid argument", __func__);                      \
@@ -91,6 +123,13 @@ matx_status_t matx_dense_##PREFIX##_wrap(const matx_alloc_t* alloc,            \
             MATX_ERROR("%s: invalid argument", __func__);                      \
             return MATX_ERR_INVALID_ARG;                                       \
         }                                                                      \
+    }                                                                          \
+    const size_t max_elements = SIZE_MAX / sizeof(SCA_TYPE);                    \
+    if ((uint64_t) minor > max_elements || (uint64_t) stride > max_elements    \
+        || (uint64_t) (major - 1) > (max_elements - (size_t) minor)            \
+                                      / (size_t) stride) {                      \
+        MATX_ERROR("%s: wrapped matrix size overflow", __func__);             \
+        return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
     OPAQUE* out_value = matx_malloc(alloc, sizeof(OPAQUE));                    \
     if (!out_value) {                                                          \
@@ -104,6 +143,7 @@ matx_status_t matx_dense_##PREFIX##_wrap(const matx_alloc_t* alloc,            \
     out_value->layout = layout;                                                \
     out_value->data = data;                                                    \
     out_value->flags = 0u;                                                     \
+    out_value->alloc = *alloc;                                                 \
     if (*out != NULL) {                                                        \
         matx_dense_##PREFIX##_destroy(alloc, *out);                             \
     }                                                                          \
@@ -117,12 +157,13 @@ void matx_dense_##PREFIX##_destroy(const matx_alloc_t* alloc,                   
 {                                                                              \
     if (!m)                                                                    \
         return;                                                                \
-    if ((m->flags & 1u) != 0u && m->data && alloc) {                           \
-        matx_free(alloc, m->data);                                             \
+    const matx_alloc_t* object_alloc = m->alloc.free_fn ? &m->alloc : alloc;   \
+    if ((m->flags & 1u) != 0u && m->data && object_alloc) {                   \
+        matx_free(object_alloc, m->data);                                     \
         m->data = NULL;                                                        \
     }                                                                          \
     matx_handles_destroy(m->backend_handles, &m->num_backend_handles);         \
-    matx_free(alloc, m);                                                       \
+    matx_free(object_alloc, m);                                                \
 }
 
 #define MATX_DEF_DENSE_FILL(PREFIX, OPAQUE, SCA_TYPE)               \
@@ -133,12 +174,15 @@ matx_status_t matx_dense_##PREFIX##_fill(matx_dense_##PREFIX##_t m,             
         MATX_ERROR("%s: invalid argument", __func__);                          \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
-    for (matx_int64_t j = 0; j < m->ncols; ++j)                                \
-        for (matx_int64_t i = 0; i < m->nrows; ++i) {                          \
-            matx_int64_t idx = (m->layout == MATX_COL_MAJOR)                    \
-                ? i + j * m->stride : i * m->stride + j;                        \
-            m->data[idx] = val;                                                 \
-        }                                                                      \
+    if (m->layout == MATX_COL_MAJOR) {                                         \
+        for (matx_int64_t j = 0; j < m->ncols; ++j)                            \
+            for (matx_int64_t i = 0; i < m->nrows; ++i)                        \
+                m->data[i + j * m->stride] = val;                              \
+    } else {                                                                   \
+        for (matx_int64_t i = 0; i < m->nrows; ++i)                            \
+            for (matx_int64_t j = 0; j < m->ncols; ++j)                        \
+                m->data[i * m->stride + j] = val;                              \
+    }                                                                          \
     return MATX_OK;                                                            \
 }
 
@@ -149,12 +193,15 @@ matx_status_t matx_dense_##PREFIX##_zeros(matx_dense_##PREFIX##_t m)            
         MATX_ERROR("%s: invalid argument", __func__);                          \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
-    for (matx_int64_t j = 0; j < m->ncols; ++j)                                \
-        for (matx_int64_t i = 0; i < m->nrows; ++i) {                          \
-            matx_int64_t idx = (m->layout == MATX_COL_MAJOR)                    \
-                ? i + j * m->stride : i * m->stride + j;                        \
-            m->data[idx] = (SCA_TYPE){0};                                       \
-        }                                                                      \
+    if (m->layout == MATX_COL_MAJOR) {                                         \
+        for (matx_int64_t j = 0; j < m->ncols; ++j)                            \
+            for (matx_int64_t i = 0; i < m->nrows; ++i)                        \
+                m->data[i + j * m->stride] = (SCA_TYPE){0};                     \
+    } else {                                                                   \
+        for (matx_int64_t i = 0; i < m->nrows; ++i)                            \
+            for (matx_int64_t j = 0; j < m->ncols; ++j)                        \
+                m->data[i * m->stride + j] = (SCA_TYPE){0};                     \
+    }                                                                          \
     return MATX_OK;                                                            \
 }
 
@@ -252,7 +299,8 @@ matx_status_t matx_dense_##PREFIX##_set_block(                                 \
     const matx_int64_t nrows_blk = re - rs;                                    \
     const matx_int64_t ncols_blk = ce - cs;                                    \
     if (re > A->nrows || ce > A->ncols                                         \
-        || dr + nrows_blk > B->nrows || dc + ncols_blk > B->ncols) {           \
+        || nrows_blk > B->nrows || ncols_blk > B->ncols                        \
+        || dr > B->nrows - nrows_blk || dc > B->ncols - ncols_blk) {           \
         MATX_ERROR("%s: block out of bounds", __func__);                       \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \

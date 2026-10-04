@@ -108,7 +108,7 @@ static matx_status_t mumps_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d
     memset(F, 0, sizeof(*F));
     out_F->reserved = F;
     F->n = A->nrows;
-    F->nnz = A->nnz;
+    F->nnz = A->handle_csc->nnz;
 
     // Allocate triplet format arrays for MUMPS
     F->irn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) F->nnz);
@@ -275,7 +275,7 @@ static matx_status_t mumps_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z
     memset(F, 0, sizeof(*F));
     out_F->reserved = F;
     F->n = A->nrows;
-    F->nnz = A->nnz;
+    F->nnz = A->handle_csc->nnz;
 
     // Allocate triplet arrays (complex values interleaved)
     F->irn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) F->nnz);

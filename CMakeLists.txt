@@ -18,11 +18,11 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # ---- Platform & language standards ----
 include(MatXPlatform)
 
-# ---- Build options (backend, feature toggles) ----
-include(MatXOptions)
-
 # ---- CPU vendor auto-detection ----
 include(MatXCPUDetect)
+
+# ---- Build options (backend, feature toggles) ----
+include(MatXOptions)
 
 # ---- BLAS backend validation + install prefix setup ----
 include(MatXBackendValidate)

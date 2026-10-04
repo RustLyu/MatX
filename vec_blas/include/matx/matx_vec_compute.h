@@ -90,8 +90,8 @@ typedef struct matx_vec_backend_t
     matx_vec_vtable_t vt;
 } matx_vec_backend_t;
 
-MATX_API matx_vec_backend_t matx_vec_default(void);
-MATX_API const char* matx_vec_backend_name(matx_vec_backend_kind_t k);
+MATX_VEC_BLAS_API matx_vec_backend_t matx_vec_default(void);
+MATX_VEC_BLAS_API const char* matx_vec_backend_name(matx_vec_backend_kind_t k);
 
 // ---- Level 1: scale / copy / swap / dot / nrm2 / asum / iamax / axpy ----
 
@@ -99,7 +99,7 @@ MATX_API const char* matx_vec_backend_name(matx_vec_backend_kind_t k);
 	 * @brief Scale a real vector by a scalar (DSCAL)
 	 * @formula x[i] := alpha * x[i],  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_scal_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_scal_d_i8(const matx_vec_backend_t* blas,
                                           matx_double alpha,
                                           matx_vec_d_i8_t x);
 
@@ -107,7 +107,7 @@ MATX_API matx_status_t matx_vec_scal_d_i8(const matx_vec_backend_t* blas,
 	 * @brief Scale a complex vector by a scalar (ZSCAL)
 	 * @formula x[i] := alpha * x[i],  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_scal_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_scal_z_i8(const matx_vec_backend_t* blas,
                                           matx_complex_d_t alpha,
                                           matx_vec_z_i8_t x);
 
@@ -115,7 +115,7 @@ MATX_API matx_status_t matx_vec_scal_z_i8(const matx_vec_backend_t* blas,
 	 * @brief Copy a real vector (DCOPY)
 	 * @formula y[i] := x[i],  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_copy_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_copy_d_i8(const matx_vec_backend_t* blas,
                                           const matx_vec_d_i8_t x,
                                           matx_vec_d_i8_t y);
 
@@ -123,7 +123,7 @@ MATX_API matx_status_t matx_vec_copy_d_i8(const matx_vec_backend_t* blas,
 	 * @brief Copy a complex vector (ZCOPY)
 	 * @formula y[i] := x[i],  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_copy_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_copy_z_i8(const matx_vec_backend_t* blas,
                                           const matx_vec_z_i8_t x,
                                           matx_vec_z_i8_t y);
 
@@ -131,7 +131,7 @@ MATX_API matx_status_t matx_vec_copy_z_i8(const matx_vec_backend_t* blas,
 	 * @brief Swap two real vectors (DSWAP)
 	 * @formula (x[i], y[i]) := (y[i], x[i]),  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_swap_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_swap_d_i8(const matx_vec_backend_t* blas,
                                           matx_vec_d_i8_t x,
                                           matx_vec_d_i8_t y);
 
@@ -139,7 +139,7 @@ MATX_API matx_status_t matx_vec_swap_d_i8(const matx_vec_backend_t* blas,
 	 * @brief Swap two complex vectors (ZSWAP)
 	 * @formula (x[i], y[i]) := (y[i], x[i]),  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_swap_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_swap_z_i8(const matx_vec_backend_t* blas,
                                           matx_vec_z_i8_t x,
                                           matx_vec_z_i8_t y);
 
@@ -147,7 +147,7 @@ MATX_API matx_status_t matx_vec_swap_z_i8(const matx_vec_backend_t* blas,
 	 * @brief Dot product of two real vectors (DDOT)
 	 * @formula result := x^T * y = sum_{i=0}^{n-1} x[i] * y[i]
 	 */
-MATX_API matx_status_t matx_vec_dot_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_dot_d_i8(const matx_vec_backend_t* blas,
                                          const matx_vec_d_i8_t x,
                                          const matx_vec_d_i8_t y,
                                          matx_double* result);
@@ -156,7 +156,7 @@ MATX_API matx_status_t matx_vec_dot_d_i8(const matx_vec_backend_t* blas,
 	 * @brief Unconjugated dot product of two complex vectors (ZDOTU)
 	 * @formula result := x^T * y = sum_{i=0}^{n-1} x[i] * y[i]  (no conjugation)
 	 */
-MATX_API matx_status_t matx_vec_dotu_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_dotu_z_i8(const matx_vec_backend_t* blas,
                                           const matx_vec_z_i8_t x,
                                           const matx_vec_z_i8_t y,
                                           matx_complex_d_t* result);
@@ -165,7 +165,7 @@ MATX_API matx_status_t matx_vec_dotu_z_i8(const matx_vec_backend_t* blas,
 	 * @brief Conjugated dot product of two complex vectors (ZDOTC)
 	 * @formula result := x^H * y = sum_{i=0}^{n-1} conj(x[i]) * y[i]
 	 */
-MATX_API matx_status_t matx_vec_dotc_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_dotc_z_i8(const matx_vec_backend_t* blas,
                                           const matx_vec_z_i8_t x,
                                           const matx_vec_z_i8_t y,
                                           matx_complex_d_t* result);
@@ -174,7 +174,7 @@ MATX_API matx_status_t matx_vec_dotc_z_i8(const matx_vec_backend_t* blas,
 	 * @brief Euclidean norm of a real vector (DNRM2)
 	 * @formula result := ||x||_2 = sqrt( sum_{i=0}^{n-1} x[i]^2 )
 	 */
-MATX_API matx_status_t matx_vec_nrm2_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_nrm2_d_i8(const matx_vec_backend_t* blas,
                                           const matx_vec_d_i8_t x,
                                           matx_double* result);
 
@@ -182,7 +182,7 @@ MATX_API matx_status_t matx_vec_nrm2_d_i8(const matx_vec_backend_t* blas,
 	 * @brief Euclidean norm of a complex vector (DZNRM2)
 	 * @formula result := ||x||_2 = sqrt( sum_{i=0}^{n-1} |x[i]|^2 )
 	 */
-MATX_API matx_status_t matx_vec_nrm2_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_nrm2_z_i8(const matx_vec_backend_t* blas,
                                           const matx_vec_z_i8_t x,
                                           matx_double* result);
 
@@ -190,7 +190,7 @@ MATX_API matx_status_t matx_vec_nrm2_z_i8(const matx_vec_backend_t* blas,
 	 * @brief Sum of absolute values of a real vector (DASUM)
 	 * @formula result := sum_{i=0}^{n-1} |x[i]|
 	 */
-MATX_API matx_status_t matx_vec_asum_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_asum_d_i8(const matx_vec_backend_t* blas,
                                           const matx_vec_d_i8_t x,
                                           matx_double* result);
 
@@ -198,7 +198,7 @@ MATX_API matx_status_t matx_vec_asum_d_i8(const matx_vec_backend_t* blas,
 	 * @brief Sum of absolute values of real and imaginary parts of a complex vector (DZASUM)
 	 * @formula result := sum_{i=0}^{n-1} ( |Re(x[i])| + |Im(x[i])| )
 	 */
-MATX_API matx_status_t matx_vec_asum_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_asum_z_i8(const matx_vec_backend_t* blas,
                                           const matx_vec_z_i8_t x,
                                           matx_double* result);
 
@@ -206,7 +206,7 @@ MATX_API matx_status_t matx_vec_asum_z_i8(const matx_vec_backend_t* blas,
 	 * @brief Index of element with max absolute value in a real vector (IDAMAX)
 	 * @formula result := argmax_i |x[i]|,  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_iamax_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_iamax_d_i8(const matx_vec_backend_t* blas,
                                            const matx_vec_d_i8_t x,
                                            matx_int64_t* result);
 
@@ -214,7 +214,7 @@ MATX_API matx_status_t matx_vec_iamax_d_i8(const matx_vec_backend_t* blas,
 	 * @brief Index of element with max absolute value in a complex vector (IZAMAX)
 	 * @formula result := argmax_i |x[i]|,  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_iamax_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_iamax_z_i8(const matx_vec_backend_t* blas,
                                            const matx_vec_z_i8_t x,
                                            matx_int64_t* result);
 
@@ -222,7 +222,7 @@ MATX_API matx_status_t matx_vec_iamax_z_i8(const matx_vec_backend_t* blas,
 	 * @brief Real vector scaled accumulation (DAXPY)
 	 * @formula y[i] := alpha * x[i] + y[i],  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_axpy_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_axpy_d_i8(const matx_vec_backend_t* blas,
                                           matx_double alpha,
                                           const matx_vec_d_i8_t x,
                                           matx_vec_d_i8_t y);
@@ -231,7 +231,7 @@ MATX_API matx_status_t matx_vec_axpy_d_i8(const matx_vec_backend_t* blas,
 	 * @brief Complex vector scaled accumulation (ZAXPY)
 	 * @formula y[i] := alpha * x[i] + y[i],  i = 0, 1, ..., n-1
 	 */
-MATX_API matx_status_t matx_vec_axpy_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_axpy_z_i8(const matx_vec_backend_t* blas,
                                           matx_complex_d_t alpha,
                                           const matx_vec_z_i8_t x,
                                           matx_vec_z_i8_t y);
@@ -242,7 +242,7 @@ MATX_API matx_status_t matx_vec_axpy_z_i8(const matx_vec_backend_t* blas,
 	 * @brief 1-norm of a real vector
 	 * @formula ||v||_1 = sum_{i=0}^{n-1} |v[i]|
 	 */
-MATX_API matx_status_t matx_vec_norm1_d_i8(const matx_vec_backend_t* backend,
+MATX_VEC_BLAS_API matx_status_t matx_vec_norm1_d_i8(const matx_vec_backend_t* backend,
                                            matx_vec_d_i8_t A,
                                            matx_double* out);
 
@@ -250,7 +250,7 @@ MATX_API matx_status_t matx_vec_norm1_d_i8(const matx_vec_backend_t* backend,
 	 * @brief 1-norm of a complex vector
 	 * @formula ||v||_1 = sum_{i=0}^{n-1} |v[i]|
 	 */
-MATX_API matx_status_t matx_vec_norm1_z_i8(const matx_vec_backend_t* backend,
+MATX_VEC_BLAS_API matx_status_t matx_vec_norm1_z_i8(const matx_vec_backend_t* backend,
                                            matx_vec_z_i8_t A,
                                            matx_double* out);
 
@@ -258,7 +258,7 @@ MATX_API matx_status_t matx_vec_norm1_z_i8(const matx_vec_backend_t* backend,
 	 * @brief 2-norm (Euclidean norm) of a real vector
 	 * @formula ||v||_2 = sqrt( sum_{i=0}^{n-1} v[i]^2 )
 	 */
-MATX_API matx_status_t matx_vec_norm2_d_i8(const matx_vec_backend_t* backend,
+MATX_VEC_BLAS_API matx_status_t matx_vec_norm2_d_i8(const matx_vec_backend_t* backend,
                                            matx_vec_d_i8_t A,
                                            matx_double* out);
 
@@ -266,7 +266,7 @@ MATX_API matx_status_t matx_vec_norm2_d_i8(const matx_vec_backend_t* backend,
 	 * @brief 2-norm (Euclidean norm) of a complex vector
 	 * @formula ||v||_2 = sqrt( sum_{i=0}^{n-1} |v[i]|^2 )
 	 */
-MATX_API matx_status_t matx_vec_norm2_z_i8(const matx_vec_backend_t* backend,
+MATX_VEC_BLAS_API matx_status_t matx_vec_norm2_z_i8(const matx_vec_backend_t* backend,
                                            matx_vec_z_i8_t A,
                                            matx_double* out);
 
@@ -274,7 +274,7 @@ MATX_API matx_status_t matx_vec_norm2_z_i8(const matx_vec_backend_t* backend,
 	 * @brief Infinity-norm of a real vector
 	 * @formula ||v||_inf = max_{i=0,...,n-1} |v[i]|
 	 */
-MATX_API matx_status_t matx_vec_norminf_d_i8(const matx_vec_backend_t* backend,
+MATX_VEC_BLAS_API matx_status_t matx_vec_norminf_d_i8(const matx_vec_backend_t* backend,
                                              matx_vec_d_i8_t A,
                                              matx_double* out);
 
@@ -282,7 +282,7 @@ MATX_API matx_status_t matx_vec_norminf_d_i8(const matx_vec_backend_t* backend,
 	 * @brief Infinity-norm of a complex vector
 	 * @formula ||v||_inf = max_{i=0,...,n-1} |v[i]|
 	 */
-MATX_API matx_status_t matx_vec_norminf_z_i8(const matx_vec_backend_t* backend,
+MATX_VEC_BLAS_API matx_status_t matx_vec_norminf_z_i8(const matx_vec_backend_t* backend,
                                              matx_vec_z_i8_t A,
                                              matx_double* out);
 
@@ -296,7 +296,7 @@ MATX_API matx_status_t matx_vec_norminf_z_i8(const matx_vec_backend_t* backend,
 	 *          out[2] = x[0]*y[1] - x[1]*y[0]
 	 *          All vectors must have length 3.
 	 */
-MATX_API matx_status_t matx_vec_cross_d_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_cross_d_i8(const matx_vec_backend_t* blas,
                                            matx_vec_d_i8_t x,
                                            matx_vec_d_i8_t y,
                                            matx_vec_d_i8_t out);
@@ -306,7 +306,7 @@ MATX_API matx_status_t matx_vec_cross_d_i8(const matx_vec_backend_t* blas,
 	 * @formula out = x × y
 	 *          All vectors must have length 3.
 	 */
-MATX_API matx_status_t matx_vec_cross_z_i8(const matx_vec_backend_t* blas,
+MATX_VEC_BLAS_API matx_status_t matx_vec_cross_z_i8(const matx_vec_backend_t* blas,
                                            matx_vec_z_i8_t x,
                                            matx_vec_z_i8_t y,
                                            matx_vec_z_i8_t out);

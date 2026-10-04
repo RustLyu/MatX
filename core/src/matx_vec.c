@@ -15,23 +15,33 @@ matx_status_t matx_vec_##PREFIX##_create(const matx_alloc_t* alloc,             
                                          SCA_TYPE* data,                        \
                                          matx_int64_t n)                        \
 {                                                                               \
-    if (!out || !alloc || n == 0) {                                             \
+    if (!out || !alloc || !alloc->malloc_fn || !alloc->free_fn || n <= 0) {     \
         MATX_ERROR("%s: invalid argument", __func__);                           \
         return MATX_ERR_INVALID_ARG;                                            \
     }                                                                           \
+    if ((uint64_t) n > SIZE_MAX / sizeof(SCA_TYPE)) {                           \
+        MATX_ERROR("%s: vector size overflow", __func__);                      \
+        return MATX_ERR_INVALID_ARG;                                            \
+    }                                                                           \
+    const size_t data_bytes = (size_t) n * sizeof(SCA_TYPE);                    \
     OPAQUE* out_value = matx_malloc(alloc, sizeof(OPAQUE));                     \
+    if (!out_value) {                                                           \
+        MATX_ERROR("%s: out of memory", __func__);                             \
+        return MATX_ERR_OUT_OF_MEMORY;                                          \
+    }                                                                           \
     memset(out_value, 0, sizeof(OPAQUE));                                       \
     out_value->n = n;                                                           \
     out_value->stride = 1;                                                      \
     out_value->flags = 1u;                                                      \
-    out_value->data = (SCA_TYPE*) matx_malloc(alloc, n * sizeof(SCA_TYPE));     \
+    out_value->alloc = *alloc;                                                  \
+    out_value->data = (SCA_TYPE*) matx_malloc(alloc, data_bytes);               \
     if (!out_value->data) {                                                     \
         matx_free(alloc, out_value);                                            \
         MATX_ERROR("%s: out of memory", __func__);                              \
         return MATX_ERR_OUT_OF_MEMORY;                                          \
     }                                                                           \
     if (data != NULL) {                                                         \
-        memcpy(out_value->data, data, sizeof(SCA_TYPE) * out_value->n);         \
+        memcpy(out_value->data, data, data_bytes);                              \
     }                                                                           \
     if (*out != NULL) {                                                         \
         matx_vec_##PREFIX##_destroy(alloc, *out);                                \
@@ -45,7 +55,18 @@ matx_status_t matx_vec_##PREFIX##_dup(const matx_alloc_t* alloc,                
                                       const matx_vec_##PREFIX##_t in,            \
                                       matx_vec_##PREFIX##_t* out)                \
 {                                                                               \
-    return matx_vec_##PREFIX##_create(alloc, out, in->data, in->n);              \
+    if (!in || !in->data || in->n <= 0 || in->stride <= 0 || !out) {            \
+        MATX_ERROR("%s: invalid argument", __func__);                           \
+        return MATX_ERR_INVALID_ARG;                                            \
+    }                                                                           \
+    matx_vec_##PREFIX##_t copy = NULL;                                          \
+    matx_status_t st = matx_vec_##PREFIX##_create(alloc, &copy, NULL, in->n);    \
+    if (st != MATX_OK) return st;                                               \
+    for (matx_int64_t i = 0; i < in->n; ++i)                                    \
+        copy->data[i] = in->data[i * in->stride];                               \
+    if (*out != NULL) matx_vec_##PREFIX##_destroy(alloc, *out);                 \
+    *out = copy;                                                                \
+    return MATX_OK;                                                             \
 }
 
 #define MATX_DEF_VEC_WRAP(PREFIX, OPAQUE, SCA_TYPE)                  \
@@ -55,16 +76,25 @@ matx_status_t matx_vec_##PREFIX##_wrap(const matx_alloc_t* alloc,               
                                         matx_int64_t stride,                     \
                                         SCA_TYPE* data)                          \
 {                                                                               \
-    if (!out || !data || n == 0 || stride == 0) {                               \
+    if (!out || !alloc || !alloc->malloc_fn || !alloc->free_fn || !data         \
+        || n <= 0 || stride <= 0                                                \
+        || (uint64_t) n > SIZE_MAX / sizeof(SCA_TYPE)                           \
+        || (n > 1 && (uint64_t) stride                                          \
+                        > (SIZE_MAX / sizeof(SCA_TYPE) - 1) / (uint64_t) (n - 1))) { \
         MATX_ERROR("%s: invalid argument", __func__);                           \
         return MATX_ERR_INVALID_ARG;                                            \
     }                                                                           \
     OPAQUE* out_value = matx_malloc(alloc, sizeof(OPAQUE));                     \
+    if (!out_value) {                                                           \
+        MATX_ERROR("%s: out of memory", __func__);                             \
+        return MATX_ERR_OUT_OF_MEMORY;                                          \
+    }                                                                           \
     memset(out_value, 0, sizeof(OPAQUE));                                       \
     out_value->n = n;                                                           \
     out_value->stride = stride;                                                 \
     out_value->data = data;                                                     \
     out_value->flags = 0u;                                                      \
+    out_value->alloc = *alloc;                                                  \
     if (*out != NULL) {                                                         \
         matx_vec_##PREFIX##_destroy(alloc, *out);                                \
     }                                                                           \
@@ -78,11 +108,12 @@ void matx_vec_##PREFIX##_destroy(const matx_alloc_t* alloc,                     
 {                                                                               \
     if (!v)                                                                     \
         return;                                                                 \
-    if ((v->flags & 1u) != 0u && v->data && alloc) {                            \
-        matx_free(alloc, v->data);                                              \
+    const matx_alloc_t* object_alloc = v->alloc.free_fn ? &v->alloc : alloc;    \
+    if ((v->flags & 1u) != 0u && v->data && object_alloc) {                    \
+        matx_free(object_alloc, v->data);                                      \
     }                                                                           \
     matx_handles_destroy(v->backend_handles, &v->num_backend_handles);          \
-    matx_free(alloc, v);                                                        \
+    matx_free(object_alloc, v);                                                 \
 }
 
 #define MATX_DEF_VEC_FILL(PREFIX, OPAQUE, SCA_TYPE)                  \

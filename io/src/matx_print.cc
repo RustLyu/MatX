@@ -36,7 +36,7 @@ void matx_print_dense_mtx_z_i8(const matx_dense_z_i8_t& mtx, const char* file)
     for (matx_int64_t i = 0; i < mtx->nrows; ++i) {
         for (matx_int64_t j = 0; j < mtx->ncols; ++j) {
             auto idx = (mtx->layout == MATX_ROW_MAJOR) ? i * mtx->stride + j : j * mtx->stride + i;
-            os << mtx->data[idx].real << "+" << mtx->data[idx].imag << "i ";
+            os << mtx->data[idx].real << " " << mtx->data[idx].imag << " ";
         }
         os << std::endl;
     }

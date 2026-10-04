@@ -9,19 +9,65 @@
 extern "C" {
 #endif
 
-#ifdef MATX_BUILD_SHARED
-#ifdef MATX_PLATFORM_WINDOWS
-#ifdef matx_types_EXPORTS
-#define MATX_API __declspec(dllexport)
+#if defined(MATX_BUILD_SHARED) && defined(MATX_PLATFORM_WINDOWS)
+#if defined(matx_types_EXPORTS)
+#define MATX_TYPES_API __declspec(dllexport)
 #else
-#define MATX_API __declspec(dllimport)
+#define MATX_TYPES_API __declspec(dllimport)
+#endif
+#if defined(matx_core_EXPORTS)
+#define MATX_CORE_API __declspec(dllexport)
+#else
+#define MATX_CORE_API __declspec(dllimport)
+#endif
+#if defined(matx_tools_EXPORTS)
+#define MATX_TOOLS_API __declspec(dllexport)
+#else
+#define MATX_TOOLS_API __declspec(dllimport)
+#endif
+#if defined(matx_io_EXPORTS)
+#define MATX_IO_API __declspec(dllexport)
+#else
+#define MATX_IO_API __declspec(dllimport)
+#endif
+#if defined(matx_vec_blas_EXPORTS)
+#define MATX_VEC_BLAS_API __declspec(dllexport)
+#else
+#define MATX_VEC_BLAS_API __declspec(dllimport)
+#endif
+#if defined(matx_dense_blas_EXPORTS)
+#define MATX_DENSE_BLAS_API __declspec(dllexport)
+#else
+#define MATX_DENSE_BLAS_API __declspec(dllimport)
+#endif
+#if defined(matx_sparse_blas_EXPORTS)
+#define MATX_SPARSE_BLAS_API __declspec(dllexport)
+#else
+#define MATX_SPARSE_BLAS_API __declspec(dllimport)
+#endif
+#if defined(matx_dense_solve_EXPORTS)
+#define MATX_DENSE_SOLVE_API __declspec(dllexport)
+#else
+#define MATX_DENSE_SOLVE_API __declspec(dllimport)
+#endif
+#if defined(matx_sparse_solve_EXPORTS)
+#define MATX_SPARSE_SOLVE_API __declspec(dllexport)
+#else
+#define MATX_SPARSE_SOLVE_API __declspec(dllimport)
 #endif
 #else
-#define MATX_API
+#define MATX_TYPES_API
+#define MATX_CORE_API
+#define MATX_TOOLS_API
+#define MATX_IO_API
+#define MATX_VEC_BLAS_API
+#define MATX_DENSE_BLAS_API
+#define MATX_SPARSE_BLAS_API
+#define MATX_DENSE_SOLVE_API
+#define MATX_SPARSE_SOLVE_API
 #endif
-#else
-#define MATX_API
-#endif
+
+#define MATX_API MATX_TYPES_API
 
 // ---- Version ----
 #define MATX_VERSION_MAJOR 0
@@ -133,7 +179,7 @@ typedef struct matx_coo_d_i8_opaque_t* matx_coo_d_i8_t;
 typedef struct matx_csc_z_i8_opaque_t* matx_csc_z_i8_t;
 typedef struct matx_coo_z_i8_opaque_t* matx_coo_z_i8_t;
 
-MATX_API const char* matx_version_string(void);
+MATX_TYPES_API const char* matx_version_string(void);
 #ifdef __cplusplus
 }
 #endif

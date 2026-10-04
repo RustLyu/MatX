@@ -96,7 +96,7 @@ static matx_status_t cxs_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
     out_F->reserved = F;
     F->n = A->nrows;
 
-    F->A.nzmax = A->nnz;
+    F->A.nzmax = A->handle_csc->nnz;
     F->A.m = A->nrows;
     F->A.n = A->ncols;
     F->A.p = A->handle_csc->col_ptr;
@@ -192,7 +192,7 @@ static matx_status_t cxs_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
     out_F->reserved = F;
     F->n = A->nrows;
 
-    F->A.nzmax = A->nnz;
+    F->A.nzmax = A->handle_csc->nnz;
     F->A.m = A->nrows;
     F->A.n = A->ncols;
     F->A.p = A->handle_csc->col_ptr;

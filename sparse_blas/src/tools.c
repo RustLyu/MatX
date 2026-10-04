@@ -176,7 +176,17 @@ static void sort_row(matx_int64_t* col, matx_double* val, matx_int64_t len)
         quick_sort(col, val, 0, len - 1);
 }
 
-int coo_to_csr_optimized(matx_int64_t nrows,
+static void free_csr_matrix(const matx_alloc_t* alloc, csr_matrix* csr)
+{
+    if (!csr) return;
+    matx_free(alloc, csr->row_ptr);
+    matx_free(alloc, csr->col_ind);
+    matx_free(alloc, csr->val);
+    memset(csr, 0, sizeof(*csr));
+}
+
+int coo_to_csr_optimized(const matx_alloc_t* alloc,
+                         matx_int64_t nrows,
                          matx_int64_t ncols,
                          matx_int64_t nnz,
                          const matx_int64_t* coo_row,
@@ -184,17 +194,41 @@ int coo_to_csr_optimized(matx_int64_t nrows,
                          const matx_double* coo_val,
                          csr_matrix* csr)
 {
+    if (!alloc || !alloc->malloc_fn || !alloc->free_fn || !csr
+        || !coo_row || !coo_col || !coo_val || nrows <= 0 || ncols <= 0
+        || nnz <= 0 || nrows == INT64_MAX
+        || (uint64_t) nrows + 1 > SIZE_MAX / sizeof(matx_int64_t)
+        || (uint64_t) nrows > SIZE_MAX / sizeof(matx_int64_t)
+        || (uint64_t) nnz > SIZE_MAX / sizeof(matx_int64_t)
+        || (uint64_t) nnz > SIZE_MAX / sizeof(matx_double)) {
+        MATX_ERROR("invalid COO matrix or size overflow");
+        return -1;
+    }
+    for (matx_int64_t i = 0; i < nnz; ++i) {
+        if (coo_row[i] < 0 || coo_row[i] >= nrows
+            || coo_col[i] < 0 || coo_col[i] >= ncols) {
+            MATX_ERROR("COO index out of bounds at position %lld", (long long) i);
+            return -1;
+        }
+    }
+
+    memset(csr, 0, sizeof(*csr));
     csr->nrows = nrows;
     csr->ncols = ncols;
 
-    csr->row_ptr = (matx_int64_t*) calloc(nrows + 1, sizeof(matx_int64_t));
-    csr->col_ind = (matx_int64_t*) malloc(nnz * sizeof(matx_int64_t));
-    csr->val = (matx_double*) malloc(nnz * sizeof(matx_double));
+    csr->row_ptr = (matx_int64_t*) matx_malloc(alloc,
+                                    ((size_t) nrows + 1) * sizeof(matx_int64_t));
+    csr->col_ind = (matx_int64_t*) matx_malloc(alloc,
+                                    (size_t) nnz * sizeof(matx_int64_t));
+    csr->val = (matx_double*) matx_malloc(alloc,
+                                    (size_t) nnz * sizeof(matx_double));
 
     if (!csr->row_ptr || !csr->col_ind || !csr->val) {
-        MATX_ERROR("NULL POINTER");
+        free_csr_matrix(alloc, csr);
+        MATX_ERROR("out of memory converting COO to CSR");
         return -1;
     }
+    memset(csr->row_ptr, 0, ((size_t) nrows + 1) * sizeof(matx_int64_t));
     for (matx_int64_t i = 0; i < nnz; ++i) {
         csr->row_ptr[coo_row[i] + 1]++;
     }
@@ -203,22 +237,24 @@ int coo_to_csr_optimized(matx_int64_t nrows,
         csr->row_ptr[i + 1] += csr->row_ptr[i];
     }
 
-    matx_int64_t* offset = (matx_int64_t*) malloc(nrows * sizeof(matx_int64_t));
-    if (offset == NULL || csr->row_ptr == NULL || nrows <= 0) {
-        MATX_ERROR("NULL POINTER or offset is 0");
+    matx_int64_t* offset = (matx_int64_t*) matx_malloc(
+        alloc, (size_t) nrows * sizeof(matx_int64_t));
+    if (!offset) {
+        free_csr_matrix(alloc, csr);
+        MATX_ERROR("out of memory converting COO to CSR");
         return -1;
     }
-    memcpy(offset, csr->row_ptr, nrows * sizeof(matx_int64_t));
+    memcpy(offset, csr->row_ptr, (size_t) nrows * sizeof(matx_int64_t));
 
-    for (int i = 0; i < nnz; ++i) {
-        int r = coo_row[i];
-        int dst = offset[r]++;
+    for (matx_int64_t i = 0; i < nnz; ++i) {
+        const matx_int64_t r = coo_row[i];
+        const matx_int64_t dst = offset[r]++;
 
         csr->col_ind[dst] = coo_col[i];
         csr->val[dst] = coo_val[i];
     }
 
-    free(offset);
+    matx_free(alloc, offset);
 
     matx_int64_t new_nnz = 0;
 
@@ -260,15 +296,6 @@ int coo_to_csr_optimized(matx_int64_t nrows,
     csr->row_ptr[nrows] = new_nnz;
     csr->nnz = new_nnz;
 
-    if (csr->col_ind == NULL) {
-        return -1;
-    }
-    csr->col_ind = (matx_int64_t*) realloc(csr->col_ind, new_nnz * sizeof(matx_int64_t));
-    if (csr->val == NULL) {
-        return -1;
-    }
-    csr->val = (matx_double*) realloc(csr->val, new_nnz * sizeof(matx_double));
-
     return 0;
 }
 
@@ -278,8 +305,29 @@ size_t coo_2_aocl_d_i8(matx_coo_d_i8_t A)
 
     aoclsparse_matrix csr;
     csr_matrix csr_m;
-    matx_int64_t ret
-        = coo_to_csr_optimized(A->nrows, A->ncols, A->nnz, A->rows, A->columns, A->values, &csr_m);
+    if (!A || !A->alloc.malloc_fn || !A->alloc.free_fn
+        || !A->rows || !A->columns || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return (size_t) -1;
+    }
+
+    matx_handle_t* handle = MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX);
+    if (handle->valid && handle->custom_free_func) {
+        handle->custom_free_func(handle->impl);
+    }
+    handle->impl = NULL;
+    handle->valid = 0;
+    handle->custom_free_func = NULL;
+    matx_free(&A->alloc, A->aocl_csr_row_ptr);
+    matx_free(&A->alloc, A->aocl_csr_col_ind);
+    matx_free(&A->alloc, A->aocl_csr_values);
+    A->aocl_csr_row_ptr = NULL;
+    A->aocl_csr_col_ind = NULL;
+    A->aocl_csr_values = NULL;
+
+    matx_int64_t ret = coo_to_csr_optimized(&A->alloc, A->nrows, A->ncols,
+                                            A->nnz, A->rows, A->columns,
+                                            A->values, &csr_m);
     if (ret != 0) {
         MATX_ERROR("coo 2 csr op. error");
         return -1;
@@ -294,6 +342,7 @@ size_t coo_2_aocl_d_i8(matx_coo_d_i8_t A)
                                                   csr_m.col_ind,
                                                   csr_m.val);
     if (st != aoclsparse_status_success) {
+        free_csr_matrix(&A->alloc, &csr_m);
         MATX_ERROR("aocl create dcsr. error: %d", st);
         return -1;
     }
@@ -301,13 +350,18 @@ size_t coo_2_aocl_d_i8(matx_coo_d_i8_t A)
     st = aoclsparse_optimize(csr);
 
     if (st != aoclsparse_status_success) {
+        aoclsparse_destroy(&csr);
+        free_csr_matrix(&A->alloc, &csr_m);
         MATX_ERROR("aocl op mtx error: %d", st);
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl = csr;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->type = MATX_HANDLE_TYPE_AOCL_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->custom_free_func = &free_aocl_matrix;
+    handle->impl = csr;
+    handle->type = MATX_HANDLE_TYPE_AOCL_MATRIX;
+    handle->valid = 1;
+    handle->custom_free_func = &free_aocl_matrix;
+    A->aocl_csr_row_ptr = csr_m.row_ptr;
+    A->aocl_csr_col_ind = csr_m.col_ind;
+    A->aocl_csr_values = csr_m.val;
 #endif
 
     return 0;
@@ -618,7 +672,9 @@ size_t grb_2_vec_z_i8(matx_vec_z_i8_t v)
 
 matx_status_t matx_coo_get_row_d_i8(matx_coo_d_i8_t A, matx_int64_t row_idx, matx_vec_d_i8_t out)
 {
-    if (!A || !out || !out->data || row_idx < 0 || row_idx >= A->nrows) {
+    if (!A || !A->rows || !A->columns || !A->values || !out || !out->data
+        || out->n != A->ncols || out->stride <= 0
+        || row_idx < 0 || row_idx >= A->nrows) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -626,14 +682,16 @@ matx_status_t matx_coo_get_row_d_i8(matx_coo_d_i8_t A, matx_int64_t row_idx, mat
         out->data[j * out->stride] = 0.0;
     for (matx_int64_t k = 0; k < A->nnz; ++k) {
         if (A->rows[k] == row_idx)
-            out->data[A->columns[k] * out->stride] = A->values[k];
+            out->data[A->columns[k] * out->stride] += A->values[k];
     }
     return MATX_OK;
 }
 
 matx_status_t matx_coo_get_row_z_i8(matx_coo_z_i8_t A, matx_int64_t row_idx, matx_vec_z_i8_t out)
 {
-    if (!A || !out || !out->data || row_idx < 0 || row_idx >= A->nrows) {
+    if (!A || !A->rows || !A->columns || !A->values || !out || !out->data
+        || out->n != A->ncols || out->stride <= 0
+        || row_idx < 0 || row_idx >= A->nrows) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -643,14 +701,19 @@ matx_status_t matx_coo_get_row_z_i8(matx_coo_z_i8_t A, matx_int64_t row_idx, mat
     }
     for (matx_int64_t k = 0; k < A->nnz; ++k) {
         if (A->rows[k] == row_idx)
-            out->data[A->columns[k] * out->stride] = A->values[k];
+        {
+            out->data[A->columns[k] * out->stride].real += A->values[k].real;
+            out->data[A->columns[k] * out->stride].imag += A->values[k].imag;
+        }
     }
     return MATX_OK;
 }
 
 matx_status_t matx_coo_get_col_d_i8(matx_coo_d_i8_t A, matx_int64_t col_idx, matx_vec_d_i8_t out)
 {
-    if (!A || !out || !out->data || col_idx < 0 || col_idx >= A->ncols) {
+    if (!A || !A->rows || !A->columns || !A->values || !out || !out->data
+        || out->n != A->nrows || out->stride <= 0
+        || col_idx < 0 || col_idx >= A->ncols) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -658,14 +721,16 @@ matx_status_t matx_coo_get_col_d_i8(matx_coo_d_i8_t A, matx_int64_t col_idx, mat
         out->data[i * out->stride] = 0.0;
     for (matx_int64_t k = 0; k < A->nnz; ++k) {
         if (A->columns[k] == col_idx)
-            out->data[A->rows[k] * out->stride] = A->values[k];
+            out->data[A->rows[k] * out->stride] += A->values[k];
     }
     return MATX_OK;
 }
 
 matx_status_t matx_coo_get_col_z_i8(matx_coo_z_i8_t A, matx_int64_t col_idx, matx_vec_z_i8_t out)
 {
-    if (!A || !out || !out->data || col_idx < 0 || col_idx >= A->ncols) {
+    if (!A || !A->rows || !A->columns || !A->values || !out || !out->data
+        || out->n != A->nrows || out->stride <= 0
+        || col_idx < 0 || col_idx >= A->ncols) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -675,14 +740,20 @@ matx_status_t matx_coo_get_col_z_i8(matx_coo_z_i8_t A, matx_int64_t col_idx, mat
     }
     for (matx_int64_t k = 0; k < A->nnz; ++k) {
         if (A->columns[k] == col_idx)
-            out->data[A->rows[k] * out->stride] = A->values[k];
+        {
+            out->data[A->rows[k] * out->stride].real += A->values[k].real;
+            out->data[A->rows[k] * out->stride].imag += A->values[k].imag;
+        }
     }
     return MATX_OK;
 }
 
 matx_status_t matx_coo_to_dense_d_i8(matx_coo_d_i8_t A, matx_dense_d_i8_t out)
 {
-    if (!A || !out || !out->data) {
+    if (!A || !A->rows || !A->columns || !A->values || !out || !out->data
+        || A->nrows <= 0 || A->ncols <= 0 || A->nnz <= 0
+        || out->stride <= 0 || (out->layout != MATX_ROW_MAJOR
+                                && out->layout != MATX_COL_MAJOR)) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -690,20 +761,30 @@ matx_status_t matx_coo_to_dense_d_i8(matx_coo_d_i8_t A, matx_dense_d_i8_t out)
         MATX_ERROR("%s: dimension mismatch", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    matx_int64_t total = out->nrows * out->ncols;
-    for (matx_int64_t i = 0; i < total; ++i)
-        out->data[i] = 0.0;
+    for (matx_int64_t r = 0; r < out->nrows; ++r)
+        for (matx_int64_t c = 0; c < out->ncols; ++c) {
+            const matx_int64_t idx = (out->layout == MATX_COL_MAJOR)
+                ? r + c * out->stride : r * out->stride + c;
+            out->data[idx] = 0.0;
+        }
     for (matx_int64_t k = 0; k < A->nnz; ++k) {
         matx_int64_t r = A->rows[k];
         matx_int64_t c = A->columns[k];
-        out->data[r + c * out->nrows] = A->values[k];
+        if (r < 0 || r >= A->nrows || c < 0 || c >= A->ncols)
+            return MATX_ERR_INVALID_ARG;
+        const matx_int64_t idx = (out->layout == MATX_COL_MAJOR)
+            ? r + c * out->stride : r * out->stride + c;
+        out->data[idx] += A->values[k];
     }
     return MATX_OK;
 }
 
 matx_status_t matx_coo_to_dense_z_i8(matx_coo_z_i8_t A, matx_dense_z_i8_t out)
 {
-    if (!A || !out || !out->data) {
+    if (!A || !A->rows || !A->columns || !A->values || !out || !out->data
+        || A->nrows <= 0 || A->ncols <= 0 || A->nnz <= 0
+        || out->stride <= 0 || (out->layout != MATX_ROW_MAJOR
+                                && out->layout != MATX_COL_MAJOR)) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -711,15 +792,22 @@ matx_status_t matx_coo_to_dense_z_i8(matx_coo_z_i8_t A, matx_dense_z_i8_t out)
         MATX_ERROR("%s: dimension mismatch", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    matx_int64_t total = out->nrows * out->ncols;
-    for (matx_int64_t i = 0; i < total; ++i) {
-        out->data[i].real = 0.0;
-        out->data[i].imag = 0.0;
-    }
+    for (matx_int64_t r = 0; r < out->nrows; ++r)
+        for (matx_int64_t c = 0; c < out->ncols; ++c) {
+            const matx_int64_t idx = (out->layout == MATX_COL_MAJOR)
+                ? r + c * out->stride : r * out->stride + c;
+            out->data[idx].real = 0.0;
+            out->data[idx].imag = 0.0;
+        }
     for (matx_int64_t k = 0; k < A->nnz; ++k) {
         matx_int64_t r = A->rows[k];
         matx_int64_t c = A->columns[k];
-        out->data[r + c * out->nrows] = A->values[k];
+        if (r < 0 || r >= A->nrows || c < 0 || c >= A->ncols)
+            return MATX_ERR_INVALID_ARG;
+        const matx_int64_t idx = (out->layout == MATX_COL_MAJOR)
+            ? r + c * out->stride : r * out->stride + c;
+        out->data[idx].real += A->values[k].real;
+        out->data[idx].imag += A->values[k].imag;
     }
     return MATX_OK;
 }

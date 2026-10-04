@@ -13,7 +13,7 @@ typedef enum {
     MATX_TM_NANOSECOND
 } matx_tm_unit;
 
-MATX_API matx_int64_t matx_tm_now(matx_tm_unit unit);
+MATX_TOOLS_API matx_int64_t matx_tm_now(matx_tm_unit unit);
 
 #ifdef __cplusplus
 }

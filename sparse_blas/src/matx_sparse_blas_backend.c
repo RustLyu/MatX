@@ -35,7 +35,7 @@ matx_sparse_backend_t matx_sparse_default(void)
     return choose_default_backend();
 }
 
-MATX_API matx_sparse_backend_t matx_sparse_by_type(matx_sparse_backend_kind_t k)
+MATX_SPARSE_BLAS_API matx_sparse_backend_t matx_sparse_by_type(matx_sparse_backend_kind_t k)
 {
     switch (k) {
     case MATX_SPARSE_BACKEND_AOCL_CPARSE:

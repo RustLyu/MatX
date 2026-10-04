@@ -102,6 +102,7 @@ typedef struct matx_csc_d_i8_opaque_t
     matx_int64_t nrows;
     matx_int64_t ncols;
     matx_int64_t nnz;
+    matx_int64_t nnz_capacity;
     matx_int64_t* col_ptr;
     matx_int64_t* row_ind;
     matx_double* values;
@@ -111,6 +112,7 @@ typedef struct matx_csc_d_i8_opaque_t
     matx_int64_t
         only_value_update; // if the structure is up to date, but values have been updated, this flag can be set to indicate that only values need to be updated in the CSC representation without redoing the entire COO to CSC conversion
     matx_int64_t flags;
+    matx_alloc_t alloc;
 } matx_csc_d_i8_opaque_t;
 
 typedef struct matx_coo_d_i8_opaque_t
@@ -126,6 +128,10 @@ typedef struct matx_coo_d_i8_opaque_t
     matx_int64_t num_backend_handles;
     matx_csc_d_i8_opaque_t*
         handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
+    matx_alloc_t alloc;
+    matx_int64_t* aocl_csr_row_ptr;
+    matx_int64_t* aocl_csr_col_ind;
+    matx_double* aocl_csr_values;
 } matx_coo_d_i8_opaque_t;
 
 typedef struct matx_csc_z_i8_opaque_t
@@ -133,6 +139,7 @@ typedef struct matx_csc_z_i8_opaque_t
     matx_int64_t nrows;
     matx_int64_t ncols;
     matx_int64_t nnz;
+    matx_int64_t nnz_capacity;
     matx_int64_t* col_ptr;
     matx_int64_t* row_ind;
     matx_complex_d_t* values;
@@ -142,6 +149,7 @@ typedef struct matx_csc_z_i8_opaque_t
     matx_int64_t
         only_value_update; // if the structure is up to date, but values have been updated, this flag can be set to indicate that only values need to be updated in the CSC representation without redoing the entire COO to CSC conversion
     matx_int64_t flags;
+    matx_alloc_t alloc;
 } matx_csc_z_i8_opaque_t;
 
 typedef struct matx_coo_z_i8_opaque_t
@@ -157,6 +165,10 @@ typedef struct matx_coo_z_i8_opaque_t
     matx_int64_t num_backend_handles;
     matx_csc_z_i8_opaque_t*
         handle_csc; // for backends that require CSC format, we can lazily convert COO to CSC and store here to avoid repeated conversions
+    matx_alloc_t alloc;
+    matx_int64_t* aocl_csr_row_ptr;
+    matx_int64_t* aocl_csr_col_ind;
+    matx_complex_d_t* aocl_csr_values;
 } matx_coo_z_i8_opaque_t;
 #ifdef __cplusplus
 }

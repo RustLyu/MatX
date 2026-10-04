@@ -26,7 +26,11 @@ if(MATX_BACKEND STREQUAL "AMD_AOCL")
             -DENABLE_ILP64=ON
             -DCMAKE_BUILD_TYPE=RELEASE
             -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+            RESULT_VARIABLE AOCL_UTILS_CONFIG_RESULT
         )
+        if(NOT AOCL_UTILS_CONFIG_RESULT EQUAL 0)
+            message(FATAL_ERROR "AOCL Utils configure failed")
+        endif()
 
         message(STATUS "Building AOCL Utils...")
 
@@ -92,6 +96,7 @@ if(MATX_ENABLE_BLIS)
 				-DENABLE_THREADING=openmp
 				-DENABLE_CBLAS=ON
 				-DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+				RESULT_VARIABLE BLIS_CONFIG_RESULT
 			)
 	else()
 		execute_process(
@@ -106,7 +111,12 @@ if(MATX_ENABLE_BLIS)
 				-DENABLE_THREADING=openmp
 				-DENABLE_CBLAS=ON
 				-DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
+				RESULT_VARIABLE BLIS_CONFIG_RESULT
 			)
+	endif()
+
+	if(NOT BLIS_CONFIG_RESULT EQUAL 0)
+		message(FATAL_ERROR "BLIS configure failed")
 	endif()
 
     execute_process(
@@ -115,12 +125,18 @@ if(MATX_ENABLE_BLIS)
         --parallel ${BUILD_JOBS}
         RESULT_VARIABLE BLIS_BUILD_RESULT
     )
+    if(NOT BLIS_BUILD_RESULT EQUAL 0)
+        message(FATAL_ERROR "BLIS build failed")
+    endif()
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --install ${blis_BINARY_DIR}
         RESULT_VARIABLE BLIS_INSTALL_RESULT
     )
+    if(NOT BLIS_INSTALL_RESULT EQUAL 0)
+        message(FATAL_ERROR "BLIS install failed")
+    endif()
 
     set(BLAS_LIBRARY ${AOCL_ROOT}/lib/libblis-mt.so)
     set(BLAS_LIBRARIES ${BLAS_LIBRARY})
@@ -170,7 +186,11 @@ if(MATX_ENABLE_LIBFLAME)
                 -DENABLE_AOCL_BLAS=ON
                 -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
                 -DBUILD_SHARED_LIBS=ON
+                RESULT_VARIABLE LIBFLAME_CONFIG_RESULT
             )
+            if(NOT LIBFLAME_CONFIG_RESULT EQUAL 0)
+                message(FATAL_ERROR "libflame configure failed")
+            endif()
 
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
@@ -178,12 +198,18 @@ if(MATX_ENABLE_LIBFLAME)
                 --parallel ${BUILD_JOBS}
                 RESULT_VARIABLE libflame_BUILD_RESULT
             )
+            if(NOT libflame_BUILD_RESULT EQUAL 0)
+                message(FATAL_ERROR "libflame build failed")
+            endif()
 
             execute_process(
                 COMMAND ${CMAKE_COMMAND}
                 --install ${libflame_BINARY_DIR}
                 RESULT_VARIABLE LIBFLAME_INSTALL_RESULT
             )
+            if(NOT LIBFLAME_INSTALL_RESULT EQUAL 0)
+                message(FATAL_ERROR "libflame install failed")
+            endif()
 
             set(LAPACK_LIBRARIES ${AOCL_ROOT}/lib/libflame.so)
         endif()
@@ -220,7 +246,11 @@ if(MATX_ENABLE_AOCL_SPARSE)
         -DBUILD_ILP64=ON
         -DCMAKE_INSTALL_PREFIX=${AOCL_ROOT}
         -DBUILD_SHARED_LIBS=ON
+        RESULT_VARIABLE AOCLSPARSE_CONFIG_RESULT
     )
+    if(NOT AOCLSPARSE_CONFIG_RESULT EQUAL 0)
+        message(FATAL_ERROR "AOCL Sparse configure failed")
+    endif()
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
@@ -228,12 +258,19 @@ if(MATX_ENABLE_AOCL_SPARSE)
         --parallel ${BUILD_JOBS}
         RESULT_VARIABLE libaoclsparse_BUILD_RESULT
     )
+    if(NOT libaoclsparse_BUILD_RESULT EQUAL 0)
+        message(FATAL_ERROR "AOCL Sparse build failed")
+    endif()
 
     execute_process(
         COMMAND ${CMAKE_COMMAND}
         --install ${aocl-sparse_BINARY_DIR}
-        RESULT VARIABLE AOCLSPARSE_INSTALL_RESULT
+        RESULT_VARIABLE AOCLSPARSE_INSTALL_RESULT
     )
+
+    if(NOT AOCLSPARSE_INSTALL_RESULT EQUAL 0)
+        message(FATAL_ERROR "AOCL Sparse install failed")
+    endif()
 
     set(AOCLSPARSE_INCLUDE_DIR ${AOCL_ROOT}/include)
     set(AOCLSPARSE_LIBRARY ${AOCL_ROOT}/lib/libaoclsparse.so)
