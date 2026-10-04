@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-MatX is a modular C17/C++20 numerical library built with CMake. Each library module has its own `CMakeLists.txt`, `include/matx/` public headers, and `src/` implementation files. Core ABI and object types live in `types/`; allocators and dense/sparse/vector containers live in `core/`; compute wrappers are split across `vec_blas/`, `dense_blas/`, and `sparse_blas/`; solver APIs are in `dense_solve/` and `sparse_solve/`; Matrix Market I/O helpers are in `io/`; logging/timing utilities are in `tools/`. CMake option and dependency logic is under `cmake/`. Unit tests are in `tests/` as `test_*.cpp`.
+MatX is a modular C17/C++20 library built with CMake. Public headers and implementation files live in each module's `include/matx/` and `src/` directories. `types/` and `core/` define types and containers; `*_blas/` modules provide compute wrappers; `*_solve/` modules provide solvers; `io/` handles Matrix Market files; `tools/` contains logging and timing utilities. Dependency logic is in `cmake/`, and tests are in `tests/test_*.cpp`.
 
 ## Build, Test, and Development Commands
 
@@ -28,4 +28,4 @@ Recent commit messages are short, imperative summaries such as `fix compile erro
 
 ## Security & Configuration Tips
 
-Do not commit local build directories, downloaded dependency trees, or machine-specific CMake cache files. Prefer explicit CMake flags, for example `-DMATX_BACKEND=OPENBLAS` or `-DMATX_ENABLE_GRAPHBLAS=OFF`, when reporting reproducible builds.
+Do not commit local build directories, dependency trees, or machine-specific caches. Build GraphBLAS through SuiteSparse and keep dependencies, caches, and generated files inside the repository build directory; never use `~/.SuiteSparse`. For GraphBLAS failures, report compiler diagnostics before adding cache or JIT workarounds. Reproducible builds should state flags such as `-DMATX_BACKEND=OPENBLAS -DMATX_ENABLE_GRAPHBLAS=ON`.
