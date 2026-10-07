@@ -383,11 +383,7 @@ static matx_status_t ref_vec_norm1_d_i8(matx_vec_d_i8_t A, matx_double* out)
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    matx_double sum = 0.0;
-    for (matx_int64_t i = 0; i < A->n; ++i)
-        sum += fabs(A->data[i * A->stride]);
-    *out = sum;
-    return MATX_OK;
+    return ref_dasum(A->n, A->data, A->stride, out);
 }
 
 static matx_status_t ref_vec_norm2_d_i8(matx_vec_d_i8_t A, matx_double* out)
@@ -396,13 +392,7 @@ static matx_status_t ref_vec_norm2_d_i8(matx_vec_d_i8_t A, matx_double* out)
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    matx_double sum = 0.0;
-    for (matx_int64_t i = 0; i < A->n; ++i) {
-        matx_double v = A->data[i * A->stride];
-        sum += v * v;
-    }
-    *out = sqrt(sum);
-    return MATX_OK;
+    return ref_dnrm2(A->n, A->data, A->stride, out);
 }
 
 static matx_status_t ref_vec_norminf_d_i8(matx_vec_d_i8_t A, matx_double* out)
@@ -443,14 +433,7 @@ static matx_status_t ref_vec_norm2_z_i8(matx_vec_z_i8_t A, matx_double* out)
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    matx_double sum = 0.0;
-    for (matx_int64_t i = 0; i < A->n; ++i) {
-        matx_double re = A->data[i * A->stride].real;
-        matx_double im = A->data[i * A->stride].imag;
-        sum += re * re + im * im;
-    }
-    *out = sqrt(sum);
-    return MATX_OK;
+    return ref_dznrm2(A->n, A->data, A->stride, out);
 }
 
 static matx_status_t ref_vec_norminf_z_i8(matx_vec_z_i8_t A, matx_double* out)

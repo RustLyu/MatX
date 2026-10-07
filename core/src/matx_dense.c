@@ -9,6 +9,84 @@
 #include <string.h>
 #include <time.h>
 
+/* Dense element-wise operations traverse the contiguous dimension first. */
+#define MATX_DENSE_FOR_EACH_2(A, B, OUT, ...)                                \
+    do {                                                                     \
+        if ((A)->layout == MATX_COL_MAJOR) {                                 \
+            if ((A)->stride == (A)->nrows && (B)->stride == (B)->nrows       \
+                && (OUT)->stride == (OUT)->nrows) {                          \
+                const matx_int64_t count = (A)->nrows * (A)->ncols;          \
+                for (matx_int64_t index = 0; index < count; ++index) {       \
+                    const matx_int64_t aidx = index;                         \
+                    const matx_int64_t bidx = index;                         \
+                    const matx_int64_t oidx = index;                         \
+                    __VA_ARGS__;                                             \
+                }                                                            \
+            } else {                                                         \
+                for (matx_int64_t j = 0; j < (A)->ncols; ++j)                \
+                    for (matx_int64_t i = 0; i < (A)->nrows; ++i) {          \
+                        const matx_int64_t aidx = i + j * (A)->stride;       \
+                        const matx_int64_t bidx = i + j * (B)->stride;       \
+                        const matx_int64_t oidx = i + j * (OUT)->stride;    \
+                        __VA_ARGS__;                                         \
+                    }                                                        \
+            }                                                                \
+        } else if ((A)->stride == (A)->ncols && (B)->stride == (B)->ncols   \
+                   && (OUT)->stride == (OUT)->ncols) {                      \
+            const matx_int64_t count = (A)->nrows * (A)->ncols;              \
+            for (matx_int64_t index = 0; index < count; ++index) {           \
+                const matx_int64_t aidx = index;                             \
+                const matx_int64_t bidx = index;                             \
+                const matx_int64_t oidx = index;                             \
+                __VA_ARGS__;                                                 \
+            }                                                                \
+        } else {                                                             \
+            for (matx_int64_t i = 0; i < (A)->nrows; ++i)                    \
+                for (matx_int64_t j = 0; j < (A)->ncols; ++j) {              \
+                    const matx_int64_t aidx = i * (A)->stride + j;           \
+                    const matx_int64_t bidx = i * (B)->stride + j;           \
+                    const matx_int64_t oidx = i * (OUT)->stride + j;        \
+                    __VA_ARGS__;                                             \
+                }                                                            \
+        }                                                                    \
+    } while (0)
+
+#define MATX_DENSE_FOR_EACH_1(A, OUT, ...)                                    \
+    do {                                                                     \
+        if ((A)->layout == MATX_COL_MAJOR) {                                 \
+            if ((A)->stride == (A)->nrows && (OUT)->stride == (OUT)->nrows)  \
+            {                                                                \
+                const matx_int64_t count = (A)->nrows * (A)->ncols;          \
+                for (matx_int64_t index = 0; index < count; ++index) {       \
+                    const matx_int64_t aidx = index;                         \
+                    const matx_int64_t oidx = index;                         \
+                    __VA_ARGS__;                                             \
+                }                                                            \
+            } else {                                                         \
+                for (matx_int64_t j = 0; j < (A)->ncols; ++j)                \
+                    for (matx_int64_t i = 0; i < (A)->nrows; ++i) {          \
+                        const matx_int64_t aidx = i + j * (A)->stride;       \
+                        const matx_int64_t oidx = i + j * (OUT)->stride;    \
+                        __VA_ARGS__;                                         \
+                    }                                                        \
+            }                                                                \
+        } else if ((A)->stride == (A)->ncols && (OUT)->stride == (OUT)->ncols) { \
+            const matx_int64_t count = (A)->nrows * (A)->ncols;              \
+            for (matx_int64_t index = 0; index < count; ++index) {           \
+                const matx_int64_t aidx = index;                             \
+                const matx_int64_t oidx = index;                             \
+                __VA_ARGS__;                                                 \
+            }                                                                \
+        } else {                                                             \
+            for (matx_int64_t i = 0; i < (A)->nrows; ++i)                    \
+                for (matx_int64_t j = 0; j < (A)->ncols; ++j) {              \
+                    const matx_int64_t aidx = i * (A)->stride + j;           \
+                    const matx_int64_t oidx = i * (OUT)->stride + j;        \
+                    __VA_ARGS__;                                             \
+                }                                                            \
+        }                                                                    \
+    } while (0)
+
 /* ---- Macro generators for type-agnostic dense matrix functions ---- */
 
 #define MATX_DEF_DENSE_CREATE(PREFIX, OPAQUE, SCA_TYPE)            \
@@ -80,14 +158,16 @@ matx_status_t matx_dense_##PREFIX##_dup(const matx_alloc_t* alloc,             \
     matx_status_t st = matx_dense_##PREFIX##_create(                           \
         alloc, &copy, in->layout, in->nrows, in->ncols, NULL);                  \
     if (st != MATX_OK) return st;                                              \
-    for (matx_int64_t j = 0; j < in->ncols; ++j)                               \
-        for (matx_int64_t i = 0; i < in->nrows; ++i) {                          \
-            const matx_int64_t src = (in->layout == MATX_COL_MAJOR)            \
-                ? i + j * in->stride : i * in->stride + j;                     \
-            const matx_int64_t dst = (copy->layout == MATX_COL_MAJOR)          \
-                ? i + j * copy->stride : i * copy->stride + j;                 \
-            copy->data[dst] = in->data[src];                                   \
-        }                                                                      \
+    const matx_int64_t minor = (in->layout == MATX_COL_MAJOR)                   \
+        ? in->nrows : in->ncols;                                                \
+    if (in->stride == minor) {                                                 \
+        const size_t data_bytes = (size_t) in->nrows                           \
+            * (size_t) in->ncols * sizeof(SCA_TYPE);                           \
+        memcpy(copy->data, in->data, data_bytes);                              \
+    } else {                                                                   \
+        MATX_DENSE_FOR_EACH_1(in, copy,                                         \
+            copy->data[oidx] = in->data[aidx]);                                \
+    }                                                                          \
     if (*out != NULL) matx_dense_##PREFIX##_destroy(alloc, *out);              \
     *out = copy;                                                               \
     return MATX_OK;                                                            \
@@ -269,16 +349,20 @@ matx_status_t matx_dense_##PREFIX##_get_block(const matx_alloc_t* alloc,       \
                                                      NULL);                     \
     if (st != MATX_OK)                                                         \
         return st;                                                             \
-    for (matx_int64_t j = 0; j < ncols_out; ++j) {                             \
-        for (matx_int64_t i = 0; i < nrows_out; ++i) {                         \
-            matx_int64_t src_idx = (A->layout == MATX_COL_MAJOR)                \
-                ? (rs + i) + (cs + j) * A->stride                               \
-                : (rs + i) * A->stride + (cs + j);                              \
-            matx_int64_t dst_idx = (A->layout == MATX_COL_MAJOR)                \
-                ? i + j * (*out)->stride                                        \
-                : i * (*out)->stride + j;                                       \
-            (*out)->data[dst_idx] = A->data[src_idx];                           \
-        }                                                                      \
+    if (A->layout == MATX_COL_MAJOR) {                                         \
+        for (matx_int64_t j = 0; j < ncols_out; ++j)                           \
+            for (matx_int64_t i = 0; i < nrows_out; ++i) {                     \
+                const matx_int64_t src_idx = (rs + i) + (cs + j) * A->stride;  \
+                const matx_int64_t dst_idx = i + j * (*out)->stride;           \
+                (*out)->data[dst_idx] = A->data[src_idx];                      \
+            }                                                                  \
+    } else {                                                                   \
+        for (matx_int64_t i = 0; i < nrows_out; ++i)                           \
+            for (matx_int64_t j = 0; j < ncols_out; ++j) {                     \
+                const matx_int64_t src_idx = (rs + i) * A->stride + cs + j;    \
+                const matx_int64_t dst_idx = i * (*out)->stride + j;           \
+                (*out)->data[dst_idx] = A->data[src_idx];                      \
+            }                                                                  \
     }                                                                          \
     return MATX_OK;                                                            \
 }
@@ -308,16 +392,20 @@ matx_status_t matx_dense_##PREFIX##_set_block(                                 \
         MATX_ERROR("%s: layout mismatch", __func__);                           \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
-    for (matx_int64_t j = 0; j < ncols_blk; ++j) {                             \
-        for (matx_int64_t i = 0; i < nrows_blk; ++i) {                         \
-            matx_int64_t src_idx = (A->layout == MATX_COL_MAJOR)                \
-                ? (rs + i) + (cs + j) * A->stride                               \
-                : (rs + i) * A->stride + (cs + j);                              \
-            matx_int64_t dst_idx = (B->layout == MATX_COL_MAJOR)                \
-                ? (dr + i) + (dc + j) * B->stride                               \
-                : (dr + i) * B->stride + (dc + j);                              \
-            B->data[dst_idx] = A->data[src_idx];                                \
-        }                                                                      \
+    if (A->layout == MATX_COL_MAJOR) {                                         \
+        for (matx_int64_t j = 0; j < ncols_blk; ++j)                           \
+            for (matx_int64_t i = 0; i < nrows_blk; ++i) {                     \
+                const matx_int64_t src_idx = (rs + i) + (cs + j) * A->stride;  \
+                const matx_int64_t dst_idx = (dr + i) + (dc + j) * B->stride;  \
+                B->data[dst_idx] = A->data[src_idx];                           \
+            }                                                                  \
+    } else {                                                                   \
+        for (matx_int64_t i = 0; i < nrows_blk; ++i)                           \
+            for (matx_int64_t j = 0; j < ncols_blk; ++j) {                     \
+                const matx_int64_t src_idx = (rs + i) * A->stride + cs + j;    \
+                const matx_int64_t dst_idx = (dr + i) * B->stride + dc + j;    \
+                B->data[dst_idx] = A->data[src_idx];                           \
+            }                                                                  \
     }                                                                          \
     return MATX_OK;                                                            \
 }
@@ -417,13 +505,9 @@ matx_status_t matx_dense_d_i8_to_z_i8(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx].real = A->data[aidx];
-            (*out)->data[oidx].imag = 0.0;
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        (*out)->data[oidx].real = A->data[aidx];
+        (*out)->data[oidx].imag = 0.0);
     return MATX_OK;
 }
 
@@ -458,12 +542,8 @@ matx_status_t matx_dense_d_i8_exp(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx] = exp(A->data[aidx]);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        (*out)->data[oidx] = exp(A->data[aidx]));
     return MATX_OK;
 }
 
@@ -478,16 +558,12 @@ matx_status_t matx_dense_z_i8_exp(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double a = A->data[aidx].real;
-            matx_double b = A->data[aidx].imag;
-            matx_double e = exp(a);
-            (*out)->data[oidx].real = e * cos(b);
-            (*out)->data[oidx].imag = e * sin(b);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        matx_double a = A->data[aidx].real;
+        matx_double b = A->data[aidx].imag;
+        matx_double e = exp(a);
+        (*out)->data[oidx].real = e * cos(b);
+        (*out)->data[oidx].imag = e * sin(b));
     return MATX_OK;
 }
 
@@ -502,17 +578,13 @@ matx_status_t matx_dense_d_i8_log(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            if (A->data[aidx] <= 0.0) {
-                matx_dense_d_i8_destroy(alloc, *out);
-                *out = NULL;
-                return MATX_ERR_INVALID_ARG;
-            }
-            (*out)->data[oidx] = log(A->data[aidx]);
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        if (A->data[aidx] <= 0.0) {
+            matx_dense_d_i8_destroy(alloc, *out);
+            *out = NULL;
+            return MATX_ERR_INVALID_ARG;
         }
+        (*out)->data[oidx] = log(A->data[aidx]));
     return MATX_OK;
 }
 
@@ -527,15 +599,11 @@ matx_status_t matx_dense_z_i8_log(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double a = A->data[aidx].real;
-            matx_double b = A->data[aidx].imag;
-            (*out)->data[oidx].real = 0.5 * log(a * a + b * b);
-            (*out)->data[oidx].imag = atan2(b, a);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        matx_double a = A->data[aidx].real;
+        matx_double b = A->data[aidx].imag;
+        (*out)->data[oidx].real = 0.5 * log(a * a + b * b);
+        (*out)->data[oidx].imag = atan2(b, a));
     return MATX_OK;
 }
 
@@ -550,17 +618,13 @@ matx_status_t matx_dense_d_i8_sqrt(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            if (A->data[aidx] < 0.0) {
-                matx_dense_d_i8_destroy(alloc, *out);
-                *out = NULL;
-                return MATX_ERR_INVALID_ARG;
-            }
-            (*out)->data[oidx] = sqrt(A->data[aidx]);
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        if (A->data[aidx] < 0.0) {
+            matx_dense_d_i8_destroy(alloc, *out);
+            *out = NULL;
+            return MATX_ERR_INVALID_ARG;
         }
+        (*out)->data[oidx] = sqrt(A->data[aidx]));
     return MATX_OK;
 }
 
@@ -575,20 +639,16 @@ matx_status_t matx_dense_z_i8_sqrt(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double a = A->data[aidx].real;
-            matx_double b = A->data[aidx].imag;
-            matx_double mag = sqrt(a * a + b * b);
-            matx_double re = sqrt((mag + a) * 0.5);
-            matx_double im = sqrt((mag - a) * 0.5);
-            if (b < 0.0)
-                im = -im;
-            (*out)->data[oidx].real = re;
-            (*out)->data[oidx].imag = im;
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        matx_double a = A->data[aidx].real;
+        matx_double b = A->data[aidx].imag;
+        matx_double mag = sqrt(a * a + b * b);
+        matx_double re = sqrt((mag + a) * 0.5);
+        matx_double im = sqrt((mag - a) * 0.5);
+        if (b < 0.0)
+            im = -im;
+        (*out)->data[oidx].real = re;
+        (*out)->data[oidx].imag = im);
     return MATX_OK;
 }
 
@@ -603,12 +663,8 @@ matx_status_t matx_dense_d_i8_sin(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx] = sin(A->data[aidx]);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        (*out)->data[oidx] = sin(A->data[aidx]));
     return MATX_OK;
 }
 
@@ -623,15 +679,11 @@ matx_status_t matx_dense_z_i8_sin(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double a = A->data[aidx].real;
-            matx_double b = A->data[aidx].imag;
-            (*out)->data[oidx].real = sin(a) * cosh(b);
-            (*out)->data[oidx].imag = cos(a) * sinh(b);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        matx_double a = A->data[aidx].real;
+        matx_double b = A->data[aidx].imag;
+        (*out)->data[oidx].real = sin(a) * cosh(b);
+        (*out)->data[oidx].imag = cos(a) * sinh(b));
     return MATX_OK;
 }
 
@@ -646,12 +698,8 @@ matx_status_t matx_dense_d_i8_cos(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx] = cos(A->data[aidx]);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        (*out)->data[oidx] = cos(A->data[aidx]));
     return MATX_OK;
 }
 
@@ -666,15 +714,11 @@ matx_status_t matx_dense_z_i8_cos(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double a = A->data[aidx].real;
-            matx_double b = A->data[aidx].imag;
-            (*out)->data[oidx].real = cos(a) * cosh(b);
-            (*out)->data[oidx].imag = -sin(a) * sinh(b);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        matx_double a = A->data[aidx].real;
+        matx_double b = A->data[aidx].imag;
+        (*out)->data[oidx].real = cos(a) * cosh(b);
+        (*out)->data[oidx].imag = -sin(a) * sinh(b));
     return MATX_OK;
 }
 
@@ -689,12 +733,8 @@ matx_status_t matx_dense_d_i8_abs(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx] = fabs(A->data[aidx]);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        (*out)->data[oidx] = fabs(A->data[aidx]));
     return MATX_OK;
 }
 
@@ -709,14 +749,10 @@ matx_status_t matx_dense_z_i8_abs(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double a = A->data[aidx].real;
-            matx_double b = A->data[aidx].imag;
-            (*out)->data[oidx] = sqrt(a * a + b * b);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        matx_double a = A->data[aidx].real;
+        matx_double b = A->data[aidx].imag;
+        (*out)->data[oidx] = sqrt(a * a + b * b));
     return MATX_OK;
 }
 
@@ -732,12 +768,8 @@ matx_status_t matx_dense_d_i8_pow(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx] = pow(A->data[aidx], exp_val);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        (*out)->data[oidx] = pow(A->data[aidx], exp_val));
     return MATX_OK;
 }
 
@@ -753,21 +785,17 @@ matx_status_t matx_dense_z_i8_pow(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double a = A->data[aidx].real;
-            matx_double b = A->data[aidx].imag;
-            matx_double r = sqrt(a * a + b * b);
-            matx_double theta = atan2(b, a);
-            matx_double c = exp_val.real;
-            matx_double d = exp_val.imag;
-            matx_double new_r = pow(r, c) * exp(-d * theta);
-            matx_double new_theta = c * theta + d * log(r);
-            (*out)->data[oidx].real = new_r * cos(new_theta);
-            (*out)->data[oidx].imag = new_r * sin(new_theta);
-        }
+    MATX_DENSE_FOR_EACH_1(A, *out,
+        matx_double a = A->data[aidx].real;
+        matx_double b = A->data[aidx].imag;
+        matx_double r = sqrt(a * a + b * b);
+        matx_double theta = atan2(b, a);
+        matx_double c = exp_val.real;
+        matx_double d = exp_val.imag;
+        matx_double new_r = pow(r, c) * exp(-d * theta);
+        matx_double new_theta = c * theta + d * log(r);
+        (*out)->data[oidx].real = new_r * cos(new_theta);
+        (*out)->data[oidx].imag = new_r * sin(new_theta));
     return MATX_OK;
 }
 
@@ -789,13 +817,8 @@ matx_status_t matx_dense_d_i8_add(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t bidx = (B->layout == MATX_COL_MAJOR) ? i + j * B->stride : i * B->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx] = A->data[aidx] + B->data[bidx];
-        }
+    MATX_DENSE_FOR_EACH_2(A, B, *out,
+        (*out)->data[oidx] = A->data[aidx] + B->data[bidx]);
     return MATX_OK;
 }
 
@@ -815,14 +838,9 @@ matx_status_t matx_dense_z_i8_add(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t bidx = (B->layout == MATX_COL_MAJOR) ? i + j * B->stride : i * B->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx].real = A->data[aidx].real + B->data[bidx].real;
-            (*out)->data[oidx].imag = A->data[aidx].imag + B->data[bidx].imag;
-        }
+    MATX_DENSE_FOR_EACH_2(A, B, *out,
+        (*out)->data[oidx].real = A->data[aidx].real + B->data[bidx].real;
+        (*out)->data[oidx].imag = A->data[aidx].imag + B->data[bidx].imag);
     return MATX_OK;
 }
 
@@ -842,13 +860,8 @@ matx_status_t matx_dense_d_i8_sub(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t bidx = (B->layout == MATX_COL_MAJOR) ? i + j * B->stride : i * B->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx] = A->data[aidx] - B->data[bidx];
-        }
+    MATX_DENSE_FOR_EACH_2(A, B, *out,
+        (*out)->data[oidx] = A->data[aidx] - B->data[bidx]);
     return MATX_OK;
 }
 
@@ -868,14 +881,9 @@ matx_status_t matx_dense_z_i8_sub(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t bidx = (B->layout == MATX_COL_MAJOR) ? i + j * B->stride : i * B->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx].real = A->data[aidx].real - B->data[bidx].real;
-            (*out)->data[oidx].imag = A->data[aidx].imag - B->data[bidx].imag;
-        }
+    MATX_DENSE_FOR_EACH_2(A, B, *out,
+        (*out)->data[oidx].real = A->data[aidx].real - B->data[bidx].real;
+        (*out)->data[oidx].imag = A->data[aidx].imag - B->data[bidx].imag);
     return MATX_OK;
 }
 
@@ -895,13 +903,8 @@ matx_status_t matx_dense_d_i8_mul(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t bidx = (B->layout == MATX_COL_MAJOR) ? i + j * B->stride : i * B->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            (*out)->data[oidx] = A->data[aidx] * B->data[bidx];
-        }
+    MATX_DENSE_FOR_EACH_2(A, B, *out,
+        (*out)->data[oidx] = A->data[aidx] * B->data[bidx]);
     return MATX_OK;
 }
 
@@ -921,16 +924,13 @@ matx_status_t matx_dense_z_i8_mul(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t bidx = (B->layout == MATX_COL_MAJOR) ? i + j * B->stride : i * B->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double ar = A->data[aidx].real, ai = A->data[aidx].imag;
-            matx_double br = B->data[bidx].real, bi = B->data[bidx].imag;
-            (*out)->data[oidx].real = ar * br - ai * bi;
-            (*out)->data[oidx].imag = ar * bi + ai * br;
-        }
+    MATX_DENSE_FOR_EACH_2(A, B, *out,
+        const matx_double ar = A->data[aidx].real;
+        const matx_double ai = A->data[aidx].imag;
+        const matx_double br = B->data[bidx].real;
+        const matx_double bi = B->data[bidx].imag;
+        (*out)->data[oidx].real = ar * br - ai * bi;
+        (*out)->data[oidx].imag = ar * bi + ai * br);
     return MATX_OK;
 }
 
@@ -950,18 +950,13 @@ matx_status_t matx_dense_d_i8_div(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t bidx = (B->layout == MATX_COL_MAJOR) ? i + j * B->stride : i * B->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            if (B->data[bidx] == 0.0) {
-                matx_dense_d_i8_destroy(alloc, *out);
-                *out = NULL;
-                return MATX_ERR_INVALID_ARG;
-            }
-            (*out)->data[oidx] = A->data[aidx] / B->data[bidx];
+    MATX_DENSE_FOR_EACH_2(A, B, *out,
+        if (B->data[bidx] == 0.0) {
+            matx_dense_d_i8_destroy(alloc, *out);
+            *out = NULL;
+            return MATX_ERR_INVALID_ARG;
         }
+        (*out)->data[oidx] = A->data[aidx] / B->data[bidx]);
     return MATX_OK;
 }
 
@@ -981,22 +976,19 @@ matx_status_t matx_dense_z_i8_div(const matx_alloc_t* alloc,
     matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout, A->nrows, A->ncols, NULL);
     if (st != MATX_OK)
         return st;
-    for (matx_int64_t j = 0; j < A->ncols; ++j)
-        for (matx_int64_t i = 0; i < A->nrows; ++i) {
-            matx_int64_t aidx = (A->layout == MATX_COL_MAJOR) ? i + j * A->stride : i * A->stride + j;
-            matx_int64_t bidx = (B->layout == MATX_COL_MAJOR) ? i + j * B->stride : i * B->stride + j;
-            matx_int64_t oidx = (A->layout == MATX_COL_MAJOR) ? i + j * (*out)->stride : i * (*out)->stride + j;
-            matx_double ar = A->data[aidx].real, ai = A->data[aidx].imag;
-            matx_double br = B->data[bidx].real, bi = B->data[bidx].imag;
-            matx_double den = br * br + bi * bi;
-            if (den == 0.0) {
-                matx_dense_z_i8_destroy(alloc, *out);
-                *out = NULL;
-                return MATX_ERR_INVALID_ARG;
-            }
-            (*out)->data[oidx].real = (ar * br + ai * bi) / den;
-            (*out)->data[oidx].imag = (ai * br - ar * bi) / den;
+    MATX_DENSE_FOR_EACH_2(A, B, *out,
+        const matx_double ar = A->data[aidx].real;
+        const matx_double ai = A->data[aidx].imag;
+        const matx_double br = B->data[bidx].real;
+        const matx_double bi = B->data[bidx].imag;
+        const matx_double den = br * br + bi * bi;
+        if (den == 0.0) {
+            matx_dense_z_i8_destroy(alloc, *out);
+            *out = NULL;
+            return MATX_ERR_INVALID_ARG;
         }
+        (*out)->data[oidx].real = (ar * br + ai * bi) / den;
+        (*out)->data[oidx].imag = (ai * br - ar * bi) / den);
     return MATX_OK;
 }
 
@@ -1008,11 +1000,19 @@ matx_status_t matx_dense_d_i8_add_scalar(matx_dense_d_i8_t m, matx_double val)
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    for (matx_int64_t j = 0; j < m->ncols; ++j)
-        for (matx_int64_t i = 0; i < m->nrows; ++i) {
-            matx_int64_t idx = (m->layout == MATX_COL_MAJOR) ? i + j * m->stride : i * m->stride + j;
-            m->data[idx] += val;
+    if (m->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < m->ncols; ++j) {
+            matx_double* column = m->data + j * m->stride;
+            for (matx_int64_t i = 0; i < m->nrows; ++i)
+                column[i] += val;
         }
+    } else {
+        for (matx_int64_t i = 0; i < m->nrows; ++i) {
+            matx_double* row = m->data + i * m->stride;
+            for (matx_int64_t j = 0; j < m->ncols; ++j)
+                row[j] += val;
+        }
+    }
     return MATX_OK;
 }
 
@@ -1022,12 +1022,23 @@ matx_status_t matx_dense_z_i8_add_scalar(matx_dense_z_i8_t m, matx_complex_d_t v
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    for (matx_int64_t j = 0; j < m->ncols; ++j)
-        for (matx_int64_t i = 0; i < m->nrows; ++i) {
-            matx_int64_t idx = (m->layout == MATX_COL_MAJOR) ? i + j * m->stride : i * m->stride + j;
-            m->data[idx].real += val.real;
-            m->data[idx].imag += val.imag;
+    if (m->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < m->ncols; ++j) {
+            matx_complex_d_t* column = m->data + j * m->stride;
+            for (matx_int64_t i = 0; i < m->nrows; ++i) {
+                column[i].real += val.real;
+                column[i].imag += val.imag;
+            }
         }
+    } else {
+        for (matx_int64_t i = 0; i < m->nrows; ++i) {
+            matx_complex_d_t* row = m->data + i * m->stride;
+            for (matx_int64_t j = 0; j < m->ncols; ++j) {
+                row[j].real += val.real;
+                row[j].imag += val.imag;
+            }
+        }
+    }
     return MATX_OK;
 }
 
@@ -1037,11 +1048,19 @@ matx_status_t matx_dense_d_i8_mul_scalar(matx_dense_d_i8_t m, matx_double val)
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    for (matx_int64_t j = 0; j < m->ncols; ++j)
-        for (matx_int64_t i = 0; i < m->nrows; ++i) {
-            matx_int64_t idx = (m->layout == MATX_COL_MAJOR) ? i + j * m->stride : i * m->stride + j;
-            m->data[idx] *= val;
+    if (m->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < m->ncols; ++j) {
+            matx_double* column = m->data + j * m->stride;
+            for (matx_int64_t i = 0; i < m->nrows; ++i)
+                column[i] *= val;
         }
+    } else {
+        for (matx_int64_t i = 0; i < m->nrows; ++i) {
+            matx_double* row = m->data + i * m->stride;
+            for (matx_int64_t j = 0; j < m->ncols; ++j)
+                row[j] *= val;
+        }
+    }
     return MATX_OK;
 }
 
@@ -1051,14 +1070,27 @@ matx_status_t matx_dense_z_i8_mul_scalar(matx_dense_z_i8_t m, matx_complex_d_t v
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    for (matx_int64_t j = 0; j < m->ncols; ++j)
-        for (matx_int64_t i = 0; i < m->nrows; ++i) {
-            matx_int64_t idx = (m->layout == MATX_COL_MAJOR) ? i + j * m->stride : i * m->stride + j;
-            matx_double re = m->data[idx].real;
-            matx_double im = m->data[idx].imag;
-            m->data[idx].real = re * val.real - im * val.imag;
-            m->data[idx].imag = re * val.imag + im * val.real;
+    if (m->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < m->ncols; ++j) {
+            matx_complex_d_t* column = m->data + j * m->stride;
+            for (matx_int64_t i = 0; i < m->nrows; ++i) {
+                const matx_double re = column[i].real;
+                const matx_double im = column[i].imag;
+                column[i].real = re * val.real - im * val.imag;
+                column[i].imag = re * val.imag + im * val.real;
+            }
         }
+    } else {
+        for (matx_int64_t i = 0; i < m->nrows; ++i) {
+            matx_complex_d_t* row = m->data + i * m->stride;
+            for (matx_int64_t j = 0; j < m->ncols; ++j) {
+                const matx_double re = row[j].real;
+                const matx_double im = row[j].imag;
+                row[j].real = re * val.real - im * val.imag;
+                row[j].imag = re * val.imag + im * val.real;
+            }
+        }
+    }
     return MATX_OK;
 }
 
@@ -1082,6 +1114,25 @@ static matx_double matx_rand_uniform_double(matx_double low, matx_double high)
     return low + (high - low) * ((matx_double) rand() / (matx_double) RAND_MAX);
 }
 
+/* SplitMix64 keeps seeded uniform fills local to the call and avoids rand()'s
+ * shared global state and per-sample locking. */
+static inline uint64_t matx_rand_next_u64(uint64_t* state)
+{
+    uint64_t value = (*state += UINT64_C(0x9e3779b97f4a7c15));
+    value = (value ^ (value >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    value = (value ^ (value >> 27)) * UINT64_C(0x94d049bb133111eb);
+    return value ^ (value >> 31);
+}
+
+static inline matx_double matx_rand_uniform_fast(matx_double low,
+                                                 matx_double high,
+                                                 uint64_t* state)
+{
+    const matx_double unit
+        = (matx_double) (matx_rand_next_u64(state) >> 11) * 0x1.0p-53;
+    return low + (high - low) * unit;
+}
+
 matx_status_t matx_vec_d_i8_rand_uniform(matx_vec_d_i8_t v,
                                          matx_double low,
                                          matx_double high,
@@ -1091,9 +1142,9 @@ matx_status_t matx_vec_d_i8_rand_uniform(matx_vec_d_i8_t v,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    matx_rand_seed(seed);
+    uint64_t state = (uint64_t) seed;
     for (matx_int64_t i = 0; i < v->n; ++i)
-        v->data[i * v->stride] = matx_rand_uniform_double(low, high);
+        v->data[i * v->stride] = matx_rand_uniform_fast(low, high, &state);
     return MATX_OK;
 }
 
@@ -1106,12 +1157,26 @@ matx_status_t matx_dense_d_i8_rand_uniform(matx_dense_d_i8_t m,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    matx_rand_seed(seed);
-    for (matx_int64_t j = 0; j < m->ncols; ++j)
-        for (matx_int64_t i = 0; i < m->nrows; ++i) {
-            matx_int64_t idx = (m->layout == MATX_COL_MAJOR) ? i + j * m->stride : i * m->stride + j;
-            m->data[idx] = matx_rand_uniform_double(low, high);
+    uint64_t state = (uint64_t) seed;
+    const matx_int64_t minor
+        = (m->layout == MATX_COL_MAJOR) ? m->nrows : m->ncols;
+    if (m->stride == minor) {
+        const matx_int64_t count = m->nrows * m->ncols;
+        for (matx_int64_t i = 0; i < count; ++i)
+            m->data[i] = matx_rand_uniform_fast(low, high, &state);
+    } else if (m->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < m->ncols; ++j) {
+            matx_double* column = m->data + j * m->stride;
+            for (matx_int64_t i = 0; i < m->nrows; ++i)
+                column[i] = matx_rand_uniform_fast(low, high, &state);
         }
+    } else {
+        for (matx_int64_t i = 0; i < m->nrows; ++i) {
+            matx_double* row = m->data + i * m->stride;
+            for (matx_int64_t j = 0; j < m->ncols; ++j)
+                row[j] = matx_rand_uniform_fast(low, high, &state);
+        }
+    }
     return MATX_OK;
 }
 

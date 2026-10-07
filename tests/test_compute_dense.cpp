@@ -360,23 +360,23 @@ TEST(compute_dense, norm1_norminf_normfro_z_i8)
     matx_alloc_t a = matx_alloc_default();
     matx_dense_z_i8_t A = NULL;
     ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
-    // col0: (1+0j, 2+0j), col1: (3+0j, 4+0j) — same as f64 test
+    // col0: (1+1j, 2), col1: (3+4j, 4); complex magnitudes use hypot.
     A->data[0].real = 1.0;
-    A->data[0].imag = 0.0;
+    A->data[0].imag = 1.0;
     A->data[1].real = 2.0;
     A->data[1].imag = 0.0;
     A->data[2].real = 3.0;
-    A->data[2].imag = 0.0;
+    A->data[2].imag = 4.0;
     A->data[3].real = 4.0;
     A->data[3].imag = 0.0;
     matx_dense_backend_t blas = matx_blas_default();
     double n1 = 0, ni = 0, nf = 0;
     ASSERT_EQ(matx_mat_norm1_z_i8(&blas, A, &n1), MATX_OK);
-    EXPECT_NEAR(n1, 7.0, 1e-12);
+    EXPECT_NEAR(n1, 9.0, 1e-12);
     ASSERT_EQ(matx_mat_norminf_z_i8(&blas, A, &ni), MATX_OK);
-    EXPECT_NEAR(ni, 6.0, 1e-12);
+    EXPECT_NEAR(ni, std::sqrt(2.0) + 5.0, 1e-12);
     ASSERT_EQ(matx_mat_normfro_z_i8(&blas, A, &nf), MATX_OK);
-    EXPECT_NEAR(nf, sqrt(1 + 4 + 9 + 16), 1e-10);
+    EXPECT_NEAR(nf, std::sqrt(47.0), 1e-10);
     matx_dense_z_i8_destroy(&a, A);
 }
 

@@ -30,6 +30,29 @@ TEST(core_dense, wrap_no_ownership)
     matx_dense_d_i8_destroy(&a, V);
 }
 
+TEST(core_dense, row_major_padded_wrap_dup_and_abs)
+{
+    matx_alloc_t alloc = matx_alloc_default();
+    double backing[10] = {1.0, -2.0, 3.0, 90.0, 91.0,
+                          -4.0, 5.0, -6.0, 92.0, 93.0};
+    matx_dense_d_i8_t wrapped = NULL, copy = NULL, magnitude = NULL;
+    ASSERT_EQ(matx_dense_d_i8_wrap(&alloc, &wrapped, 2, 3, 5,
+                                   MATX_ROW_MAJOR, backing), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_dup(&alloc, wrapped, &copy), MATX_OK);
+    ASSERT_EQ(copy->stride, 3);
+    for (int i = 0; i < 6; ++i)
+        EXPECT_NEAR(copy->data[i], i < 3 ? backing[i] : backing[i + 2], 1e-14);
+
+    ASSERT_EQ(matx_dense_d_i8_abs(&alloc, wrapped, &magnitude), MATX_OK);
+    const double expected[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+    for (int i = 0; i < 6; ++i)
+        EXPECT_NEAR(magnitude->data[i], expected[i], 1e-14);
+
+    matx_dense_d_i8_destroy(&alloc, magnitude);
+    matx_dense_d_i8_destroy(&alloc, copy);
+    matx_dense_d_i8_destroy(&alloc, wrapped);
+}
+
 TEST(core_dense, create_4x4)
 {
     matx_alloc_t a = matx_alloc_default();
@@ -94,6 +117,42 @@ TEST(core_dense, f64_fill_zeros_ones)
     ASSERT_EQ(matx_dense_d_i8_ones(M), MATX_OK);
     EXPECT_NEAR(M->data[8], 1.0, 1e-12);
     matx_dense_d_i8_destroy(&a, M);
+}
+
+TEST(core_dense, uniform_random_seeded_fill_is_repeatable_and_respects_stride)
+{
+    matx_alloc_t alloc = matx_alloc_default();
+    double backing[10];
+    for (double& value : backing) value = -99.0;
+    matx_dense_d_i8_t matrix = NULL;
+    ASSERT_EQ(matx_dense_d_i8_wrap(&alloc, &matrix, 2, 3, 5,
+                                   MATX_ROW_MAJOR, backing), MATX_OK);
+    matx_vec_d_i8_t vector = NULL;
+    ASSERT_EQ(matx_vec_d_i8_create(&alloc, &vector, NULL, 6), MATX_OK);
+
+    ASSERT_EQ(matx_dense_d_i8_rand_uniform(matrix, -1.0, 1.0, 12345), MATX_OK);
+    double first_fill[6];
+    for (int row = 0; row < 2; ++row) {
+        for (int col = 0; col < 3; ++col) {
+            const double value = backing[row * 5 + col];
+            EXPECT_TRUE(value >= -1.0 && value < 1.0);
+            first_fill[row * 3 + col] = value;
+        }
+    }
+    EXPECT_EQ(backing[3], -99.0);
+    EXPECT_EQ(backing[4], -99.0);
+    EXPECT_EQ(backing[8], -99.0);
+    EXPECT_EQ(backing[9], -99.0);
+
+    ASSERT_EQ(matx_dense_d_i8_rand_uniform(matrix, -1.0, 1.0, 12345), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_rand_uniform(vector, -1.0, 1.0, 12345), MATX_OK);
+    for (int i = 0; i < 6; ++i) {
+        EXPECT_NEAR(backing[(i / 3) * 5 + i % 3], first_fill[i], 0.0);
+        EXPECT_NEAR(vector->data[i * vector->stride], first_fill[i], 0.0);
+    }
+
+    matx_vec_d_i8_destroy(&alloc, vector);
+    matx_dense_d_i8_destroy(&alloc, matrix);
 }
 
 TEST(core_dense, f64_trace)

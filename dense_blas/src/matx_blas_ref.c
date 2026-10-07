@@ -5,6 +5,7 @@
 #include "matx/matx_dense_compute.h"
 #include "matx/matx_log.h"
 
+#include <math.h>
 #include <string.h>
 
 #if MATX_ENABLE_OPENBLAS
@@ -1093,6 +1094,98 @@ static matx_status_t ref_conj_transpose_z_i8(matx_layout_t layout,
 
 // ---- Norm implementations ----
 
+static matx_status_t ref_norm_abs_sum(matx_layout_t layout,
+                                      matx_int64_t rows,
+                                      matx_int64_t cols,
+                                      const void* A,
+                                      matx_int64_t lda,
+                                      matx_double* out,
+                                      int norm_one,
+                                      int complex_values)
+{
+    if (!A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (rows < 0 || cols < 0 || lda < 0
+        || (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR)
+        || (layout == MATX_COL_MAJOR && lda < rows)
+        || (layout == MATX_ROW_MAJOR && lda < cols)) {
+        MATX_ERROR("%s: invalid matrix dimensions or layout", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    if (rows == 0 || cols == 0) {
+        *out = 0.0;
+        return MATX_OK;
+    }
+
+    const matx_int64_t reduction_count = norm_one ? cols : rows;
+    const matx_int64_t inner_count = norm_one ? rows : cols;
+    const int contiguous_reductions
+        = (norm_one && layout == MATX_COL_MAJOR)
+          || (!norm_one && layout == MATX_ROW_MAJOR);
+    matx_double maximum = 0.0;
+
+    if (contiguous_reductions) {
+        for (matx_int64_t reduction = 0; reduction < reduction_count; ++reduction) {
+            matx_double sum = 0.0;
+            for (matx_int64_t inner = 0; inner < inner_count; ++inner) {
+                const matx_int64_t row = norm_one ? inner : reduction;
+                const matx_int64_t col = norm_one ? reduction : inner;
+                const size_t index = layout == MATX_COL_MAJOR
+                                         ? (size_t) row + (size_t) col * (size_t) lda
+                                         : (size_t) row * (size_t) lda + (size_t) col;
+                matx_double magnitude;
+                if (complex_values) {
+                    const matx_complex_d_t value = ((const matx_complex_d_t*) A)[index];
+                    magnitude = hypot(value.real, value.imag);
+                } else {
+                    magnitude = fabs(((const matx_double*) A)[index]);
+                }
+                sum += magnitude;
+            }
+            if (sum > maximum || isnan(sum)) maximum = sum;
+        }
+    } else {
+        if ((uint64_t) reduction_count > SIZE_MAX / sizeof(matx_double)) {
+            return MATX_ERR_INVALID_ARG;
+        }
+        matx_double* sums = (matx_double*) calloc((size_t) reduction_count, sizeof(*sums));
+        if (!sums) return MATX_ERR_OUT_OF_MEMORY;
+        const int column_major = layout == MATX_COL_MAJOR;
+        const matx_int64_t outer_count = column_major ? cols : rows;
+        const matx_int64_t inner_count_by_layout = column_major ? rows : cols;
+        for (matx_int64_t outer = 0; outer < outer_count; ++outer) {
+            for (matx_int64_t inner = 0; inner < inner_count_by_layout; ++inner) {
+                const matx_int64_t row = column_major ? inner : outer;
+                const matx_int64_t col = column_major ? outer : inner;
+                const size_t index = layout == MATX_COL_MAJOR
+                                         ? (size_t) row + (size_t) col * (size_t) lda
+                                         : (size_t) row * (size_t) lda + (size_t) col;
+                matx_double magnitude;
+                if (complex_values) {
+                    const matx_complex_d_t value = ((const matx_complex_d_t*) A)[index];
+                    magnitude = hypot(value.real, value.imag);
+                } else {
+                    magnitude = fabs(((const matx_double*) A)[index]);
+                }
+                sums[norm_one ? col : row] += magnitude;
+            }
+        }
+        for (matx_int64_t i = 0; i < reduction_count; ++i) {
+            if (sums[i] > maximum || isnan(sums[i])) maximum = sums[i];
+        }
+        free(sums);
+    }
+
+    *out = maximum;
+    return MATX_OK;
+}
+
 static matx_status_t ref_norm1_d_i8(matx_layout_t layout,
                                     matx_int64_t rows,
                                     matx_int64_t cols,
@@ -1100,21 +1193,7 @@ static matx_status_t ref_norm1_d_i8(matx_layout_t layout,
                                     matx_int64_t lda,
                                     matx_double* out)
 {
-    if (!A || !out) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
-        MATX_ERROR("%s: operation not supported", __func__);
-        return MATX_ERR_NOT_SUPPORTED;
-    }
-    *out = LAPACKE_dlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-                          '1',
-                          (lapack_int) rows,
-                          (lapack_int) cols,
-                          A,
-                          (lapack_int) lda);
-    return MATX_OK;
+    return ref_norm_abs_sum(layout, rows, cols, A, lda, out, 1, 0);
 }
 
 static matx_status_t ref_norminf_d_i8(matx_layout_t layout,
@@ -1124,21 +1203,7 @@ static matx_status_t ref_norminf_d_i8(matx_layout_t layout,
                                       matx_int64_t lda,
                                       matx_double* out)
 {
-    if (!A || !out) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
-        MATX_ERROR("%s: operation not supported", __func__);
-        return MATX_ERR_NOT_SUPPORTED;
-    }
-    *out = LAPACKE_dlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-                          'I',
-                          (lapack_int) rows,
-                          (lapack_int) cols,
-                          A,
-                          (lapack_int) lda);
-    return MATX_OK;
+    return ref_norm_abs_sum(layout, rows, cols, A, lda, out, 0, 0);
 }
 
 static matx_status_t ref_normfro_d_i8(matx_layout_t layout,
@@ -1172,21 +1237,7 @@ static matx_status_t ref_norm1_z_i8(matx_layout_t layout,
                                     matx_int64_t lda,
                                     matx_double* out)
 {
-    if (!A || !out) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
-        MATX_ERROR("%s: operation not supported", __func__);
-        return MATX_ERR_NOT_SUPPORTED;
-    }
-    *out = LAPACKE_zlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-                          '1',
-                          (lapack_int) rows,
-                          (lapack_int) cols,
-                          A,
-                          (lapack_int) lda);
-    return MATX_OK;
+    return ref_norm_abs_sum(layout, rows, cols, A, lda, out, 1, 1);
 }
 
 static matx_status_t ref_norminf_z_i8(matx_layout_t layout,
@@ -1196,21 +1247,7 @@ static matx_status_t ref_norminf_z_i8(matx_layout_t layout,
                                       matx_int64_t lda,
                                       matx_double* out)
 {
-    if (!A || !out) {
-        MATX_ERROR("%s: invalid argument", __func__);
-        return MATX_ERR_INVALID_ARG;
-    }
-    if (rows > INT_MAX || cols > INT_MAX || lda > INT_MAX) {
-        MATX_ERROR("%s: operation not supported", __func__);
-        return MATX_ERR_NOT_SUPPORTED;
-    }
-    *out = LAPACKE_zlange(layout == MATX_COL_MAJOR ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR,
-                          'I',
-                          (lapack_int) rows,
-                          (lapack_int) cols,
-                          A,
-                          (lapack_int) lda);
-    return MATX_OK;
+    return ref_norm_abs_sum(layout, rows, cols, A, lda, out, 0, 1);
 }
 
 static matx_status_t ref_normfro_z_i8(matx_layout_t layout,
@@ -1251,13 +1288,23 @@ static matx_status_t ref_hadamard_d_i8(matx_layout_t layout,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    for (matx_int64_t i = 0; i < rows; ++i)
+    if (layout == MATX_COL_MAJOR) {
         for (matx_int64_t j = 0; j < cols; ++j) {
-            matx_int64_t si = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
-            matx_int64_t bi = (layout == MATX_COL_MAJOR) ? i + j * ldb : i * ldb + j;
-            matx_int64_t di = (layout == MATX_COL_MAJOR) ? i + j * ldc : i * ldc + j;
-            C[di] = A[si] * B[bi];
+            const matx_int64_t a_col = j * lda;
+            const matx_int64_t b_col = j * ldb;
+            const matx_int64_t c_col = j * ldc;
+            for (matx_int64_t i = 0; i < rows; ++i)
+                C[c_col + i] = A[a_col + i] * B[b_col + i];
         }
+    } else {
+        for (matx_int64_t i = 0; i < rows; ++i) {
+            const matx_int64_t a_row = i * lda;
+            const matx_int64_t b_row = i * ldb;
+            const matx_int64_t c_row = i * ldc;
+            for (matx_int64_t j = 0; j < cols; ++j)
+                C[c_row + j] = A[a_row + j] * B[b_row + j];
+        }
+    }
     return MATX_OK;
 }
 
@@ -1278,14 +1325,31 @@ static matx_status_t ref_hadamard_z_i8(matx_layout_t layout,
     const matx_complex_d_t* a_data = (const matx_complex_d_t*) A;
     const matx_complex_d_t* b_data = (const matx_complex_d_t*) B;
     matx_complex_d_t* c_data = (matx_complex_d_t*) C;
-    for (matx_int64_t i = 0; i < rows; ++i)
+    if (layout == MATX_COL_MAJOR) {
         for (matx_int64_t j = 0; j < cols; ++j) {
-            matx_int64_t si = (layout == MATX_COL_MAJOR) ? i + j * lda : i * lda + j;
-            matx_int64_t bi = (layout == MATX_COL_MAJOR) ? i + j * ldb : i * ldb + j;
-            matx_int64_t di = (layout == MATX_COL_MAJOR) ? i + j * ldc : i * ldc + j;
-            c_data[di].real = a_data[si].real * b_data[bi].real - a_data[si].imag * b_data[bi].imag;
-            c_data[di].imag = a_data[si].real * b_data[bi].imag + a_data[si].imag * b_data[bi].real;
+            const matx_int64_t a_col = j * lda;
+            const matx_int64_t b_col = j * ldb;
+            const matx_int64_t c_col = j * ldc;
+            for (matx_int64_t i = 0; i < rows; ++i) {
+                c_data[c_col + i].real = a_data[a_col + i].real * b_data[b_col + i].real
+                    - a_data[a_col + i].imag * b_data[b_col + i].imag;
+                c_data[c_col + i].imag = a_data[a_col + i].real * b_data[b_col + i].imag
+                    + a_data[a_col + i].imag * b_data[b_col + i].real;
+            }
         }
+    } else {
+        for (matx_int64_t i = 0; i < rows; ++i) {
+            const matx_int64_t a_row = i * lda;
+            const matx_int64_t b_row = i * ldb;
+            const matx_int64_t c_row = i * ldc;
+            for (matx_int64_t j = 0; j < cols; ++j) {
+                c_data[c_row + j].real = a_data[a_row + j].real * b_data[b_row + j].real
+                    - a_data[a_row + j].imag * b_data[b_row + j].imag;
+                c_data[c_row + j].imag = a_data[a_row + j].real * b_data[b_row + j].imag
+                    + a_data[a_row + j].imag * b_data[b_row + j].real;
+            }
+        }
+    }
     return MATX_OK;
 }
 
