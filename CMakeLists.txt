@@ -51,6 +51,11 @@ if(MATX_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
+option(MATX_BUILD_BENCHMARKS "Build MatX performance benchmarks" OFF)
+if(MATX_BUILD_BENCHMARKS)
+  add_subdirectory(benchmarks)
+endif()
+
 # ---- Export targets ----
 install(EXPORT MatXConfig
   NAMESPACE MatX::
