@@ -11,8 +11,402 @@
 
 #include <limits.h>
 #include <math.h>
+#include <stdlib.h>
 
 //C(i,j)=k⨁​(A(i,k)⊗B(k,j))
+
+/* These crossover limits come from the bundled scale/density benchmark sweep. */
+#define MATX_SPARSE_DIRECT_SPMV_MAX_NNZ 3000000
+#define MATX_SPARSE_DIRECT_SPMM_MAX_PRODUCTS 50000000
+#define MATX_SPARSE_DIRECT_NORM_MAX_NNZ 8192
+#define MATX_SPARSE_DIRECT_NORM1_REAL_MAX_NNZ 2048
+#define MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION 65536
+
+typedef struct
+{
+    matx_int64_t row;
+    matx_int64_t col;
+    matx_double real;
+    matx_double imag;
+    unsigned char occupied;
+} matx_sparse_norm_entry_t;
+
+typedef enum
+{
+    MATX_SPARSE_NORM_ONE,
+    MATX_SPARSE_NORM_INFINITY,
+    MATX_SPARSE_NORM_FROBENIUS
+} matx_sparse_norm_kind_t;
+
+static uint64_t sparse_coordinate_hash(matx_int64_t row, matx_int64_t col)
+{
+    uint64_t value = (uint64_t) row * UINT64_C(0x9e3779b185ebca87)
+                     ^ (uint64_t) col * UINT64_C(0xc2b2ae3d27d4eb4f);
+    value ^= value >> 33;
+    value *= UINT64_C(0xff51afd7ed558ccd);
+    value ^= value >> 33;
+    value *= UINT64_C(0xc4ceb9fe1a85ec53);
+    return value ^ (value >> 33);
+}
+
+/*
+ * GraphBLAS reductions allocate temporary matrices and vectors for each norm.
+ * For small COO inputs, coalesce duplicates in a temporary hash table and
+ * reduce directly. This preserves COO-as-matrix semantics: duplicates are
+ * summed before taking absolute values or squares.
+ */
+static matx_status_t ref_sparse_norm_coo(const matx_alloc_t* alloc,
+                                         matx_int64_t nrows,
+                                         matx_int64_t ncols,
+                                         matx_int64_t nnz,
+                                         const matx_int64_t* rows,
+                                         const matx_int64_t* columns,
+                                         const matx_double* real_values,
+                                         const matx_complex_d_t* complex_values,
+                                         matx_sparse_norm_kind_t kind,
+                                         matx_double* out)
+{
+    if (!alloc || !out || nrows <= 0 || ncols <= 0 || nnz < 0
+        || (nnz > 0 && (!rows || !columns || (!real_values && !complex_values)))) {
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (nnz == 0) {
+        *out = 0.0;
+        return MATX_OK;
+    }
+    if ((uint64_t) nnz > SIZE_MAX / 2) {
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    size_t capacity = 1;
+    const size_t minimum_capacity = (size_t) nnz * 2;
+    while (capacity < minimum_capacity) {
+        if (capacity > SIZE_MAX / 2) {
+            return MATX_ERR_INVALID_ARG;
+        }
+        capacity *= 2;
+    }
+    if (capacity > SIZE_MAX / sizeof(matx_sparse_norm_entry_t)) {
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_sparse_norm_entry_t* entries
+        = (matx_sparse_norm_entry_t*) matx_malloc(alloc,
+                                                  capacity * sizeof(*entries));
+    if (!entries) {
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    memset(entries, 0, capacity * sizeof(*entries));
+    const size_t mask = capacity - 1;
+    for (matx_int64_t i = 0; i < nnz; ++i) {
+        const matx_int64_t row = rows[i];
+        const matx_int64_t col = columns[i];
+        if (row < 0 || row >= nrows || col < 0 || col >= ncols) {
+            matx_free(alloc, entries);
+            return MATX_ERR_INVALID_ARG;
+        }
+        const matx_double real = complex_values ? complex_values[i].real : real_values[i];
+        const matx_double imag = complex_values ? complex_values[i].imag : 0.0;
+        if (isnan(real) || isnan(imag)) {
+            matx_free(alloc, entries);
+            return MATX_ERR_NOT_SUPPORTED;
+        }
+
+        size_t slot = (size_t) sparse_coordinate_hash(row, col) & mask;
+        while (entries[slot].occupied
+               && (entries[slot].row != row || entries[slot].col != col)) {
+            slot = (slot + 1) & mask;
+        }
+        if (!entries[slot].occupied) {
+            entries[slot].row = row;
+            entries[slot].col = col;
+            entries[slot].occupied = 1;
+        }
+        entries[slot].real += real;
+        entries[slot].imag += imag;
+        if (isnan(entries[slot].real) || isnan(entries[slot].imag)) {
+            matx_free(alloc, entries);
+            return MATX_ERR_NOT_SUPPORTED;
+        }
+    }
+
+    matx_status_t status = MATX_OK;
+    if (kind == MATX_SPARSE_NORM_FROBENIUS) {
+        matx_double sum_squares = 0.0;
+        for (size_t i = 0; i < capacity; ++i) {
+            if (!entries[i].occupied) continue;
+            const matx_double magnitude = complex_values
+                                              ? hypot(entries[i].real, entries[i].imag)
+                                              : fabs(entries[i].real);
+            sum_squares += magnitude * magnitude;
+        }
+        *out = sqrt(sum_squares);
+    } else {
+        const matx_int64_t count = kind == MATX_SPARSE_NORM_ONE ? ncols : nrows;
+        if ((uint64_t) count > SIZE_MAX / sizeof(matx_double)) {
+            status = MATX_ERR_INVALID_ARG;
+        } else {
+            matx_double* sums = (matx_double*) matx_malloc(
+                alloc, (size_t) count * sizeof(*sums));
+            if (!sums) {
+                status = MATX_ERR_OUT_OF_MEMORY;
+            } else {
+                memset(sums, 0, (size_t) count * sizeof(*sums));
+                for (size_t i = 0; i < capacity; ++i) {
+                    if (!entries[i].occupied) continue;
+                    const matx_double magnitude = complex_values
+                                                      ? hypot(entries[i].real, entries[i].imag)
+                                                      : fabs(entries[i].real);
+                    const matx_int64_t index = kind == MATX_SPARSE_NORM_ONE
+                                                   ? entries[i].col
+                                                   : entries[i].row;
+                    sums[index] += magnitude;
+                }
+                matx_double maximum = 0.0;
+                for (matx_int64_t i = 0; i < count; ++i) {
+                    if (sums[i] > maximum) maximum = sums[i];
+                }
+                *out = maximum;
+                matx_free(alloc, sums);
+            }
+        }
+    }
+    matx_free(alloc, entries);
+    return status;
+}
+
+static matx_complex_d_t complex_multiply(matx_complex_d_t a, matx_complex_d_t b)
+{
+    matx_complex_d_t result = {
+        a.real * b.real - a.imag * b.imag,
+        a.real * b.imag + a.imag * b.real
+    };
+    return result;
+}
+
+static matx_status_t ref_spmv_d_i8_coo(matx_double alpha,
+                                       matx_coo_d_i8_t A,
+                                       matx_vec_d_i8_t x,
+                                       matx_double beta,
+                                       matx_vec_d_i8_t y)
+{
+    if (!A || !x || !y || !A->rows || !A->columns || !A->values || !x->data || !y->data
+        || A->ncols != x->n || A->nrows != y->n || A->nnz < 0 || x->stride <= 0
+        || y->stride <= 0) {
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_double* x_copy = NULL;
+    const matx_double* x_data = x->data;
+    matx_int64_t x_stride = x->stride;
+    if (x == y) {
+        x_copy = (matx_double*) malloc((size_t) x->n * sizeof(*x_copy));
+        if (!x_copy) return MATX_ERR_OUT_OF_MEMORY;
+        for (matx_int64_t i = 0; i < x->n; ++i)
+            x_copy[i] = x->data[i * x->stride];
+        x_data = x_copy;
+        x_stride = 1;
+    }
+
+    for (matx_int64_t i = 0; i < y->n; ++i) {
+        matx_double* output = &y->data[i * y->stride];
+        if (beta == 0.0)
+            *output = 0.0;
+        else if (beta != 1.0)
+            *output *= beta;
+    }
+    if (alpha != 0.0) {
+        for (matx_int64_t k = 0; k < A->nnz; ++k) {
+            const matx_int64_t row = A->rows[k];
+            const matx_int64_t col = A->columns[k];
+            const matx_double product = A->values[k] * x_data[col * x_stride];
+            y->data[row * y->stride] += alpha == 1.0 ? product : alpha * product;
+        }
+    }
+    free(x_copy);
+    return MATX_OK;
+}
+
+static matx_status_t ref_spmv_z_i8_coo(matx_complex_d_t alpha,
+                                       matx_coo_z_i8_t A,
+                                       matx_vec_z_i8_t x,
+                                       matx_complex_d_t beta,
+                                       matx_vec_z_i8_t y)
+{
+    if (!A || !x || !y || !A->rows || !A->columns || !A->values || !x->data || !y->data
+        || A->ncols != x->n || A->nrows != y->n || A->nnz < 0 || x->stride <= 0
+        || y->stride <= 0) {
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_complex_d_t* x_copy = NULL;
+    const matx_complex_d_t* x_data = x->data;
+    matx_int64_t x_stride = x->stride;
+    if (x == y) {
+        x_copy = (matx_complex_d_t*) malloc((size_t) x->n * sizeof(*x_copy));
+        if (!x_copy) return MATX_ERR_OUT_OF_MEMORY;
+        for (matx_int64_t i = 0; i < x->n; ++i)
+            x_copy[i] = x->data[i * x->stride];
+        x_data = x_copy;
+        x_stride = 1;
+    }
+
+    for (matx_int64_t i = 0; i < y->n; ++i) {
+        matx_complex_d_t* output = &y->data[i * y->stride];
+        if (beta.real == 0.0 && beta.imag == 0.0)
+            *output = (matx_complex_d_t) {0.0, 0.0};
+        else if (beta.real != 1.0 || beta.imag != 0.0)
+            *output = complex_multiply(beta, *output);
+    }
+    if (alpha.real != 0.0 || alpha.imag != 0.0) {
+        for (matx_int64_t k = 0; k < A->nnz; ++k) {
+            const matx_int64_t row = A->rows[k];
+            const matx_int64_t col = A->columns[k];
+            const matx_complex_d_t product
+                = complex_multiply(A->values[k], x_data[col * x_stride]);
+            const matx_complex_d_t scaled
+                = alpha.real == 1.0 && alpha.imag == 0.0
+                      ? product
+                      : complex_multiply(alpha, product);
+            y->data[row * y->stride].real += scaled.real;
+            y->data[row * y->stride].imag += scaled.imag;
+        }
+    }
+    free(x_copy);
+    return MATX_OK;
+}
+
+static matx_status_t ref_spmm_d_i8_coo(matx_double alpha,
+                                       matx_coo_d_i8_t A,
+                                       matx_dense_d_i8_t B,
+                                       matx_double beta,
+                                       matx_dense_d_i8_t C)
+{
+    if (!A || !B || !C || !A->rows || !A->columns || !A->values || !B->data || !C->data
+        || A->ncols != B->nrows || A->nrows != C->nrows || B->ncols != C->ncols
+        || A->nnz < 0 || B->stride <= 0 || C->stride <= 0) {
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_double* b_copy = NULL;
+    const matx_double* b_data = B->data;
+    matx_int64_t b_stride = B->stride;
+    matx_layout_t b_layout = B->layout;
+    if (B == C) {
+        b_copy = (matx_double*) malloc((size_t) B->nrows * (size_t) B->ncols * sizeof(*b_copy));
+        if (!b_copy) return MATX_ERR_OUT_OF_MEMORY;
+        for (matx_int64_t col = 0; col < B->ncols; ++col) {
+            for (matx_int64_t row = 0; row < B->nrows; ++row) {
+                const size_t source = B->layout == MATX_COL_MAJOR
+                                          ? (size_t) row + (size_t) col * B->stride
+                                          : (size_t) row * B->stride + (size_t) col;
+                b_copy[(size_t) row + (size_t) col * B->nrows] = B->data[source];
+            }
+        }
+        b_data = b_copy;
+        b_stride = B->nrows;
+        b_layout = MATX_COL_MAJOR;
+    }
+
+    for (matx_int64_t col = 0; col < C->ncols; ++col) {
+        for (matx_int64_t row = 0; row < C->nrows; ++row) {
+            const size_t index = C->layout == MATX_COL_MAJOR
+                                     ? (size_t) row + (size_t) col * C->stride
+                                     : (size_t) row * C->stride + (size_t) col;
+            if (beta == 0.0)
+                C->data[index] = 0.0;
+            else if (beta != 1.0)
+                C->data[index] *= beta;
+        }
+    }
+    if (alpha != 0.0) {
+        for (matx_int64_t k = 0; k < A->nnz; ++k) {
+            const matx_int64_t row = A->rows[k];
+            const matx_int64_t inner = A->columns[k];
+            for (matx_int64_t col = 0; col < B->ncols; ++col) {
+                const size_t b_index = b_layout == MATX_COL_MAJOR
+                                           ? (size_t) inner + (size_t) col * b_stride
+                                           : (size_t) inner * b_stride + (size_t) col;
+                const size_t c_index = C->layout == MATX_COL_MAJOR
+                                           ? (size_t) row + (size_t) col * C->stride
+                                           : (size_t) row * C->stride + (size_t) col;
+                const matx_double product = A->values[k] * b_data[b_index];
+                C->data[c_index] += alpha == 1.0 ? product : alpha * product;
+            }
+        }
+    }
+    free(b_copy);
+    return MATX_OK;
+}
+
+static matx_status_t ref_spmm_z_i8_coo(matx_complex_d_t alpha,
+                                       matx_coo_z_i8_t A,
+                                       matx_dense_z_i8_t B,
+                                       matx_complex_d_t beta,
+                                       matx_dense_z_i8_t C)
+{
+    if (!A || !B || !C || !A->rows || !A->columns || !A->values || !B->data || !C->data
+        || A->ncols != B->nrows || A->nrows != C->nrows || B->ncols != C->ncols
+        || A->nnz < 0 || B->stride <= 0 || C->stride <= 0) {
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_complex_d_t* b_copy = NULL;
+    const matx_complex_d_t* b_data = B->data;
+    matx_int64_t b_stride = B->stride;
+    matx_layout_t b_layout = B->layout;
+    if (B == C) {
+        b_copy = (matx_complex_d_t*) malloc((size_t) B->nrows * (size_t) B->ncols * sizeof(*b_copy));
+        if (!b_copy) return MATX_ERR_OUT_OF_MEMORY;
+        for (matx_int64_t col = 0; col < B->ncols; ++col) {
+            for (matx_int64_t row = 0; row < B->nrows; ++row) {
+                const size_t source = B->layout == MATX_COL_MAJOR
+                                          ? (size_t) row + (size_t) col * B->stride
+                                          : (size_t) row * B->stride + (size_t) col;
+                b_copy[(size_t) row + (size_t) col * B->nrows] = B->data[source];
+            }
+        }
+        b_data = b_copy;
+        b_stride = B->nrows;
+        b_layout = MATX_COL_MAJOR;
+    }
+
+    for (matx_int64_t col = 0; col < C->ncols; ++col) {
+        for (matx_int64_t row = 0; row < C->nrows; ++row) {
+            const size_t index = C->layout == MATX_COL_MAJOR
+                                     ? (size_t) row + (size_t) col * C->stride
+                                     : (size_t) row * C->stride + (size_t) col;
+            if (beta.real == 0.0 && beta.imag == 0.0)
+                C->data[index] = (matx_complex_d_t) {0.0, 0.0};
+            else if (beta.real != 1.0 || beta.imag != 0.0)
+                C->data[index] = complex_multiply(beta, C->data[index]);
+        }
+    }
+    if (alpha.real != 0.0 || alpha.imag != 0.0) {
+        for (matx_int64_t k = 0; k < A->nnz; ++k) {
+            const matx_int64_t row = A->rows[k];
+            const matx_int64_t inner = A->columns[k];
+            for (matx_int64_t col = 0; col < B->ncols; ++col) {
+                const size_t b_index = b_layout == MATX_COL_MAJOR
+                                           ? (size_t) inner + (size_t) col * b_stride
+                                           : (size_t) inner * b_stride + (size_t) col;
+                const size_t c_index = C->layout == MATX_COL_MAJOR
+                                           ? (size_t) row + (size_t) col * C->stride
+                                           : (size_t) row * C->stride + (size_t) col;
+                const matx_complex_d_t product
+                    = complex_multiply(A->values[k], b_data[b_index]);
+                const matx_complex_d_t scaled
+                    = alpha.real == 1.0 && alpha.imag == 0.0
+                          ? product
+                          : complex_multiply(alpha, product);
+                C->data[c_index].real += scaled.real;
+                C->data[c_index].imag += scaled.imag;
+            }
+        }
+    }
+    free(b_copy);
+    return MATX_OK;
+}
 
 static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
                                        matx_coo_z_i8_t A,
@@ -21,6 +415,9 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
                                        matx_vec_z_i8_t y)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
+    if (A && A->nnz <= MATX_SPARSE_DIRECT_SPMV_MAX_NNZ)
+        return ref_spmv_z_i8_coo(alpha, A, x, beta, y);
+
     if (!A || !x || !y) {
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
@@ -31,15 +428,23 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
-        coo_2_grb_z_i8(A);
-    if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0)
-        vec_2_grb_z_i8(x);
-    if (MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0)
-        vec_2_grb_z_i8(y);
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
+        && coo_2_grb_z_i8(A) != 0) {
+        return MATX_ERR_INTERNAL;
+    }
+    if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0
+        && vec_2_grb_z_i8(x) != 0) {
+        return MATX_ERR_INTERNAL;
+    }
+    if (MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0
+        && vec_2_grb_z_i8(y) != 0) {
+        if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid > 0)
+            grb_2_vec_z_i8(x);
+        return MATX_ERR_INTERNAL;
+    }
 
-    GxB_FC64_t a = {alpha.real, alpha.imag};
-    GxB_FC64_t b = {beta.real, beta.imag};
+    GxB_FC64_t a = GxB_CMPLX(alpha.real, alpha.imag);
+    GxB_FC64_t b = GxB_CMPLX(beta.real, beta.imag);
 
     // gy = beta * gy
     GrB_Info info = GrB_apply((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
@@ -51,11 +456,18 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
                               NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_apply beta*gy error: %d", info);
+        grb_2_vec_z_i8(x);
+        grb_2_vec_z_i8(y);
         return MATX_ERR_INTERNAL;
     }
     // gy += alpha * A * x  (accumulate into gy)
     GrB_Vector temp;
-    GrB_Vector_new(&temp, GxB_FC64, y->n);
+    info = GrB_Vector_new(&temp, GxB_FC64, y->n);
+    if (info != GrB_SUCCESS) {
+        grb_2_vec_z_i8(x);
+        grb_2_vec_z_i8(y);
+        return MATX_ERR_INTERNAL;
+    }
     info = GrB_mxv(temp,
                    NULL,
                    NULL,
@@ -66,12 +478,16 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
     if (info != GrB_SUCCESS) {
         GrB_Vector_free(&temp);
         MATX_ERROR("GrB_mxv error: %d", info);
+        grb_2_vec_z_i8(x);
+        grb_2_vec_z_i8(y);
         return MATX_ERR_INTERNAL;
     }
     info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
     if (info != GrB_SUCCESS) {
         GrB_Vector_free(&temp);
         MATX_ERROR("GrB_apply alpha*temp error: %d", info);
+        grb_2_vec_z_i8(x);
+        grb_2_vec_z_i8(y);
         return MATX_ERR_INTERNAL;
     }
     info = GrB_eWiseAdd((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
@@ -84,9 +500,14 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
     GrB_Vector_free(&temp);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_eWiseAdd error: %d", info);
+        grb_2_vec_z_i8(x);
+        grb_2_vec_z_i8(y);
         return MATX_ERR_INTERNAL;
     }
-    grb_2_vec_z_i8(y);
+    const size_t x_export_status = grb_2_vec_z_i8(x);
+    const size_t y_export_status = grb_2_vec_z_i8(y);
+    if (x_export_status != 0 || y_export_status != 0)
+        return MATX_ERR_INTERNAL;
 #endif
     return MATX_OK;
 }
@@ -98,6 +519,12 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
                                        matx_dense_z_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
+    if (A && B && B->ncols > 0
+        && A->nnz <= MATX_SPARSE_DIRECT_SPMV_MAX_NNZ
+        && A->nnz <= MATX_SPARSE_DIRECT_SPMM_MAX_PRODUCTS / B->ncols) {
+        return ref_spmm_z_i8_coo(alpha, A, B, beta, C);
+    }
+
     if (!A || !B || !C) {
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
@@ -109,24 +536,34 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
     }
 
     /* build A */
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        coo_2_grb_z_i8(A);
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
+        && coo_2_grb_z_i8(A) != 0) {
+        return MATX_ERR_INTERNAL;
     }
-    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        dense_2_grb_z_i8(B);
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
+        && dense_2_grb_z_i8(B) != 0) {
+        return MATX_ERR_INTERNAL;
     }
-    if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        dense_2_grb_z_i8(C);
+    if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
+        && dense_2_grb_z_i8(C) != 0) {
+        if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid > 0)
+            grb_2_dense_z_i8(B);
+        return MATX_ERR_INTERNAL;
     }
 
     /* C = alpha*A*B + beta*C */
-    GxB_FC64_t a = {alpha.real, alpha.imag};
-    GxB_FC64_t b = {beta.real, beta.imag};
+    GxB_FC64_t a = GxB_CMPLX(alpha.real, alpha.imag);
+    GxB_FC64_t b = GxB_CMPLX(beta.real, beta.imag);
 
     // 1. temp = alpha * A * B
     GrB_Matrix temp;
-    GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
-    GrB_Info info = GrB_mxm(temp,
+    GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
+    if (info != GrB_SUCCESS) {
+        grb_2_dense_z_i8(B);
+        grb_2_dense_z_i8(C);
+        return MATX_ERR_INTERNAL;
+    }
+    info = GrB_mxm(temp,
                             NULL,
                             NULL,
                             GxB_PLUS_TIMES_FC64,
@@ -134,12 +571,18 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
                             (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                             NULL);
     if (info != GrB_SUCCESS) {
+        GrB_Matrix_free(&temp);
         MATX_ERROR("GrB_mxm error: %d", info);
+        grb_2_dense_z_i8(B);
+        grb_2_dense_z_i8(C);
         return MATX_ERR_INTERNAL;
     }
     info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
     if (info != GrB_SUCCESS) {
+        GrB_Matrix_free(&temp);
         MATX_ERROR("GrB_apply error: %d", info);
+        grb_2_dense_z_i8(B);
+        grb_2_dense_z_i8(C);
         return MATX_ERR_INTERNAL;
     }
     //2. gC = beta * gC
@@ -151,7 +594,10 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
                      b,
                      NULL);
     if (info != GrB_SUCCESS) {
+        GrB_Matrix_free(&temp);
         MATX_ERROR("GrB_apply beta * gC error: %d", info);
+        grb_2_dense_z_i8(B);
+        grb_2_dense_z_i8(C);
         return MATX_ERR_INTERNAL;
     }
     //3. gC = temp + gC
@@ -163,11 +609,17 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
                         (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL);
     if (info != GrB_SUCCESS) {
+        GrB_Matrix_free(&temp);
         MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
+        grb_2_dense_z_i8(B);
+        grb_2_dense_z_i8(C);
         return MATX_ERR_INTERNAL;
     }
     GrB_Matrix_free(&temp);
-    grb_2_dense_z_i8(C);
+    const size_t b_export_status = grb_2_dense_z_i8(B);
+    const size_t c_export_status = grb_2_dense_z_i8(C);
+    if (b_export_status != 0 || c_export_status != 0)
+        return MATX_ERR_INTERNAL;
 #endif
     return MATX_OK;
 }
@@ -176,6 +628,9 @@ static matx_status_t ref_spmv_d_i8_grb(
     matx_double alpha, matx_coo_d_i8_t A, matx_vec_d_i8_t x, matx_double beta, matx_vec_d_i8_t y)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
+    if (A && A->nnz <= MATX_SPARSE_DIRECT_SPMV_MAX_NNZ)
+        return ref_spmv_d_i8_coo(alpha, A, x, beta, y);
+
     if (!A || !x || !y) {
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
@@ -186,12 +641,20 @@ static matx_status_t ref_spmv_d_i8_grb(
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
-        coo_2_grb_d_i8(A);
-    if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0)
-        vec_2_grb_d_i8(x);
-    if (MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0)
-        vec_2_grb_d_i8(y);
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
+        && coo_2_grb_d_i8(A) != 0) {
+        return MATX_ERR_INTERNAL;
+    }
+    if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0
+        && vec_2_grb_d_i8(x) != 0) {
+        return MATX_ERR_INTERNAL;
+    }
+    if (MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0
+        && vec_2_grb_d_i8(y) != 0) {
+        if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid > 0)
+            grb_2_vec_d_i8(x);
+        return MATX_ERR_INTERNAL;
+    }
 
     // gy = beta * gy
     GrB_Info info = GrB_apply((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
@@ -203,12 +666,19 @@ static matx_status_t ref_spmv_d_i8_grb(
                               NULL);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_apply beta*gy error: %d", info);
+        grb_2_vec_d_i8(x);
+        grb_2_vec_d_i8(y);
         return MATX_ERR_INTERNAL;
     }
     // temp = A*x, then gy += alpha*temp
     matx_int64_t t0 = matx_tm_now(MATX_TM_MICROSECOND);
     GrB_Vector temp;
-    GrB_Vector_new(&temp, GrB_FP64, y->n);
+    info = GrB_Vector_new(&temp, GrB_FP64, y->n);
+    if (info != GrB_SUCCESS) {
+        grb_2_vec_d_i8(x);
+        grb_2_vec_d_i8(y);
+        return MATX_ERR_INTERNAL;
+    }
     info = GrB_mxv(temp,
                    NULL,
                    NULL,
@@ -219,12 +689,16 @@ static matx_status_t ref_spmv_d_i8_grb(
     if (info != GrB_SUCCESS) {
         GrB_Vector_free(&temp);
         MATX_ERROR("GrB_mxv A*x error: %d", info);
+        grb_2_vec_d_i8(x);
+        grb_2_vec_d_i8(y);
         return MATX_ERR_INTERNAL;
     }
     info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
     if (info != GrB_SUCCESS) {
         GrB_Vector_free(&temp);
         MATX_ERROR("GrB_apply alpha*temp error: %d", info);
+        grb_2_vec_d_i8(x);
+        grb_2_vec_d_i8(y);
         return MATX_ERR_INTERNAL;
     }
     info = GrB_eWiseAdd((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
@@ -237,11 +711,16 @@ static matx_status_t ref_spmv_d_i8_grb(
     GrB_Vector_free(&temp);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_eWiseAdd temp + gy error: %d", info);
+        grb_2_vec_d_i8(x);
+        grb_2_vec_d_i8(y);
         return MATX_ERR_INTERNAL;
     }
     matx_int64_t t1 = matx_tm_now(MATX_TM_MICROSECOND);
     MATX_TRACE("GraphBLAS SpMV time: %ld micro.s", t1 - t0);
-    grb_2_vec_d_i8(y);
+    const size_t x_export_status = grb_2_vec_d_i8(x);
+    const size_t y_export_status = grb_2_vec_d_i8(y);
+    if (x_export_status != 0 || y_export_status != 0)
+        return MATX_ERR_INTERNAL;
 #endif
     return MATX_OK;
 }
@@ -253,20 +732,35 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
                                        matx_dense_d_i8_t C)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
+    if (A && B && B->ncols > 0
+        && A->nnz <= MATX_SPARSE_DIRECT_SPMV_MAX_NNZ
+        && A->nnz <= MATX_SPARSE_DIRECT_SPMM_MAX_PRODUCTS / B->ncols) {
+        return ref_spmm_d_i8_coo(alpha, A, B, beta, C);
+    }
+
     if (!A || !B || !C) {
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
 
     /* build A */
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        coo_2_grb_d_i8(A);
+    if (A->ncols != B->nrows || A->nrows != C->nrows || B->ncols != C->ncols) {
+        MATX_ERROR("invalid argument");
+        return MATX_ERR_INVALID_ARG;
     }
-    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        dense_2_grb_d_i8(B);
+    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
+        && coo_2_grb_d_i8(A) != 0) {
+        return MATX_ERR_INTERNAL;
     }
-    if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        dense_2_grb_d_i8(C);
+    if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
+        && dense_2_grb_d_i8(B) != 0) {
+        return MATX_ERR_INTERNAL;
+    }
+    if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
+        && dense_2_grb_d_i8(C) != 0) {
+        if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid > 0)
+            grb_2_dense_d_i8(B);
+        return MATX_ERR_INTERNAL;
     }
 
     /* C = alpha*A*B + beta*C */
@@ -274,6 +768,11 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
     // 1. temp = alpha * A * B
     GrB_Matrix temp;
     GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->nrows, C->ncols);
+    if (info != GrB_SUCCESS) {
+        grb_2_dense_d_i8(B);
+        grb_2_dense_d_i8(C);
+        return MATX_ERR_INTERNAL;
+    }
     info = GrB_mxm(temp,
                    NULL,
                    NULL,
@@ -282,12 +781,18 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
                    (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                    NULL);
     if (info != GrB_SUCCESS) {
+        GrB_Matrix_free(&temp);
         MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
+        grb_2_dense_d_i8(B);
+        grb_2_dense_d_i8(C);
         return MATX_ERR_INTERNAL;
     }
     info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
     if (info != GrB_SUCCESS) {
+        GrB_Matrix_free(&temp);
         MATX_ERROR("GrB_apply  error: %d", info);
+        grb_2_dense_d_i8(B);
+        grb_2_dense_d_i8(C);
         return MATX_ERR_INTERNAL;
     }
     //2. gC = beta * gC
@@ -299,7 +804,10 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
                      beta,
                      NULL);
     if (info != GrB_SUCCESS) {
+        GrB_Matrix_free(&temp);
         MATX_ERROR("GrB_apply beta * gC error: %d", info);
+        grb_2_dense_d_i8(B);
+        grb_2_dense_d_i8(C);
         return MATX_ERR_INTERNAL;
     }
     //3. gC = temp + gC
@@ -311,11 +819,17 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
                         (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
                         NULL);
     if (info != GrB_SUCCESS) {
+        GrB_Matrix_free(&temp);
         MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
+        grb_2_dense_d_i8(B);
+        grb_2_dense_d_i8(C);
         return MATX_ERR_INTERNAL;
     }
     GrB_Matrix_free(&temp);
-    grb_2_dense_d_i8(C);
+    const size_t b_export_status = grb_2_dense_d_i8(B);
+    const size_t c_export_status = grb_2_dense_d_i8(C);
+    if (b_export_status != 0 || c_export_status != 0)
+        return MATX_ERR_INTERNAL;
 #endif
     return MATX_OK;
 }
@@ -415,8 +929,8 @@ static matx_status_t ref_zsp2md_z_i8_grb(matx_complex_d_t alpha,
     }
 
     /* C = alpha*A*B + beta*C */
-    GxB_FC64_t a = {alpha.real, alpha.imag};
-    GxB_FC64_t b = {beta.real, beta.imag};
+    GxB_FC64_t a = GxB_CMPLX(alpha.real, alpha.imag);
+    GxB_FC64_t b = GxB_CMPLX(beta.real, beta.imag);
     // 1. temp = alpha * A * B
     GrB_Matrix temp;
     GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
@@ -569,11 +1083,23 @@ static matx_status_t ref_finalize_grb()
 
 static matx_status_t ref_norm1_mat_grb(matx_coo_d_i8_t A, matx_double* out)
 {
-#ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) {
-        MATX_ERROR("invalid argument");
-        return MATX_ERR_INVALID_ARG;
+    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (A->nnz <= MATX_SPARSE_DIRECT_NORM1_REAL_MAX_NNZ
+        && A->nrows <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION
+        && A->ncols <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION) {
+        const matx_status_t status = ref_sparse_norm_coo(&A->alloc,
+                                                          A->nrows,
+                                                          A->ncols,
+                                                          A->nnz,
+                                                          A->rows,
+                                                          A->columns,
+                                                          A->values,
+                                                          NULL,
+                                                          MATX_SPARSE_NORM_ONE,
+                                                          out);
+        if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
+#ifdef MATX_ENABLE_GRAPHBLAS
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(A);
 
@@ -582,7 +1108,7 @@ static matx_status_t ref_norm1_mat_grb(matx_coo_d_i8_t A, matx_double* out)
     GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
     GrB_Vector col_sums;
     GrB_Vector_new(&col_sums, GrB_FP64, A->ncols);
-    GrB_reduce(col_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
+    GrB_reduce(col_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, tmp, GrB_DESC_T0);
     GrB_Matrix_free(&tmp);
     GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, col_sums, NULL);
     GrB_Vector_free(&col_sums);
@@ -592,11 +1118,23 @@ static matx_status_t ref_norm1_mat_grb(matx_coo_d_i8_t A, matx_double* out)
 
 static matx_status_t ref_norminf_mat_grb(matx_coo_d_i8_t A, matx_double* out)
 {
-#ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) {
-        MATX_ERROR("invalid argument");
-        return MATX_ERR_INVALID_ARG;
+    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (A->nnz <= MATX_SPARSE_DIRECT_NORM_MAX_NNZ
+        && A->nrows <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION
+        && A->ncols <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION) {
+        const matx_status_t status = ref_sparse_norm_coo(&A->alloc,
+                                                          A->nrows,
+                                                          A->ncols,
+                                                          A->nnz,
+                                                          A->rows,
+                                                          A->columns,
+                                                          A->values,
+                                                          NULL,
+                                                          MATX_SPARSE_NORM_INFINITY,
+                                                          out);
+        if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
+#ifdef MATX_ENABLE_GRAPHBLAS
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(A);
 
@@ -605,7 +1143,7 @@ static matx_status_t ref_norminf_mat_grb(matx_coo_d_i8_t A, matx_double* out)
     GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
     GrB_Vector row_sums;
     GrB_Vector_new(&row_sums, GrB_FP64, A->nrows);
-    GrB_reduce(row_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, tmp, GrB_DESC_T0);
+    GrB_reduce(row_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
     GrB_Matrix_free(&tmp);
     GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, row_sums, NULL);
     GrB_Vector_free(&row_sums);
@@ -615,11 +1153,23 @@ static matx_status_t ref_norminf_mat_grb(matx_coo_d_i8_t A, matx_double* out)
 
 static matx_status_t ref_normfro_mat_grb(matx_coo_d_i8_t A, matx_double* out)
 {
-#ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) {
-        MATX_ERROR("invalid argument");
-        return MATX_ERR_INVALID_ARG;
+    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (A->nnz <= MATX_SPARSE_DIRECT_NORM_MAX_NNZ
+        && A->nrows <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION
+        && A->ncols <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION) {
+        const matx_status_t status = ref_sparse_norm_coo(&A->alloc,
+                                                          A->nrows,
+                                                          A->ncols,
+                                                          A->nnz,
+                                                          A->rows,
+                                                          A->columns,
+                                                          A->values,
+                                                          NULL,
+                                                          MATX_SPARSE_NORM_FROBENIUS,
+                                                          out);
+        if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
+#ifdef MATX_ENABLE_GRAPHBLAS
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(A);
 
@@ -638,11 +1188,23 @@ static matx_status_t ref_normfro_mat_grb(matx_coo_d_i8_t A, matx_double* out)
 
 static matx_status_t ref_norm1_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out)
 {
-#ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) {
-        MATX_ERROR("invalid argument");
-        return MATX_ERR_INVALID_ARG;
+    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (A->nnz <= MATX_SPARSE_DIRECT_NORM_MAX_NNZ
+        && A->nrows <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION
+        && A->ncols <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION) {
+        const matx_status_t status = ref_sparse_norm_coo(&A->alloc,
+                                                          A->nrows,
+                                                          A->ncols,
+                                                          A->nnz,
+                                                          A->rows,
+                                                          A->columns,
+                                                          NULL,
+                                                          A->values,
+                                                          MATX_SPARSE_NORM_ONE,
+                                                          out);
+        if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
+#ifdef MATX_ENABLE_GRAPHBLAS
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(A);
 
@@ -651,7 +1213,7 @@ static matx_status_t ref_norm1_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out)
     GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl, NULL);
     GrB_Vector col_sums;
     GrB_Vector_new(&col_sums, GrB_FP64, A->ncols);
-    GrB_reduce(col_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, abs_mat, NULL);
+    GrB_reduce(col_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, abs_mat, GrB_DESC_T0);
     GrB_Matrix_free(&abs_mat);
     GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, col_sums, NULL);
     GrB_Vector_free(&col_sums);
@@ -661,11 +1223,23 @@ static matx_status_t ref_norm1_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out)
 
 static matx_status_t ref_norminf_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out)
 {
-#ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) {
-        MATX_ERROR("invalid argument");
-        return MATX_ERR_INVALID_ARG;
+    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (A->nnz <= MATX_SPARSE_DIRECT_NORM_MAX_NNZ
+        && A->nrows <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION
+        && A->ncols <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION) {
+        const matx_status_t status = ref_sparse_norm_coo(&A->alloc,
+                                                          A->nrows,
+                                                          A->ncols,
+                                                          A->nnz,
+                                                          A->rows,
+                                                          A->columns,
+                                                          NULL,
+                                                          A->values,
+                                                          MATX_SPARSE_NORM_INFINITY,
+                                                          out);
+        if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
+#ifdef MATX_ENABLE_GRAPHBLAS
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(A);
 
@@ -674,7 +1248,7 @@ static matx_status_t ref_norminf_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* ou
     GrB_apply(abs_mat, NULL, NULL, GxB_ABS_FC64, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl, NULL);
     GrB_Vector row_sums;
     GrB_Vector_new(&row_sums, GrB_FP64, A->nrows);
-    GrB_reduce(row_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, abs_mat, GrB_DESC_T0);
+    GrB_reduce(row_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, abs_mat, NULL);
     GrB_Matrix_free(&abs_mat);
     GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, row_sums, NULL);
     GrB_Vector_free(&row_sums);
@@ -684,11 +1258,23 @@ static matx_status_t ref_norminf_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* ou
 
 static matx_status_t ref_normfro_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out)
 {
-#ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) {
-        MATX_ERROR("invalid argument");
-        return MATX_ERR_INVALID_ARG;
+    if (!A || !out) return MATX_ERR_INVALID_ARG;
+    if (A->nnz <= MATX_SPARSE_DIRECT_NORM_MAX_NNZ
+        && A->nrows <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION
+        && A->ncols <= MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION) {
+        const matx_status_t status = ref_sparse_norm_coo(&A->alloc,
+                                                          A->nrows,
+                                                          A->ncols,
+                                                          A->nnz,
+                                                          A->rows,
+                                                          A->columns,
+                                                          NULL,
+                                                          A->values,
+                                                          MATX_SPARSE_NORM_FROBENIUS,
+                                                          out);
+        if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
+#ifdef MATX_ENABLE_GRAPHBLAS
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(A);
 
@@ -769,8 +1355,8 @@ static matx_status_t ref_spadd_z_i8_grb(matx_complex_d_t alpha,
     if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_z_i8(B);
 
-    GxB_FC64_t a = {alpha.real, alpha.imag};
-    GxB_FC64_t b = {beta.real, beta.imag};
+    GxB_FC64_t a = GxB_CMPLX(alpha.real, alpha.imag);
+    GxB_FC64_t b = GxB_CMPLX(beta.real, beta.imag);
     GrB_Matrix temp_a;
     GrB_Matrix_dup(&temp_a, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
     GrB_apply(temp_a, NULL, NULL, GxB_TIMES_FC64, temp_a, a, NULL);
