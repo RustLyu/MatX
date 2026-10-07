@@ -186,6 +186,91 @@ TEST(solve, dense_complex_4x4_factor_solve)
     matx_dense_z_i8_destroy(&a, A);
 }
 
+TEST(solve, dense_real_small_lu_row_major_pivot)
+{
+    matx_alloc_t alloc = matx_alloc_default();
+    double matrix_values[9] = {0.0, 2.0, 1.0,
+                               1.0, 1.0, 0.0,
+                               2.0, 0.0, 1.0};
+    matx_dense_d_i8_t A = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&alloc, &A, MATX_ROW_MAJOR, 3, 3,
+                                     matrix_values), MATX_OK);
+    const double rhs[3] = {7.0, 3.0, 5.0};
+    double solution[3] = {0.0, 0.0, 0.0};
+    matx_dense_linsolve_t solver = matx_dense_linsolve_default(matx_alloc_default());
+    matx_factor_dense_d_i8_t* factor = NULL;
+    matx_status_t status = matx_factor_dense_d_i8(&solver, A, &factor);
+    if (status == MATX_ERR_NOT_SUPPORTED) {
+        matx_dense_d_i8_destroy(&alloc, A);
+        return;
+    }
+    ASSERT_EQ(status, MATX_OK);
+    status = matx_solve_dense_d_i8_factor(&solver, factor, rhs, solution);
+    ASSERT_EQ(status, MATX_OK);
+    EXPECT_NEAR(solution[0], 1.0, 1e-12);
+    EXPECT_NEAR(solution[1], 2.0, 1e-12);
+    EXPECT_NEAR(solution[2], 3.0, 1e-12);
+
+    double in_place[3] = {7.0, 3.0, 5.0};
+    status = matx_solve_dense_d_i8_factor(&solver, factor, in_place, in_place);
+    EXPECT_EQ(status, MATX_OK);
+    EXPECT_NEAR(in_place[0], 1.0, 1e-12);
+    EXPECT_NEAR(in_place[1], 2.0, 1e-12);
+    EXPECT_NEAR(in_place[2], 3.0, 1e-12);
+    matx_factor_dense_d_i8_destroy(&solver, factor);
+    matx_dense_d_i8_destroy(&alloc, A);
+}
+
+TEST(solve, dense_complex_small_lu_row_major_pivot)
+{
+    matx_alloc_t alloc = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&alloc, &A, MATX_ROW_MAJOR, 3, 3, NULL), MATX_OK);
+    const matx_complex_d_t matrix_values[9] = {
+        {0.0, 0.0}, {2.0, 1.0}, {0.0, 0.0},
+        {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0},
+        {0.0, 0.0}, {0.0, 0.0}, {2.0, -1.0}};
+    for (size_t i = 0; i < 9; ++i) A->data[i] = matrix_values[i];
+
+    matx_vec_z_i8_t rhs = NULL, solution = NULL;
+    ASSERT_EQ(matx_vec_z_i8_create(&alloc, &rhs, NULL, 3), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_create(&alloc, &solution, NULL, 3), MATX_OK);
+    rhs->data[0] = {5.0, 0.0};
+    rhs->data[1] = {3.0, -0.5};
+    rhs->data[2] = {6.25, -2.5};
+    matx_dense_linsolve_t solver = matx_dense_linsolve_default(matx_alloc_default());
+    matx_factor_dense_z_i8_t* factor = NULL;
+    matx_status_t status = matx_factor_dense_z_i8(&solver, A, &factor);
+    if (status == MATX_ERR_NOT_SUPPORTED) {
+        matx_vec_z_i8_destroy(&alloc, rhs);
+        matx_vec_z_i8_destroy(&alloc, solution);
+        matx_dense_z_i8_destroy(&alloc, A);
+        return;
+    }
+    ASSERT_EQ(status, MATX_OK);
+    status = matx_solve_dense_z_i8_factor(&solver, factor, rhs, solution);
+    ASSERT_EQ(status, MATX_OK);
+    EXPECT_NEAR(solution->data[0].real, 1.0, 1e-12);
+    EXPECT_NEAR(solution->data[0].imag, 0.5, 1e-12);
+    EXPECT_NEAR(solution->data[1].real, 2.0, 1e-12);
+    EXPECT_NEAR(solution->data[1].imag, -1.0, 1e-12);
+    EXPECT_NEAR(solution->data[2].real, 3.0, 1e-12);
+    EXPECT_NEAR(solution->data[2].imag, 0.25, 1e-12);
+
+    status = matx_solve_dense_z_i8_factor(&solver, factor, rhs, rhs);
+    EXPECT_EQ(status, MATX_OK);
+    EXPECT_NEAR(rhs->data[0].real, 1.0, 1e-12);
+    EXPECT_NEAR(rhs->data[0].imag, 0.5, 1e-12);
+    EXPECT_NEAR(rhs->data[1].real, 2.0, 1e-12);
+    EXPECT_NEAR(rhs->data[1].imag, -1.0, 1e-12);
+    EXPECT_NEAR(rhs->data[2].real, 3.0, 1e-12);
+    EXPECT_NEAR(rhs->data[2].imag, 0.25, 1e-12);
+    matx_factor_dense_z_i8_destroy(&solver, factor);
+    matx_vec_z_i8_destroy(&alloc, rhs);
+    matx_vec_z_i8_destroy(&alloc, solution);
+    matx_dense_z_i8_destroy(&alloc, A);
+}
+
 TEST(solve, sparse_complex_4x4_factor_solve)
 {
     matx_alloc_t a = matx_alloc_default();
@@ -229,6 +314,53 @@ TEST(solve, sparse_complex_4x4_factor_solve)
     matx_vec_z_i8_destroy(&alloc, b);
     matx_vec_z_i8_destroy(&alloc, x);
     matx_coo_sparse_z_i8_destroy(&alloc, coo_A);
+}
+
+TEST(solve, sparse_complex_factor_solve_strided_vectors)
+{
+    matx_alloc_t alloc = matx_alloc_default();
+    matx_int64_t rows[2] = {0, 1};
+    matx_int64_t columns[2] = {0, 1};
+    matx_complex_d_t values[2] = {{2.0, 0.0}, {4.0, 0.0}};
+    matx_coo_z_i8_t matrix = NULL;
+    ASSERT_EQ(matx_coo_sparse_z_i8_create(&alloc, &matrix, 2, 2, 2,
+                                          rows, columns, values), MATX_OK);
+
+    matx_complex_d_t rhs_storage[3] = {{2.0, 2.0}, {0.0, 0.0}, {8.0, -2.0}};
+    matx_complex_d_t solution_storage[3] = {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}};
+    matx_vec_z_i8_t rhs = NULL, solution = NULL;
+    ASSERT_EQ(matx_vec_z_i8_wrap(&alloc, &rhs, 2, 2, rhs_storage), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_wrap(&alloc, &solution, 2, 2, solution_storage), MATX_OK);
+
+    const matx_sparse_linsolve_backend_kind_t backends[] = {
+        MATX_LINSOLVE_BACKEND_UMFPACK,
+        MATX_LINSOLVE_BACKEND_CXSPARSE,
+        MATX_LINSOLVE_BACKEND_MUMPS,
+        MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU};
+    int supported_backends = 0;
+    for (matx_sparse_linsolve_backend_kind_t kind : backends) {
+        matx_sparse_linsolve_t solver = matx_sparse_linsolve_by_type(kind, alloc);
+        matx_factor_sparse_z_i8_t factor{};
+        matx_status_t status = matx_factor_csc_z_i8(&solver, matrix, &factor);
+        if (status == MATX_ERR_NOT_SUPPORTED) continue;
+        ASSERT_EQ(status, MATX_OK);
+        status = matx_solve_csc_z_i8_factor(&solver, &factor, rhs, solution);
+        matx_factor_csc_z_i8_destroy(&solver, &factor);
+        if (status == MATX_ERR_NOT_SUPPORTED) continue;
+        ASSERT_EQ(status, MATX_OK);
+        ++supported_backends;
+        EXPECT_NEAR(solution_storage[0].real, 1.0, 1e-12);
+        EXPECT_NEAR(solution_storage[0].imag, 1.0, 1e-12);
+        EXPECT_NEAR(solution_storage[2].real, 2.0, 1e-12);
+        EXPECT_NEAR(solution_storage[2].imag, -0.5, 1e-12);
+        solution_storage[0] = {0.0, 0.0};
+        solution_storage[2] = {0.0, 0.0};
+    }
+    EXPECT_TRUE(supported_backends >= 1);
+
+    matx_vec_z_i8_destroy(&alloc, solution);
+    matx_vec_z_i8_destroy(&alloc, rhs);
+    matx_coo_sparse_z_i8_destroy(&alloc, matrix);
 }
 
 // ---- Cholesky tests ----

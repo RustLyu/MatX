@@ -254,8 +254,7 @@ static matx_status_t slu_solve_csc_d_i8(const matx_alloc_t* alloc, matx_factor_s
 #else
     matx_factor_sparse_d_i8_slu_t* ptr = (matx_factor_sparse_d_i8_slu_t*) F->reserved;
     /* Copy RHS to internal buffer */
-    for (int i = 0; i < ptr->n; ++i)
-        ptr->rhs[i] = b[i];
+    memcpy(ptr->rhs, b, (size_t) ptr->n * sizeof(double));
 
     /* Solve using existing LU factors */
     int info = 0;
@@ -266,8 +265,7 @@ static matx_status_t slu_solve_csc_d_i8(const matx_alloc_t* alloc, matx_factor_s
     }
 
     /* Copy solution to output */
-    for (int i = 0; i < ptr->n; ++i)
-        x[i] = ptr->rhs[i];
+    memcpy(x, ptr->rhs, (size_t) ptr->n * sizeof(double));
     return MATX_OK;
 #endif
 }
@@ -433,7 +431,7 @@ static matx_status_t slu_solve_csc_z_i8(const matx_alloc_t* alloc, matx_factor_s
                                         matx_vec_z_i8_t x)
 {
     if (!F || !F->reserved || !b || !x || !b->data || !x->data
-        || b->stride <= 0 || x->stride <= 0) {
+        || b->n <= 0 || x->n <= 0 || b->stride <= 0 || x->stride <= 0) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -450,9 +448,13 @@ static matx_status_t slu_solve_csc_z_i8(const matx_alloc_t* alloc, matx_factor_s
         MATX_ERROR("%s: vector length mismatch", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    for (int i = 0; i < ptr->n; ++i) {
-        ptr->rhs[i].r = b->data[(matx_int64_t) i * b->stride].real;
-        ptr->rhs[i].i = b->data[(matx_int64_t) i * b->stride].imag;
+    if (b->stride == 1) {
+        memcpy(ptr->rhs, b->data, (size_t) ptr->n * sizeof(matx_complex_d_t));
+    } else {
+        for (int i = 0; i < ptr->n; ++i) {
+            ptr->rhs[i].r = b->data[(matx_int64_t) i * b->stride].real;
+            ptr->rhs[i].i = b->data[(matx_int64_t) i * b->stride].imag;
+        }
     }
     /* Complex triangular solve with LU factors */
     int info = 0;
@@ -462,9 +464,13 @@ static matx_status_t slu_solve_csc_z_i8(const matx_alloc_t* alloc, matx_factor_s
         return MATX_ERR_INTERNAL;
     }
 
-    for (int i = 0; i < ptr->n; ++i) {
-        x->data[(matx_int64_t) i * x->stride].real = ptr->rhs[i].r;
-        x->data[(matx_int64_t) i * x->stride].imag = ptr->rhs[i].i;
+    if (x->stride == 1) {
+        memcpy(x->data, ptr->rhs, (size_t) ptr->n * sizeof(matx_complex_d_t));
+    } else {
+        for (int i = 0; i < ptr->n; ++i) {
+            x->data[(matx_int64_t) i * x->stride].real = ptr->rhs[i].r;
+            x->data[(matx_int64_t) i * x->stride].imag = ptr->rhs[i].i;
+        }
     }
     return MATX_OK;
 #endif

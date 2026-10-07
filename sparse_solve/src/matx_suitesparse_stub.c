@@ -137,9 +137,8 @@ static matx_status_t ss_solve_csc_d_i8(const matx_alloc_t* alloc,
     }
     matx_factor_sparse_d_i8_klu_t* ptr = (matx_factor_sparse_d_i8_klu_t*) F->reserved;
     const matx_int64_t n = ptr->n;
-    for (matx_int64_t i = 0; i < n; ++i) {
-        x[i] = b[i];
-    }
+    if (x != b)
+        memmove(x, b, (size_t) n * sizeof(matx_double));
 
     const int status = klu_l_solve(ptr->S, ptr->N, n, 1, x, &ptr->common);
     if (!status) {
@@ -231,7 +230,7 @@ static matx_status_t ss_solve_csc_z_i8(const matx_alloc_t* alloc,
                                        const matx_vec_z_i8_t b,
                                        matx_vec_z_i8_t x)
 {
-    if (!F || !b || !x) {
+    if (!F || !F->reserved || !b || !x) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -242,7 +241,8 @@ static matx_status_t ss_solve_csc_z_i8(const matx_alloc_t* alloc,
     matx_factor_sparse_z_i8_klu_t* ptr = (matx_factor_sparse_z_i8_klu_t*) F->reserved;
     matx_int64_t n = ptr->n;
 
-    memcpy(x->data, b->data, sizeof(matx_complex_d_t) * n);
+    if (x->data != b->data)
+        memmove(x->data, b->data, (size_t) n * sizeof(matx_complex_d_t));
 
     matx_int64_t status = klu_zl_solve(ptr->S, ptr->N, n, 1, (matx_double*) x->data, &ptr->common);
 
@@ -259,6 +259,10 @@ static matx_status_t ss_solve_csc_z_i8(const matx_alloc_t* alloc,
 typedef struct matx_factor_sparse_d_i8_cholmod
 {
     cholmod_factor* L;
+    cholmod_dense* rhs_work;
+    cholmod_dense* solution_work;
+    cholmod_dense* y_work;
+    cholmod_dense* e_work;
     cholmod_common common;
     matx_int64_t n;
 } matx_factor_sparse_d_i8_cholmod_t;
@@ -268,6 +272,15 @@ static void ss_factor_chol_csc_d_i8_destroy(const matx_alloc_t* alloc, matx_fact
     if (!F || !F->reserved)
         return;
     matx_factor_sparse_d_i8_cholmod_t* ptr = (matx_factor_sparse_d_i8_cholmod_t*) F->reserved;
+    F->reserved = NULL;
+    if (ptr->rhs_work)
+        cholmod_l_free_dense(&ptr->rhs_work, &ptr->common);
+    if (ptr->solution_work)
+        cholmod_l_free_dense(&ptr->solution_work, &ptr->common);
+    if (ptr->y_work)
+        cholmod_l_free_dense(&ptr->y_work, &ptr->common);
+    if (ptr->e_work)
+        cholmod_l_free_dense(&ptr->e_work, &ptr->common);
     if (ptr->L) {
         cholmod_l_free_factor(&ptr->L, &ptr->common);
     }
@@ -291,6 +304,11 @@ static matx_status_t ss_factor_chol_csc_d_i8(const matx_alloc_t* alloc, matx_coo
         MATX_ERROR("coo_to_csc_d_i8 error:%d", st);
         return st;
     }
+    st = coo_to_csc_d_i8_value_remap(A);
+    if (st != MATX_OK) {
+        MATX_ERROR("coo_to_csc_d_i8_value_remap error:%d", st);
+        return st;
+    }
 
     const matx_int64_t n = A->nrows;
     const matx_int64_t nnz = A->handle_csc->nnz;
@@ -305,7 +323,7 @@ static matx_status_t ss_factor_chol_csc_d_i8(const matx_alloc_t* alloc, matx_coo
 
     cholmod_l_start(&F->common);
 
-    cholmod_sparse* A_chol = cholmod_l_allocate_sparse(n, n, nnz, 1, 1, 0, CHOLMOD_REAL, &F->common);
+    cholmod_sparse* A_chol = cholmod_l_allocate_sparse(n, n, nnz, 1, 1, -1, CHOLMOD_REAL, &F->common);
     if (!A_chol) {
         MATX_ERROR("%s: cholmod_l_allocate_sparse failed", __func__);
         cholmod_l_finish(&F->common);
@@ -360,23 +378,29 @@ static matx_status_t ss_solve_chol_csc_d_i8(const matx_alloc_t* alloc,
     matx_factor_sparse_d_i8_cholmod_t* ptr = (matx_factor_sparse_d_i8_cholmod_t*) F->reserved;
     const matx_int64_t n = ptr->n;
 
-    cholmod_dense* b_chol = cholmod_l_allocate_dense(n, 1, n, CHOLMOD_REAL, &ptr->common);
-    if (!b_chol) {
-        MATX_ERROR("%s: out of memory", __func__);
-        return MATX_ERR_OUT_OF_MEMORY;
+    if (!ptr->rhs_work) {
+        ptr->rhs_work = cholmod_l_allocate_dense(n, 1, n, CHOLMOD_REAL, &ptr->common);
+        if (!ptr->rhs_work) {
+            MATX_ERROR("%s: out of memory", __func__);
+            return MATX_ERR_OUT_OF_MEMORY;
+        }
     }
-    memcpy(b_chol->x, b, n * sizeof(matx_double));
+    memcpy(ptr->rhs_work->x, b, (size_t) n * sizeof(matx_double));
 
-    cholmod_dense* x_chol = cholmod_l_solve(CHOLMOD_A, ptr->L, b_chol, &ptr->common);
-    if (!x_chol) {
-        MATX_ERROR("%s: cholmod_l_solve failed", __func__);
-        cholmod_l_free_dense(&b_chol, &ptr->common);
+    if (!cholmod_l_solve2(CHOLMOD_A,
+                          ptr->L,
+                          ptr->rhs_work,
+                          NULL,
+                          &ptr->solution_work,
+                          NULL,
+                          &ptr->y_work,
+                          &ptr->e_work,
+                          &ptr->common)
+        || !ptr->solution_work || ptr->common.status < CHOLMOD_OK) {
+        MATX_ERROR("%s: cholmod_l_solve2 failed, status=%d", __func__, ptr->common.status);
         return MATX_ERR_INTERNAL;
     }
-    memcpy(x, x_chol->x, n * sizeof(matx_double));
-
-    cholmod_l_free_dense(&x_chol, &ptr->common);
-    cholmod_l_free_dense(&b_chol, &ptr->common);
+    memcpy(x, ptr->solution_work->x, (size_t) n * sizeof(matx_double));
     return MATX_OK;
 }
 

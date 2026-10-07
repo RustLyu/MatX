@@ -3,6 +3,7 @@
 #include "matx/matx_types_internal.h"
 
 #include <stdlib.h>
+#include <stdatomic.h>
 #include <string.h>
 
 #if MATX_HAVE_UMFPACK
@@ -21,6 +22,9 @@ typedef struct matx_factor_sparse_d_i8_umfpack
     matx_int64_t* Ap;
     matx_int64_t* Ai;
     matx_double* Ax;
+    matx_int64_t* solve_iwork;
+    matx_double* solve_work;
+    atomic_bool solve_busy;
 } matx_factor_sparse_d_i8_umfpack_t;
 
 /**
@@ -37,6 +41,10 @@ typedef struct matx_factor_sparse_z_i8_umfpack
     matx_int64_t* Ai;
     matx_double* Ax;
     matx_double* Az;
+    matx_int64_t* solve_iwork;
+    matx_double* solve_work;
+    matx_double* solve_vectors;
+    atomic_bool solve_busy;
 #endif
     int unused;
 } matx_factor_sparse_z_i8_umfpack_t;
@@ -47,9 +55,10 @@ typedef struct matx_factor_sparse_z_i8_umfpack
  */
 static void umf_factor_csc_d_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F)
 {
-    if (!F)
+    if (!F || !F->reserved)
         return;
     matx_factor_sparse_d_i8_umfpack_t* ptr = (matx_factor_sparse_d_i8_umfpack_t*) F->reserved;
+    F->reserved = NULL;
 #if MATX_HAVE_UMFPACK
     if (ptr->numeric)
         umfpack_dl_free_numeric(&ptr->numeric);
@@ -59,6 +68,8 @@ static void umf_factor_csc_d_i8_destroy(const matx_alloc_t* alloc, matx_factor_s
     matx_free(alloc, ptr->Ap);
     matx_free(alloc, ptr->Ai);
     matx_free(alloc, ptr->Ax);
+    matx_free(alloc, ptr->solve_iwork);
+    matx_free(alloc, ptr->solve_work);
     matx_free(alloc, ptr);
 }
 
@@ -102,6 +113,7 @@ static matx_status_t umf_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
         return MATX_ERR_OUT_OF_MEMORY;
     }
     memset(F, 0, sizeof(*F));
+    atomic_init(&F->solve_busy, 0);
 
     out_F->reserved = F;
     F->n = A->nrows;
@@ -147,6 +159,21 @@ static matx_status_t umf_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
         return MATX_ERR_INTERNAL;
     }
 
+    /* Retain UMFPACK's documented wsolve workspace across repeated solves. */
+    if ((uint64_t) F->n <= SIZE_MAX / (5 * sizeof(matx_double))
+        && (uint64_t) F->n <= SIZE_MAX / sizeof(matx_int64_t)) {
+        F->solve_iwork = (matx_int64_t*) matx_malloc(
+            alloc, (size_t) F->n * sizeof(matx_int64_t));
+        F->solve_work = (matx_double*) matx_malloc(
+            alloc, (size_t) F->n * 5 * sizeof(matx_double));
+        if (!F->solve_iwork || !F->solve_work) {
+            matx_free(alloc, F->solve_iwork);
+            matx_free(alloc, F->solve_work);
+            F->solve_iwork = NULL;
+            F->solve_work = NULL;
+        }
+    }
+
     return MATX_OK;
 #endif
 }
@@ -163,7 +190,7 @@ static matx_status_t umf_solve_csc_d_i8(const matx_alloc_t* alloc,
                                         const matx_double* b,
                                         matx_double* x)
 {
-    if (!F || !b || !x) {
+    if (!F || !F->reserved || !b || !x) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -176,15 +203,32 @@ static matx_status_t umf_solve_csc_d_i8(const matx_alloc_t* alloc,
     return MATX_ERR_NOT_SUPPORTED;
 #else
     matx_factor_sparse_d_i8_umfpack_t* ptr = (matx_factor_sparse_d_i8_umfpack_t*) F->reserved;
-    int status = umfpack_dl_solve(UMFPACK_A,
+    int status;
+    if (ptr->solve_iwork && ptr->solve_work && x != b
+        && !atomic_exchange_explicit(&ptr->solve_busy, 1, memory_order_acquire)) {
+        status = umfpack_dl_wsolve(UMFPACK_A,
+                                   (const int64_t*) ptr->Ap,
+                                   (const int64_t*) ptr->Ai,
+                                   (const double*) ptr->Ax,
+                                   (double*) x,
+                                   (const double*) b,
+                                   ptr->numeric,
+                                   NULL,
+                                   NULL,
+                                   (int64_t*) ptr->solve_iwork,
+                                   (double*) ptr->solve_work);
+        atomic_store_explicit(&ptr->solve_busy, 0, memory_order_release);
+    } else {
+        status = umfpack_dl_solve(UMFPACK_A,
                                   (const int64_t*) ptr->Ap,
                                   (const int64_t*) ptr->Ai,
                                   (const double*) ptr->Ax,
                                   (double*) x,
-                                  (double*) b,
+                                  (const double*) b,
                                   ptr->numeric,
                                   NULL,
                                   NULL);
+    }
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_dl_solve failed status=%d", status);
         return MATX_ERR_INTERNAL;
@@ -204,6 +248,7 @@ static void umf_factor_csc_z_i8_destroy(const matx_alloc_t* alloc, matx_factor_s
     if (!F || !F->reserved)
         return;
     matx_factor_sparse_z_i8_umfpack_t* ptr = (matx_factor_sparse_z_i8_umfpack_t*) F->reserved;
+    F->reserved = NULL;
 #if MATX_HAVE_UMFPACK
     if (ptr->numeric)
         umfpack_zl_free_numeric(&ptr->numeric);
@@ -215,6 +260,9 @@ static void umf_factor_csc_z_i8_destroy(const matx_alloc_t* alloc, matx_factor_s
     matx_free(alloc, ptr->Ai);
     matx_free(alloc, ptr->Ax);
     matx_free(alloc, ptr->Az);
+    matx_free(alloc, ptr->solve_iwork);
+    matx_free(alloc, ptr->solve_work);
+    matx_free(alloc, ptr->solve_vectors);
 #endif
     matx_free(alloc, ptr);
 }
@@ -261,6 +309,7 @@ static matx_status_t umf_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
         return MATX_ERR_OUT_OF_MEMORY;
     }
     memset(F, 0, sizeof(*F));
+    atomic_init(&F->solve_busy, 0);
     out_F->reserved = F;
     F->n = A->nrows;
     F->nnz = A->handle_csc->nnz;
@@ -316,6 +365,25 @@ static matx_status_t umf_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
         return MATX_ERR_INTERNAL;
     }
 
+    /* Four split-complex vectors plus UMFPACK's reusable worst-case workspace. */
+    if ((uint64_t) F->n <= SIZE_MAX / (10 * sizeof(matx_double))
+        && (uint64_t) F->n <= SIZE_MAX / (4 * sizeof(matx_int64_t))) {
+        F->solve_iwork = (matx_int64_t*) matx_malloc(
+            alloc, (size_t) F->n * 4 * sizeof(matx_int64_t));
+        F->solve_work = (matx_double*) matx_malloc(
+            alloc, (size_t) F->n * 10 * sizeof(matx_double));
+        F->solve_vectors = (matx_double*) matx_malloc(
+            alloc, (size_t) F->n * 4 * sizeof(matx_double));
+        if (!F->solve_iwork || !F->solve_work || !F->solve_vectors) {
+            matx_free(alloc, F->solve_iwork);
+            matx_free(alloc, F->solve_work);
+            matx_free(alloc, F->solve_vectors);
+            F->solve_iwork = NULL;
+            F->solve_work = NULL;
+            F->solve_vectors = NULL;
+        }
+    }
+
     return MATX_OK;
 #endif
 }
@@ -332,7 +400,8 @@ static matx_status_t umf_solve_csc_z_i8(const matx_alloc_t* alloc,
                                         const matx_vec_z_i8_t b,
                                         matx_vec_z_i8_t x)
 {
-    if (!F || !b || !x) {
+    if (!F || !F->reserved || !b || !x || !b->data || !x->data
+        || b->stride <= 0 || x->stride <= 0) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -345,28 +414,51 @@ static matx_status_t umf_solve_csc_z_i8(const matx_alloc_t* alloc,
     return MATX_ERR_NOT_SUPPORTED;
 #else
     matx_factor_sparse_z_i8_umfpack_t* ptr = (matx_factor_sparse_z_i8_umfpack_t*) F->reserved;
-    // UMFPACK complex vectors: interleaved [real0, imag0, real1, imag1...]
-    matx_double* b_umf_x = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) ptr->n);
-    matx_double* b_umf_z = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) ptr->n);
-    matx_double* x_umf_x = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) ptr->n);
-    matx_double* x_umf_z = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) ptr->n);
-    if (!b_umf_x || !b_umf_z || !x_umf_x || !x_umf_z) {
-        matx_free(alloc, b_umf_x);
-        matx_free(alloc, x_umf_x);
-        matx_free(alloc, b_umf_z);
-        matx_free(alloc, x_umf_z);
+    if (b->n < ptr->n || x->n < ptr->n
+        || (uint64_t) ptr->n > SIZE_MAX / (4 * sizeof(matx_double))) {
+        MATX_ERROR("%s: vector length mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    const int use_workspace = ptr->solve_iwork && ptr->solve_work && ptr->solve_vectors
+        && !atomic_exchange_explicit(&ptr->solve_busy, 1, memory_order_acquire);
+    const size_t vector_bytes = (size_t) ptr->n * sizeof(matx_double);
+    matx_double* vectors = use_workspace
+        ? ptr->solve_vectors
+        : (matx_double*) matx_malloc(alloc, vector_bytes * 4);
+    if (!vectors) {
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    matx_double* b_umf_x = vectors;
+    matx_double* b_umf_z = vectors + ptr->n;
+    matx_double* x_umf_x = vectors + 2 * ptr->n;
+    matx_double* x_umf_z = vectors + 3 * ptr->n;
 
-    // Pack input b
-    for (matx_int64_t i = 0; i < ptr->n; i++) {
-        b_umf_x[i] = b->data[i].real;
-        b_umf_z[i] = b->data[i].imag;
+    for (matx_int64_t i = 0; i < ptr->n; ++i) {
+        const matx_complex_d_t value = b->data[i * b->stride];
+        b_umf_x[i] = value.real;
+        b_umf_z[i] = value.imag;
     }
 
-    // Solve
-    int status = umfpack_zl_solve(UMFPACK_A,
+    int status;
+    if (use_workspace) {
+        status = umfpack_zl_wsolve(UMFPACK_A,
+                                   (const int64_t*) ptr->Ap,
+                                   (const int64_t*) ptr->Ai,
+                                   (const double*) ptr->Ax,
+                                   (const double*) ptr->Az,
+                                   x_umf_x,
+                                   x_umf_z,
+                                   b_umf_x,
+                                   b_umf_z,
+                                   ptr->numeric,
+                                   NULL,
+                                   NULL,
+                                   (int64_t*) ptr->solve_iwork,
+                                   (double*) ptr->solve_work);
+    } else {
+        status = umfpack_zl_solve(UMFPACK_A,
                                   (const int64_t*) ptr->Ap,
                                   (const int64_t*) ptr->Ai,
                                   (const double*) ptr->Ax,
@@ -378,26 +470,23 @@ static matx_status_t umf_solve_csc_z_i8(const matx_alloc_t* alloc,
                                   ptr->numeric,
                                   NULL,
                                   NULL);
+    }
+    if (status == UMFPACK_OK) {
+        for (matx_int64_t i = 0; i < ptr->n; ++i) {
+            x->data[i * x->stride].real = x_umf_x[i];
+            x->data[i * x->stride].imag = x_umf_z[i];
+        }
+    }
+
+    if (use_workspace)
+        atomic_store_explicit(&ptr->solve_busy, 0, memory_order_release);
+    else
+        matx_free(alloc, vectors);
+
     if (status != UMFPACK_OK) {
         MATX_ERROR("umfpack_zl_solve failed status=%d", status);
-        matx_free(alloc, b_umf_x);
-        matx_free(alloc, x_umf_x);
-        matx_free(alloc, b_umf_z);
-        matx_free(alloc, x_umf_z);
-        MATX_ERROR("%s: internal error", __func__);
         return MATX_ERR_INTERNAL;
     }
-
-    // Unpack solution x
-    for (matx_int64_t i = 0; i < ptr->n; i++) {
-        x->data[i].real = x_umf_x[i];
-        x->data[i].imag = x_umf_z[i];
-    }
-
-    matx_free(alloc, b_umf_x);
-    matx_free(alloc, x_umf_x);
-    matx_free(alloc, b_umf_z);
-    matx_free(alloc, x_umf_z);
     return MATX_OK;
 #endif
 }

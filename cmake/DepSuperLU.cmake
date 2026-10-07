@@ -3,6 +3,15 @@
 # Fetch + build SuperLU (when MATX_ENABLE_SUPERLU=ON)
 # =========================================================
 
+# SuperLU 7.0.1 declares its BLAS integer arguments as 32-bit `int`, while
+# MatX's OPENBLAS backend is built with INTERFACE64=1. Linking these interfaces
+# makes SuperLU pass invalid dimensions to OpenBLAS64 (for example DTRSV's LDA).
+if(MATX_ENABLE_SUPERLU AND MATX_BACKEND STREQUAL "OPENBLAS")
+    message(WARNING
+        "Disabling SuperLU: SuperLU 7.0.1 uses LP64 BLAS arguments, but the MatX OPENBLAS backend uses ILP64.")
+    set(MATX_ENABLE_SUPERLU OFF)
+endif()
+
 if(MATX_ENABLE_SUPERLU)
 
     FetchContent_Declare(

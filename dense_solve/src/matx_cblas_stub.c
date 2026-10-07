@@ -112,6 +112,187 @@ static int ss_layout_to_lapack(matx_layout_t layout)
     return (layout == MATX_COL_MAJOR) ? LAPACK_COL_MAJOR : LAPACK_ROW_MAJOR;
 }
 
+#define MATX_DENSE_SMALL_SOLVE_LIMIT 32
+
+static matx_int64_t ss_dense_index(matx_layout_t layout,
+                                   matx_int64_t lda,
+                                   matx_int64_t row,
+                                   matx_int64_t col)
+{
+    return (layout == MATX_COL_MAJOR) ? row + col * lda : row * lda + col;
+}
+
+static void ss_solve_small_lu_d(const matx_factor_dense_d_i8_t* F, matx_double* rhs)
+{
+    const matx_int64_t n = F->n;
+    for (matx_int64_t i = 0; i < n; ++i) {
+        const matx_int64_t pivot = F->piv[i] - 1;
+        if (pivot != i) {
+            const matx_double tmp = rhs[i];
+            rhs[i] = rhs[pivot];
+            rhs[pivot] = tmp;
+        }
+    }
+
+    if (F->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t col = 0; col < n; ++col)
+            for (matx_int64_t row = col + 1; row < n; ++row)
+                rhs[row] -= F->lu[row + col * F->lda] * rhs[col];
+        for (matx_int64_t col = n; col-- > 0;) {
+            rhs[col] /= F->lu[col + col * F->lda];
+            for (matx_int64_t row = 0; row < col; ++row)
+                rhs[row] -= F->lu[row + col * F->lda] * rhs[col];
+        }
+    } else {
+        for (matx_int64_t row = 0; row < n; ++row)
+            for (matx_int64_t col = 0; col < row; ++col)
+                rhs[row] -= F->lu[row * F->lda + col] * rhs[col];
+        for (matx_int64_t row = n; row-- > 0;) {
+            for (matx_int64_t col = row + 1; col < n; ++col)
+                rhs[row] -= F->lu[row * F->lda + col] * rhs[col];
+            rhs[row] /= F->lu[row * F->lda + row];
+        }
+    }
+}
+
+static matx_complex_d_t ss_complex_sub(matx_complex_d_t a, matx_complex_d_t b)
+{
+    return (matx_complex_d_t) {a.real - b.real, a.imag - b.imag};
+}
+
+static matx_complex_d_t ss_complex_mul(matx_complex_d_t a, matx_complex_d_t b)
+{
+    return (matx_complex_d_t) {a.real * b.real - a.imag * b.imag,
+                               a.real * b.imag + a.imag * b.real};
+}
+
+static matx_complex_d_t ss_complex_div(matx_complex_d_t a, matx_complex_d_t b)
+{
+    if (fabs(b.real) >= fabs(b.imag)) {
+        const matx_double ratio = b.imag / b.real;
+        const matx_double denominator = b.real + b.imag * ratio;
+        return (matx_complex_d_t) {(a.real + a.imag * ratio) / denominator,
+                                   (a.imag - a.real * ratio) / denominator};
+    }
+    const matx_double ratio = b.real / b.imag;
+    const matx_double denominator = b.imag + b.real * ratio;
+    return (matx_complex_d_t) {(a.real * ratio + a.imag) / denominator,
+                               (a.imag * ratio - a.real) / denominator};
+}
+
+static matx_complex_d_t ss_complex_conj(matx_complex_d_t a)
+{
+    a.imag = -a.imag;
+    return a;
+}
+
+static void ss_solve_small_chol_d(const matx_factor_dense_d_i8_t* F, matx_double* rhs)
+{
+    const matx_int64_t n = F->n;
+    if (F->uplo != MATX_UPPER) {
+        for (matx_int64_t row = 0; row < n; ++row) {
+            for (matx_int64_t col = 0; col < row; ++col)
+                rhs[row] -= F->lu[ss_dense_index(F->layout, F->lda, row, col)] * rhs[col];
+            rhs[row] /= F->lu[ss_dense_index(F->layout, F->lda, row, row)];
+        }
+        for (matx_int64_t row = n; row-- > 0;) {
+            for (matx_int64_t col = row + 1; col < n; ++col)
+                rhs[row] -= F->lu[ss_dense_index(F->layout, F->lda, col, row)] * rhs[col];
+            rhs[row] /= F->lu[ss_dense_index(F->layout, F->lda, row, row)];
+        }
+    } else {
+        for (matx_int64_t row = 0; row < n; ++row) {
+            for (matx_int64_t col = 0; col < row; ++col)
+                rhs[row] -= F->lu[ss_dense_index(F->layout, F->lda, col, row)] * rhs[col];
+            rhs[row] /= F->lu[ss_dense_index(F->layout, F->lda, row, row)];
+        }
+        for (matx_int64_t row = n; row-- > 0;) {
+            for (matx_int64_t col = row + 1; col < n; ++col)
+                rhs[row] -= F->lu[ss_dense_index(F->layout, F->lda, row, col)] * rhs[col];
+            rhs[row] /= F->lu[ss_dense_index(F->layout, F->lda, row, row)];
+        }
+    }
+}
+
+static void ss_solve_small_chol_z(const matx_factor_dense_z_i8_t* F,
+                                  matx_complex_d_t* rhs)
+{
+    const matx_int64_t n = F->n;
+    const matx_complex_d_t* factor = (const matx_complex_d_t*) F->lu;
+    if (F->uplo != MATX_UPPER) {
+        for (matx_int64_t row = 0; row < n; ++row) {
+            for (matx_int64_t col = 0; col < row; ++col)
+                rhs[row] = ss_complex_sub(rhs[row], ss_complex_mul(
+                    factor[ss_dense_index(F->layout, F->lda, row, col)], rhs[col]));
+            rhs[row] = ss_complex_div(rhs[row],
+                factor[ss_dense_index(F->layout, F->lda, row, row)]);
+        }
+        for (matx_int64_t row = n; row-- > 0;) {
+            for (matx_int64_t col = row + 1; col < n; ++col)
+                rhs[row] = ss_complex_sub(rhs[row], ss_complex_mul(
+                    ss_complex_conj(factor[ss_dense_index(F->layout, F->lda, col, row)]),
+                    rhs[col]));
+            rhs[row] = ss_complex_div(rhs[row], ss_complex_conj(
+                factor[ss_dense_index(F->layout, F->lda, row, row)]));
+        }
+    } else {
+        for (matx_int64_t row = 0; row < n; ++row) {
+            for (matx_int64_t col = 0; col < row; ++col)
+                rhs[row] = ss_complex_sub(rhs[row], ss_complex_mul(
+                    ss_complex_conj(factor[ss_dense_index(F->layout, F->lda, col, row)]),
+                    rhs[col]));
+            rhs[row] = ss_complex_div(rhs[row], ss_complex_conj(
+                factor[ss_dense_index(F->layout, F->lda, row, row)]));
+        }
+        for (matx_int64_t row = n; row-- > 0;) {
+            for (matx_int64_t col = row + 1; col < n; ++col)
+                rhs[row] = ss_complex_sub(rhs[row], ss_complex_mul(
+                    factor[ss_dense_index(F->layout, F->lda, row, col)], rhs[col]));
+            rhs[row] = ss_complex_div(rhs[row],
+                factor[ss_dense_index(F->layout, F->lda, row, row)]);
+        }
+    }
+}
+
+static void ss_solve_small_lu_z(const matx_factor_dense_z_i8_t* F,
+                                matx_complex_d_t* rhs)
+{
+    const matx_int64_t n = F->n;
+    const matx_complex_d_t* lu = (const matx_complex_d_t*) F->lu;
+    for (matx_int64_t i = 0; i < n; ++i) {
+        const matx_int64_t pivot = F->piv[i] - 1;
+        if (pivot != i) {
+            const matx_complex_d_t tmp = rhs[i];
+            rhs[i] = rhs[pivot];
+            rhs[pivot] = tmp;
+        }
+    }
+
+    if (F->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t col = 0; col < n; ++col)
+            for (matx_int64_t row = col + 1; row < n; ++row)
+                rhs[row] = ss_complex_sub(rhs[row],
+                    ss_complex_mul(lu[row + col * F->lda], rhs[col]));
+        for (matx_int64_t col = n; col-- > 0;) {
+            rhs[col] = ss_complex_div(rhs[col], lu[col + col * F->lda]);
+            for (matx_int64_t row = 0; row < col; ++row)
+                rhs[row] = ss_complex_sub(rhs[row],
+                    ss_complex_mul(lu[row + col * F->lda], rhs[col]));
+        }
+    } else {
+        for (matx_int64_t row = 0; row < n; ++row)
+            for (matx_int64_t col = 0; col < row; ++col)
+                rhs[row] = ss_complex_sub(rhs[row],
+                    ss_complex_mul(lu[row * F->lda + col], rhs[col]));
+        for (matx_int64_t row = n; row-- > 0;) {
+            for (matx_int64_t col = row + 1; col < n; ++col)
+                rhs[row] = ss_complex_sub(rhs[row],
+                    ss_complex_mul(lu[row * F->lda + col], rhs[col]));
+            rhs[row] = ss_complex_div(rhs[row], lu[row * F->lda + row]);
+        }
+    }
+}
+
 // ---- Dense real LU ----
 
 static matx_status_t ss_factor_dense_d_i8(const matx_alloc_t* alloc,
@@ -179,7 +360,13 @@ static matx_status_t ss_solve_dense_d_i8(const matx_alloc_t* alloc,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    memcpy(x, b, F->n * sizeof(matx_double));
+    if (x != b)
+        memmove(x, b, (size_t) F->n * sizeof(matx_double));
+
+    if (F->n <= MATX_DENSE_SMALL_SOLVE_LIMIT) {
+        ss_solve_small_lu_d(F, x);
+        return MATX_OK;
+    }
 
     matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
     matx_int64_t info
@@ -271,13 +458,39 @@ static matx_status_t ss_solve_dense_z_i8(const matx_alloc_t* alloc,
         return MATX_ERR_INVALID_ARG;
     }
     const size_t bytes = (size_t) F->n * sizeof(matx_complex_d_t);
-    matx_complex_d_t* rhs = (matx_complex_d_t*) matx_malloc(alloc, bytes);
-    if (!rhs) {
-        MATX_ERROR("%s: out of memory", __func__);
-        return MATX_ERR_OUT_OF_MEMORY;
+    const int can_solve_in_output
+        = x->stride == 1 && (b->data != x->data || b->stride == 1);
+    matx_complex_d_t* rhs = x->data;
+    int allocated_rhs = 0;
+    if (can_solve_in_output) {
+        if (b->data != x->data || b->stride != 1) {
+            if (b->stride == 1)
+                memmove(rhs, b->data, bytes);
+            else {
+                for (matx_int64_t i = 0; i < F->n; ++i)
+                    rhs[i] = b->data[i * b->stride];
+            }
+        }
+    } else {
+        rhs = (matx_complex_d_t*) matx_malloc(alloc, bytes);
+        if (!rhs) {
+            MATX_ERROR("%s: out of memory", __func__);
+            return MATX_ERR_OUT_OF_MEMORY;
+        }
+        allocated_rhs = 1;
+        for (matx_int64_t i = 0; i < F->n; ++i)
+            rhs[i] = b->data[i * b->stride];
     }
-    for (matx_int64_t i = 0; i < F->n; ++i)
-        rhs[i] = b->data[i * b->stride];
+
+    if (F->n <= MATX_DENSE_SMALL_SOLVE_LIMIT) {
+        ss_solve_small_lu_z(F, rhs);
+        if (allocated_rhs) {
+            for (matx_int64_t i = 0; i < F->n; ++i)
+                x->data[i * x->stride] = rhs[i];
+            matx_free(alloc, rhs);
+        }
+        return MATX_OK;
+    }
 
     matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
     matx_int64_t info = LAPACKE_zgetrs(ss_layout_to_lapack(F->layout),
@@ -291,12 +504,15 @@ static matx_status_t ss_solve_dense_z_i8(const matx_alloc_t* alloc,
                                        ldb);
     if (info != 0) {
         MATX_ERROR("LAPACKE_zgetrs error:%d", info);
-        matx_free(alloc, rhs);
+        if (allocated_rhs)
+            matx_free(alloc, rhs);
         return MATX_ERR_INTERNAL;
     }
-    for (matx_int64_t i = 0; i < F->n; ++i)
-        x->data[i * x->stride] = rhs[i];
-    matx_free(alloc, rhs);
+    if (allocated_rhs) {
+        for (matx_int64_t i = 0; i < F->n; ++i)
+            x->data[i * x->stride] = rhs[i];
+        matx_free(alloc, rhs);
+    }
     return MATX_OK;
 }
 
@@ -372,7 +588,13 @@ static matx_status_t ss_potrs_d_i8(const matx_alloc_t* alloc,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
-    memcpy(x, b, F->n * sizeof(matx_double));
+    if (x != b)
+        memmove(x, b, (size_t) F->n * sizeof(matx_double));
+
+    if (F->n <= MATX_DENSE_SMALL_SOLVE_LIMIT) {
+        ss_solve_small_chol_d(F, x);
+        return MATX_OK;
+    }
 
     matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
     matx_int64_t info = LAPACKE_dpotrs(ss_layout_to_lapack(F->layout),
@@ -459,13 +681,39 @@ static matx_status_t ss_potrs_z_i8(const matx_alloc_t* alloc,
         return MATX_ERR_INVALID_ARG;
     }
     const size_t bytes = (size_t) F->n * sizeof(matx_complex_d_t);
-    matx_complex_d_t* rhs = (matx_complex_d_t*) matx_malloc(alloc, bytes);
-    if (!rhs) {
-        MATX_ERROR("%s: out of memory", __func__);
-        return MATX_ERR_OUT_OF_MEMORY;
+    const int can_solve_in_output
+        = x->stride == 1 && (b->data != x->data || b->stride == 1);
+    matx_complex_d_t* rhs = x->data;
+    int allocated_rhs = 0;
+    if (can_solve_in_output) {
+        if (b->data != x->data || b->stride != 1) {
+            if (b->stride == 1)
+                memmove(rhs, b->data, bytes);
+            else {
+                for (matx_int64_t i = 0; i < F->n; ++i)
+                    rhs[i] = b->data[i * b->stride];
+            }
+        }
+    } else {
+        rhs = (matx_complex_d_t*) matx_malloc(alloc, bytes);
+        if (!rhs) {
+            MATX_ERROR("%s: out of memory", __func__);
+            return MATX_ERR_OUT_OF_MEMORY;
+        }
+        allocated_rhs = 1;
+        for (matx_int64_t i = 0; i < F->n; ++i)
+            rhs[i] = b->data[i * b->stride];
     }
-    for (matx_int64_t i = 0; i < F->n; ++i)
-        rhs[i] = b->data[i * b->stride];
+
+    if (F->n <= MATX_DENSE_SMALL_SOLVE_LIMIT) {
+        ss_solve_small_chol_z(F, rhs);
+        if (allocated_rhs) {
+            for (matx_int64_t i = 0; i < F->n; ++i)
+                x->data[i * x->stride] = rhs[i];
+            matx_free(alloc, rhs);
+        }
+        return MATX_OK;
+    }
 
     matx_int64_t ldb = (F->layout == MATX_COL_MAJOR) ? F->n : 1;
     matx_int64_t info = LAPACKE_zpotrs(ss_layout_to_lapack(F->layout),
@@ -478,12 +726,15 @@ static matx_status_t ss_potrs_z_i8(const matx_alloc_t* alloc,
                                        ldb);
     if (info != 0) {
         MATX_ERROR("LAPACKE_zpotrs error: %d", info);
-        matx_free(alloc, rhs);
+        if (allocated_rhs)
+            matx_free(alloc, rhs);
         return MATX_ERR_INTERNAL;
     }
-    for (matx_int64_t i = 0; i < F->n; ++i)
-        x->data[i * x->stride] = rhs[i];
-    matx_free(alloc, rhs);
+    if (allocated_rhs) {
+        for (matx_int64_t i = 0; i < F->n; ++i)
+            x->data[i * x->stride] = rhs[i];
+        matx_free(alloc, rhs);
+    }
     return MATX_OK;
 }
 
