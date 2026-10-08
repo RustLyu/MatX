@@ -323,45 +323,37 @@ static matx_status_t ss_factor_chol_csc_d_i8(const matx_alloc_t* alloc, matx_coo
 
     cholmod_l_start(&F->common);
 
-    cholmod_sparse* A_chol = cholmod_l_allocate_sparse(n, n, nnz, 1, 1, -1, CHOLMOD_REAL, &F->common);
-    if (!A_chol) {
-        MATX_ERROR("%s: cholmod_l_allocate_sparse failed", __func__);
-        cholmod_l_finish(&F->common);
-        matx_free(alloc, F);
-        return MATX_ERR_OUT_OF_MEMORY;
-    }
+    cholmod_sparse A_chol_struct;
+    memset(&A_chol_struct, 0, sizeof(A_chol_struct));
+    A_chol_struct.nrow   = n;
+    A_chol_struct.ncol   = n;
+    A_chol_struct.nzmax  = nnz;
+    A_chol_struct.p      = (void*) A->handle_csc->col_ptr;
+    A_chol_struct.i      = (void*) A->handle_csc->row_ind;
+    A_chol_struct.x      = (void*) A->handle_csc->values;
+    A_chol_struct.stype  = -1;             /* lower triangular */
+    A_chol_struct.itype  = CHOLMOD_LONG;
+    A_chol_struct.xtype  = CHOLMOD_REAL;
+    A_chol_struct.dtype  = CHOLMOD_DOUBLE;
+    A_chol_struct.sorted = 1;
+    A_chol_struct.packed = 1;
 
-    matx_int64_t* Ap = (matx_int64_t*) A_chol->p;
-    matx_int64_t* Ai = (matx_int64_t*) A_chol->i;
-    matx_double* Ax = (matx_double*) A_chol->x;
-
-    for (matx_int64_t j = 0; j <= n; ++j)
-        Ap[j] = A->handle_csc->col_ptr[j];
-    for (matx_int64_t k = 0; k < nnz; ++k) {
-        Ai[k] = A->handle_csc->row_ind[k];
-        Ax[k] = A->handle_csc->values[k];
-    }
-    A_chol->nzmax = nnz;
-
-    F->L = cholmod_l_analyze(A_chol, &F->common);
+    F->L = cholmod_l_analyze(&A_chol_struct, &F->common);
     if (!F->L) {
         MATX_ERROR("%s: cholmod_l_analyze failed", __func__);
-        cholmod_l_free_sparse(&A_chol, &F->common);
         cholmod_l_finish(&F->common);
         matx_free(alloc, F);
         return MATX_ERR_INTERNAL;
     }
 
-    cholmod_l_factorize(A_chol, F->L, &F->common);
+    cholmod_l_factorize(&A_chol_struct, F->L, &F->common);
     if (F->common.status != CHOLMOD_OK) {
         MATX_ERROR("%s: cholmod_l_factorize failed, status=%d", __func__, F->common.status);
-        cholmod_l_free_sparse(&A_chol, &F->common);
         ss_factor_chol_csc_d_i8_destroy(alloc, out_F);
         out_F->reserved = NULL;
         return MATX_ERR_INTERNAL;
     }
 
-    cholmod_l_free_sparse(&A_chol, &F->common);
     out_F->reserved = F;
     return MATX_OK;
 }

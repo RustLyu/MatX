@@ -100,11 +100,19 @@ matx_status_t matx_gemm_z_i8(const matx_dense_backend_t* blas,
                              matx_complex_d_t beta,
                              matx_dense_z_i8_t C)
 {
-    if (!A || !B || !C || !A->data || !B->data || !C->data) {
+    if (!blas || !A || !B || !C || !A->data || !B->data || !C->data) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
+    if (!blas->vt.zgemm) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
     if (A->layout != B->layout || A->layout != C->layout) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != MATX_COL_MAJOR && A->layout != MATX_ROW_MAJOR) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -151,10 +159,13 @@ matx_status_t matx_gemv_z_i8(const matx_dense_backend_t* blas,
                              matx_complex_d_t beta,
                              matx_vec_z_i8_t y)
 {
-    (void) blas;
-    if (!A || !x || !y || !A->data || !x->data || !y->data) {
+    if (!blas || !A || !x || !y || !A->data || !x->data || !y->data) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zgemv) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
     }
 
     const matx_int64_t m = A->nrows;
@@ -189,10 +200,13 @@ matx_status_t matx_gemv_d_i8(const matx_dense_backend_t* blas,
                              matx_double beta,
                              matx_vec_d_i8_t y)
 {
-    (void) blas;
-    if (!A || !x || !y || !A->data || !x->data || !y->data) {
+    if (!blas || !A || !x || !y || !A->data || !x->data || !y->data) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dgemv) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
     }
 
     const size_t m = A->nrows;
@@ -225,9 +239,13 @@ matx_status_t matx_geadd_z_i8(const matx_dense_backend_t* blas,
                               matx_complex_d_t beta,
                               matx_dense_z_i8_t B)
 {
-    if (!A || !B || !A->data || !B->data) {
+    if (!blas || !A || !B || !A->data || !B->data) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zgeadd) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
     }
     if (A->nrows != B->nrows || A->ncols != B->ncols) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -249,9 +267,13 @@ matx_status_t matx_geadd_d_i8(const matx_dense_backend_t* blas,
                               matx_double beta,
                               matx_dense_d_i8_t B)
 {
-    if (!A || !B || !A->data || !B->data) {
+    if (!blas || !A || !B || !A->data || !B->data) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dgeadd) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
     }
     if (A->nrows != B->nrows || A->ncols != B->ncols) {
         MATX_ERROR("%s: invalid argument", __func__);

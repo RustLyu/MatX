@@ -15,7 +15,8 @@ typedef struct {
     matx_int64_t nnz;
     matx_int64_t* row_ptr;
     matx_int64_t* col_ind;
-    matx_double* val;
+    void* val;
+    size_t elem_size;
 } matx_test_csr_matrix_t;
 
 extern "C" int coo_to_csr_optimized(const matx_alloc_t* alloc,
@@ -24,7 +25,8 @@ extern "C" int coo_to_csr_optimized(const matx_alloc_t* alloc,
                                      matx_int64_t nnz,
                                      const matx_int64_t* coo_row,
                                      const matx_int64_t* coo_col,
-                                     const matx_double* coo_val,
+                                     const void* coo_val,
+                                     size_t elem_size,
                                      matx_test_csr_matrix_t* csr);
 
 TEST(sparse_solve, coo_to_csc_unsorted_duplicate_mapping)
@@ -245,13 +247,15 @@ TEST(sparse_blas, coo_to_csr_unsorted_duplicates)
     const matx_double expected_values[] = {15, 6, 5, 8, 4, 7};
 
     matx_test_csr_matrix_t csr{};
-    ASSERT_EQ(coo_to_csr_optimized(&alloc, 5, 6, 9, rows, columns, values, &csr), 0);
+    ASSERT_EQ(coo_to_csr_optimized(&alloc, 5, 6, 9, rows, columns, values,
+                                    sizeof(matx_double), &csr), 0);
     EXPECT_EQ(csr.nnz, 6);
+    matx_double* csr_vals = (matx_double*) csr.val;
     for (matx_int64_t i = 0; i < 6; ++i)
         EXPECT_EQ(csr.row_ptr[i], expected_row_ptr[i]);
     for (matx_int64_t i = 0; i < 6; ++i) {
         EXPECT_EQ(csr.col_ind[i], expected_col_ind[i]);
-        EXPECT_EQ(csr.val[i], expected_values[i]);
+        EXPECT_NEAR(csr_vals[i], expected_values[i], 1e-15);
     }
     matx_free(&alloc, csr.row_ptr);
     matx_free(&alloc, csr.col_ind);
@@ -274,13 +278,15 @@ TEST(sparse_blas, coo_to_csr_large_row_introsort)
 
     matx_test_csr_matrix_t csr{};
     ASSERT_EQ(coo_to_csr_optimized(&alloc, 1, unique_count, count,
-                                   rows, columns, values, &csr), 0);
+                                    rows, columns, values, sizeof(matx_double),
+                                    &csr), 0);
     EXPECT_EQ(csr.nnz, unique_count);
+    matx_double* csr_vals = (matx_double*) csr.val;
     EXPECT_EQ(csr.row_ptr[0], 0);
     EXPECT_EQ(csr.row_ptr[1], unique_count);
     for (matx_int64_t col = 0; col < unique_count; ++col) {
         EXPECT_EQ(csr.col_ind[col], col);
-        EXPECT_EQ(csr.val[col], (matx_double) (2 * (col + 1)));
+        EXPECT_NEAR(csr_vals[col], (matx_double) (2 * (col + 1)), 1e-15);
     }
     matx_free(&alloc, csr.row_ptr);
     matx_free(&alloc, csr.col_ind);
@@ -299,7 +305,8 @@ TEST(sparse_blas, coo_to_csr_rejects_out_of_range_indices)
     auto expect_invalid_and_clean = [&](const matx_int64_t* rows,
                                         const matx_int64_t* columns) {
         matx_test_csr_matrix_t csr{};
-        EXPECT_NE(coo_to_csr_optimized(&alloc, 3, 2, 2, rows, columns, values, &csr), 0);
+        EXPECT_NE(coo_to_csr_optimized(&alloc, 3, 2, 2, rows, columns, values,
+                                             sizeof(matx_double), &csr), 0);
         EXPECT_EQ(csr.row_ptr, nullptr);
         EXPECT_EQ(csr.col_ind, nullptr);
         EXPECT_EQ(csr.val, nullptr);

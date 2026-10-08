@@ -296,7 +296,7 @@ static matx_status_t ref_idamax(matx_int64_t n,
         matx_double v = fabs(x[i * incx]);
         if (v > max_val) {
             max_val = v;
-            idx = i;
+            idx = i + 1; /* 1-based to match CBLAS convention */
         }
     }
     *result = idx;
@@ -325,7 +325,7 @@ static matx_status_t ref_izamax(matx_int64_t n,
         matx_double v = fabs(re) + fabs(im);
         if (v > max_val) {
             max_val = v;
-            idx = i;
+            idx = i + 1; /* 1-based to match CBLAS convention */
         }
     }
     *result = idx;
@@ -357,7 +357,7 @@ static matx_status_t ref_daxpy(matx_int64_t n,
 static matx_status_t ref_zaxpy(
     matx_int64_t n, const void* alpha, const void* x, matx_int64_t lda, void* y, matx_int64_t ldy)
 {
-    if (!x || !y) {
+    if (!x || !y || !alpha) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
@@ -462,6 +462,10 @@ static matx_status_t ref_vec_cross_d_i8(matx_vec_d_i8_t x, matx_vec_d_i8_t y, ma
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
+    if (x->n < 3 || y->n < 3 || out->n < 3) {
+        MATX_ERROR("%s: cross product requires vectors of length >= 3", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
     matx_double x0 = x->data[0 * x->stride];
     matx_double x1 = x->data[1 * x->stride];
     matx_double x2 = x->data[2 * x->stride];
@@ -478,6 +482,10 @@ static matx_status_t ref_vec_cross_z_i8(matx_vec_z_i8_t x, matx_vec_z_i8_t y, ma
 {
     if (!x || !y || !out || !x->data || !y->data || !out->data) {
         MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (x->n < 3 || y->n < 3 || out->n < 3) {
+        MATX_ERROR("%s: cross product requires vectors of length >= 3", __func__);
         return MATX_ERR_INVALID_ARG;
     }
     matx_complex_d_t x0 = x->data[0 * x->stride];

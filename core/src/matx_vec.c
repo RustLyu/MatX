@@ -62,8 +62,12 @@ matx_status_t matx_vec_##PREFIX##_dup(const matx_alloc_t* alloc,                
     matx_vec_##PREFIX##_t copy = NULL;                                          \
     matx_status_t st = matx_vec_##PREFIX##_create(alloc, &copy, NULL, in->n);    \
     if (st != MATX_OK) return st;                                               \
-    for (matx_int64_t i = 0; i < in->n; ++i)                                    \
-        copy->data[i] = in->data[i * in->stride];                               \
+    if (in->stride == 1) {                                                       \
+        memcpy(copy->data, in->data, (size_t) in->n * sizeof(SCA_TYPE));        \
+    } else {                                                                     \
+        for (matx_int64_t i = 0; i < in->n; ++i)                                 \
+            copy->data[i] = in->data[i * in->stride];                            \
+    }                                                                            \
     if (*out != NULL) matx_vec_##PREFIX##_destroy(alloc, *out);                 \
     *out = copy;                                                                \
     return MATX_OK;                                                             \
@@ -139,7 +143,7 @@ matx_status_t matx_vec_##PREFIX##_zeros(matx_vec_##PREFIX##_t v)            \
         memset(v->data, 0, v->n * sizeof(SCA_TYPE));                        \
     else                                                                    \
         for (matx_int64_t i = 0; i < v->n; ++i)                             \
-            memset(&v->data[i * v->stride], 0, sizeof(SCA_TYPE));           \
+            v->data[i * v->stride] = (SCA_TYPE){0};                         \
     return MATX_OK;                                                         \
 }
 

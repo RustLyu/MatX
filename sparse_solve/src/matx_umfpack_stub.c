@@ -119,18 +119,12 @@ static matx_status_t umf_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
     F->n = A->nrows;
     F->nnz = A->handle_csc->nnz;
 
-    F->Ap = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) (F->n + 1));
-    F->Ai = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) F->nnz);
-    F->Ax = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) F->nnz);
-    if (!F->Ap || !F->Ai || !F->Ax) {
-        umf_factor_csc_d_i8_destroy(alloc, out_F);
-        MATX_ERROR("%s: out of memory", __func__);
-        return MATX_ERR_OUT_OF_MEMORY;
-    }
-
-    memcpy(F->Ap, A->handle_csc->col_ptr, sizeof(matx_int64_t) * (size_t) (F->n + 1));
-    memcpy(F->Ai, A->handle_csc->row_ind, sizeof(matx_int64_t) * (size_t) F->nnz);
-    memcpy(F->Ax, A->handle_csc->values, sizeof(matx_double) * (size_t) F->nnz);
+    F->Ap = A->handle_csc->col_ptr;
+    F->Ai = A->handle_csc->row_ind;
+    F->Ax = A->handle_csc->values;
+    A->handle_csc->col_ptr = NULL;
+    A->handle_csc->row_ind = NULL;
+    A->handle_csc->values = NULL;
 
     int status = umfpack_dl_symbolic((int64_t) F->n,
                                      (int64_t) F->n,
@@ -313,22 +307,21 @@ static matx_status_t umf_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
     out_F->reserved = F;
     F->n = A->nrows;
     F->nnz = A->handle_csc->nnz;
-    // Allocate CSC arrays
-    F->Ap = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) (F->n + 1));
-    F->Ai = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) F->nnz);
+    // Transfer index arrays from CSC handle
+    F->Ap = A->handle_csc->col_ptr;
+    F->Ai = A->handle_csc->row_ind;
+    A->handle_csc->col_ptr = NULL;
+    A->handle_csc->row_ind = NULL;
+
+    // Allocate and interleave complex values for UMFPACK (split real/imag)
     F->Ax = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) F->nnz);
     F->Az = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) F->nnz);
-    if (!F->Ap || !F->Ai || !F->Az || !F->Ax) {
+    if (!F->Az || !F->Ax) {
         umf_factor_csc_z_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
-    // Copy indices
-    memcpy(F->Ap, A->handle_csc->col_ptr, sizeof(matx_int64_t) * (size_t) (F->n + 1));
-    memcpy(F->Ai, A->handle_csc->row_ind, sizeof(matx_int64_t) * (size_t) F->nnz);
-
-    // Copy complex values (interleave real/imag for UMFPACK)
     for (matx_int64_t i = 0; i < F->nnz; i++) {
         F->Ax[i] = A->handle_csc->values[i].real;
         F->Az[i] = A->handle_csc->values[i].imag;

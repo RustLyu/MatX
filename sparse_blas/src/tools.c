@@ -41,9 +41,10 @@ void free_aocl_matrix(void* impl)
 
 size_t coo_2_grb_d_i8(matx_coo_d_i8_t A)
 {
-    GrB_Matrix_free(MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
+    GrB_Matrix_free(h->impl);
     GrB_Info info
-        = GrB_Matrix_import_FP64((GrB_Matrix*) &MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+        = GrB_Matrix_import_FP64((GrB_Matrix*) &h->impl,
                                  GrB_FP64,
                                  A->nrows,
                                  A->ncols,
@@ -59,16 +60,17 @@ size_t coo_2_grb_d_i8(matx_coo_d_i8_t A)
         return -1;
     }
 
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->type = MATX_HANDLE_TYPE_GRB_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = &free_grb_matrix;
+    h->type = MATX_HANDLE_TYPE_GRB_MATRIX;
+    h->valid = 1;
+    h->custom_free_func = &free_grb_matrix;
     return 0;
 }
 
 size_t create_empty_grb_d_i8(matx_coo_d_i8_t A)
 {
-    GrB_Matrix_free(MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_Info info = GrB_Matrix_new((GrB_Matrix*) &MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
+    GrB_Matrix_free(h->impl);
+    GrB_Info info = GrB_Matrix_new((GrB_Matrix*) &h->impl,
                                    GrB_FP64,
                                    A->nrows,
                                    A->ncols);
@@ -76,16 +78,17 @@ size_t create_empty_grb_d_i8(matx_coo_d_i8_t A)
         MATX_ERROR("create f grb handle error:%d", info);
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->type = MATX_HANDLE_TYPE_GRB_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = &free_grb_matrix;
+    h->type = MATX_HANDLE_TYPE_GRB_MATRIX;
+    h->valid = 1;
+    h->custom_free_func = &free_grb_matrix;
     return 0;
 }
 
 size_t create_empty_grb_z_i8(matx_coo_z_i8_t A)
 {
-    GrB_Matrix_free(MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_Info info = GrB_Matrix_new((GrB_Matrix*) &MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
+    GrB_Matrix_free(h->impl);
+    GrB_Info info = GrB_Matrix_new((GrB_Matrix*) &h->impl,
                                    GxB_FC64,
                                    A->nrows,
                                    A->ncols);
@@ -93,9 +96,9 @@ size_t create_empty_grb_z_i8(matx_coo_z_i8_t A)
         MATX_ERROR("create c grb handle error:%d", info);
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->type = MATX_HANDLE_TYPE_GRB_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = &free_grb_matrix;
+    h->type = MATX_HANDLE_TYPE_GRB_MATRIX;
+    h->valid = 1;
+    h->custom_free_func = &free_grb_matrix;
     return 0;
 }
 
@@ -109,7 +112,8 @@ typedef struct
 
     matx_int64_t* row_ptr; // size nrows+1
     matx_int64_t* col_ind; // size nnz
-    matx_double* val;      // size nnz
+    void*         val;     // size nnz * elem_size
+    size_t        elem_size;
 } csr_matrix;
 
 static inline void swap_int(matx_int64_t* a, matx_int64_t* b)
@@ -119,58 +123,66 @@ static inline void swap_int(matx_int64_t* a, matx_int64_t* b)
     *b = t;
 }
 
-static inline void swap_double(matx_double* a, matx_double* b)
+static inline void swap_val(unsigned char* val, matx_int64_t i,
+                            matx_int64_t j, size_t elem_size)
 {
-    matx_double t = *a;
-    *a = *b;
-    *b = t;
+    unsigned char tmp[32]; /* large enough for matx_complex_double */
+    memcpy(tmp, val + (size_t)i * elem_size, elem_size);
+    memcpy(val + (size_t)i * elem_size, val + (size_t)j * elem_size, elem_size);
+    memcpy(val + (size_t)j * elem_size, tmp, elem_size);
 }
 
-static void insertion_sort(matx_int64_t* col, matx_double* val, matx_int64_t len)
+static void insertion_sort(matx_int64_t* col, unsigned char* val,
+                           matx_int64_t len, size_t elem_size)
 {
+    unsigned char tmp[32];
     for (matx_int64_t i = 1; i < len; ++i) {
         matx_int64_t c = col[i];
-        matx_double v = val[i];
+        memcpy(tmp, val + (size_t)i * elem_size, elem_size);
         matx_int64_t j = i - 1;
         while (j >= 0 && col[j] > c) {
             col[j + 1] = col[j];
-            val[j + 1] = val[j];
+            memcpy(val + (size_t)(j + 1) * elem_size,
+                   val + (size_t)j * elem_size, elem_size);
             j--;
         }
         col[j + 1] = c;
-        val[j + 1] = v;
+        memcpy(val + (size_t)(j + 1) * elem_size, tmp, elem_size);
     }
 }
 
-static void swap_csr_entry(matx_int64_t* col, matx_double* val,
-                           matx_int64_t left, matx_int64_t right)
+static void swap_csr_entry(matx_int64_t* col, unsigned char* val,
+                           matx_int64_t left, matx_int64_t right,
+                           size_t elem_size)
 {
     swap_int(&col[left], &col[right]);
-    swap_double(&val[left], &val[right]);
+    swap_val(val, left, right, elem_size);
 }
 
-static void sift_csr_entries_down(matx_int64_t* col, matx_double* val,
-                                  matx_int64_t root, matx_int64_t end)
+static void sift_csr_entries_down(matx_int64_t* col, unsigned char* val,
+                                  matx_int64_t root, matx_int64_t end,
+                                  size_t elem_size)
 {
     for (;;) {
         matx_int64_t child = root * 2 + 1;
         if (child > end) return;
         if (child + 1 <= end && col[child] < col[child + 1]) ++child;
         if (col[root] >= col[child]) return;
-        swap_csr_entry(col, val, root, child);
+        swap_csr_entry(col, val, root, child, elem_size);
         root = child;
     }
 }
 
-static void heapsort_csr_entries(matx_int64_t* col, matx_double* val, matx_int64_t len)
+static void heapsort_csr_entries(matx_int64_t* col, unsigned char* val,
+                                 matx_int64_t len, size_t elem_size)
 {
     for (matx_int64_t start = len / 2; start > 0;) {
         --start;
-        sift_csr_entries_down(col, val, start, len - 1);
+        sift_csr_entries_down(col, val, start, len - 1, elem_size);
     }
     for (matx_int64_t end = len - 1; end > 0; --end) {
-        swap_csr_entry(col, val, 0, end);
-        sift_csr_entries_down(col, val, 0, end - 1);
+        swap_csr_entry(col, val, 0, end, elem_size);
+        sift_csr_entries_down(col, val, 0, end - 1, elem_size);
     }
 }
 
@@ -180,12 +192,13 @@ static matx_int64_t median_col(matx_int64_t a, matx_int64_t b, matx_int64_t c)
     return (a < c) ? a : (b < c ? c : b);
 }
 
-static void introsort_csr_entries(matx_int64_t* col, matx_double* val,
-                                  matx_int64_t len, unsigned depth_limit)
+static void introsort_csr_entries(matx_int64_t* col, unsigned char* val,
+                                  matx_int64_t len, unsigned depth_limit,
+                                  size_t elem_size)
 {
     while (len > 32) {
         if (depth_limit == 0) {
-            heapsort_csr_entries(col, val, len);
+            heapsort_csr_entries(col, val, len, elem_size);
             return;
         }
         --depth_limit;
@@ -200,7 +213,7 @@ static void introsort_csr_entries(matx_int64_t* col, matx_double* val,
                 --right;
             }
             if (left <= right) {
-                swap_csr_entry(col, val, left, right);
+                swap_csr_entry(col, val, left, right, elem_size);
                 ++left;
                 if (right == 0) {
                     right = -1;
@@ -214,30 +227,32 @@ static void introsort_csr_entries(matx_int64_t* col, matx_double* val,
         const matx_int64_t right_len = len - left;
         if (left_len < right_len) {
             if (left_len > 1)
-                introsort_csr_entries(col, val, left_len, depth_limit);
+                introsort_csr_entries(col, val, left_len, depth_limit, elem_size);
             col += left;
-            val += left;
+            val += (size_t)left * elem_size;
             len = right_len;
         } else {
             if (right_len > 1)
-                introsort_csr_entries(col + left, val + left, right_len, depth_limit);
+                introsort_csr_entries(col + left, val + (size_t)left * elem_size,
+                                      right_len, depth_limit, elem_size);
             len = left_len;
         }
     }
 
-    insertion_sort(col, val, len);
+    insertion_sort(col, val, len, elem_size);
 }
 
-static void sort_row(matx_int64_t* col, matx_double* val, matx_int64_t len)
+static void sort_row(matx_int64_t* col, unsigned char* val, matx_int64_t len,
+                     size_t elem_size)
 {
     if (len <= 32)
-        insertion_sort(col, val, len);
+        insertion_sort(col, val, len, elem_size);
     else {
         unsigned depth_limit = 0;
         for (matx_int64_t size = len; size > 1; size >>= 1) {
             depth_limit += 2;
         }
-        introsort_csr_entries(col, val, len, depth_limit);
+        introsort_csr_entries(col, val, len, depth_limit, elem_size);
     }
 }
 
@@ -256,29 +271,32 @@ int coo_to_csr_optimized(const matx_alloc_t* alloc,
                          matx_int64_t nnz,
                          const matx_int64_t* coo_row,
                          const matx_int64_t* coo_col,
-                         const matx_double* coo_val,
+                         const void* coo_val,
+                         size_t elem_size,
                          csr_matrix* csr)
 {
     if (!alloc || !alloc->malloc_fn || !alloc->free_fn || !csr
         || !coo_row || !coo_col || !coo_val || nrows <= 0 || ncols <= 0
         || nnz <= 0 || nrows == INT64_MAX
+        || (elem_size != sizeof(matx_double)
+            && elem_size != sizeof(matx_complex_d_t))
         || (uint64_t) nrows + 1 > SIZE_MAX / sizeof(matx_int64_t)
         || (uint64_t) nrows > SIZE_MAX / sizeof(matx_int64_t)
         || (uint64_t) nnz > SIZE_MAX / sizeof(matx_int64_t)
-        || (uint64_t) nnz > SIZE_MAX / sizeof(matx_double)) {
+        || (uint64_t) nnz > SIZE_MAX / elem_size) {
         MATX_ERROR("invalid COO matrix or size overflow");
         return -1;
     }
     memset(csr, 0, sizeof(*csr));
     csr->nrows = nrows;
     csr->ncols = ncols;
+    csr->elem_size = elem_size;
 
     csr->row_ptr = (matx_int64_t*) matx_malloc(alloc,
                                     ((size_t) nrows + 1) * sizeof(matx_int64_t));
     csr->col_ind = (matx_int64_t*) matx_malloc(alloc,
                                     (size_t) nnz * sizeof(matx_int64_t));
-    csr->val = (matx_double*) matx_malloc(alloc,
-                                    (size_t) nnz * sizeof(matx_double));
+    csr->val = matx_malloc(alloc, (size_t) nnz * elem_size);
 
     if (!csr->row_ptr || !csr->col_ind || !csr->val) {
         free_csr_matrix(alloc, csr);
@@ -300,18 +318,33 @@ int coo_to_csr_optimized(const matx_alloc_t* alloc,
         csr->row_ptr[i + 1] += csr->row_ptr[i];
     }
 
-    for (matx_int64_t i = 0; i < nnz; ++i) {
-        const matx_int64_t r = coo_row[i];
-        const matx_int64_t c = coo_col[i];
-        if (c < 0 || c >= ncols) {
-            free_csr_matrix(alloc, csr);
-            MATX_ERROR("COO index out of bounds at position %lld", (long long) i);
-            return -1;
+    /* Check if COO is already row-sorted (and within-row column-sorted). */
+    int is_sorted = 1;
+    for (matx_int64_t i = 1; i < nnz; ++i) {
+        if (coo_row[i] < coo_row[i - 1]
+            || (coo_row[i] == coo_row[i - 1] && coo_col[i] < coo_col[i - 1])) {
+            is_sorted = 0;
+            break;
         }
-        const matx_int64_t dst = csr->row_ptr[r]++;
+    }
 
-        csr->col_ind[dst] = c;
-        csr->val[dst] = coo_val[i];
+    {
+        const unsigned char* coo_v = (const unsigned char*) coo_val;
+        unsigned char* csv = (unsigned char*) csr->val;
+        for (matx_int64_t i = 0; i < nnz; ++i) {
+            const matx_int64_t r = coo_row[i];
+            const matx_int64_t c = coo_col[i];
+            if (c < 0 || c >= ncols) {
+                free_csr_matrix(alloc, csr);
+                MATX_ERROR("COO index out of bounds at position %lld", (long long) i);
+                return -1;
+            }
+            const matx_int64_t dst = csr->row_ptr[r]++;
+
+            csr->col_ind[dst] = c;
+            memcpy(csv + (size_t)dst * elem_size,
+                   coo_v + (size_t)i * elem_size, elem_size);
+        }
     }
 
     /* Restore row starts by shifting the advanced per-row cursors right. */
@@ -320,45 +353,62 @@ int coo_to_csr_optimized(const matx_alloc_t* alloc,
     }
     csr->row_ptr[0] = 0;
 
-    matx_int64_t new_nnz = 0;
+    /* Per-row sort — skipped if COO was already row-sorted. */
+    {
+        matx_int64_t new_nnz = 0;
 
-    for (matx_int64_t i = 0; i < nrows; ++i) {
-        matx_int64_t start = csr->row_ptr[i];
-        matx_int64_t end = csr->row_ptr[i + 1];
-        matx_int64_t len = end - start;
+        for (matx_int64_t i = 0; i < nrows; ++i) {
+            matx_int64_t start = csr->row_ptr[i];
+            matx_int64_t end = csr->row_ptr[i + 1];
+            matx_int64_t len = end - start;
 
-        if (len == 0) {
-            csr->row_ptr[i] = new_nnz;
-            continue;
-        }
-
-        matx_int64_t* col = csr->col_ind + start;
-        matx_double* val = csr->val + start;
-
-        sort_row(col, val, len);
-
-        matx_int64_t write = 0;
-        for (matx_int64_t j = 0; j < len; ++j) {
-            if (j > 0 && col[j] == col[j - 1]) {
-                val[write - 1] += val[j];
-            } else {
-                col[write] = col[j];
-                val[write] = val[j];
-                write++;
+            if (len == 0) {
+                csr->row_ptr[i] = new_nnz;
+                continue;
             }
+
+            matx_int64_t* col = csr->col_ind + start;
+            unsigned char* val = (unsigned char*)csr->val
+                                 + (size_t)start * elem_size;
+
+            if (!is_sorted) {
+                sort_row(col, val, len, elem_size);
+            }
+
+            matx_int64_t write = 0;
+            for (matx_int64_t j = 0; j < len; ++j) {
+                if (j > 0 && col[j] == col[j - 1]) {
+                    if (elem_size == sizeof(matx_double)) {
+                        ((matx_double*)val)[write - 1]
+                            += ((matx_double*)val)[j];
+                    } else {
+                        matx_complex_d_t* cv
+                            = (matx_complex_d_t*) val;
+                        cv[write - 1].real += cv[j].real;
+                        cv[write - 1].imag += cv[j].imag;
+                    }
+                } else {
+                    col[write] = col[j];
+                    memcpy(val + (size_t)write * elem_size,
+                           val + (size_t)j * elem_size, elem_size);
+                    write++;
+                }
+            }
+
+            for (matx_int64_t j = 0; j < write; ++j) {
+                csr->col_ind[new_nnz + j] = col[j];
+                memcpy((unsigned char*)csr->val
+                       + (size_t)(new_nnz + j) * elem_size,
+                       val + (size_t)j * elem_size, elem_size);
+            }
+
+            csr->row_ptr[i] = new_nnz;
+            new_nnz += write;
         }
 
-        for (matx_int64_t j = 0; j < write; ++j) {
-            csr->col_ind[new_nnz + j] = col[j];
-            csr->val[new_nnz + j] = val[j];
-        }
-
-        csr->row_ptr[i] = new_nnz;
-        new_nnz += write;
+        csr->row_ptr[nrows] = new_nnz;
+        csr->nnz = new_nnz;
     }
-
-    csr->row_ptr[nrows] = new_nnz;
-    csr->nnz = new_nnz;
 
     return 0;
 }
@@ -391,7 +441,7 @@ size_t coo_2_aocl_d_i8(matx_coo_d_i8_t A)
 
     matx_int64_t ret = coo_to_csr_optimized(&A->alloc, A->nrows, A->ncols,
                                             A->nnz, A->rows, A->columns,
-                                            A->values, &csr_m);
+                                            A->values, sizeof(matx_double), &csr_m);
     if (ret != 0) {
         MATX_ERROR("coo 2 csr op. error");
         return -1;
@@ -435,39 +485,66 @@ size_t coo_2_aocl_z_i8(matx_coo_z_i8_t A)
 {
 #if MATX_HAVE_AOCL_SPARSE
 
-    aoclsparse_matrix coo;
     aoclsparse_matrix csr;
-    aoclsparse_status st;
-
-    st = aoclsparse_create_zcoo(&coo,
-                                aoclsparse_index_base_zero,
-                                (aoclsparse_int) A->nrows,
-                                (aoclsparse_int) A->ncols,
-                                (aoclsparse_int) A->nnz,
-                                (aoclsparse_int*) A->rows,
-                                (aoclsparse_int*) A->columns,
-                                (void*) A->values);
-
-    if (st != aoclsparse_status_success) {
-        MATX_ERROR("aocl create zcoo error: %d", st);
+    csr_matrix csr_m;
+    if (!A || !A->alloc.malloc_fn || !A->alloc.free_fn
+        || !A->rows || !A->columns || !A->values) {
+        MATX_ERROR("%s: invalid argument", __func__);
         return (size_t) -1;
     }
 
-    st = aoclsparse_convert_csr(coo, aoclsparse_operation_none, &csr);
+    matx_handle_t* handle = MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX);
+    if (handle->valid && handle->custom_free_func) {
+        handle->custom_free_func(handle->impl);
+    }
+    handle->impl = NULL;
+    handle->valid = 0;
+    handle->custom_free_func = NULL;
+    matx_free(&A->alloc, A->aocl_csr_row_ptr);
+    matx_free(&A->alloc, A->aocl_csr_col_ind);
+    matx_free(&A->alloc, A->aocl_csr_values);
+    A->aocl_csr_row_ptr = NULL;
+    A->aocl_csr_col_ind = NULL;
+    A->aocl_csr_values = NULL;
 
+    matx_int64_t ret = coo_to_csr_optimized(&A->alloc, A->nrows, A->ncols,
+                                            A->nnz, A->rows, A->columns,
+                                            A->values, sizeof(matx_complex_double),
+                                            &csr_m);
+    if (ret != 0) {
+        MATX_ERROR("coo 2 csr op. error");
+        return -1;
+    }
+    aoclsparse_index_base base = aoclsparse_index_base_zero;
+    aoclsparse_status st = aoclsparse_create_zcsr(&csr,
+                                                  base,
+                                                  csr_m.nrows,
+                                                  csr_m.ncols,
+                                                  csr_m.nnz,
+                                                  csr_m.row_ptr,
+                                                  csr_m.col_ind,
+                                                  (aoclsparse_double_complex*)csr_m.val);
     if (st != aoclsparse_status_success) {
-        MATX_ERROR("aocl convert csr error: %d", st);
-        return (size_t) -1;
+        free_csr_matrix(&A->alloc, &csr_m);
+        MATX_ERROR("aocl create zcsr. error: %d", st);
+        return -1;
     }
 
-    aoclsparse_destroy(&coo);
-    aoclsparse_optimize(csr);
+    st = aoclsparse_optimize(csr);
 
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl = csr;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->type = MATX_HANDLE_TYPE_AOCL_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->custom_free_func = &free_aocl_matrix;
-
+    if (st != aoclsparse_status_success) {
+        aoclsparse_destroy(&csr);
+        free_csr_matrix(&A->alloc, &csr_m);
+        MATX_ERROR("aocl op mtx error: %d", st);
+        return -1;
+    }
+    handle->impl = csr;
+    handle->type = MATX_HANDLE_TYPE_AOCL_MATRIX;
+    handle->valid = 1;
+    handle->custom_free_func = &free_aocl_matrix;
+    A->aocl_csr_row_ptr = csr_m.row_ptr;
+    A->aocl_csr_col_ind = csr_m.col_ind;
+    A->aocl_csr_values = csr_m.val;
 #endif
 
     return 0;
@@ -476,8 +553,9 @@ size_t coo_2_aocl_z_i8(matx_coo_z_i8_t A)
 size_t aocl_2_coo_z_i8(matx_coo_z_i8_t A)
 {
 #if MATX_HAVE_AOCL_SPARSE
+    matx_handle_t* ha = MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX);
     aoclsparse_index_base base;
-    aoclsparse_status st = aoclsparse_export_zcoo(MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
+    aoclsparse_status st = aoclsparse_export_zcoo(ha->impl,
                                                   &base,
                                                   &A->nrows,
                                                   &A->ncols,
@@ -489,9 +567,9 @@ size_t aocl_2_coo_z_i8(matx_coo_z_i8_t A)
         MATX_ERROR("aocl expoert zcoo error: %d", st);
         return (size_t) -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->type = MATX_HANDLE_TYPE_AOCL_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->custom_free_func = &free_aocl_matrix;
+    ha->type = MATX_HANDLE_TYPE_AOCL_MATRIX;
+    ha->valid = 1;
+    ha->custom_free_func = &free_aocl_matrix;
 #endif
     return 0;
 }
@@ -500,11 +578,12 @@ size_t aocl_2_coo_z_i8(matx_coo_z_i8_t A)
 
 size_t dense_2_grb_d_i8(matx_dense_d_i8_t A)
 {
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
     const uint64_t values_size
         = (uint64_t) A->nrows * (uint64_t) A->ncols * sizeof(*A->data);
-    GrB_Matrix_free(MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
+    GrB_Matrix_free(h->impl);
     GrB_Info info
-        = GxB_Matrix_import_FullC((GrB_Matrix*) &MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+        = GxB_Matrix_import_FullC((GrB_Matrix*) &h->impl,
                                   GrB_FP64,
                                   A->nrows,
                                   A->ncols,
@@ -516,19 +595,20 @@ size_t dense_2_grb_d_i8(matx_dense_d_i8_t A)
         MATX_ERROR("grb import fullc, %d", info);
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->type = MATX_HANDLE_TYPE_GRB_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = NULL;
+    h->type = MATX_HANDLE_TYPE_GRB_MATRIX;
+    h->valid = 1;
+    h->custom_free_func = NULL;
     return 0;
 }
 
 size_t grb_2_dense_d_i8(matx_dense_d_i8_t A)
 {
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
     GrB_Type t;
     uint64_t values_size = 0;
     bool iso = false;
     GrB_Info info
-        = GxB_Matrix_export_FullC((GrB_Matrix*) &MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+        = GxB_Matrix_export_FullC((GrB_Matrix*) &h->impl,
                                   &t,
                                   &A->nrows,
                                   &A->ncols,
@@ -542,17 +622,18 @@ size_t grb_2_dense_d_i8(matx_dense_d_i8_t A)
     }
     const uint64_t expected_size
         = (uint64_t) A->nrows * (uint64_t) A->ncols * sizeof(*A->data);
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 0;
+    h->valid = 0;
     if (values_size != expected_size) {
         MATX_ERROR("grb export fullc returned an unexpected size");
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = NULL;
+    h->custom_free_func = NULL;
     return 0;
 }
 
 size_t grb_2_coo_d_i8(matx_coo_d_i8_t A)
 {
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
     A->nrows = -1;
     A->ncols = -1;
     GrB_Info info = GrB_Matrix_export(A->rows,
@@ -562,20 +643,21 @@ size_t grb_2_coo_d_i8(matx_coo_d_i8_t A)
                                       &A->ncols,
                                       &A->nnz,
                                       GrB_COO_FORMAT,
-                                      MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
+                                      h->impl);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("grb export error: %d", info);
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 1;
+    h->valid = 1;
     return 0;
 }
 
 size_t vec_2_grb_d_i8(matx_vec_d_i8_t v)
 {
+    matx_handle_t* hv = MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR);
     const uint64_t values_size = (uint64_t) v->n * sizeof(*v->data);
     GrB_Info info
-        = GxB_Vector_import_Full((GrB_Vector*) &MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
+        = GxB_Vector_import_Full((GrB_Vector*) &hv->impl,
                                  GrB_FP64,
                                  v->n,
                                  (void*) &v->data,
@@ -586,20 +668,21 @@ size_t vec_2_grb_d_i8(matx_vec_d_i8_t v)
         MATX_ERROR("grb vector import error: %d", info);
         return -1;
     }
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->type = MATX_HANDLE_TYPE_GRB_VECTOR;
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->valid = 1;
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->custom_free_func = NULL;
+    hv->type = MATX_HANDLE_TYPE_GRB_VECTOR;
+    hv->valid = 1;
+    hv->custom_free_func = NULL;
     return 0;
 }
 
 size_t grb_2_vec_d_i8(matx_vec_d_i8_t v)
 {
+    matx_handle_t* hv = MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR);
     GrB_Type t = GrB_FP64;
     uint64_t vector_size = 0;
     uint64_t values_size = 0;
     bool iso = false;
     GrB_Info info
-        = GxB_Vector_export_Full((GrB_Vector*) &MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
+        = GxB_Vector_export_Full((GrB_Vector*) &hv->impl,
                                  &t,
                                  &vector_size,
                                  (void*) &v->data,
@@ -611,19 +694,20 @@ size_t grb_2_vec_d_i8(matx_vec_d_i8_t v)
         return -1;
     }
     if (vector_size != (uint64_t) v->n || values_size != vector_size * sizeof(*v->data)) {
-        MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->valid = 0;
+        hv->valid = 0;
         MATX_ERROR("grb vector export returned an unexpected size");
         return -1;
     }
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->valid = 0;
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->custom_free_func = NULL;
+    hv->valid = 0;
+    hv->custom_free_func = NULL;
     return 0;
 }
 
 size_t coo_2_grb_z_i8(matx_coo_z_i8_t A)
 {
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
     GrB_Info info
-        = GxB_Matrix_import_FC64((GrB_Matrix*) &MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+        = GxB_Matrix_import_FC64((GrB_Matrix*) &h->impl,
                                  GxB_FC64,
                                  A->nrows,
                                  A->ncols,
@@ -638,18 +722,19 @@ size_t coo_2_grb_z_i8(matx_coo_z_i8_t A)
         MATX_ERROR("grb mtx import error: %d", info);
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->type = MATX_HANDLE_TYPE_GRB_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = NULL;
+    h->type = MATX_HANDLE_TYPE_GRB_MATRIX;
+    h->valid = 1;
+    h->custom_free_func = NULL;
     return 0;
 }
 
 size_t dense_2_grb_z_i8(matx_dense_z_i8_t A)
 {
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
     const uint64_t values_size
         = (uint64_t) A->nrows * (uint64_t) A->ncols * sizeof(*A->data);
     GrB_Info info
-        = GxB_Matrix_import_FullC((GrB_Matrix*) &MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+        = GxB_Matrix_import_FullC((GrB_Matrix*) &h->impl,
                                   GxB_FC64,
                                   A->nrows,
                                   A->ncols,
@@ -661,19 +746,20 @@ size_t dense_2_grb_z_i8(matx_dense_z_i8_t A)
         MATX_ERROR("grb dense mtx import error: %d", info);
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->type = MATX_HANDLE_TYPE_GRB_MATRIX;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 1;
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = NULL;
+    h->type = MATX_HANDLE_TYPE_GRB_MATRIX;
+    h->valid = 1;
+    h->custom_free_func = NULL;
     return 0;
 }
 
 size_t grb_2_dense_z_i8(matx_dense_z_i8_t A)
 {
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
     GrB_Type t;
     uint64_t values_size = 0;
     bool iso = false;
     GrB_Info info
-        = GxB_Matrix_export_FullC((GrB_Matrix*) &MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
+        = GxB_Matrix_export_FullC((GrB_Matrix*) &h->impl,
                                   &t,
                                   &A->nrows,
                                   &A->ncols,
@@ -687,17 +773,18 @@ size_t grb_2_dense_z_i8(matx_dense_z_i8_t A)
     }
     const uint64_t expected_size
         = (uint64_t) A->nrows * (uint64_t) A->ncols * sizeof(*A->data);
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid = 0;
+    h->valid = 0;
     if (values_size != expected_size) {
         MATX_ERROR("grb dense export returned an unexpected size");
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = NULL;
+    h->custom_free_func = NULL;
     return 0;
 }
 
 size_t grb_2_coo_z_i8(matx_coo_z_i8_t A)
 {
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
     A->ncols = -1;
     A->nrows = -1;
     GrB_Info info = GrB_Matrix_export(A->rows,
@@ -707,23 +794,24 @@ size_t grb_2_coo_z_i8(matx_coo_z_i8_t A)
                                       &A->ncols,
                                       &A->nnz,
                                       GrB_COO_FORMAT,
-                                      MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
+                                      h->impl);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("grb 2 coo mtx export error: %d", info);
         return -1;
     }
-    MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->custom_free_func = NULL;
+    h->custom_free_func = NULL;
     return 0;
 }
 
 size_t vec_2_grb_z_i8(matx_vec_z_i8_t v)
 {
+    matx_handle_t* hv = MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR);
     const uint64_t values_size = (uint64_t) v->n * sizeof(*v->data);
-    if (MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->impl != NULL) {
-        GrB_Vector_free((GrB_Vector*) &MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->impl);
+    if (hv->impl != NULL) {
+        GrB_Vector_free((GrB_Vector*) &hv->impl);
     }
     GrB_Info info
-        = GxB_Vector_import_Full((GrB_Vector*) &MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
+        = GxB_Vector_import_Full((GrB_Vector*) &hv->impl,
                                  GxB_FC64,
                                  v->n,
                                  (void*) &v->data,
@@ -734,20 +822,21 @@ size_t vec_2_grb_z_i8(matx_vec_z_i8_t v)
         MATX_ERROR("vec 2 grb mtx export error: %d", info);
         return -1;
     }
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->type = MATX_HANDLE_TYPE_GRB_VECTOR;
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->valid = 1;
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->custom_free_func = NULL;
+    hv->type = MATX_HANDLE_TYPE_GRB_VECTOR;
+    hv->valid = 1;
+    hv->custom_free_func = NULL;
     return 0;
 }
 
 size_t grb_2_vec_z_i8(matx_vec_z_i8_t v)
 {
+    matx_handle_t* hv = MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR);
     GrB_Type t = GxB_FC64;
     uint64_t vector_size = 0;
     uint64_t values_size = 0;
     bool iso = false;
     GrB_Info info
-        = GxB_Vector_export_Full((GrB_Vector*) &MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
+        = GxB_Vector_export_Full((GrB_Vector*) &hv->impl,
                                  &t,
                                  &vector_size,
                                  (void*) &v->data,
@@ -759,12 +848,12 @@ size_t grb_2_vec_z_i8(matx_vec_z_i8_t v)
         return -1;
     }
     if (vector_size != (uint64_t) v->n || values_size != vector_size * sizeof(*v->data)) {
-        MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->valid = 0;
+        hv->valid = 0;
         MATX_ERROR("grb vector export returned an unexpected size");
         return -1;
     }
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->valid = 0;
-    MATX_HANDLE(v, MATX_HANDLE_TYPE_GRB_VECTOR)->custom_free_func = NULL;
+    hv->valid = 0;
+    hv->custom_free_func = NULL;
     return 0;
 }
 

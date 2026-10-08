@@ -273,14 +273,21 @@ matx_status_t matx_dense_##PREFIX##_zeros(matx_dense_##PREFIX##_t m)            
         MATX_ERROR("%s: invalid argument", __func__);                          \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
+    const matx_int64_t minor = (m->layout == MATX_COL_MAJOR)                    \
+        ? m->nrows : m->ncols;                                                  \
+    if (m->stride == minor) {                                                   \
+        memset(m->data, 0, (size_t) m->nrows * (size_t) m->ncols               \
+               * sizeof(SCA_TYPE));                                             \
+        return MATX_OK;                                                         \
+    }                                                                          \
     if (m->layout == MATX_COL_MAJOR) {                                         \
         for (matx_int64_t j = 0; j < m->ncols; ++j)                            \
-            for (matx_int64_t i = 0; i < m->nrows; ++i)                        \
-                m->data[i + j * m->stride] = (SCA_TYPE){0};                     \
+            memset(m->data + j * m->stride, 0,                                  \
+                   (size_t) m->nrows * sizeof(SCA_TYPE));                       \
     } else {                                                                   \
         for (matx_int64_t i = 0; i < m->nrows; ++i)                            \
-            for (matx_int64_t j = 0; j < m->ncols; ++j)                        \
-                m->data[i * m->stride + j] = (SCA_TYPE){0};                     \
+            memset(m->data + i * m->stride, 0,                                  \
+                   (size_t) m->ncols * sizeof(SCA_TYPE));                       \
     }                                                                          \
     return MATX_OK;                                                            \
 }

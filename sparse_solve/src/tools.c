@@ -186,14 +186,15 @@ static int coo_2_csc_from_entries(const matx_int64_t* columns,
                                   matx_int64_t* Ap,
                                   matx_int64_t* Ai,
                                   matx_int64_t* coo2csc,
-                                  matx_int64_t* out_nnz)
+                                  matx_int64_t* out_nnz,
+                                  const matx_alloc_t* alloc)
 {
     if ((uint64_t) nnz > SIZE_MAX / sizeof(Entry)) {
         MATX_ERROR("%s: temporary entry array size overflow", __func__);
         memset(Ap, 0, ((size_t) ncols + 1) * sizeof(matx_int64_t));
         return COO2CSC_ERR_OUT_OF_RANGE;
     }
-    Entry* entries = (Entry*) malloc((size_t) nnz * sizeof(*entries));
+    Entry* entries = (Entry*) matx_malloc(alloc, (size_t) nnz * sizeof(*entries));
     if (entries == NULL) {
         MATX_ERROR("%s: out of memory", __func__);
         memset(Ap, 0, ((size_t) ncols + 1) * sizeof(matx_int64_t));
@@ -237,7 +238,7 @@ static int coo_2_csc_from_entries(const matx_int64_t* columns,
     }
     Ap[ncols] = unique_nnz;
     *out_nnz = unique_nnz;
-    free(entries);
+    matx_free(alloc, entries);
     return COO2CSC_SUCCESS;
 }
 
@@ -249,7 +250,8 @@ static int coo_2_csc_from_counts(const matx_int64_t* columns,
                                  matx_int64_t* Ap,
                                  matx_int64_t* Ai,
                                  matx_int64_t* coo2csc,
-                                 matx_int64_t* out_nnz)
+                                 matx_int64_t* out_nnz,
+                                 const matx_alloc_t* alloc)
 {
     int has_radix_columns = 0;
     for (matx_int64_t col = 0; col < ncols; ++col) {
@@ -259,10 +261,10 @@ static int coo_2_csc_from_counts(const matx_int64_t* columns,
 
     if (!has_radix_columns)
         return coo_2_csc_from_entries(columns, rows, ncols, nnz, Ap, Ai,
-                                      coo2csc, out_nnz);
+                                      coo2csc, out_nnz, alloc);
 
     matx_int64_t* indices
-        = (matx_int64_t*) malloc((size_t) nnz * sizeof(*indices));
+        = (matx_int64_t*) matx_malloc(alloc, (size_t) nnz * sizeof(*indices));
     if (indices == NULL) {
         MATX_ERROR("%s: out of memory", __func__);
         memset(Ap, 0, ((size_t) ncols + 1) * sizeof(matx_int64_t));
@@ -330,7 +332,7 @@ static int coo_2_csc_from_counts(const matx_int64_t* columns,
     Ap[ncols] = unique_nnz;
 
     *out_nnz = unique_nnz;
-    free(indices);
+    matx_free(alloc, indices);
     return COO2CSC_SUCCESS;
 }
 
@@ -342,7 +344,8 @@ int coo_2_csc(matx_int64_t* columns,
               matx_int64_t* Ap,
               matx_int64_t* Ai,
               matx_int64_t* coo2csc,
-              matx_int64_t* out_nnz)
+              matx_int64_t* out_nnz,
+              const matx_alloc_t* alloc)
 {
     if (!columns || !rows || !Ap || !Ai || !coo2csc || !out_nnz) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -377,7 +380,7 @@ int coo_2_csc(matx_int64_t* columns,
             ++Ap[columns[k] + 1];
         }
         return coo_2_csc_from_counts(columns, rows, nrows, ncols, nnz, Ap, Ai,
-                                    coo2csc, out_nnz);
+                                    coo2csc, out_nnz, alloc);
     }
 
     int is_sorted = 1;
@@ -421,7 +424,7 @@ int coo_2_csc(matx_int64_t* columns,
         ++Ap[columns[k] + 1];
     }
     return coo_2_csc_from_counts(columns, rows, nrows, ncols, nnz, Ap, Ai,
-                                coo2csc, out_nnz);
+                                coo2csc, out_nnz, alloc);
 }
 
 int build_Ax_from_coo_z_i8(const matx_int64_t* coo2csc,
@@ -533,7 +536,8 @@ matx_status_t coo_to_csc_d_i8(matx_coo_d_i8_t coo)
     int s = coo_2_csc(coo->columns, coo->rows, coo->nrows, coo->ncols,
                       coo->nnz, coo->handle_csc->col_ptr,
                       coo->handle_csc->row_ind,
-                      coo->handle_csc->coo_csc_index_map, &final_nnz);
+                      coo->handle_csc->coo_csc_index_map, &final_nnz,
+                      &coo->alloc);
     if (s != COO2CSC_SUCCESS) {
         MATX_ERROR("%s: coo_2_csc failed with code %d", __func__, s);
         return coo2csc_status(s);
@@ -551,7 +555,8 @@ matx_status_t coo_to_csc_z_i8(matx_coo_z_i8_t coo)
     int s = coo_2_csc(coo->columns, coo->rows, coo->nrows, coo->ncols,
                       coo->nnz, coo->handle_csc->col_ptr,
                       coo->handle_csc->row_ind,
-                      coo->handle_csc->coo_csc_index_map, &final_nnz);
+                      coo->handle_csc->coo_csc_index_map, &final_nnz,
+                      &coo->alloc);
     if (s != COO2CSC_SUCCESS) {
         MATX_ERROR("%s: coo_2_csc failed with code %d", __func__, s);
         return coo2csc_status(s);

@@ -508,6 +508,10 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
     const size_t y_export_status = grb_2_vec_z_i8(y);
     if (x_export_status != 0 || y_export_status != 0)
         return MATX_ERR_INTERNAL;
+#else
+    (void) alpha; (void) A; (void) x; (void) beta; (void) y;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -520,8 +524,7 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
     if (A && B && B->ncols > 0
-        && A->nnz <= MATX_SPARSE_DIRECT_SPMV_MAX_NNZ
-        && A->nnz <= MATX_SPARSE_DIRECT_SPMM_MAX_PRODUCTS / B->ncols) {
+        && (uint64_t) A->nnz * (uint64_t) B->ncols <= MATX_SPARSE_DIRECT_SPMM_MAX_PRODUCTS) {
         return ref_spmm_z_i8_coo(alpha, A, B, beta, C);
     }
 
@@ -620,6 +623,10 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
     const size_t c_export_status = grb_2_dense_z_i8(C);
     if (b_export_status != 0 || c_export_status != 0)
         return MATX_ERR_INTERNAL;
+#else
+    (void) alpha; (void) A; (void) B; (void) beta; (void) C;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -721,6 +728,10 @@ static matx_status_t ref_spmv_d_i8_grb(
     const size_t y_export_status = grb_2_vec_d_i8(y);
     if (x_export_status != 0 || y_export_status != 0)
         return MATX_ERR_INTERNAL;
+#else
+    (void) alpha; (void) A; (void) x; (void) beta; (void) y;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -830,6 +841,10 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
     const size_t c_export_status = grb_2_dense_d_i8(C);
     if (b_export_status != 0 || c_export_status != 0)
         return MATX_ERR_INTERNAL;
+#else
+    (void) alpha; (void) A; (void) B; (void) beta; (void) C;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -856,51 +871,63 @@ static matx_status_t ref_dsp2md_d_i8_grb(
 
     /* C = alpha*A*B + beta*C */
 
-    // 1. temp = alpha * A * B
-    GrB_Matrix temp;
-    GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->nrows, C->ncols);
-    info = GrB_mxm(temp,
-                   NULL,
-                   NULL,
-                   GxB_PLUS_TIMES_FP64,
-                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                   (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                   NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
-        return MATX_ERR_INTERNAL;
+    GrB_Matrix c_grb = (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    GrB_Matrix a_grb = (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    GrB_Matrix b_grb = (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+
+    if (beta == 0.0) {
+        /* C = alpha * A * B — output directly into C, no temp needed. */
+        GrB_Descriptor desc;
+        GrB_Descriptor_new(&desc);
+        GrB_Descriptor_set(desc, GrB_OUTP, GrB_REPLACE);
+        GrB_Info info = GrB_mxm(c_grb, NULL, NULL, GxB_PLUS_TIMES_FP64, a_grb, b_grb, desc);
+        GrB_Descriptor_free(&desc);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_mxm error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        if (alpha != 1.0) {
+            info = GrB_apply(c_grb, NULL, NULL, GrB_TIMES_FP64, c_grb, alpha, NULL);
+            if (info != GrB_SUCCESS) {
+                MATX_ERROR("GrB_apply scale error: %d", info);
+                return MATX_ERR_INTERNAL;
+            }
+        }
+    } else {
+        GrB_Matrix temp;
+        GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->nrows, C->ncols);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_Matrix_new error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, a_grb, b_grb, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_apply alpha * A * B error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(c_grb, NULL, NULL, GrB_TIMES_FP64, c_grb, beta, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_apply beta * gC error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_eWiseAdd(c_grb, NULL, NULL, GrB_PLUS_FP64, temp, c_grb, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
+            GrB_Matrix_free(&temp);
+            return MATX_ERR_INTERNAL;
+        }
+        GrB_Matrix_free(&temp);
     }
-    info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_apply alpha * A * B error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    //2. gC = beta * gC
-    info = GrB_apply((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                     NULL,
-                     NULL,
-                     GrB_TIMES_FP64,
-                     (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                     beta,
-                     NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_apply beta * gC error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    //3. gC = temp + gC
-    info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                        NULL,
-                        NULL,
-                        GrB_PLUS_FP64,
-                        temp,
-                        (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                        NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    GrB_Matrix_free(&temp);
     grb_2_dense_d_i8(C);
+#else
+    (void) alpha; (void) A; (void) B; (void) beta; (void) C;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -929,53 +956,65 @@ static matx_status_t ref_zsp2md_z_i8_grb(matx_complex_d_t alpha,
     }
 
     /* C = alpha*A*B + beta*C */
+    GrB_Matrix c_grb = (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    GrB_Matrix a_grb = (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    GrB_Matrix b_grb = (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
     GxB_FC64_t a = GxB_CMPLX(alpha.real, alpha.imag);
     GxB_FC64_t b = GxB_CMPLX(beta.real, beta.imag);
-    // 1. temp = alpha * A * B
-    GrB_Matrix temp;
-    GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
-    info = GrB_mxm(temp,
-                   NULL,
-                   NULL,
-                   GxB_PLUS_TIMES_FC64,
-                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                   (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                   NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
-        return MATX_ERR_INTERNAL;
+
+    if (beta.real == 0.0 && beta.imag == 0.0) {
+        /* C = alpha * A * B — output directly into C, no temp needed. */
+        GrB_Descriptor desc;
+        GrB_Descriptor_new(&desc);
+        GrB_Descriptor_set(desc, GrB_OUTP, GrB_REPLACE);
+        GrB_Info info = GrB_mxm(c_grb, NULL, NULL, GxB_PLUS_TIMES_FC64, a_grb, b_grb, desc);
+        GrB_Descriptor_free(&desc);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_mxm error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        if (alpha.real != 1.0 || alpha.imag != 0.0) {
+            info = GrB_apply(c_grb, NULL, NULL, GxB_TIMES_FC64, c_grb, a, NULL);
+            if (info != GrB_SUCCESS) {
+                MATX_ERROR("GrB_apply scale error: %d", info);
+                return MATX_ERR_INTERNAL;
+            }
+        }
+    } else {
+        GrB_Matrix temp;
+        GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_Matrix_new error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, a_grb, b_grb, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_apply error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(c_grb, NULL, NULL, GxB_TIMES_FC64, c_grb, b, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_apply beta * gC error: %d", info);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_eWiseAdd(c_grb, NULL, NULL, GxB_PLUS_FC64, temp, c_grb, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
+            GrB_Matrix_free(&temp);
+            return MATX_ERR_INTERNAL;
+        }
+        GrB_Matrix_free(&temp);
     }
-    info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_apply error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    //2. gC = beta * gC
-    info = GrB_apply((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                     NULL,
-                     NULL,
-                     GxB_TIMES_FC64,
-                     (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                     b,
-                     NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_apply beta * gC error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    //3. gC = temp + gC
-    info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                        NULL,
-                        NULL,
-                        GxB_PLUS_FC64,
-                        temp,
-                        (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                        NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    GrB_Matrix_free(&temp);
     grb_2_dense_z_i8(C);
+#else
+    (void) alpha; (void) A; (void) B; (void) beta; (void) C;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -983,26 +1022,29 @@ static matx_status_t ref_zsp2md_z_i8_grb(matx_complex_d_t alpha,
 static matx_status_t ref_transpose_d_i8_grb(matx_coo_d_i8_t A, matx_coo_d_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A) {
+    if (!A || !out || !A->rows || !A->columns || !A->values
+        || !out->rows || !out->columns || !out->values) {
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
 
-    /* build A */
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        coo_2_grb_d_i8(A);
+    /* Direct COO transpose: swap row/col arrays, no GrB round-trips needed. */
+    out->nrows = A->ncols;
+    out->ncols = A->nrows;
+    out->nnz = A->nnz;
+    memcpy(out->rows, A->columns, (size_t) A->nnz * sizeof(matx_int64_t));
+    memcpy(out->columns, A->rows, (size_t) A->nnz * sizeof(matx_int64_t));
+    memcpy(out->values, A->values, (size_t) A->nnz * sizeof(matx_double));
+
+    /* Invalidate cached GrB handle since COO data changed. */
+    {
+        matx_handle_t* h = MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX);
+        if (h) h->valid = 0;
     }
-    create_empty_grb_d_i8(out);
-    GrB_Info info = GrB_transpose((GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                                  NULL,
-                                  NULL,
-                                  (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                                  NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_transpose error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    grb_2_coo_d_i8(out);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1010,27 +1052,28 @@ static matx_status_t ref_transpose_d_i8_grb(matx_coo_d_i8_t A, matx_coo_d_i8_t o
 static matx_status_t ref_transpose_z_i8_grb(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A || !out) {
+    if (!A || !out || !A->rows || !A->columns || !A->values
+        || !out->rows || !out->columns || !out->values) {
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
 
-    /* build A */
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        coo_2_grb_z_i8(A);
+    /* Direct COO transpose. */
+    out->nrows = A->ncols;
+    out->ncols = A->nrows;
+    out->nnz = A->nnz;
+    memcpy(out->rows, A->columns, (size_t) A->nnz * sizeof(matx_int64_t));
+    memcpy(out->columns, A->rows, (size_t) A->nnz * sizeof(matx_int64_t));
+    memcpy(out->values, A->values, (size_t) A->nnz * sizeof(matx_complex_d_t));
+
+    {
+        matx_handle_t* h = MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX);
+        if (h) h->valid = 0;
     }
-    if (!MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl)
-        create_empty_grb_z_i8(out);
-    GrB_Info info = GrB_transpose((GrB_Matrix) (MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl),
-                                  NULL,
-                                  NULL,
-                                  (GrB_Matrix) (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl),
-                                  NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_transpose error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    grb_2_coo_z_i8(out);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1038,35 +1081,31 @@ static matx_status_t ref_transpose_z_i8_grb(matx_coo_z_i8_t A, matx_coo_z_i8_t o
 static matx_status_t ref_conj_trans_z_i8_grb(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (!A) {
+    if (!A || !out || !A->rows || !A->columns || !A->values
+        || !out->rows || !out->columns || !out->values) {
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
 
-    /* build A */
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0) {
-        coo_2_grb_z_i8(A);
+    /* Direct COO conjugate-transpose: swap rows/cols, negate imag parts. */
+    out->nrows = A->ncols;
+    out->ncols = A->nrows;
+    out->nnz = A->nnz;
+    memcpy(out->rows, A->columns, (size_t) A->nnz * sizeof(matx_int64_t));
+    memcpy(out->columns, A->rows, (size_t) A->nnz * sizeof(matx_int64_t));
+    for (matx_int64_t i = 0; i < A->nnz; ++i) {
+        out->values[i].real = A->values[i].real;
+        out->values[i].imag = -A->values[i].imag;
     }
-    if (!MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl)
-        create_empty_grb_z_i8(out);
-    //1. transpose
-    matx_status_t trans_status = ref_transpose_z_i8_grb(A, out);
-    if (trans_status != MATX_OK) {
-        MATX_ERROR("GrB_transpose error: %d", trans_status);
-        return MATX_ERR_INTERNAL;
+
+    {
+        matx_handle_t* h = MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX);
+        if (h) h->valid = 0;
     }
-    //2.  conj
-    GrB_Info info = GrB_apply((GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                              NULL,
-                              NULL,
-                              GxB_CONJ_FC64,
-                              (GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                              NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_CONJ error: %d", info);
-        return MATX_ERR_INTERNAL;
-    }
-    grb_2_coo_z_i8(out);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1075,6 +1114,9 @@ static matx_status_t ref_finalize_grb()
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
     GrB_finalize();
+#else
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1100,18 +1142,23 @@ static matx_status_t ref_norm1_mat_grb(matx_coo_d_i8_t A, matx_double* out)
         if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
-        coo_2_grb_d_i8(A);
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
+    if (h->valid <= 0) coo_2_grb_d_i8(A);
 
+    GrB_Matrix src = (GrB_Matrix) h->impl;
     GrB_Matrix tmp;
-    GrB_Matrix_dup(&tmp, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
+    GrB_Matrix_new(&tmp, GrB_FP64, A->nrows, A->ncols);
+    GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, src, NULL);
     GrB_Vector col_sums;
     GrB_Vector_new(&col_sums, GrB_FP64, A->ncols);
     GrB_reduce(col_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, tmp, GrB_DESC_T0);
     GrB_Matrix_free(&tmp);
     GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, col_sums, NULL);
     GrB_Vector_free(&col_sums);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1135,18 +1182,23 @@ static matx_status_t ref_norminf_mat_grb(matx_coo_d_i8_t A, matx_double* out)
         if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
-        coo_2_grb_d_i8(A);
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
+    if (h->valid <= 0) coo_2_grb_d_i8(A);
 
+    GrB_Matrix src = (GrB_Matrix) h->impl;
     GrB_Matrix tmp;
-    GrB_Matrix_dup(&tmp, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, tmp, NULL);
+    GrB_Matrix_new(&tmp, GrB_FP64, A->nrows, A->ncols);
+    GrB_apply(tmp, NULL, NULL, GrB_ABS_FP64, src, NULL);
     GrB_Vector row_sums;
     GrB_Vector_new(&row_sums, GrB_FP64, A->nrows);
     GrB_reduce(row_sums, NULL, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
     GrB_Matrix_free(&tmp);
     GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, row_sums, NULL);
     GrB_Vector_free(&row_sums);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1170,16 +1222,21 @@ static matx_status_t ref_normfro_mat_grb(matx_coo_d_i8_t A, matx_double* out)
         if (status != MATX_ERR_NOT_SUPPORTED) return status;
     }
 #ifdef MATX_ENABLE_GRAPHBLAS
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
-        coo_2_grb_d_i8(A);
+    matx_handle_t* h = MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX);
+    if (h->valid <= 0) coo_2_grb_d_i8(A);
 
+    GrB_Matrix src = (GrB_Matrix) h->impl;
     GrB_Matrix tmp;
-    GrB_Matrix_dup(&tmp, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_eWiseMult(tmp, NULL, NULL, GrB_TIMES_FP64, tmp, tmp, NULL);
+    GrB_Matrix_new(&tmp, GrB_FP64, A->nrows, A->ncols);
+    GrB_eWiseMult(tmp, NULL, NULL, GrB_TIMES_FP64, src, src, NULL);
     double sumsq = 0.0;
     GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, tmp, NULL);
     GrB_Matrix_free(&tmp);
     *out = sqrt(sumsq);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1217,6 +1274,10 @@ static matx_status_t ref_norm1_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* out)
     GrB_Matrix_free(&abs_mat);
     GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, col_sums, NULL);
     GrB_Vector_free(&col_sums);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1252,6 +1313,10 @@ static matx_status_t ref_norminf_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* ou
     GrB_Matrix_free(&abs_mat);
     GrB_reduce(out, NULL, GrB_MAX_MONOID_FP64, row_sums, NULL);
     GrB_Vector_free(&row_sums);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1286,6 +1351,10 @@ static matx_status_t ref_normfro_mat_z_i8_grb(matx_coo_z_i8_t A, matx_double* ou
     GrB_reduce(&sumsq, NULL, GrB_PLUS_MONOID_FP64, abs_mat, NULL);
     GrB_Matrix_free(&abs_mat);
     *out = sqrt(sumsq);
+#else
+    (void) A; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1309,28 +1378,39 @@ static matx_status_t ref_spadd_d_i8_grb(
     if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0)
         coo_2_grb_d_i8(B);
 
-    GrB_Matrix temp_a;
-    GrB_Matrix_dup(&temp_a, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_apply(temp_a, NULL, NULL, GrB_TIMES_FP64, temp_a, alpha, NULL);
-    GrB_Matrix temp_b;
-    GrB_Matrix_dup(&temp_b, (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_apply(temp_b, NULL, NULL, GrB_TIMES_FP64, temp_b, beta, NULL);
+    GrB_Matrix temp_a = NULL, temp_b = NULL;
+    GrB_Matrix a_op, b_op;
+
+    if (alpha == 1.0) {
+        a_op = (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    } else {
+        GrB_Matrix_dup(&temp_a, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
+        GrB_apply(temp_a, NULL, NULL, GrB_TIMES_FP64, temp_a, alpha, NULL);
+        a_op = temp_a;
+    }
+
+    if (beta == 1.0) {
+        b_op = (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    } else {
+        GrB_Matrix_dup(&temp_b, (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
+        GrB_apply(temp_b, NULL, NULL, GrB_TIMES_FP64, temp_b, beta, NULL);
+        b_op = temp_b;
+    }
 
     create_empty_grb_d_i8(out);
     GrB_Info info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                                 NULL,
-                                 NULL,
-                                 GrB_PLUS_FP64,
-                                 temp_a,
-                                 temp_b,
-                                 NULL);
-    GrB_Matrix_free(&temp_a);
-    GrB_Matrix_free(&temp_b);
+                                 NULL, NULL, GrB_PLUS_FP64, a_op, b_op, NULL);
+    if (temp_a) GrB_Matrix_free(&temp_a);
+    if (temp_b) GrB_Matrix_free(&temp_b);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_eWiseAdd spadd_d_i8 error: %d", info);
         return MATX_ERR_INTERNAL;
     }
     grb_2_coo_d_i8(out);
+#else
+    (void) alpha; (void) A; (void) beta; (void) B; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }
@@ -1357,28 +1437,39 @@ static matx_status_t ref_spadd_z_i8_grb(matx_complex_d_t alpha,
 
     GxB_FC64_t a = GxB_CMPLX(alpha.real, alpha.imag);
     GxB_FC64_t b = GxB_CMPLX(beta.real, beta.imag);
-    GrB_Matrix temp_a;
-    GrB_Matrix_dup(&temp_a, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_apply(temp_a, NULL, NULL, GxB_TIMES_FC64, temp_a, a, NULL);
-    GrB_Matrix temp_b;
-    GrB_Matrix_dup(&temp_b, (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
-    GrB_apply(temp_b, NULL, NULL, GxB_TIMES_FC64, temp_b, b, NULL);
+    GrB_Matrix temp_a = NULL, temp_b = NULL;
+    GrB_Matrix a_op, b_op;
+
+    if (alpha.real == 1.0 && alpha.imag == 0.0) {
+        a_op = (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    } else {
+        GrB_Matrix_dup(&temp_a, (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
+        GrB_apply(temp_a, NULL, NULL, GxB_TIMES_FC64, temp_a, a, NULL);
+        a_op = temp_a;
+    }
+
+    if (beta.real == 1.0 && beta.imag == 0.0) {
+        b_op = (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    } else {
+        GrB_Matrix_dup(&temp_b, (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl);
+        GrB_apply(temp_b, NULL, NULL, GxB_TIMES_FC64, temp_b, b, NULL);
+        b_op = temp_b;
+    }
 
     create_empty_grb_z_i8(out);
     GrB_Info info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(out, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                                 NULL,
-                                 NULL,
-                                 GxB_PLUS_FC64,
-                                 temp_a,
-                                 temp_b,
-                                 NULL);
-    GrB_Matrix_free(&temp_a);
-    GrB_Matrix_free(&temp_b);
+                                 NULL, NULL, GxB_PLUS_FC64, a_op, b_op, NULL);
+    if (temp_a) GrB_Matrix_free(&temp_a);
+    if (temp_b) GrB_Matrix_free(&temp_b);
     if (info != GrB_SUCCESS) {
         MATX_ERROR("GrB_eWiseAdd spadd_z_i8 error: %d", info);
         return MATX_ERR_INTERNAL;
     }
     grb_2_coo_z_i8(out);
+#else
+    (void) alpha; (void) A; (void) beta; (void) B; (void) out;
+    MATX_ERROR("%s: GraphBLAS not available", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
 #endif
     return MATX_OK;
 }

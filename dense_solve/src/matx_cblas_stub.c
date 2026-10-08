@@ -122,9 +122,12 @@ static matx_int64_t ss_dense_index(matx_layout_t layout,
     return (layout == MATX_COL_MAJOR) ? row + col * lda : row * lda + col;
 }
 
-static void ss_solve_small_lu_d(const matx_factor_dense_d_i8_t* F, matx_double* rhs)
+static void ss_solve_small_lu_d(const matx_factor_dense_d_i8_t* F, matx_double* restrict rhs)
 {
     const matx_int64_t n = F->n;
+    const matx_double* restrict lu = F->lu;
+    const matx_int64_t lda = F->lda;
+
     for (matx_int64_t i = 0; i < n; ++i) {
         const matx_int64_t pivot = F->piv[i] - 1;
         if (pivot != i) {
@@ -135,38 +138,49 @@ static void ss_solve_small_lu_d(const matx_factor_dense_d_i8_t* F, matx_double* 
     }
 
     if (F->layout == MATX_COL_MAJOR) {
-        for (matx_int64_t col = 0; col < n; ++col)
+        for (matx_int64_t col = 0; col < n; ++col) {
+            const matx_double rcol = rhs[col];
+            #pragma omp simd
             for (matx_int64_t row = col + 1; row < n; ++row)
-                rhs[row] -= F->lu[row + col * F->lda] * rhs[col];
+                rhs[row] -= lu[row + col * lda] * rcol;
+        }
         for (matx_int64_t col = n; col-- > 0;) {
-            rhs[col] /= F->lu[col + col * F->lda];
+            rhs[col] /= lu[col + col * lda];
+            const matx_double rcol = rhs[col];
+            #pragma omp simd
             for (matx_int64_t row = 0; row < col; ++row)
-                rhs[row] -= F->lu[row + col * F->lda] * rhs[col];
+                rhs[row] -= lu[row + col * lda] * rcol;
         }
     } else {
-        for (matx_int64_t row = 0; row < n; ++row)
+        for (matx_int64_t row = 0; row < n; ++row) {
+            matx_double sum = rhs[row];
+            #pragma omp simd
             for (matx_int64_t col = 0; col < row; ++col)
-                rhs[row] -= F->lu[row * F->lda + col] * rhs[col];
+                sum -= lu[row * lda + col] * rhs[col];
+            rhs[row] = sum;
+        }
         for (matx_int64_t row = n; row-- > 0;) {
+            matx_double sum = rhs[row];
+            #pragma omp simd
             for (matx_int64_t col = row + 1; col < n; ++col)
-                rhs[row] -= F->lu[row * F->lda + col] * rhs[col];
-            rhs[row] /= F->lu[row * F->lda + row];
+                sum -= lu[row * lda + col] * rhs[col];
+            rhs[row] = sum / lu[row * lda + row];
         }
     }
 }
 
-static matx_complex_d_t ss_complex_sub(matx_complex_d_t a, matx_complex_d_t b)
+static inline matx_complex_d_t ss_complex_sub(matx_complex_d_t a, matx_complex_d_t b)
 {
     return (matx_complex_d_t) {a.real - b.real, a.imag - b.imag};
 }
 
-static matx_complex_d_t ss_complex_mul(matx_complex_d_t a, matx_complex_d_t b)
+static inline matx_complex_d_t ss_complex_mul(matx_complex_d_t a, matx_complex_d_t b)
 {
     return (matx_complex_d_t) {a.real * b.real - a.imag * b.imag,
                                a.real * b.imag + a.imag * b.real};
 }
 
-static matx_complex_d_t ss_complex_div(matx_complex_d_t a, matx_complex_d_t b)
+static inline matx_complex_d_t ss_complex_div(matx_complex_d_t a, matx_complex_d_t b)
 {
     if (fabs(b.real) >= fabs(b.imag)) {
         const matx_double ratio = b.imag / b.real;
@@ -180,85 +194,212 @@ static matx_complex_d_t ss_complex_div(matx_complex_d_t a, matx_complex_d_t b)
                                (a.imag * ratio - a.real) / denominator};
 }
 
-static matx_complex_d_t ss_complex_conj(matx_complex_d_t a)
+static inline matx_complex_d_t ss_complex_conj(matx_complex_d_t a)
 {
     a.imag = -a.imag;
     return a;
 }
 
-static void ss_solve_small_chol_d(const matx_factor_dense_d_i8_t* F, matx_double* rhs)
+static void ss_solve_small_chol_d(const matx_factor_dense_d_i8_t* F, matx_double* restrict rhs)
 {
     const matx_int64_t n = F->n;
+    const matx_double* restrict lu = F->lu;
+    const matx_int64_t lda = F->lda;
+    const matx_layout_t layout = F->layout;
+
     if (F->uplo != MATX_UPPER) {
-        for (matx_int64_t row = 0; row < n; ++row) {
-            for (matx_int64_t col = 0; col < row; ++col)
-                rhs[row] -= F->lu[ss_dense_index(F->layout, F->lda, row, col)] * rhs[col];
-            rhs[row] /= F->lu[ss_dense_index(F->layout, F->lda, row, row)];
-        }
-        for (matx_int64_t row = n; row-- > 0;) {
-            for (matx_int64_t col = row + 1; col < n; ++col)
-                rhs[row] -= F->lu[ss_dense_index(F->layout, F->lda, col, row)] * rhs[col];
-            rhs[row] /= F->lu[ss_dense_index(F->layout, F->lda, row, row)];
+        if (layout == MATX_COL_MAJOR) {
+            for (matx_int64_t row = 0; row < n; ++row) {
+                matx_double sum = rhs[row];
+                #pragma omp simd
+                for (matx_int64_t col = 0; col < row; ++col)
+                    sum -= lu[row + col * lda] * rhs[col];
+                rhs[row] = sum / lu[row + row * lda];
+            }
+            for (matx_int64_t row = n; row-- > 0;) {
+                matx_double sum = rhs[row];
+                #pragma omp simd
+                for (matx_int64_t col = row + 1; col < n; ++col)
+                    sum -= lu[col + row * lda] * rhs[col];
+                rhs[row] = sum / lu[row + row * lda];
+            }
+        } else {
+            for (matx_int64_t row = 0; row < n; ++row) {
+                matx_double sum = rhs[row];
+                #pragma omp simd
+                for (matx_int64_t col = 0; col < row; ++col)
+                    sum -= lu[row * lda + col] * rhs[col];
+                rhs[row] = sum / lu[row * lda + row];
+            }
+            for (matx_int64_t row = n; row-- > 0;) {
+                matx_double sum = rhs[row];
+                #pragma omp simd
+                for (matx_int64_t col = row + 1; col < n; ++col)
+                    sum -= lu[col * lda + row] * rhs[col];
+                rhs[row] = sum / lu[row * lda + row];
+            }
         }
     } else {
-        for (matx_int64_t row = 0; row < n; ++row) {
-            for (matx_int64_t col = 0; col < row; ++col)
-                rhs[row] -= F->lu[ss_dense_index(F->layout, F->lda, col, row)] * rhs[col];
-            rhs[row] /= F->lu[ss_dense_index(F->layout, F->lda, row, row)];
-        }
-        for (matx_int64_t row = n; row-- > 0;) {
-            for (matx_int64_t col = row + 1; col < n; ++col)
-                rhs[row] -= F->lu[ss_dense_index(F->layout, F->lda, row, col)] * rhs[col];
-            rhs[row] /= F->lu[ss_dense_index(F->layout, F->lda, row, row)];
+        if (layout == MATX_COL_MAJOR) {
+            for (matx_int64_t row = 0; row < n; ++row) {
+                matx_double sum = rhs[row];
+                #pragma omp simd
+                for (matx_int64_t col = 0; col < row; ++col)
+                    sum -= lu[col + row * lda] * rhs[col];
+                rhs[row] = sum / lu[row + row * lda];
+            }
+            for (matx_int64_t row = n; row-- > 0;) {
+                matx_double sum = rhs[row];
+                #pragma omp simd
+                for (matx_int64_t col = row + 1; col < n; ++col)
+                    sum -= lu[row + col * lda] * rhs[col];
+                rhs[row] = sum / lu[row + row * lda];
+            }
+        } else {
+            for (matx_int64_t row = 0; row < n; ++row) {
+                matx_double sum = rhs[row];
+                #pragma omp simd
+                for (matx_int64_t col = 0; col < row; ++col)
+                    sum -= lu[col * lda + row] * rhs[col];
+                rhs[row] = sum / lu[row * lda + row];
+            }
+            for (matx_int64_t row = n; row-- > 0;) {
+                matx_double sum = rhs[row];
+                #pragma omp simd
+                for (matx_int64_t col = row + 1; col < n; ++col)
+                    sum -= lu[row * lda + col] * rhs[col];
+                rhs[row] = sum / lu[row * lda + row];
+            }
         }
     }
 }
 
 static void ss_solve_small_chol_z(const matx_factor_dense_z_i8_t* F,
-                                  matx_complex_d_t* rhs)
+                                  matx_complex_d_t* restrict rhs)
 {
     const matx_int64_t n = F->n;
-    const matx_complex_d_t* factor = (const matx_complex_d_t*) F->lu;
+    const matx_complex_d_t* restrict factor = (const matx_complex_d_t*) F->lu;
+    const matx_int64_t lda = F->lda;
+    const matx_layout_t layout = F->layout;
+
     if (F->uplo != MATX_UPPER) {
-        for (matx_int64_t row = 0; row < n; ++row) {
-            for (matx_int64_t col = 0; col < row; ++col)
-                rhs[row] = ss_complex_sub(rhs[row], ss_complex_mul(
-                    factor[ss_dense_index(F->layout, F->lda, row, col)], rhs[col]));
-            rhs[row] = ss_complex_div(rhs[row],
-                factor[ss_dense_index(F->layout, F->lda, row, row)]);
-        }
-        for (matx_int64_t row = n; row-- > 0;) {
-            for (matx_int64_t col = row + 1; col < n; ++col)
-                rhs[row] = ss_complex_sub(rhs[row], ss_complex_mul(
-                    ss_complex_conj(factor[ss_dense_index(F->layout, F->lda, col, row)]),
-                    rhs[col]));
-            rhs[row] = ss_complex_div(rhs[row], ss_complex_conj(
-                factor[ss_dense_index(F->layout, F->lda, row, row)]));
+        if (layout == MATX_COL_MAJOR) {
+            for (matx_int64_t row = 0; row < n; ++row) {
+                matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+                #pragma omp simd
+                for (matx_int64_t col = 0; col < row; ++col) {
+                    const matx_complex_d_t a = factor[row + col * lda];
+                    const matx_complex_d_t b = rhs[col];
+                    sum_re -= a.real * b.real - a.imag * b.imag;
+                    sum_im -= a.real * b.imag + a.imag * b.real;
+                }
+                const matx_complex_d_t d = factor[row + row * lda];
+                rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im}, d);
+            }
+            for (matx_int64_t row = n; row-- > 0;) {
+                matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+                #pragma omp simd
+                for (matx_int64_t col = row + 1; col < n; ++col) {
+                    const matx_complex_d_t a = factor[col + row * lda];
+                    const matx_complex_d_t b = rhs[col];
+                    sum_re -= a.real * b.real + a.imag * b.imag;  /* conj(a) * b */
+                    sum_im -= a.real * b.imag - a.imag * b.real;
+                }
+                const matx_complex_d_t d = factor[row + row * lda];
+                rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im},
+                                          (matx_complex_d_t){d.real, -d.imag});
+            }
+        } else {
+            for (matx_int64_t row = 0; row < n; ++row) {
+                matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+                #pragma omp simd
+                for (matx_int64_t col = 0; col < row; ++col) {
+                    const matx_complex_d_t a = factor[row * lda + col];
+                    const matx_complex_d_t b = rhs[col];
+                    sum_re -= a.real * b.real - a.imag * b.imag;
+                    sum_im -= a.real * b.imag + a.imag * b.real;
+                }
+                const matx_complex_d_t d = factor[row * lda + row];
+                rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im}, d);
+            }
+            for (matx_int64_t row = n; row-- > 0;) {
+                matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+                #pragma omp simd
+                for (matx_int64_t col = row + 1; col < n; ++col) {
+                    const matx_complex_d_t a = factor[col * lda + row];
+                    const matx_complex_d_t b = rhs[col];
+                    sum_re -= a.real * b.real + a.imag * b.imag;
+                    sum_im -= a.real * b.imag - a.imag * b.real;
+                }
+                const matx_complex_d_t d = factor[row * lda + row];
+                rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im},
+                                          (matx_complex_d_t){d.real, -d.imag});
+            }
         }
     } else {
-        for (matx_int64_t row = 0; row < n; ++row) {
-            for (matx_int64_t col = 0; col < row; ++col)
-                rhs[row] = ss_complex_sub(rhs[row], ss_complex_mul(
-                    ss_complex_conj(factor[ss_dense_index(F->layout, F->lda, col, row)]),
-                    rhs[col]));
-            rhs[row] = ss_complex_div(rhs[row], ss_complex_conj(
-                factor[ss_dense_index(F->layout, F->lda, row, row)]));
-        }
-        for (matx_int64_t row = n; row-- > 0;) {
-            for (matx_int64_t col = row + 1; col < n; ++col)
-                rhs[row] = ss_complex_sub(rhs[row], ss_complex_mul(
-                    factor[ss_dense_index(F->layout, F->lda, row, col)], rhs[col]));
-            rhs[row] = ss_complex_div(rhs[row],
-                factor[ss_dense_index(F->layout, F->lda, row, row)]);
+        if (layout == MATX_COL_MAJOR) {
+            for (matx_int64_t row = 0; row < n; ++row) {
+                matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+                #pragma omp simd
+                for (matx_int64_t col = 0; col < row; ++col) {
+                    const matx_complex_d_t a = factor[col + row * lda];
+                    const matx_complex_d_t b = rhs[col];
+                    sum_re -= a.real * b.real + a.imag * b.imag;
+                    sum_im -= a.real * b.imag - a.imag * b.real;
+                }
+                const matx_complex_d_t d = factor[row + row * lda];
+                rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im},
+                                          (matx_complex_d_t){d.real, -d.imag});
+            }
+            for (matx_int64_t row = n; row-- > 0;) {
+                matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+                #pragma omp simd
+                for (matx_int64_t col = row + 1; col < n; ++col) {
+                    const matx_complex_d_t a = factor[row + col * lda];
+                    const matx_complex_d_t b = rhs[col];
+                    sum_re -= a.real * b.real - a.imag * b.imag;
+                    sum_im -= a.real * b.imag + a.imag * b.real;
+                }
+                const matx_complex_d_t d = factor[row + row * lda];
+                rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im}, d);
+            }
+        } else {
+            for (matx_int64_t row = 0; row < n; ++row) {
+                matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+                #pragma omp simd
+                for (matx_int64_t col = 0; col < row; ++col) {
+                    const matx_complex_d_t a = factor[col * lda + row];
+                    const matx_complex_d_t b = rhs[col];
+                    sum_re -= a.real * b.real + a.imag * b.imag;
+                    sum_im -= a.real * b.imag - a.imag * b.real;
+                }
+                const matx_complex_d_t d = factor[row * lda + row];
+                rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im},
+                                          (matx_complex_d_t){d.real, -d.imag});
+            }
+            for (matx_int64_t row = n; row-- > 0;) {
+                matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+                #pragma omp simd
+                for (matx_int64_t col = row + 1; col < n; ++col) {
+                    const matx_complex_d_t a = factor[row * lda + col];
+                    const matx_complex_d_t b = rhs[col];
+                    sum_re -= a.real * b.real - a.imag * b.imag;
+                    sum_im -= a.real * b.imag + a.imag * b.real;
+                }
+                const matx_complex_d_t d = factor[row * lda + row];
+                rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im}, d);
+            }
         }
     }
 }
 
 static void ss_solve_small_lu_z(const matx_factor_dense_z_i8_t* F,
-                                matx_complex_d_t* rhs)
+                                matx_complex_d_t* restrict rhs)
 {
     const matx_int64_t n = F->n;
-    const matx_complex_d_t* lu = (const matx_complex_d_t*) F->lu;
+    const matx_complex_d_t* restrict lu = (const matx_complex_d_t*) F->lu;
+    const matx_int64_t lda = F->lda;
+
     for (matx_int64_t i = 0; i < n; ++i) {
         const matx_int64_t pivot = F->piv[i] - 1;
         if (pivot != i) {
@@ -269,26 +410,49 @@ static void ss_solve_small_lu_z(const matx_factor_dense_z_i8_t* F,
     }
 
     if (F->layout == MATX_COL_MAJOR) {
-        for (matx_int64_t col = 0; col < n; ++col)
-            for (matx_int64_t row = col + 1; row < n; ++row)
-                rhs[row] = ss_complex_sub(rhs[row],
-                    ss_complex_mul(lu[row + col * F->lda], rhs[col]));
+        for (matx_int64_t col = 0; col < n; ++col) {
+            const matx_complex_d_t rcol = rhs[col];
+            #pragma omp simd
+            for (matx_int64_t row = col + 1; row < n; ++row) {
+                const matx_complex_d_t a = lu[row + col * lda];
+                rhs[row].real -= a.real * rcol.real - a.imag * rcol.imag;
+                rhs[row].imag -= a.real * rcol.imag + a.imag * rcol.real;
+            }
+        }
         for (matx_int64_t col = n; col-- > 0;) {
-            rhs[col] = ss_complex_div(rhs[col], lu[col + col * F->lda]);
-            for (matx_int64_t row = 0; row < col; ++row)
-                rhs[row] = ss_complex_sub(rhs[row],
-                    ss_complex_mul(lu[row + col * F->lda], rhs[col]));
+            rhs[col] = ss_complex_div(rhs[col], lu[col + col * lda]);
+            const matx_complex_d_t rcol = rhs[col];
+            #pragma omp simd
+            for (matx_int64_t row = 0; row < col; ++row) {
+                const matx_complex_d_t a = lu[row + col * lda];
+                rhs[row].real -= a.real * rcol.real - a.imag * rcol.imag;
+                rhs[row].imag -= a.real * rcol.imag + a.imag * rcol.real;
+            }
         }
     } else {
-        for (matx_int64_t row = 0; row < n; ++row)
-            for (matx_int64_t col = 0; col < row; ++col)
-                rhs[row] = ss_complex_sub(rhs[row],
-                    ss_complex_mul(lu[row * F->lda + col], rhs[col]));
+        for (matx_int64_t row = 0; row < n; ++row) {
+            matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+            #pragma omp simd
+            for (matx_int64_t col = 0; col < row; ++col) {
+                const matx_complex_d_t a = lu[row * lda + col];
+                const matx_complex_d_t b = rhs[col];
+                sum_re -= a.real * b.real - a.imag * b.imag;
+                sum_im -= a.real * b.imag + a.imag * b.real;
+            }
+            rhs[row].real = sum_re;
+            rhs[row].imag = sum_im;
+        }
         for (matx_int64_t row = n; row-- > 0;) {
-            for (matx_int64_t col = row + 1; col < n; ++col)
-                rhs[row] = ss_complex_sub(rhs[row],
-                    ss_complex_mul(lu[row * F->lda + col], rhs[col]));
-            rhs[row] = ss_complex_div(rhs[row], lu[row * F->lda + row]);
+            matx_double sum_re = rhs[row].real, sum_im = rhs[row].imag;
+            #pragma omp simd
+            for (matx_int64_t col = row + 1; col < n; ++col) {
+                const matx_complex_d_t a = lu[row * lda + col];
+                const matx_complex_d_t b = rhs[col];
+                sum_re -= a.real * b.real - a.imag * b.imag;
+                sum_im -= a.real * b.imag + a.imag * b.real;
+            }
+            const matx_complex_d_t d = lu[row * lda + row];
+            rhs[row] = ss_complex_div((matx_complex_d_t){sum_re, sum_im}, d);
         }
     }
 }

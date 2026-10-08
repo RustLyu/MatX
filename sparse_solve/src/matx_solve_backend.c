@@ -1,5 +1,99 @@
 ﻿#include "matx/matx_log.h"
 #include "matx/matx_sparse_solve.h"
+#include "matx/matx_func.h"
+#include <string.h>
+
+/* ── small-n dense fallback: for tiny systems (n ≤ 64), COO→dense+solve ── */
+#if MATX_HAVE_OPENBLAS
+#define MATX_SMALL_DENSE_SOLVE_LIMIT 64
+
+extern void dgesv_(const int* n, const int* nrhs, double* A, const int* lda,
+                   int* ipiv, double* B, const int* ldb, int* info);
+extern void zgesv_(const int* n, const int* nrhs, void* A, const int* lda,
+                   int* ipiv, void* B, const int* ldb, int* info);
+
+static matx_status_t solve_small_dense_d(const matx_alloc_t* alloc,
+                                          matx_coo_d_i8_t A,
+                                          const matx_double* b,
+                                          matx_double* x)
+{
+    const int n = (int) A->nrows;
+    const int nrhs = 1;
+    const size_t mat_bytes = (size_t) n * (size_t) n * sizeof(matx_double);
+    const size_t vec_bytes = (size_t) n * sizeof(matx_double);
+    matx_double* dense_A = (matx_double*) matx_malloc(alloc, mat_bytes);
+    matx_double* B       = (matx_double*) matx_malloc(alloc, vec_bytes);
+    int*         ipiv    = (int*)         matx_malloc(alloc, (size_t) n * sizeof(int));
+    if (!dense_A || !B || !ipiv) {
+        matx_free(alloc, dense_A);
+        matx_free(alloc, B);
+        matx_free(alloc, ipiv);
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    memset(dense_A, 0, mat_bytes);
+    for (matx_int64_t k = 0; k < A->nnz; ++k)
+        dense_A[A->rows[k] + A->columns[k] * n] += A->values[k];
+    memcpy(B, b, vec_bytes);
+
+    int info = 0;
+    dgesv_(&n, &nrhs, dense_A, &n, ipiv, B, &n, &info);
+    if (info != 0) {
+        matx_free(alloc, dense_A);
+        matx_free(alloc, B);
+        matx_free(alloc, ipiv);
+        MATX_ERROR("%s: dgesv failed, info=%d", __func__, info);
+        return MATX_ERR_INTERNAL;
+    }
+    memcpy(x, B, vec_bytes);
+    matx_free(alloc, dense_A);
+    matx_free(alloc, B);
+    matx_free(alloc, ipiv);
+    return MATX_OK;
+}
+
+static matx_status_t solve_small_dense_z(const matx_alloc_t* alloc,
+                                          matx_coo_z_i8_t A,
+                                          const matx_vec_z_i8_t b,
+                                          matx_vec_z_i8_t x)
+{
+    const int n = (int) A->nrows;
+    const int nrhs = 1;
+    const size_t mat_bytes = (size_t) n * (size_t) n * sizeof(matx_complex_double);
+    const size_t vec_bytes = (size_t) n * sizeof(matx_complex_double);
+    matx_complex_double* dense_A = (matx_complex_double*) matx_malloc(alloc, mat_bytes);
+    matx_complex_double* B       = (matx_complex_double*) matx_malloc(alloc, vec_bytes);
+    int*                 ipiv    = (int*) matx_malloc(alloc, (size_t) n * sizeof(int));
+    if (!dense_A || !B || !ipiv) {
+        matx_free(alloc, dense_A);
+        matx_free(alloc, B);
+        matx_free(alloc, ipiv);
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    memset(dense_A, 0, mat_bytes);
+    for (matx_int64_t k = 0; k < A->nnz; ++k) {
+        dense_A[A->rows[k] + A->columns[k] * n].real += A->values[k].real;
+        dense_A[A->rows[k] + A->columns[k] * n].imag += A->values[k].imag;
+    }
+    memcpy(B, b->data, vec_bytes);
+
+    int info = 0;
+    zgesv_(&n, &nrhs, dense_A, &n, ipiv, B, &n, &info);
+    if (info != 0) {
+        matx_free(alloc, dense_A);
+        matx_free(alloc, B);
+        matx_free(alloc, ipiv);
+        MATX_ERROR("%s: zgesv failed, info=%d", __func__, info);
+        return MATX_ERR_INTERNAL;
+    }
+    memcpy(x->data, B, vec_bytes);
+    matx_free(alloc, dense_A);
+    matx_free(alloc, B);
+    matx_free(alloc, ipiv);
+    return MATX_OK;
+}
+#endif /* MATX_HAVE_OPENBLAS */
 
 // Forward decls
 matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(matx_alloc_t alloc);
@@ -112,6 +206,12 @@ matx_status_t matx_solve_csc_d_i8(const matx_sparse_linsolve_t* ls,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
+#if MATX_HAVE_OPENBLAS
+    if (A->nrows == A->ncols && A->nrows > 0
+        && A->nrows <= MATX_SMALL_DENSE_SOLVE_LIMIT) {
+        return solve_small_dense_d(&ls->alloc, A, b, x);
+    }
+#endif
     matx_factor_sparse_d_i8_t F;
     F.reserved = NULL;
     F.alloc = ls->alloc;
@@ -174,6 +274,12 @@ matx_status_t matx_solve_csc_z_i8(const matx_sparse_linsolve_t* ls,
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
+#if MATX_HAVE_OPENBLAS
+    if (A->nrows == A->ncols && A->nrows > 0
+        && A->nrows <= MATX_SMALL_DENSE_SOLVE_LIMIT) {
+        return solve_small_dense_z(&ls->alloc, A, b, x);
+    }
+#endif
     matx_factor_sparse_z_i8_t F;
     F.reserved = NULL;
     F.alloc = ls->alloc;

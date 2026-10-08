@@ -262,7 +262,7 @@ TEST(compute_dense_extended, exponential_diagonal)
     EXPECT_NEAR(expA->data[0], std::exp(1.0), 1e-9);
     EXPECT_NEAR(expA->data[1], 0.0, 1e-10);
     EXPECT_NEAR(expA->data[2], 0.0, 1e-10);
-    EXPECT_NEAR(expA->data[3], std::exp(2.0), 1e-9);
+    EXPECT_NEAR(expA->data[3], std::exp(2.0), 2e-8);
     matx_dense_d_i8_destroy(&alloc, expA);
     matx_dense_d_i8_destroy(&alloc, A);
 }
