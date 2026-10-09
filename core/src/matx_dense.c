@@ -254,6 +254,14 @@ matx_status_t matx_dense_##PREFIX##_fill(matx_dense_##PREFIX##_t m,             
         MATX_ERROR("%s: invalid argument", __func__);                          \
         return MATX_ERR_INVALID_ARG;                                           \
     }                                                                          \
+    const matx_int64_t minor = (m->layout == MATX_COL_MAJOR)                    \
+        ? m->nrows : m->ncols;                                                  \
+    if (m->stride == minor) {                                                   \
+        const size_t count = (size_t) m->nrows * (size_t) m->ncols;             \
+        for (size_t i = 0; i < count; ++i)                                      \
+            m->data[i] = val;                                                    \
+        return MATX_OK;                                                         \
+    }                                                                          \
     if (m->layout == MATX_COL_MAJOR) {                                         \
         for (matx_int64_t j = 0; j < m->ncols; ++j)                            \
             for (matx_int64_t i = 0; i < m->nrows; ++i)                        \

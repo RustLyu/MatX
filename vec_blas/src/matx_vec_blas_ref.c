@@ -53,7 +53,8 @@ static matx_status_t ref_zscal(matx_int64_t n, const void* alpha, void* x, matx_
 }
 
 static matx_status_t ref_dcopy(
-    matx_int64_t n, const matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy)
+    matx_int64_t n, const matx_double* restrict x, matx_int64_t incx,
+    matx_double* restrict y, matx_int64_t incy)
 {
     if (!x || !y) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -87,7 +88,8 @@ static matx_status_t ref_zcopy(
 }
 
 static matx_status_t ref_dswap(
-    matx_int64_t n, matx_double* x, matx_int64_t incx, matx_double* y, matx_int64_t incy)
+    matx_int64_t n, matx_double* restrict x, matx_int64_t incx,
+    matx_double* restrict y, matx_int64_t incy)
 {
     if (!x || !y) {
         MATX_ERROR("%s: invalid argument", __func__);
@@ -126,9 +128,9 @@ static matx_status_t ref_zswap(matx_int64_t n, void* x, matx_int64_t incx, void*
 }
 
 static matx_status_t ref_ddot(matx_int64_t n,
-                              const matx_double* x,
+                              const matx_double* restrict x,
                               matx_int64_t incx,
-                              const matx_double* y,
+                              const matx_double* restrict y,
                               matx_int64_t incy,
                               matx_double* result)
 {
@@ -194,7 +196,7 @@ static matx_status_t ref_zdotc(
 }
 
 static matx_status_t ref_dnrm2(matx_int64_t n,
-                               const matx_double* x,
+                               const matx_double* restrict x,
                                matx_int64_t incx,
                                matx_double* result)
 {
@@ -238,7 +240,7 @@ static matx_status_t ref_dznrm2(matx_int64_t n,
 }
 
 static matx_status_t ref_dasum(matx_int64_t n,
-                               const matx_double* x,
+                               const matx_double* restrict x,
                                matx_int64_t incx,
                                matx_double* result)
 {
@@ -279,7 +281,7 @@ static matx_status_t ref_dzasum(matx_int64_t n,
 }
 
 static matx_status_t ref_idamax(matx_int64_t n,
-                                const matx_double* x,
+                                const matx_double* restrict x,
                                 matx_int64_t incx,
                                 matx_int64_t* result)
 {
@@ -335,7 +337,7 @@ static matx_status_t ref_izamax(matx_int64_t n,
 
 static matx_status_t ref_daxpy(matx_int64_t n,
                                matx_double alpha,
-                               const matx_double* x,
+                               const matx_double* restrict x,
                                matx_int64_t lda,
                                void* y,
                                matx_int64_t ldy)
@@ -421,7 +423,7 @@ static matx_status_t ref_vec_norm1_z_i8(matx_vec_z_i8_t A, matx_double* out)
     for (matx_int64_t i = 0; i < A->n; ++i) {
         matx_double re = A->data[i * A->stride].real;
         matx_double im = A->data[i * A->stride].imag;
-        sum += sqrt(re * re + im * im);
+        sum += hypot(re, im);
     }
     *out = sum;
     return MATX_OK;
@@ -446,7 +448,7 @@ static matx_status_t ref_vec_norminf_z_i8(matx_vec_z_i8_t A, matx_double* out)
     for (matx_int64_t i = 0; i < A->n; ++i) {
         matx_double re = A->data[i * A->stride].real;
         matx_double im = A->data[i * A->stride].imag;
-        matx_double mag = sqrt(re * re + im * im);
+        matx_double mag = hypot(re, im);
         if (mag > max_val)
             max_val = mag;
     }

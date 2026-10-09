@@ -383,33 +383,24 @@ static matx_status_t ref_dgeadd(matx_layout_t trans_a,
 
     if (trans_a == MATX_ROW_MAJOR) {
         if (lda == cols && ldb == cols) {
-            matx_int64_t len = rows * cols;
-
-            if (beta != 1.0)
-                cblas_dscal(len, beta, B, 1);
-
-            if (alpha != 0.0)
-                cblas_daxpy(len, alpha, A, 1, B, 1);
-
+            const matx_int64_t len = rows * cols;
+            for (matx_int64_t i = 0; i < len; ++i)
+                B[i] = alpha * A[i] + beta * B[i];
             return MATX_OK;
         }
     } else {
         if (lda == rows && ldb == rows) {
-            matx_int64_t len = rows * cols;
-
-            if (beta != 1.0)
-                cblas_dscal(len, beta, B, 1);
-
-            if (alpha != 0.0)
-                cblas_daxpy(len, alpha, A, 1, B, 1);
-
+            const matx_int64_t len = rows * cols;
+            for (matx_int64_t i = 0; i < len; ++i)
+                B[i] = alpha * A[i] + beta * B[i];
             return MATX_OK;
         }
     }
 
-    for (size_t j = 0; j < cols; ++j) {
-        cblas_dscal(rows, beta, B + j * ldb, 1);
-        cblas_daxpy(rows, alpha, A + j * lda, 1, B + j * ldb, 1);
+    for (matx_int64_t j = 0; j < cols; ++j) {
+        const matx_int64_t a_off = j * lda, b_off = j * ldb;
+        for (matx_int64_t i = 0; i < rows; ++i)
+            B[b_off + i] = alpha * A[a_off + i] + beta * B[b_off + i];
     }
 #else
     /* Pure-C fallback: B = alpha * A + beta * B */
@@ -447,36 +438,43 @@ static matx_status_t ref_zgeadd(matx_layout_t trans_a,
     cblas_zgeadd(order, rows, cols, alpha, A, lda, beta, B, ldb);
 #elif MATX_ENABLE_BLIS
 
-    const void* alpha_p = alpha;
-    const void* beta_p = beta;
-
-    size_t len;
+    const matx_complex_d_t* a = (const matx_complex_d_t*) alpha;
+    const matx_complex_d_t* b = (const matx_complex_d_t*) beta;
+    const matx_complex_d_t* Ad = (const matx_complex_d_t*) A;
+    matx_complex_d_t* Bd = (matx_complex_d_t*) B;
 
     if (trans_a == MATX_ROW_MAJOR) {
         if (lda == cols && ldb == cols) {
-            len = rows * cols;
-            cblas_zscal(len, beta_p, B, 1);
-            cblas_zaxpy(len, alpha_p, A, 1, B, 1);
-
+            const matx_int64_t len = rows * cols;
+            for (matx_int64_t i = 0; i < len; ++i) {
+                Bd[i].real = a->real * Ad[i].real - a->imag * Ad[i].imag
+                           + b->real * Bd[i].real - b->imag * Bd[i].imag;
+                Bd[i].imag = a->real * Ad[i].imag + a->imag * Ad[i].real
+                           + b->real * Bd[i].imag + b->imag * Bd[i].real;
+            }
             return MATX_OK;
         }
     } else {
         if (lda == rows && ldb == rows) {
-            len = rows * cols;
-
-            cblas_zscal((matx_int64_t) len, beta_p, B, 1);
-            cblas_zaxpy((matx_int64_t) len, alpha_p, A, 1, B, 1);
-
+            const matx_int64_t len = rows * cols;
+            for (matx_int64_t i = 0; i < len; ++i) {
+                Bd[i].real = a->real * Ad[i].real - a->imag * Ad[i].imag
+                           + b->real * Bd[i].real - b->imag * Bd[i].imag;
+                Bd[i].imag = a->real * Ad[i].imag + a->imag * Ad[i].real
+                           + b->real * Bd[i].imag + b->imag * Bd[i].real;
+            }
             return MATX_OK;
         }
     }
 
     for (matx_int64_t j = 0; j < cols; ++j) {
-        void* Bcol = (char*) B + j * ldb * sizeof(matx_double) * 2;
-        const void* Acol = (const char*) A + j * lda * sizeof(matx_double) * 2;
-
-        cblas_zscal(rows, beta_p, Bcol, 1);
-        cblas_zaxpy(rows, alpha_p, Acol, 1, Bcol, 1);
+        for (matx_int64_t i = 0; i < rows; ++i) {
+            const matx_int64_t aidx = i + j * lda, bidx = i + j * ldb;
+            Bd[bidx].real = a->real * Ad[aidx].real - a->imag * Ad[aidx].imag
+                          + b->real * Bd[bidx].real - b->imag * Bd[bidx].imag;
+            Bd[bidx].imag = a->real * Ad[aidx].imag + a->imag * Ad[aidx].real
+                          + b->real * Bd[bidx].imag + b->imag * Bd[bidx].real;
+        }
     }
 #else
     /* Pure-C fallback: B = alpha * A + beta * B */

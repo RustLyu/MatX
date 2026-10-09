@@ -51,14 +51,26 @@ matx_status_t matx_coo_sparse_##PREFIX##_create(const matx_alloc_t* alloc,      
     else memset(cols, 0, index_bytes);                                           \
     if (ax != NULL) memcpy(values_buf, ax, value_bytes);                        \
     else memset(values_buf, 0, value_bytes);                                     \
-    for (matx_int64_t i = 0; i < nnz; ++i) {                                    \
-        if ((ap != NULL && (rows[i] < 0 || rows[i] >= nrows))                   \
-            || (ai != NULL && (cols[i] < 0 || cols[i] >= ncols))) {            \
-            matx_free(alloc, rows);                                             \
-            matx_free(alloc, cols);                                             \
-            matx_free(alloc, values_buf);                                       \
-            MATX_ERROR("%s: COO index out of bounds", __func__);               \
-            return MATX_ERR_INVALID_ARG;                                        \
+    if (ap != NULL) {                                                           \
+        for (matx_int64_t i = 0; i < nnz; ++i) {                                \
+            if (rows[i] < 0 || rows[i] >= nrows) {                              \
+                matx_free(alloc, rows);                                         \
+                matx_free(alloc, cols);                                         \
+                matx_free(alloc, values_buf);                                   \
+                MATX_ERROR("%s: COO row index out of bounds", __func__);       \
+                return MATX_ERR_INVALID_ARG;                                    \
+            }                                                                   \
+        }                                                                       \
+    }                                                                           \
+    if (ai != NULL) {                                                           \
+        for (matx_int64_t i = 0; i < nnz; ++i) {                                \
+            if (cols[i] < 0 || cols[i] >= ncols) {                              \
+                matx_free(alloc, rows);                                         \
+                matx_free(alloc, cols);                                         \
+                matx_free(alloc, values_buf);                                   \
+                MATX_ERROR("%s: COO col index out of bounds", __func__);       \
+                return MATX_ERR_INVALID_ARG;                                    \
+            }                                                                   \
         }                                                                       \
     }                                                                           \
     OPAQUE* out_value = matx_malloc(alloc, sizeof(OPAQUE));                     \

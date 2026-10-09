@@ -353,13 +353,24 @@ static matx_status_t ref_spmv_d_i8_aocl(
     /* Small-nnz crossover: direct COO loop avoids AOCL CSR conversion overhead. */
     if (A->nnz <= MATX_AOCL_DIRECT_SPMV_MAX_NNZ) {
         const matx_int64_t x_stride = x->stride, y_stride = y->stride;
+        const matx_double* x_data = x->data;
+        matx_double* x_saved = NULL;
+        /* When x and y alias (same data pointer), beta scaling would
+           overwrite x before the compute loop reads it. Save a copy. */
+        if (x->data == y->data) {
+            x_saved = (matx_double*) malloc((size_t) y->n * sizeof(matx_double));
+            if (!x_saved) return MATX_ERR_OUT_OF_MEMORY;
+            memcpy(x_saved, x->data, (size_t) y->n * sizeof(matx_double));
+            x_data = x_saved;
+        }
         for (matx_int64_t i = 0; i < y->n; ++i)
             y->data[i * y_stride] = (beta != 0.0) ? beta * y->data[i * y_stride] : 0.0;
         if (alpha != 0.0) {
             for (matx_int64_t k = 0; k < A->nnz; ++k)
                 y->data[A->rows[k] * y_stride]
-                    += alpha * A->values[k] * x->data[A->columns[k] * x_stride];
+                    += alpha * A->values[k] * x_data[A->columns[k] * x_stride];
         }
+        free(x_saved);
         return MATX_OK;
     }
 
@@ -423,6 +434,17 @@ static matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
         && A->nnz <= MATX_AOCL_DIRECT_SPMM_MAX_PRODUCTS / B->ncols) {
         const matx_int64_t ldc = C->stride, ldb = B->stride;
         const matx_layout_t layout = C->layout;
+        const matx_double* b_data = B->data;
+        matx_double* b_copy = NULL;
+        /* When B and C alias (same data pointer), beta scaling would
+           overwrite B before the compute loop reads it. Save a copy. */
+        if (B->data == C->data) {
+            const size_t b_elems = (size_t) B->nrows * (size_t) B->ncols;
+            b_copy = (matx_double*) malloc(b_elems * sizeof(matx_double));
+            if (!b_copy) return MATX_ERR_OUT_OF_MEMORY;
+            memcpy(b_copy, B->data, b_elems * sizeof(matx_double));
+            b_data = b_copy;
+        }
 
         for (matx_int64_t j = 0; j < B->ncols; ++j)
             for (matx_int64_t i = 0; i < C->nrows; ++i) {
@@ -439,10 +461,11 @@ static matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
                         ? (size_t) c + (size_t) j * ldb : (size_t) c * ldb + (size_t) j;
                     const size_t c_idx = (layout == MATX_COL_MAJOR)
                         ? (size_t) r + (size_t) j * ldc : (size_t) r * ldc + (size_t) j;
-                    C->data[c_idx] += av * B->data[b_idx];
+                    C->data[c_idx] += av * b_data[b_idx];
                 }
             }
         }
+        free(b_copy);
         return MATX_OK;
     }
 

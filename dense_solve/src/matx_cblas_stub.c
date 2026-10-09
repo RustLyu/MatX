@@ -1866,6 +1866,36 @@ static matx_status_t ss_det_dense_d_i8(const matx_alloc_t* alloc, const matx_den
         return MATX_ERR_INVALID_ARG;
     }
     const matx_int64_t n = A->nrows;
+
+    /* Small-n explicit formulas avoid LAPACK allocation overhead. */
+    if (n == 2) {
+        const matx_double a00 = (A->layout == MATX_COL_MAJOR)
+            ? A->data[0] : A->data[0];
+        const matx_double a01 = (A->layout == MATX_COL_MAJOR)
+            ? A->data[A->stride] : A->data[1];
+        const matx_double a10 = (A->layout == MATX_COL_MAJOR)
+            ? A->data[1] : A->data[A->stride];
+        const matx_double a11 = (A->layout == MATX_COL_MAJOR)
+            ? A->data[1 + A->stride] : A->data[A->stride + 1];
+        *det = a00 * a11 - a01 * a10;
+        return MATX_OK;
+    }
+    if (n == 3) {
+        const matx_int64_t s = A->stride;
+        const matx_double a00 = (A->layout == MATX_COL_MAJOR) ? A->data[0]      : A->data[0];
+        const matx_double a01 = (A->layout == MATX_COL_MAJOR) ? A->data[s]      : A->data[1];
+        const matx_double a02 = (A->layout == MATX_COL_MAJOR) ? A->data[2*s]    : A->data[2];
+        const matx_double a10 = (A->layout == MATX_COL_MAJOR) ? A->data[1]      : A->data[s];
+        const matx_double a11 = (A->layout == MATX_COL_MAJOR) ? A->data[1+s]    : A->data[s+1];
+        const matx_double a12 = (A->layout == MATX_COL_MAJOR) ? A->data[1+2*s]  : A->data[s+2];
+        const matx_double a20 = (A->layout == MATX_COL_MAJOR) ? A->data[2]      : A->data[2*s];
+        const matx_double a21 = (A->layout == MATX_COL_MAJOR) ? A->data[2+s]    : A->data[2*s+1];
+        const matx_double a22 = (A->layout == MATX_COL_MAJOR) ? A->data[2+2*s]  : A->data[2*s+2];
+        *det = a00 * (a11 * a22 - a12 * a21)
+             - a01 * (a10 * a22 - a12 * a20)
+             + a02 * (a10 * a21 - a11 * a20);
+        return MATX_OK;
+    }
     matx_int64_t lda = ss_packed_lda(A->layout, n, n);
 
     matx_double* Acopy = (matx_double*) matx_malloc(alloc, (size_t) n * (size_t) n * sizeof(matx_double));
@@ -1920,6 +1950,23 @@ static matx_status_t ss_det_dense_z_i8(const matx_alloc_t* alloc, const matx_den
         return MATX_ERR_INVALID_ARG;
     }
     const matx_int64_t n = A->nrows;
+
+    /* Small-n explicit formulas avoid LAPACK allocation overhead. */
+    if (n == 2) {
+        const matx_complex_d_t a00 = (A->layout == MATX_COL_MAJOR)
+            ? A->data[0] : A->data[0];
+        const matx_complex_d_t a01 = (A->layout == MATX_COL_MAJOR)
+            ? A->data[A->stride] : A->data[1];
+        const matx_complex_d_t a10 = (A->layout == MATX_COL_MAJOR)
+            ? A->data[1] : A->data[A->stride];
+        const matx_complex_d_t a11 = (A->layout == MATX_COL_MAJOR)
+            ? A->data[1 + A->stride] : A->data[A->stride + 1];
+        det->real = a00.real * a11.real - a00.imag * a11.imag
+                  - (a01.real * a10.real - a01.imag * a10.imag);
+        det->imag = a00.real * a11.imag + a00.imag * a11.real
+                  - (a01.real * a10.imag + a01.imag * a10.real);
+        return MATX_OK;
+    }
     matx_int64_t lda = ss_packed_lda(A->layout, n, n);
 
     matx_complex_d_t* Acopy = (matx_complex_d_t*) matx_malloc(alloc, (size_t) n * (size_t) n
