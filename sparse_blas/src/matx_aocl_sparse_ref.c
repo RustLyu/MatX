@@ -658,33 +658,27 @@ static matx_status_t ref_transpose_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t 
 
 static matx_status_t ref_conj_trans_z_i8_aocl(matx_coo_z_i8_t A, matx_coo_z_i8_t out)
 {
-#if MATX_HAVE_AOCL_SPARSE
-    if (!A || !out) {
+    if (!A || !out || !A->rows || !A->columns || !A->values || !out->rows || !out->columns || !out->values) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
     }
 
-    if (MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->valid <= 0) {
-        if (coo_2_aocl_z_i8(A) != 0) {
-            MATX_ERROR("%s: internal error", __func__);
-            return MATX_ERR_INTERNAL;
-        }
+    /* Direct COO conjugate-transpose: swap rows/cols, negate imag parts */
+    out->nrows = A->ncols;
+    out->ncols = A->nrows;
+    out->nnz = A->nnz;
+    memcpy(out->rows, A->columns, (size_t) A->nnz * sizeof(matx_int64_t));
+    memcpy(out->columns, A->rows, (size_t) A->nnz * sizeof(matx_int64_t));
+    for (matx_int64_t i = 0; i < A->nnz; ++i) {
+        out->values[i].real = A->values[i].real;
+        out->values[i].imag = -A->values[i].imag;
     }
 
-    aoclsparse_status status = aoclsparse_convert_csr(MATX_HANDLE(A, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl,
-                                                      aoclsparse_operation_conjugate_transpose,
-                                                      MATX_HANDLE(out, MATX_HANDLE_TYPE_AOCL_MATRIX)->impl);
-
-    if (status != aoclsparse_status_success) {
-        MATX_ERROR("aoclsparse_convert_csr error: %d", status);
-        return MATX_ERR_INTERNAL;
+    /* Invalidate cached AOCL handle since COO data changed */
+    {
+        matx_handle_t* h = MATX_HANDLE(out, MATX_HANDLE_TYPE_AOCL_MATRIX);
+        if (h) h->valid = 0;
     }
-    aocl_2_coo_z_i8(out);
-#else
-    (void) A; (void) out;
-    MATX_ERROR("%s: AOCL not available", __func__);
-    return MATX_ERR_NOT_SUPPORTED;
-#endif
     return MATX_OK;
 }
 

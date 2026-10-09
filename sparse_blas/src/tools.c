@@ -318,14 +318,19 @@ int coo_to_csr_optimized(const matx_alloc_t* alloc,
         csr->row_ptr[i + 1] += csr->row_ptr[i];
     }
 
-    /* Check if COO is already row-sorted (and within-row column-sorted). */
+    /* Check if COO is already row-sorted (and within-row column-sorted).
+       Also detect duplicates so we can skip the per-row dedup entirely
+       when the COO is both sorted and duplicate-free. */
     int is_sorted = 1;
+    int has_dupes = 0;
     for (matx_int64_t i = 1; i < nnz; ++i) {
         if (coo_row[i] < coo_row[i - 1]
             || (coo_row[i] == coo_row[i - 1] && coo_col[i] < coo_col[i - 1])) {
             is_sorted = 0;
             break;
         }
+        if (coo_row[i] == coo_row[i - 1] && coo_col[i] == coo_col[i - 1])
+            has_dupes = 1;
     }
 
     {
@@ -353,8 +358,12 @@ int coo_to_csr_optimized(const matx_alloc_t* alloc,
     }
     csr->row_ptr[0] = 0;
 
-    /* Per-row sort — skipped if COO was already row-sorted. */
-    {
+    /* Per-row sort and dedup.
+       Skip entirely when COO was already sorted and duplicate-free. */
+    if (is_sorted && !has_dupes) {
+        /* Data already correctly ordered — row_ptr was restored above. */
+        csr->nnz = nnz;
+    } else {
         matx_int64_t new_nnz = 0;
 
         for (matx_int64_t i = 0; i < nrows; ++i) {

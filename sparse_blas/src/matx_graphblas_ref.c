@@ -428,6 +428,21 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
         return MATX_ERR_INVALID_ARG;
     }
 
+    /* Early exit: alpha == 0 or nnz == 0 — just scale y by beta */
+    if ((alpha.real == 0.0 && alpha.imag == 0.0) || A->nnz == 0) {
+        if (beta.real == 0.0 && beta.imag == 0.0) {
+            for (matx_int64_t i = 0; i < y->n; ++i)
+                y->data[i * y->stride] = (matx_complex_d_t){0.0, 0.0};
+        } else {
+            for (matx_int64_t i = 0; i < y->n; ++i) {
+                matx_complex_d_t v = y->data[i * y->stride];
+                y->data[i * y->stride].real = beta.real * v.real - beta.imag * v.imag;
+                y->data[i * y->stride].imag = beta.real * v.imag + beta.imag * v.real;
+            }
+        }
+        return MATX_OK;
+    }
+
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
         && coo_2_grb_z_i8(A) != 0) {
         return MATX_ERR_INTERNAL;
@@ -438,75 +453,74 @@ static matx_status_t ref_spmv_z_i8_grb(matx_complex_d_t alpha,
     }
     if (MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0
         && vec_2_grb_z_i8(y) != 0) {
-        if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid > 0)
-            grb_2_vec_z_i8(x);
         return MATX_ERR_INTERNAL;
     }
 
     GxB_FC64_t a = GxB_CMPLX(alpha.real, alpha.imag);
     GxB_FC64_t b = GxB_CMPLX(beta.real, beta.imag);
+    GrB_Vector y_grb = (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl;
+    GrB_Vector x_grb = (GrB_Vector) MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->impl;
+    GrB_Matrix a_grb = (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
 
-    // gy = beta * gy
-    GrB_Info info = GrB_apply((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                              NULL,
-                              NULL,
-                              GxB_TIMES_FC64,
-                              (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                              b,
-                              NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_apply beta*gy error: %d", info);
-        grb_2_vec_z_i8(x);
-        grb_2_vec_z_i8(y);
-        return MATX_ERR_INTERNAL;
-    }
-    // gy += alpha * A * x  (accumulate into gy)
-    GrB_Vector temp;
-    info = GrB_Vector_new(&temp, GxB_FC64, y->n);
-    if (info != GrB_SUCCESS) {
-        grb_2_vec_z_i8(x);
-        grb_2_vec_z_i8(y);
-        return MATX_ERR_INTERNAL;
-    }
-    info = GrB_mxv(temp,
-                   NULL,
-                   NULL,
-                   GxB_PLUS_TIMES_FC64,
-                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                   (GrB_Vector) MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                   NULL);
-    if (info != GrB_SUCCESS) {
+    if (beta.real == 0.0 && beta.imag == 0.0) {
+        /* y = alpha * A * x — write directly into y, no temp needed */
+        GrB_Descriptor desc;
+        GrB_Descriptor_new(&desc);
+        GrB_Descriptor_set(desc, GrB_OUTP, GrB_REPLACE);
+        GrB_Info info = GrB_mxv(y_grb, NULL, NULL, GxB_PLUS_TIMES_FC64, a_grb, x_grb, desc);
+        GrB_Descriptor_free(&desc);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_mxv error: %d", info);
+            grb_2_vec_z_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        if (alpha.real != 1.0 || alpha.imag != 0.0) {
+            info = GrB_apply(y_grb, NULL, NULL, GxB_TIMES_FC64, y_grb, a, NULL);
+            if (info != GrB_SUCCESS) {
+                MATX_ERROR("GrB_apply scale error: %d", info);
+                grb_2_vec_z_i8(y);
+                return MATX_ERR_INTERNAL;
+            }
+        }
+    } else {
+        /* y = alpha * A * x + beta * y */
+        GrB_Info info = GrB_apply(y_grb, NULL, NULL, GxB_TIMES_FC64, y_grb, b, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_apply beta*gy error: %d", info);
+            grb_2_vec_z_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        GrB_Vector temp;
+        info = GrB_Vector_new(&temp, GxB_FC64, y->n);
+        if (info != GrB_SUCCESS) {
+            grb_2_vec_z_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, a_grb, x_grb, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Vector_free(&temp);
+            MATX_ERROR("GrB_mxv error: %d", info);
+            grb_2_vec_z_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Vector_free(&temp);
+            MATX_ERROR("GrB_apply alpha*temp error: %d", info);
+            grb_2_vec_z_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_eWiseAdd(y_grb, NULL, NULL, GxB_PLUS_FC64, y_grb, temp, NULL);
         GrB_Vector_free(&temp);
-        MATX_ERROR("GrB_mxv error: %d", info);
-        grb_2_vec_z_i8(x);
-        grb_2_vec_z_i8(y);
-        return MATX_ERR_INTERNAL;
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_eWiseAdd error: %d", info);
+            grb_2_vec_z_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
     }
-    info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
-    if (info != GrB_SUCCESS) {
-        GrB_Vector_free(&temp);
-        MATX_ERROR("GrB_apply alpha*temp error: %d", info);
-        grb_2_vec_z_i8(x);
-        grb_2_vec_z_i8(y);
-        return MATX_ERR_INTERNAL;
-    }
-    info = GrB_eWiseAdd((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                        NULL,
-                        NULL,
-                        GxB_PLUS_FC64,
-                        (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                        temp,
-                        NULL);
-    GrB_Vector_free(&temp);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_eWiseAdd error: %d", info);
-        grb_2_vec_z_i8(x);
-        grb_2_vec_z_i8(y);
-        return MATX_ERR_INTERNAL;
-    }
-    const size_t x_export_status = grb_2_vec_z_i8(x);
-    const size_t y_export_status = grb_2_vec_z_i8(y);
-    if (x_export_status != 0 || y_export_status != 0)
+
+    /* Export only modified output y (x is read-only) */
+    if (grb_2_vec_z_i8(y) != 0)
         return MATX_ERR_INTERNAL;
 #else
     (void) alpha; (void) A; (void) x; (void) beta; (void) y;
@@ -538,6 +552,34 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
         return MATX_ERR_INVALID_ARG;
     }
 
+    /* Early exit: alpha == 0 or nnz == 0 — just scale C by beta */
+    if ((alpha.real == 0.0 && alpha.imag == 0.0) || A->nnz == 0) {
+        if (beta.real == 0.0 && beta.imag == 0.0) {
+            memset(C->data, 0, (size_t) C->nrows * C->ncols * C->stride * sizeof(matx_complex_d_t));
+        } else {
+            const matx_int64_t minor = (C->layout == MATX_COL_MAJOR) ? C->nrows : C->ncols;
+            const matx_int64_t major = (C->layout == MATX_COL_MAJOR) ? C->ncols : C->nrows;
+            if (C->stride == minor) {
+                const size_t count = (size_t) C->nrows * (size_t) C->ncols;
+                for (size_t i = 0; i < count; ++i) {
+                    matx_complex_d_t v = C->data[i];
+                    C->data[i].real = beta.real * v.real - beta.imag * v.imag;
+                    C->data[i].imag = beta.real * v.imag + beta.imag * v.real;
+                }
+            } else {
+                for (matx_int64_t j = 0; j < major; ++j) {
+                    for (matx_int64_t i = 0; i < minor; ++i) {
+                        matx_complex_d_t* c = &C->data[i + j * C->stride];
+                        matx_complex_d_t v = *c;
+                        c->real = beta.real * v.real - beta.imag * v.imag;
+                        c->imag = beta.real * v.imag + beta.imag * v.real;
+                    }
+                }
+            }
+        }
+        return MATX_OK;
+    }
+
     /* build A */
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
         && coo_2_grb_z_i8(A) != 0) {
@@ -549,79 +591,76 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
     }
     if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
         && dense_2_grb_z_i8(C) != 0) {
-        if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid > 0)
-            grb_2_dense_z_i8(B);
         return MATX_ERR_INTERNAL;
     }
 
     /* C = alpha*A*B + beta*C */
     GxB_FC64_t a = GxB_CMPLX(alpha.real, alpha.imag);
     GxB_FC64_t b = GxB_CMPLX(beta.real, beta.imag);
+    GrB_Matrix c_grb = (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    GrB_Matrix b_grb = (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    GrB_Matrix a_grb = (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
 
-    // 1. temp = alpha * A * B
-    GrB_Matrix temp;
-    GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
-    if (info != GrB_SUCCESS) {
-        grb_2_dense_z_i8(B);
-        grb_2_dense_z_i8(C);
-        return MATX_ERR_INTERNAL;
-    }
-    info = GrB_mxm(temp,
-                            NULL,
-                            NULL,
-                            GxB_PLUS_TIMES_FC64,
-                            (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                            (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                            NULL);
-    if (info != GrB_SUCCESS) {
+    if (beta.real == 0.0 && beta.imag == 0.0) {
+        /* C = alpha * A * B — write directly into C, no temp needed */
+        GrB_Descriptor desc;
+        GrB_Descriptor_new(&desc);
+        GrB_Descriptor_set(desc, GrB_OUTP, GrB_REPLACE);
+        GrB_Info info = GrB_mxm(c_grb, NULL, NULL, GxB_PLUS_TIMES_FC64, a_grb, b_grb, desc);
+        GrB_Descriptor_free(&desc);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_mxm error: %d", info);
+            grb_2_dense_z_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        if (alpha.real != 1.0 || alpha.imag != 0.0) {
+            info = GrB_apply(c_grb, NULL, NULL, GxB_TIMES_FC64, c_grb, a, NULL);
+            if (info != GrB_SUCCESS) {
+                MATX_ERROR("GrB_apply scale error: %d", info);
+                grb_2_dense_z_i8(C);
+                return MATX_ERR_INTERNAL;
+            }
+        }
+    } else {
+        /* C = alpha * A * B + beta * C */
+        GrB_Matrix temp;
+        GrB_Info info = GrB_Matrix_new(&temp, GxB_FC64, C->nrows, C->ncols);
+        if (info != GrB_SUCCESS) {
+            grb_2_dense_z_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FC64, a_grb, b_grb, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Matrix_free(&temp);
+            MATX_ERROR("GrB_mxm error: %d", info);
+            grb_2_dense_z_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Matrix_free(&temp);
+            MATX_ERROR("GrB_apply error: %d", info);
+            grb_2_dense_z_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(c_grb, NULL, NULL, GxB_TIMES_FC64, c_grb, b, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Matrix_free(&temp);
+            MATX_ERROR("GrB_apply beta * gC error: %d", info);
+            grb_2_dense_z_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_eWiseAdd(c_grb, NULL, NULL, GxB_PLUS_FC64, temp, c_grb, NULL);
         GrB_Matrix_free(&temp);
-        MATX_ERROR("GrB_mxm error: %d", info);
-        grb_2_dense_z_i8(B);
-        grb_2_dense_z_i8(C);
-        return MATX_ERR_INTERNAL;
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
+            grb_2_dense_z_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
     }
-    info = GrB_apply(temp, NULL, NULL, GxB_TIMES_FC64, temp, a, NULL);
-    if (info != GrB_SUCCESS) {
-        GrB_Matrix_free(&temp);
-        MATX_ERROR("GrB_apply error: %d", info);
-        grb_2_dense_z_i8(B);
-        grb_2_dense_z_i8(C);
-        return MATX_ERR_INTERNAL;
-    }
-    //2. gC = beta * gC
-    info = GrB_apply((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                     NULL,
-                     NULL,
-                     GxB_TIMES_FC64,
-                     (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                     b,
-                     NULL);
-    if (info != GrB_SUCCESS) {
-        GrB_Matrix_free(&temp);
-        MATX_ERROR("GrB_apply beta * gC error: %d", info);
-        grb_2_dense_z_i8(B);
-        grb_2_dense_z_i8(C);
-        return MATX_ERR_INTERNAL;
-    }
-    //3. gC = temp + gC
-    info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                        NULL,
-                        NULL,
-                        GxB_PLUS_FC64,
-                        temp,
-                        (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                        NULL);
-    if (info != GrB_SUCCESS) {
-        GrB_Matrix_free(&temp);
-        MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
-        grb_2_dense_z_i8(B);
-        grb_2_dense_z_i8(C);
-        return MATX_ERR_INTERNAL;
-    }
-    GrB_Matrix_free(&temp);
-    const size_t b_export_status = grb_2_dense_z_i8(B);
-    const size_t c_export_status = grb_2_dense_z_i8(C);
-    if (b_export_status != 0 || c_export_status != 0)
+
+    /* Export only modified output C (B is read-only) */
+    if (grb_2_dense_z_i8(C) != 0)
         return MATX_ERR_INTERNAL;
 #else
     (void) alpha; (void) A; (void) B; (void) beta; (void) C;
@@ -648,6 +687,18 @@ static matx_status_t ref_spmv_d_i8_grb(
         return MATX_ERR_INVALID_ARG;
     }
 
+    /* Early exit: alpha == 0 or nnz == 0 — just scale y by beta */
+    if (alpha == 0.0 || A->nnz == 0) {
+        if (beta == 0.0) {
+            for (matx_int64_t i = 0; i < y->n; ++i)
+                y->data[i * y->stride] = 0.0;
+        } else {
+            for (matx_int64_t i = 0; i < y->n; ++i)
+                y->data[i * y->stride] *= beta;
+        }
+        return MATX_OK;
+    }
+
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
         && coo_2_grb_d_i8(A) != 0) {
         return MATX_ERR_INTERNAL;
@@ -658,75 +709,72 @@ static matx_status_t ref_spmv_d_i8_grb(
     }
     if (MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->valid <= 0
         && vec_2_grb_d_i8(y) != 0) {
-        if (MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->valid > 0)
-            grb_2_vec_d_i8(x);
         return MATX_ERR_INTERNAL;
     }
 
-    // gy = beta * gy
-    GrB_Info info = GrB_apply((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                              NULL,
-                              NULL,
-                              GrB_TIMES_FP64,
-                              (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                              beta,
-                              NULL);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_apply beta*gy error: %d", info);
-        grb_2_vec_d_i8(x);
-        grb_2_vec_d_i8(y);
-        return MATX_ERR_INTERNAL;
-    }
-    // temp = A*x, then gy += alpha*temp
-    matx_int64_t t0 = matx_tm_now(MATX_TM_MICROSECOND);
-    GrB_Vector temp;
-    info = GrB_Vector_new(&temp, GrB_FP64, y->n);
-    if (info != GrB_SUCCESS) {
-        grb_2_vec_d_i8(x);
-        grb_2_vec_d_i8(y);
-        return MATX_ERR_INTERNAL;
-    }
-    info = GrB_mxv(temp,
-                   NULL,
-                   NULL,
-                   GxB_PLUS_TIMES_FP64,
-                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                   (GrB_Vector) MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                   NULL);
-    if (info != GrB_SUCCESS) {
+    GrB_Vector y_grb = (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl;
+    GrB_Vector x_grb = (GrB_Vector) MATX_HANDLE(x, MATX_HANDLE_TYPE_GRB_VECTOR)->impl;
+    GrB_Matrix a_grb = (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+
+    if (beta == 0.0) {
+        /* y = alpha * A * x — write directly into y, no temp needed */
+        GrB_Descriptor desc;
+        GrB_Descriptor_new(&desc);
+        GrB_Descriptor_set(desc, GrB_OUTP, GrB_REPLACE);
+        GrB_Info info = GrB_mxv(y_grb, NULL, NULL, GxB_PLUS_TIMES_FP64, a_grb, x_grb, desc);
+        GrB_Descriptor_free(&desc);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_mxv error: %d", info);
+            grb_2_vec_d_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        if (alpha != 1.0) {
+            info = GrB_apply(y_grb, NULL, NULL, GrB_TIMES_FP64, y_grb, alpha, NULL);
+            if (info != GrB_SUCCESS) {
+                MATX_ERROR("GrB_apply scale error: %d", info);
+                grb_2_vec_d_i8(y);
+                return MATX_ERR_INTERNAL;
+            }
+        }
+    } else {
+        /* y = alpha * A * x + beta * y */
+        GrB_Info info = GrB_apply(y_grb, NULL, NULL, GrB_TIMES_FP64, y_grb, beta, NULL);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_apply beta*gy error: %d", info);
+            grb_2_vec_d_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        GrB_Vector temp;
+        info = GrB_Vector_new(&temp, GrB_FP64, y->n);
+        if (info != GrB_SUCCESS) {
+            grb_2_vec_d_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_mxv(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, a_grb, x_grb, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Vector_free(&temp);
+            MATX_ERROR("GrB_mxv A*x error: %d", info);
+            grb_2_vec_d_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Vector_free(&temp);
+            MATX_ERROR("GrB_apply alpha*temp error: %d", info);
+            grb_2_vec_d_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_eWiseAdd(y_grb, NULL, NULL, GrB_PLUS_FP64, y_grb, temp, NULL);
         GrB_Vector_free(&temp);
-        MATX_ERROR("GrB_mxv A*x error: %d", info);
-        grb_2_vec_d_i8(x);
-        grb_2_vec_d_i8(y);
-        return MATX_ERR_INTERNAL;
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_eWiseAdd temp + gy error: %d", info);
+            grb_2_vec_d_i8(y);
+            return MATX_ERR_INTERNAL;
+        }
     }
-    info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
-    if (info != GrB_SUCCESS) {
-        GrB_Vector_free(&temp);
-        MATX_ERROR("GrB_apply alpha*temp error: %d", info);
-        grb_2_vec_d_i8(x);
-        grb_2_vec_d_i8(y);
-        return MATX_ERR_INTERNAL;
-    }
-    info = GrB_eWiseAdd((GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                        NULL,
-                        NULL,
-                        GrB_PLUS_FP64,
-                        (GrB_Vector) MATX_HANDLE(y, MATX_HANDLE_TYPE_GRB_VECTOR)->impl,
-                        temp,
-                        NULL);
-    GrB_Vector_free(&temp);
-    if (info != GrB_SUCCESS) {
-        MATX_ERROR("GrB_eWiseAdd temp + gy error: %d", info);
-        grb_2_vec_d_i8(x);
-        grb_2_vec_d_i8(y);
-        return MATX_ERR_INTERNAL;
-    }
-    matx_int64_t t1 = matx_tm_now(MATX_TM_MICROSECOND);
-    MATX_TRACE("GraphBLAS SpMV time: %ld micro.s", t1 - t0);
-    const size_t x_export_status = grb_2_vec_d_i8(x);
-    const size_t y_export_status = grb_2_vec_d_i8(y);
-    if (x_export_status != 0 || y_export_status != 0)
+
+    /* Export only modified output y (x is read-only) */
+    if (grb_2_vec_d_i8(y) != 0)
         return MATX_ERR_INTERNAL;
 #else
     (void) alpha; (void) A; (void) x; (void) beta; (void) y;
@@ -759,6 +807,27 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
         MATX_ERROR("invalid argument");
         return MATX_ERR_INVALID_ARG;
     }
+
+    /* Early exit: alpha == 0 or nnz == 0 — just scale C by beta */
+    if (alpha == 0.0 || A->nnz == 0) {
+        if (beta == 0.0) {
+            memset(C->data, 0, (size_t) C->nrows * C->ncols * C->stride * sizeof(matx_double));
+        } else {
+            const matx_int64_t minor = (C->layout == MATX_COL_MAJOR) ? C->nrows : C->ncols;
+            if (C->stride == minor) {
+                const size_t count = (size_t) C->nrows * (size_t) C->ncols;
+                for (size_t i = 0; i < count; ++i)
+                    C->data[i] *= beta;
+            } else {
+                const matx_int64_t major = (C->layout == MATX_COL_MAJOR) ? C->ncols : C->nrows;
+                for (matx_int64_t j = 0; j < major; ++j)
+                    for (matx_int64_t i = 0; i < minor; ++i)
+                        C->data[i + j * C->stride] *= beta;
+            }
+        }
+        return MATX_OK;
+    }
+
     if (MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
         && coo_2_grb_d_i8(A) != 0) {
         return MATX_ERR_INTERNAL;
@@ -769,77 +838,74 @@ static matx_status_t ref_spmm_d_i8_grb(matx_double alpha,
     }
     if (MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->valid <= 0
         && dense_2_grb_d_i8(C) != 0) {
-        if (MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->valid > 0)
-            grb_2_dense_d_i8(B);
         return MATX_ERR_INTERNAL;
     }
 
     /* C = alpha*A*B + beta*C */
+    GrB_Matrix c_grb = (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    GrB_Matrix b_grb = (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
+    GrB_Matrix a_grb = (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl;
 
-    // 1. temp = alpha * A * B
-    GrB_Matrix temp;
-    GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->nrows, C->ncols);
-    if (info != GrB_SUCCESS) {
-        grb_2_dense_d_i8(B);
-        grb_2_dense_d_i8(C);
-        return MATX_ERR_INTERNAL;
-    }
-    info = GrB_mxm(temp,
-                   NULL,
-                   NULL,
-                   GxB_PLUS_TIMES_FP64,
-                   (GrB_Matrix) MATX_HANDLE(A, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                   (GrB_Matrix) MATX_HANDLE(B, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                   NULL);
-    if (info != GrB_SUCCESS) {
+    if (beta == 0.0) {
+        /* C = alpha * A * B — write directly into C, no temp needed */
+        GrB_Descriptor desc;
+        GrB_Descriptor_new(&desc);
+        GrB_Descriptor_set(desc, GrB_OUTP, GrB_REPLACE);
+        GrB_Info info = GrB_mxm(c_grb, NULL, NULL, GxB_PLUS_TIMES_FP64, a_grb, b_grb, desc);
+        GrB_Descriptor_free(&desc);
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_mxm error: %d", info);
+            grb_2_dense_d_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        if (alpha != 1.0) {
+            info = GrB_apply(c_grb, NULL, NULL, GrB_TIMES_FP64, c_grb, alpha, NULL);
+            if (info != GrB_SUCCESS) {
+                MATX_ERROR("GrB_apply scale error: %d", info);
+                grb_2_dense_d_i8(C);
+                return MATX_ERR_INTERNAL;
+            }
+        }
+    } else {
+        /* C = alpha * A * B + beta * C */
+        GrB_Matrix temp;
+        GrB_Info info = GrB_Matrix_new(&temp, GrB_FP64, C->nrows, C->ncols);
+        if (info != GrB_SUCCESS) {
+            grb_2_dense_d_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_mxm(temp, NULL, NULL, GxB_PLUS_TIMES_FP64, a_grb, b_grb, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Matrix_free(&temp);
+            MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
+            grb_2_dense_d_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Matrix_free(&temp);
+            MATX_ERROR("GrB_apply alpha * temp error: %d", info);
+            grb_2_dense_d_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_apply(c_grb, NULL, NULL, GrB_TIMES_FP64, c_grb, beta, NULL);
+        if (info != GrB_SUCCESS) {
+            GrB_Matrix_free(&temp);
+            MATX_ERROR("GrB_apply beta * gC error: %d", info);
+            grb_2_dense_d_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
+        info = GrB_eWiseAdd(c_grb, NULL, NULL, GrB_PLUS_FP64, temp, c_grb, NULL);
         GrB_Matrix_free(&temp);
-        MATX_ERROR("GrB_mxm alpha * A * B error: %d", info);
-        grb_2_dense_d_i8(B);
-        grb_2_dense_d_i8(C);
-        return MATX_ERR_INTERNAL;
+        if (info != GrB_SUCCESS) {
+            MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
+            grb_2_dense_d_i8(C);
+            return MATX_ERR_INTERNAL;
+        }
     }
-    info = GrB_apply(temp, NULL, NULL, GrB_TIMES_FP64, temp, alpha, NULL);
-    if (info != GrB_SUCCESS) {
-        GrB_Matrix_free(&temp);
-        MATX_ERROR("GrB_apply  error: %d", info);
-        grb_2_dense_d_i8(B);
-        grb_2_dense_d_i8(C);
-        return MATX_ERR_INTERNAL;
-    }
-    //2. gC = beta * gC
-    info = GrB_apply((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                     NULL,
-                     NULL,
-                     GrB_TIMES_FP64,
-                     (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                     beta,
-                     NULL);
-    if (info != GrB_SUCCESS) {
-        GrB_Matrix_free(&temp);
-        MATX_ERROR("GrB_apply beta * gC error: %d", info);
-        grb_2_dense_d_i8(B);
-        grb_2_dense_d_i8(C);
-        return MATX_ERR_INTERNAL;
-    }
-    //3. gC = temp + gC
-    info = GrB_eWiseAdd((GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                        NULL,
-                        NULL,
-                        GrB_PLUS_FP64,
-                        temp,
-                        (GrB_Matrix) MATX_HANDLE(C, MATX_HANDLE_TYPE_GRB_MATRIX)->impl,
-                        NULL);
-    if (info != GrB_SUCCESS) {
-        GrB_Matrix_free(&temp);
-        MATX_ERROR("GrB_eWiseAdd temp + gC error: %d", info);
-        grb_2_dense_d_i8(B);
-        grb_2_dense_d_i8(C);
-        return MATX_ERR_INTERNAL;
-    }
-    GrB_Matrix_free(&temp);
-    const size_t b_export_status = grb_2_dense_d_i8(B);
-    const size_t c_export_status = grb_2_dense_d_i8(C);
-    if (b_export_status != 0 || c_export_status != 0)
+
+    /* Export only modified output C (B is read-only) */
+    if (grb_2_dense_d_i8(C) != 0)
         return MATX_ERR_INTERNAL;
 #else
     (void) alpha; (void) A; (void) B; (void) beta; (void) C;

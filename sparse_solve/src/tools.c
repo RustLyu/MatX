@@ -383,7 +383,10 @@ int coo_2_csc(matx_int64_t* columns,
                                     coo2csc, out_nnz, alloc);
     }
 
+    /* Merge validation, sort detection, and dedup-count into a single pass.
+       memset before the loop is safe — on error we return immediately. */
     int is_sorted = 1;
+    memset(Ap, 0, ((size_t) ncols + 1) * sizeof(matx_int64_t));
     for (matx_int64_t k = 0; k < nnz; ++k) {
         if (columns[k] < 0 || columns[k] >= ncols
             || rows[k] < 0 || rows[k] >= nrows) {
@@ -397,8 +400,8 @@ int coo_2_csc(matx_int64_t* columns,
         }
     }
 
-    memset(Ap, 0, ((size_t) ncols + 1) * sizeof(matx_int64_t));
     if (is_sorted) {
+        /* Dedup-count pass — only safe because input is sorted. */
         for (matx_int64_t k = 0; k < nnz; ++k) {
             if (k == 0 || columns[k] != columns[k - 1] || rows[k] != rows[k - 1]) {
                 ++Ap[columns[k] + 1];
@@ -420,6 +423,7 @@ int coo_2_csc(matx_int64_t* columns,
         return COO2CSC_SUCCESS;
     }
 
+    /* !is_sorted: recount all entries for coo_2_csc_from_counts */
     for (matx_int64_t k = 0; k < nnz; ++k) {
         ++Ap[columns[k] + 1];
     }
