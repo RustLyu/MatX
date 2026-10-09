@@ -427,6 +427,236 @@ matx_status_t matx_trsv_z_i8(const matx_dense_backend_t* blas,
         .ztrsv(A->layout, uplo, trans, diag, A->nrows, A->data, A->stride, x->data, x->stride);
 }
 
+matx_status_t matx_trmv_d_i8(const matx_dense_backend_t* blas,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
+                             matx_diag_t diag,
+                             const matx_dense_d_i8_t A,
+                             matx_vec_d_i8_t x)
+{
+    if (!blas || !A || !x || !A->data || !x->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->ncols != x->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dtrmv) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt
+        .dtrmv(A->layout, uplo, trans, diag, A->nrows, A->data, A->stride, x->data, x->stride);
+}
+
+matx_status_t matx_trmv_z_i8(const matx_dense_backend_t* blas,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
+                             matx_diag_t diag,
+                             const matx_dense_z_i8_t A,
+                             matx_vec_z_i8_t x)
+{
+    if (!blas || !A || !x || !A->data || !x->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->ncols != x->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.ztrmv) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt
+        .ztrmv(A->layout, uplo, trans, diag, A->nrows, A->data, A->stride, x->data, x->stride);
+}
+
+matx_status_t matx_symv_d_i8(const matx_dense_backend_t* blas,
+                             matx_uplo_t uplo,
+                             matx_double alpha,
+                             const matx_dense_d_i8_t A,
+                             matx_vec_d_i8_t x,
+                             matx_double beta,
+                             matx_vec_d_i8_t y)
+{
+    if (!blas || !A || !x || !y || !A->data || !x->data || !y->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->ncols != x->n || x->n != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dsymv) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.dsymv(A->layout,
+                          uplo,
+                          A->nrows,
+                          alpha,
+                          A->data,
+                          A->stride,
+                          x->data,
+                          x->stride,
+                          beta,
+                          y->data,
+                          y->stride);
+}
+
+matx_status_t matx_hemv_z_i8(const matx_dense_backend_t* blas,
+                             matx_uplo_t uplo,
+                             matx_complex_d_t alpha,
+                             const matx_dense_z_i8_t A,
+                             matx_vec_z_i8_t x,
+                             matx_complex_d_t beta,
+                             matx_vec_z_i8_t y)
+{
+    if (!blas || !A || !x || !y || !A->data || !x->data || !y->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->ncols != x->n || x->n != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zhemv) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.zhemv(A->layout,
+                          uplo,
+                          A->nrows,
+                          &alpha,
+                          A->data,
+                          A->stride,
+                          x->data,
+                          x->stride,
+                          &beta,
+                          y->data,
+                          y->stride);
+}
+
+matx_status_t matx_syr_d_i8(const matx_dense_backend_t* blas,
+                            matx_uplo_t uplo,
+                            matx_double alpha,
+                            const matx_vec_d_i8_t x,
+                            matx_dense_d_i8_t A)
+{
+    if (!blas || !x || !A || !x->data || !A->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->nrows != x->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dsyr) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.dsyr(A->layout,
+                         uplo,
+                         A->nrows,
+                         alpha,
+                         x->data,
+                         x->stride,
+                         A->data,
+                         A->stride);
+}
+
+matx_status_t matx_her_z_i8(const matx_dense_backend_t* blas,
+                            matx_uplo_t uplo,
+                            matx_double alpha,
+                            const matx_vec_z_i8_t x,
+                            matx_dense_z_i8_t A)
+{
+    if (!blas || !x || !A || !x->data || !A->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->nrows != x->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zher) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.zher(A->layout,
+                         uplo,
+                         A->nrows,
+                         alpha,
+                         x->data,
+                         x->stride,
+                         A->data,
+                         A->stride);
+}
+
+matx_status_t matx_syr2_d_i8(const matx_dense_backend_t* blas,
+                             matx_uplo_t uplo,
+                             matx_double alpha,
+                             const matx_vec_d_i8_t x,
+                             const matx_vec_d_i8_t y,
+                             matx_dense_d_i8_t A)
+{
+    if (!blas || !x || !y || !A || !x->data || !y->data || !A->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->nrows != x->n || x->n != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dsyr2) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.dsyr2(A->layout,
+                          uplo,
+                          A->nrows,
+                          alpha,
+                          x->data,
+                          x->stride,
+                          y->data,
+                          y->stride,
+                          A->data,
+                          A->stride);
+}
+
+matx_status_t matx_her2_z_i8(const matx_dense_backend_t* blas,
+                             matx_uplo_t uplo,
+                             matx_complex_d_t alpha,
+                             const matx_vec_z_i8_t x,
+                             const matx_vec_z_i8_t y,
+                             matx_dense_z_i8_t A)
+{
+    if (!blas || !x || !y || !A || !x->data || !y->data || !A->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->nrows != x->n || x->n != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zher2) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.zher2(A->layout,
+                          uplo,
+                          A->nrows,
+                          &alpha,
+                          x->data,
+                          x->stride,
+                          y->data,
+                          y->stride,
+                          A->data,
+                          A->stride);
+}
+
 // ---- Level 3 wrappers ----
 
 matx_status_t matx_trsm_d_i8(const matx_dense_backend_t* blas,
@@ -486,6 +716,76 @@ matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas,
         return MATX_ERR_NOT_SUPPORTED;
     }
     return blas->vt.ztrsm(A->layout,
+                          side,
+                          uplo,
+                          trans,
+                          diag,
+                          B->nrows,
+                          B->ncols,
+                          &alpha,
+                          A->data,
+                          A->stride,
+                          B->data,
+                          B->stride);
+}
+
+matx_status_t matx_trmm_d_i8(const matx_dense_backend_t* blas,
+                             matx_side_t side,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
+                             matx_diag_t diag,
+                             matx_double alpha,
+                             const matx_dense_d_i8_t A,
+                             matx_dense_d_i8_t B)
+{
+    if (!blas || !A || !B || !A->data || !B->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != B->layout) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dtrmm) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.dtrmm(A->layout,
+                          side,
+                          uplo,
+                          trans,
+                          diag,
+                          B->nrows,
+                          B->ncols,
+                          alpha,
+                          A->data,
+                          A->stride,
+                          B->data,
+                          B->stride);
+}
+
+matx_status_t matx_trmm_z_i8(const matx_dense_backend_t* blas,
+                             matx_side_t side,
+                             matx_uplo_t uplo,
+                             matx_trans_t trans,
+                             matx_diag_t diag,
+                             matx_complex_d_t alpha,
+                             const matx_dense_z_i8_t A,
+                             matx_dense_z_i8_t B)
+{
+    if (!blas || !A || !B || !A->data || !B->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != B->layout) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.ztrmm) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.ztrmm(A->layout,
                           side,
                           uplo,
                           trans,
@@ -641,6 +941,78 @@ matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas,
                            beta,
                            C->data,
                            C->stride);
+}
+
+matx_status_t matx_symm_d_i8(const matx_dense_backend_t* blas,
+                             matx_side_t side,
+                             matx_uplo_t uplo,
+                             matx_double alpha,
+                             const matx_dense_d_i8_t A,
+                             const matx_dense_d_i8_t B,
+                             matx_double beta,
+                             matx_dense_d_i8_t C)
+{
+    if (!blas || !A || !B || !C || !A->data || !B->data || !C->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != C->layout || B->layout != C->layout) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dsymm) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.dsymm(A->layout,
+                          side,
+                          uplo,
+                          C->nrows,
+                          C->ncols,
+                          alpha,
+                          A->data,
+                          A->stride,
+                          B->data,
+                          B->stride,
+                          beta,
+                          C->data,
+                          C->stride);
+}
+
+matx_status_t matx_hemm_z_i8(const matx_dense_backend_t* blas,
+                             matx_side_t side,
+                             matx_uplo_t uplo,
+                             matx_complex_d_t alpha,
+                             const matx_dense_z_i8_t A,
+                             const matx_dense_z_i8_t B,
+                             matx_complex_d_t beta,
+                             matx_dense_z_i8_t C)
+{
+    if (!blas || !A || !B || !C || !A->data || !B->data || !C->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != C->layout || B->layout != C->layout) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zhemm) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.zhemm(A->layout,
+                          side,
+                          uplo,
+                          C->nrows,
+                          C->ncols,
+                          &alpha,
+                          A->data,
+                          A->stride,
+                          B->data,
+                          B->stride,
+                          &beta,
+                          C->data,
+                          C->stride);
 }
 
 // ---- Transpose wrappers ----

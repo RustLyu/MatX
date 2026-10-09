@@ -16,6 +16,8 @@ add_executable(${PROJECT_NAME}
   test_extended_numeric.cpp
   test_print_mtx.cpp
   test_read_mtx.cpp
+  test_write_mtx.cpp
+  test_csv.cpp
 )
 find_package(OpenMP REQUIRED)
 target_link_libraries(${PROJECT_NAME}

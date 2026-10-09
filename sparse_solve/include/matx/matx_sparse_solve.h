@@ -52,6 +52,16 @@ typedef struct matx_sparse_linsolve_vtable_t
                                          matx_double* x);
     void (*factor_chol_csc_d_i8_destroy)(const matx_alloc_t* alloc, matx_factor_sparse_d_i8_t* F);
 
+    // Sparse Cholesky (complex HPD)
+    matx_status_t (*factor_chol_csc_z_i8)(const matx_alloc_t* alloc, matx_coo_z_i8_t A, matx_factor_sparse_z_i8_t* out_F);
+    matx_status_t (*solve_chol_csc_z_i8)(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F,
+                                         const matx_vec_z_i8_t b,
+                                         matx_vec_z_i8_t x);
+    void (*factor_chol_csc_z_i8_destroy)(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F);
+
+    // Numeric-only refactorization (reuse symbolic, new values)
+    matx_status_t (*refactor_csc_d_i8)(const matx_alloc_t* alloc, matx_coo_d_i8_t A, matx_factor_sparse_d_i8_t* F);
+
 } matx_sparse_linsolve_vtable_t;
 
 typedef struct matx_sparse_linsolve_t
@@ -167,6 +177,39 @@ MATX_SPARSE_SOLVE_API matx_status_t matx_solve_chol_coo_d_i8(const matx_sparse_l
                                                 matx_coo_d_i8_t A,
                                                 const matx_double* b,
                                                 matx_double* x);
+
+// ---- Sparse Cholesky (complex HPD) ----
+
+/**
+ * @brief Cholesky factorization of a complex sparse HPD matrix in COO format
+ * @formula A = L * L^H
+ *          where L is lower triangular. A must be Hermitian positive-definite.
+ */
+MATX_SPARSE_SOLVE_API matx_status_t matx_factor_chol_coo_z_i8(const matx_sparse_linsolve_t* ls,
+                                                 matx_coo_z_i8_t A,
+                                                 matx_factor_sparse_z_i8_t* out_F);
+
+/**
+ * @brief Solve a complex sparse HPD system using pre-computed Cholesky factorization
+ */
+MATX_SPARSE_SOLVE_API matx_status_t matx_solve_chol_coo_z_i8_factor(const matx_sparse_linsolve_t* ls,
+                                                       matx_factor_sparse_z_i8_t* F,
+                                                       const matx_vec_z_i8_t b,
+                                                       matx_vec_z_i8_t x);
+
+MATX_SPARSE_SOLVE_API void matx_factor_chol_coo_z_i8_destroy(const matx_sparse_linsolve_t* ls,
+                                                matx_factor_sparse_z_i8_t* F);
+
+// ---- Numeric-only refactorization ----
+
+/**
+ * @brief Refactorize a real sparse matrix with new numeric values but same sparsity pattern
+ * @formula Reuses the symbolic factorization from a previous call to matx_factor_csc_d_i8,
+ *          performing only numeric factorization with updated matrix values.
+ */
+MATX_SPARSE_SOLVE_API matx_status_t matx_refactor_csc_d_i8(const matx_sparse_linsolve_t* ls,
+                                              matx_coo_d_i8_t A,
+                                              matx_factor_sparse_d_i8_t* F);
 
 // ---- COO-to-CSC conversion ----
 

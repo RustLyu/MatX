@@ -599,3 +599,77 @@ matx_status_t matx_scale_cols_coo_z_i8(const matx_sparse_backend_t* backend,
     }
     return backend->vt.scale_cols_z_i8(A, s);
 }
+
+// ---- Sparse-sparse GEMM producing COO (SpGEMM) ----
+
+matx_status_t matx_spgemm_coo_d_i8(const matx_sparse_backend_t* backend,
+                                    matx_double alpha,
+                                    matx_coo_d_i8_t A,
+                                    matx_coo_d_i8_t B,
+                                    matx_coo_d_i8_t out)
+{
+    if (!backend || !A || !B || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!backend->vt.spgemm_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return backend->vt.spgemm_d_i8(alpha, A, B, out);
+}
+
+matx_status_t matx_spgemm_coo_z_i8(const matx_sparse_backend_t* backend,
+                                    matx_complex_d_t alpha,
+                                    matx_coo_z_i8_t A,
+                                    matx_coo_z_i8_t B,
+                                    matx_coo_z_i8_t out)
+{
+    if (!backend || !A || !B || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!backend->vt.spgemm_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return backend->vt.spgemm_z_i8(alpha, A, B, out);
+}
+
+// ---- Sparse triangular solve (SpTRSV) ----
+
+matx_status_t matx_sptrsv_coo_d_i8(const matx_sparse_backend_t* backend,
+                                    matx_uplo_t uplo,
+                                    matx_trans_t trans,
+                                    matx_diag_t diag,
+                                    matx_coo_d_i8_t A,
+                                    matx_vec_d_i8_t x)
+{
+    if (!backend || !A || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!backend->vt.sptrsv_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return backend->vt.sptrsv_d_i8(uplo, trans, diag, A, x);
+}
+
+matx_status_t matx_sptrsv_coo_z_i8(const matx_sparse_backend_t* backend,
+                                    matx_uplo_t uplo,
+                                    matx_trans_t trans,
+                                    matx_diag_t diag,
+                                    matx_coo_z_i8_t A,
+                                    matx_vec_z_i8_t x)
+{
+    if (!backend || !A || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!backend->vt.sptrsv_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return backend->vt.sptrsv_z_i8(uplo, trans, diag, A, x);
+}

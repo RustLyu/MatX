@@ -354,3 +354,62 @@ matx_status_t matx_solve_chol_coo_d_i8(const matx_sparse_linsolve_t* ls,
     matx_factor_chol_coo_d_i8_destroy(ls, &F);
     return st;
 }
+
+// ---- Sparse Cholesky (complex HPD) ----
+
+matx_status_t matx_factor_chol_coo_z_i8(const matx_sparse_linsolve_t* ls,
+                                         matx_coo_z_i8_t A,
+                                         matx_factor_sparse_z_i8_t* out_F)
+{
+    if (!ls || !A || !out_F) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.factor_chol_csc_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.factor_chol_csc_z_i8(&ls->alloc, A, out_F);
+}
+
+matx_status_t matx_solve_chol_coo_z_i8_factor(const matx_sparse_linsolve_t* ls,
+                                               matx_factor_sparse_z_i8_t* F,
+                                               const matx_vec_z_i8_t b,
+                                               matx_vec_z_i8_t x)
+{
+    if (!ls || !F || !F->reserved || !b || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.solve_chol_csc_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.solve_chol_csc_z_i8(&ls->alloc, F, b, x);
+}
+
+void matx_factor_chol_coo_z_i8_destroy(const matx_sparse_linsolve_t* ls,
+                                        matx_factor_sparse_z_i8_t* F)
+{
+    if (!ls || !F || !F->reserved)
+        return;
+    if (ls->vt.factor_chol_csc_z_i8_destroy)
+        ls->vt.factor_chol_csc_z_i8_destroy(&ls->alloc, F);
+}
+
+// ---- Numeric-only refactorization ----
+
+matx_status_t matx_refactor_csc_d_i8(const matx_sparse_linsolve_t* ls,
+                                      matx_coo_d_i8_t A,
+                                      matx_factor_sparse_d_i8_t* F)
+{
+    if (!ls || !A || !F || !F->reserved) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.refactor_csc_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.refactor_csc_d_i8(&ls->alloc, A, F);
+}

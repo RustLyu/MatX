@@ -290,6 +290,13 @@ MATX_DECL_VEC_MATH(log);
 MATX_DECL_VEC_MATH(sqrt);
 MATX_DECL_VEC_MATH(sin);
 MATX_DECL_VEC_MATH(cos);
+MATX_DECL_VEC_MATH(tan);
+MATX_DECL_VEC_MATH(asin);
+MATX_DECL_VEC_MATH(acos);
+MATX_DECL_VEC_MATH(atan);
+MATX_DECL_VEC_MATH(sinh);
+MATX_DECL_VEC_MATH(cosh);
+MATX_DECL_VEC_MATH(tanh);
 
 #undef MATX_DECL_VEC_MATH
 
@@ -323,6 +330,13 @@ MATX_DECL_DENSE_MATH(log);
 MATX_DECL_DENSE_MATH(sqrt);
 MATX_DECL_DENSE_MATH(sin);
 MATX_DECL_DENSE_MATH(cos);
+MATX_DECL_DENSE_MATH(tan);
+MATX_DECL_DENSE_MATH(asin);
+MATX_DECL_DENSE_MATH(acos);
+MATX_DECL_DENSE_MATH(atan);
+MATX_DECL_DENSE_MATH(sinh);
+MATX_DECL_DENSE_MATH(cosh);
+MATX_DECL_DENSE_MATH(tanh);
 
 #undef MATX_DECL_DENSE_MATH
 
@@ -471,6 +485,164 @@ MATX_CORE_API matx_status_t matx_vec_d_i8_rand_normal(matx_vec_d_i8_t v,
                                                  matx_double mean,
                                                  matx_double stddev,
                                                  unsigned int seed);
+
+// ---- Element-wise min/max/clip ----
+
+MATX_CORE_API matx_status_t matx_vec_d_i8_min(const matx_alloc_t* alloc,
+                                         const matx_vec_d_i8_t a,
+                                         const matx_vec_d_i8_t b,
+                                         matx_vec_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_vec_z_i8_min(const matx_alloc_t* alloc,
+                                         const matx_vec_z_i8_t a,
+                                         const matx_vec_z_i8_t b,
+                                         matx_vec_z_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_d_i8_min(const matx_alloc_t* alloc,
+                                           const matx_dense_d_i8_t A,
+                                           const matx_dense_d_i8_t B,
+                                           matx_dense_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_min(const matx_alloc_t* alloc,
+                                           const matx_dense_z_i8_t A,
+                                           const matx_dense_z_i8_t B,
+                                           matx_dense_z_i8_t* out);
+
+MATX_CORE_API matx_status_t matx_vec_d_i8_max(const matx_alloc_t* alloc,
+                                         const matx_vec_d_i8_t a,
+                                         const matx_vec_d_i8_t b,
+                                         matx_vec_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_vec_z_i8_max(const matx_alloc_t* alloc,
+                                         const matx_vec_z_i8_t a,
+                                         const matx_vec_z_i8_t b,
+                                         matx_vec_z_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_d_i8_max(const matx_alloc_t* alloc,
+                                           const matx_dense_d_i8_t A,
+                                           const matx_dense_d_i8_t B,
+                                           matx_dense_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_max(const matx_alloc_t* alloc,
+                                           const matx_dense_z_i8_t A,
+                                           const matx_dense_z_i8_t B,
+                                           matx_dense_z_i8_t* out);
+
+MATX_CORE_API matx_status_t matx_vec_d_i8_clip(const matx_alloc_t* alloc,
+                                          const matx_vec_d_i8_t v,
+                                          matx_double lo,
+                                          matx_double hi,
+                                          matx_vec_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_vec_z_i8_clip(const matx_alloc_t* alloc,
+                                          const matx_vec_z_i8_t v,
+                                          matx_complex_d_t lo,
+                                          matx_complex_d_t hi,
+                                          matx_vec_z_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_d_i8_clip(const matx_alloc_t* alloc,
+                                            const matx_dense_d_i8_t A,
+                                            matx_double lo,
+                                            matx_double hi,
+                                            matx_dense_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_clip(const matx_alloc_t* alloc,
+                                            const matx_dense_z_i8_t A,
+                                            matx_complex_d_t lo,
+                                            matx_complex_d_t hi,
+                                            matx_dense_z_i8_t* out);
+
+// ---- Complex RNG ----
+
+MATX_CORE_API matx_status_t matx_vec_z_i8_rand_uniform(matx_vec_z_i8_t v,
+                                                  matx_double low_re,
+                                                  matx_double high_re,
+                                                  matx_double low_im,
+                                                  matx_double high_im,
+                                                  unsigned int seed);
+MATX_CORE_API matx_status_t matx_dense_z_i8_rand_uniform(matx_dense_z_i8_t m,
+                                                    matx_double low_re,
+                                                    matx_double high_re,
+                                                    matx_double low_im,
+                                                    matx_double high_im,
+                                                    unsigned int seed);
+MATX_CORE_API matx_status_t matx_vec_z_i8_rand_normal(matx_vec_z_i8_t v,
+                                                 matx_double mean_re,
+                                                 matx_double mean_im,
+                                                 matx_double stddev,
+                                                 unsigned int seed);
+
+// ---- Complex conjugate ----
+
+MATX_CORE_API matx_status_t matx_vec_z_i8_conj(const matx_alloc_t* alloc,
+                                          const matx_vec_z_i8_t v,
+                                          matx_vec_z_i8_t* out);
+MATX_CORE_API matx_status_t matx_vec_z_i8_conj_inplace(matx_vec_z_i8_t v);
+MATX_CORE_API matx_status_t matx_dense_z_i8_conj(const matx_alloc_t* alloc,
+                                            const matx_dense_z_i8_t A,
+                                            matx_dense_z_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_conj_inplace(matx_dense_z_i8_t A);
+
+// ---- Real / imaginary extraction ----
+
+MATX_CORE_API matx_status_t matx_vec_z_i8_real(const matx_alloc_t* alloc,
+                                          const matx_vec_z_i8_t v,
+                                          matx_vec_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_vec_z_i8_imag(const matx_alloc_t* alloc,
+                                          const matx_vec_z_i8_t v,
+                                          matx_vec_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_real(const matx_alloc_t* alloc,
+                                            const matx_dense_z_i8_t A,
+                                            matx_dense_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_imag(const matx_alloc_t* alloc,
+                                            const matx_dense_z_i8_t A,
+                                            matx_dense_d_i8_t* out);
+
+// ---- Cumulative sum extensions ----
+
+MATX_CORE_API matx_status_t matx_vec_z_i8_cumsum(const matx_alloc_t* alloc,
+                                            const matx_vec_z_i8_t v,
+                                            matx_vec_z_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_d_i8_cumsum(const matx_alloc_t* alloc,
+                                              const matx_dense_d_i8_t A,
+                                              matx_dense_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_cumsum(const matx_alloc_t* alloc,
+                                              const matx_dense_z_i8_t A,
+                                              matx_dense_z_i8_t* out);
+
+// ---- Kronecker product ----
+
+MATX_CORE_API matx_status_t matx_kron_d_i8(const matx_alloc_t* alloc,
+                                      const matx_dense_d_i8_t A,
+                                      const matx_dense_d_i8_t B,
+                                      matx_dense_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_kron_z_i8(const matx_alloc_t* alloc,
+                                      const matx_dense_z_i8_t A,
+                                      const matx_dense_z_i8_t B,
+                                      matx_dense_z_i8_t* out);
+
+// ---- Matrix concatenation ----
+
+MATX_CORE_API matx_status_t matx_dense_d_i8_hstack(const matx_alloc_t* alloc,
+                                              const matx_dense_d_i8_t A,
+                                              const matx_dense_d_i8_t B,
+                                              matx_dense_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_hstack(const matx_alloc_t* alloc,
+                                              const matx_dense_z_i8_t A,
+                                              const matx_dense_z_i8_t B,
+                                              matx_dense_z_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_d_i8_vstack(const matx_alloc_t* alloc,
+                                              const matx_dense_d_i8_t A,
+                                              const matx_dense_d_i8_t B,
+                                              matx_dense_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_dense_z_i8_vstack(const matx_alloc_t* alloc,
+                                              const matx_dense_z_i8_t A,
+                                              const matx_dense_z_i8_t B,
+                                              matx_dense_z_i8_t* out);
+
+// ---- linspace / logspace ----
+
+MATX_CORE_API matx_status_t matx_vec_d_i8_linspace(const matx_alloc_t* alloc,
+                                              matx_double start,
+                                              matx_double end,
+                                              matx_int64_t n,
+                                              matx_vec_d_i8_t* out);
+MATX_CORE_API matx_status_t matx_vec_d_i8_logspace(const matx_alloc_t* alloc,
+                                              matx_double start,
+                                              matx_double end,
+                                              matx_int64_t n,
+                                              matx_vec_d_i8_t* out);
 
 #ifdef __cplusplus
 }

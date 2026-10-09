@@ -1131,6 +1131,52 @@ static matx_status_t ref_scale_cols_z_i8_aocl(matx_coo_z_i8_t A, const matx_vec_
     return MATX_OK;
 }
 
+// ---- SpGEMM → COO (reference stubs) ----
+
+static matx_status_t ref_spgemm_d_i8_aocl(matx_double alpha,
+                                           matx_coo_d_i8_t A,
+                                           matx_coo_d_i8_t B,
+                                           matx_coo_d_i8_t out)
+{
+    (void) alpha; (void) A; (void) B; (void) out;
+    MATX_ERROR("%s: SpGEMM not implemented for AOCL backend", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+}
+
+static matx_status_t ref_spgemm_z_i8_aocl(matx_complex_d_t alpha,
+                                           matx_coo_z_i8_t A,
+                                           matx_coo_z_i8_t B,
+                                           matx_coo_z_i8_t out)
+{
+    (void) alpha; (void) A; (void) B; (void) out;
+    MATX_ERROR("%s: SpGEMM not implemented for AOCL backend", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+}
+
+// ---- SpTRSV (reference stubs) ----
+
+static matx_status_t ref_sptrsv_d_i8_aocl(matx_uplo_t uplo,
+                                           matx_trans_t trans,
+                                           matx_diag_t diag,
+                                           matx_coo_d_i8_t A,
+                                           matx_vec_d_i8_t x)
+{
+    (void) uplo; (void) trans; (void) diag; (void) A; (void) x;
+    MATX_ERROR("%s: SpTRSV not implemented for AOCL backend", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+}
+
+static matx_status_t ref_sptrsv_z_i8_aocl(matx_uplo_t uplo,
+                                           matx_trans_t trans,
+                                           matx_diag_t diag,
+                                           matx_coo_z_i8_t A,
+                                           matx_vec_z_i8_t x)
+{
+    (void) uplo; (void) trans; (void) diag; (void) A; (void) x;
+    MATX_ERROR("%s: SpTRSV not implemented for AOCL backend", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+}
+
 matx_sparse_backend_t matx_sparse_make_reference_aocl(void)
 {
     matx_sparse_backend_t b = {.kind = MATX_SPARSE_BACKEND_AOCL_CPARSE,
@@ -1167,6 +1213,10 @@ matx_sparse_backend_t matx_sparse_make_reference_aocl(void)
                                .scale_cols_d_i8 = ref_scale_cols_d_i8_aocl,
                                .scale_rows_z_i8 = ref_scale_rows_z_i8_aocl,
                                .scale_cols_z_i8 = ref_scale_cols_z_i8_aocl,
+                               .spgemm_d_i8 = ref_spgemm_d_i8_aocl,
+                               .spgemm_z_i8 = ref_spgemm_z_i8_aocl,
+                               .sptrsv_d_i8 = ref_sptrsv_d_i8_aocl,
+                               .sptrsv_z_i8 = ref_sptrsv_z_i8_aocl,
                                }};
     MATX_TRACE("AOCL INIT");
     return b;

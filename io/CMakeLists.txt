@@ -3,6 +3,7 @@
 add_library(${PROJECT_NAME}
   src/matx_print.cc
   src/matx_read.cc
+  src/matx_write.cc
 )
 
 add_library(MatX::io ALIAS ${PROJECT_NAME})
@@ -25,6 +26,7 @@ target_sources(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_print.h>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_read.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_write.h>
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC MATX_CORE_BUILD=1)

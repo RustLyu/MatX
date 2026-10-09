@@ -102,3 +102,67 @@ void matx_print_vec_z_i8(const matx_vec_z_i8_t& vec, const char* file)
     }
     os.close();
 }
+
+/* ============ Matrix info / summary ============ */
+
+#include <cstdio>
+#include <cstring>
+
+int matx_dense_d_i8_info(const matx_dense_d_i8_t mtx, char* buf, size_t bufsize)
+{
+    if (!mtx || !buf || !bufsize)
+        return -1;
+    const char* layout_str = (mtx->layout == MATX_COL_MAJOR) ? "col-major" : "row-major";
+    size_t data_bytes = (size_t) mtx->nrows * (size_t) mtx->ncols * sizeof(matx_double);
+    double density = 100.0;
+    int n = snprintf(buf, bufsize,
+        "Dense[d]  rows=%lld  cols=%lld  layout=%s  stride=%lld  bytes=%zu  density=%.1f%%",
+        (long long) mtx->nrows, (long long) mtx->ncols, layout_str,
+        (long long) mtx->stride, data_bytes, density);
+    if (n < 0) return -1;
+    return n < (int) bufsize ? n : (int) bufsize - 1;
+}
+
+int matx_dense_z_i8_info(const matx_dense_z_i8_t mtx, char* buf, size_t bufsize)
+{
+    if (!mtx || !buf || !bufsize)
+        return -1;
+    const char* layout_str = (mtx->layout == MATX_COL_MAJOR) ? "col-major" : "row-major";
+    size_t data_bytes = (size_t) mtx->nrows * (size_t) mtx->ncols * sizeof(matx_complex_d_t);
+    int n = snprintf(buf, bufsize,
+        "Dense[z]  rows=%lld  cols=%lld  layout=%s  stride=%lld  bytes=%zu",
+        (long long) mtx->nrows, (long long) mtx->ncols, layout_str,
+        (long long) mtx->stride, data_bytes);
+    if (n < 0) return -1;
+    return n < (int) bufsize ? n : (int) bufsize - 1;
+}
+
+int matx_coo_d_i8_info(const matx_coo_d_i8_t mtx, char* buf, size_t bufsize)
+{
+    if (!mtx || !buf || !bufsize)
+        return -1;
+    size_t idx_bytes = (size_t) mtx->nnz * 2 * sizeof(matx_int64_t);
+    size_t val_bytes = (size_t) mtx->nnz * sizeof(matx_double);
+    double density = (double) mtx->nnz / (double) ((size_t) mtx->nrows * (size_t) mtx->ncols) * 100.0;
+    int n = snprintf(buf, bufsize,
+        "COO[d]    rows=%lld  cols=%lld  nnz=%lld  idx_bytes=%zu  val_bytes=%zu  density=%.4f%%",
+        (long long) mtx->nrows, (long long) mtx->ncols, (long long) mtx->nnz,
+        idx_bytes, val_bytes, density);
+    if (n < 0) return -1;
+    return n < (int) bufsize ? n : (int) bufsize - 1;
+}
+
+int matx_coo_z_i8_info(const matx_coo_z_i8_t mtx, char* buf, size_t bufsize)
+{
+    if (!mtx || !buf || !bufsize)
+        return -1;
+    size_t idx_bytes = (size_t) mtx->nnz * 2 * sizeof(matx_int64_t);
+    size_t val_bytes = (size_t) mtx->nnz * sizeof(matx_complex_d_t);
+    double density = (double) mtx->nnz / (double) ((size_t) mtx->nrows * (size_t) mtx->ncols) * 100.0;
+    int n = snprintf(buf, bufsize,
+        "COO[z]    rows=%lld  cols=%lld  nnz=%lld  idx_bytes=%zu  val_bytes=%zu  density=%.4f%%",
+        (long long) mtx->nrows, (long long) mtx->ncols, (long long) mtx->nnz,
+        idx_bytes, val_bytes, density);
+    if (n < 0) return -1;
+    return n < (int) bufsize ? n : (int) bufsize - 1;
+}

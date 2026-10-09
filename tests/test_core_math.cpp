@@ -87,6 +87,52 @@ TEST(core_math, vec_sin_cos_d_i8)
     matx_vec_d_i8_destroy(&a, c);
 }
 
+// Phase 4: Additional trig functions (vec)
+
+TEST(core_math, vec_tan_asin_acos_atan_d_i8)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_vec_d_i8_t x = NULL, t = NULL, as = NULL, ac = NULL, at = NULL;
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &x, NULL, 2), MATX_OK);
+    x->data[0] = M_PI / 4.0;
+    x->data[1] = 0.5;
+    ASSERT_EQ(matx_vec_d_i8_tan(&a, x, &t), MATX_OK);
+    EXPECT_NEAR(t->data[0], tan(M_PI / 4.0), 1e-12);
+    ASSERT_EQ(matx_vec_d_i8_asin(&a, x, &as), MATX_OK);
+    EXPECT_NEAR(as->data[1], asin(0.5), 1e-12);
+    ASSERT_EQ(matx_vec_d_i8_acos(&a, x, &ac), MATX_OK);
+    EXPECT_NEAR(ac->data[1], acos(0.5), 1e-12);
+    ASSERT_EQ(matx_vec_d_i8_atan(&a, x, &at), MATX_OK);
+    EXPECT_NEAR(at->data[0], atan(M_PI / 4.0), 1e-12);
+    matx_vec_d_i8_destroy(&a, x);
+    matx_vec_d_i8_destroy(&a, t);
+    matx_vec_d_i8_destroy(&a, as);
+    matx_vec_d_i8_destroy(&a, ac);
+    matx_vec_d_i8_destroy(&a, at);
+}
+
+TEST(core_math, vec_sinh_cosh_tanh_d_i8)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_vec_d_i8_t x = NULL, sh = NULL, ch = NULL, th = NULL;
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &x, NULL, 2), MATX_OK);
+    x->data[0] = 0.0;
+    x->data[1] = 1.0;
+    ASSERT_EQ(matx_vec_d_i8_sinh(&a, x, &sh), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_cosh(&a, x, &ch), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_tanh(&a, x, &th), MATX_OK);
+    EXPECT_NEAR(sh->data[0], 0.0, 1e-12);
+    EXPECT_NEAR(ch->data[0], 1.0, 1e-12);
+    EXPECT_NEAR(th->data[0], 0.0, 1e-12);
+    EXPECT_NEAR(sh->data[1], sinh(1.0), 1e-12);
+    EXPECT_NEAR(ch->data[1], cosh(1.0), 1e-12);
+    EXPECT_NEAR(th->data[1], tanh(1.0), 1e-12);
+    matx_vec_d_i8_destroy(&a, x);
+    matx_vec_d_i8_destroy(&a, sh);
+    matx_vec_d_i8_destroy(&a, ch);
+    matx_vec_d_i8_destroy(&a, th);
+}
+
 TEST(core_math, vec_abs_d_i8)
 {
     matx_alloc_t a = matx_alloc_default();
@@ -181,6 +227,56 @@ TEST(core_math, dense_abs_d_i8)
     EXPECT_NEAR(B->data[2], 4.0, 1e-12);
     matx_dense_d_i8_destroy(&a, A);
     matx_dense_d_i8_destroy(&a, B);
+}
+
+// Phase 4: Additional trig functions (dense)
+
+TEST(core_math, dense_tan_asin_acos_atan_d_i8)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL, t = NULL, as = NULL, ac = NULL, at = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    A->data[0] = M_PI / 4.0;
+    A->data[1] = 0.5;
+    A->data[2] = 0.5;
+    A->data[3] = M_PI / 4.0;
+    ASSERT_EQ(matx_dense_d_i8_tan(&a, A, &t), MATX_OK);
+    EXPECT_NEAR(t->data[0], tan(M_PI / 4.0), 1e-12);
+    ASSERT_EQ(matx_dense_d_i8_asin(&a, A, &as), MATX_OK);
+    EXPECT_NEAR(as->data[1], asin(0.5), 1e-12);
+    ASSERT_EQ(matx_dense_d_i8_acos(&a, A, &ac), MATX_OK);
+    EXPECT_NEAR(ac->data[1], acos(0.5), 1e-12);
+    ASSERT_EQ(matx_dense_d_i8_atan(&a, A, &at), MATX_OK);
+    EXPECT_NEAR(at->data[0], atan(M_PI / 4.0), 1e-12);
+    matx_dense_d_i8_destroy(&a, A);
+    matx_dense_d_i8_destroy(&a, t);
+    matx_dense_d_i8_destroy(&a, as);
+    matx_dense_d_i8_destroy(&a, ac);
+    matx_dense_d_i8_destroy(&a, at);
+}
+
+TEST(core_math, dense_sinh_cosh_tanh_d_i8)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL, sh = NULL, ch = NULL, th = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    A->data[0] = 0.0;
+    A->data[1] = 1.0;
+    A->data[2] = 1.0;
+    A->data[3] = 0.0;
+    ASSERT_EQ(matx_dense_d_i8_sinh(&a, A, &sh), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_cosh(&a, A, &ch), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_tanh(&a, A, &th), MATX_OK);
+    EXPECT_NEAR(sh->data[0], 0.0, 1e-12);
+    EXPECT_NEAR(ch->data[0], 1.0, 1e-12);
+    EXPECT_NEAR(th->data[0], 0.0, 1e-12);
+    EXPECT_NEAR(sh->data[1], sinh(1.0), 1e-12);
+    EXPECT_NEAR(ch->data[1], cosh(1.0), 1e-12);
+    EXPECT_NEAR(th->data[1], tanh(1.0), 1e-12);
+    matx_dense_d_i8_destroy(&a, A);
+    matx_dense_d_i8_destroy(&a, sh);
+    matx_dense_d_i8_destroy(&a, ch);
+    matx_dense_d_i8_destroy(&a, th);
 }
 
 /* ============================================================

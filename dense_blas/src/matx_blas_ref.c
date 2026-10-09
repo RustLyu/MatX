@@ -1196,6 +1196,230 @@ static matx_status_t ref_ztrsv(matx_layout_t layout,
     return MATX_OK;
 }
 
+static matx_status_t ref_dtrmv(matx_layout_t layout,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
+                               matx_diag_t diag,
+                               matx_int64_t n,
+                               const matx_double* A,
+                               matx_int64_t lda,
+                               matx_double* x,
+                               matx_int64_t incx)
+{
+    if (!A || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dtrmv(order,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                (enum CBLAS_DIAG) diag,
+                n,
+                A,
+                lda,
+                x,
+                incx);
+    return MATX_OK;
+}
+
+static matx_status_t ref_ztrmv(matx_layout_t layout,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
+                               matx_diag_t diag,
+                               matx_int64_t n,
+                               const void* A,
+                               matx_int64_t lda,
+                               void* x,
+                               matx_int64_t incx)
+{
+    if (!A || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_ztrmv(order,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                (enum CBLAS_DIAG) diag,
+                n,
+                A,
+                lda,
+                x,
+                incx);
+    return MATX_OK;
+}
+
+static matx_status_t ref_dsymv(matx_layout_t layout,
+                               matx_uplo_t uplo,
+                               matx_int64_t n,
+                               matx_double alpha,
+                               const matx_double* A,
+                               matx_int64_t lda,
+                               const matx_double* x,
+                               matx_int64_t incx,
+                               matx_double beta,
+                               matx_double* y,
+                               matx_int64_t incy)
+{
+    if (!A || !x || !y) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dsymv(order,
+                (enum CBLAS_UPLO) uplo,
+                n,
+                alpha,
+                A,
+                lda,
+                x,
+                incx,
+                beta,
+                y,
+                incy);
+    return MATX_OK;
+}
+
+static matx_status_t ref_zhemv(matx_layout_t layout,
+                               matx_uplo_t uplo,
+                               matx_int64_t n,
+                               const void* alpha,
+                               const void* A,
+                               matx_int64_t lda,
+                               const void* x,
+                               matx_int64_t incx,
+                               const void* beta,
+                               void* y,
+                               matx_int64_t incy)
+{
+    if (!A || !x || !y || !alpha || !beta) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_zhemv(order,
+                (enum CBLAS_UPLO) uplo,
+                n,
+                alpha,
+                A,
+                lda,
+                x,
+                incx,
+                beta,
+                y,
+                incy);
+    return MATX_OK;
+}
+
+static matx_status_t ref_dsyr(matx_layout_t layout,
+                              matx_uplo_t uplo,
+                              matx_int64_t n,
+                              matx_double alpha,
+                              const matx_double* x,
+                              matx_int64_t incx,
+                              matx_double* A,
+                              matx_int64_t lda)
+{
+    if (!x || !A) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dsyr(order,
+               (enum CBLAS_UPLO) uplo,
+               n,
+               alpha,
+               x,
+               incx,
+               A,
+               lda);
+    return MATX_OK;
+}
+
+static matx_status_t ref_zher(matx_layout_t layout,
+                              matx_uplo_t uplo,
+                              matx_int64_t n,
+                              matx_double alpha,
+                              const void* x,
+                              matx_int64_t incx,
+                              void* A,
+                              matx_int64_t lda)
+{
+    if (!x || !A) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_zher(order,
+               (enum CBLAS_UPLO) uplo,
+               n,
+               alpha,
+               x,
+               incx,
+               A,
+               lda);
+    return MATX_OK;
+}
+
+static matx_status_t ref_dsyr2(matx_layout_t layout,
+                               matx_uplo_t uplo,
+                               matx_int64_t n,
+                               matx_double alpha,
+                               const matx_double* x,
+                               matx_int64_t incx,
+                               const matx_double* y,
+                               matx_int64_t incy,
+                               matx_double* A,
+                               matx_int64_t lda)
+{
+    if (!x || !y || !A) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dsyr2(order,
+                (enum CBLAS_UPLO) uplo,
+                n,
+                alpha,
+                x,
+                incx,
+                y,
+                incy,
+                A,
+                lda);
+    return MATX_OK;
+}
+
+static matx_status_t ref_zher2(matx_layout_t layout,
+                               matx_uplo_t uplo,
+                               matx_int64_t n,
+                               const void* alpha,
+                               const void* x,
+                               matx_int64_t incx,
+                               const void* y,
+                               matx_int64_t incy,
+                               void* A,
+                               matx_int64_t lda)
+{
+    if (!x || !y || !A || !alpha) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_zher2(order,
+                (enum CBLAS_UPLO) uplo,
+                n,
+                alpha,
+                x,
+                incx,
+                y,
+                incy,
+                A,
+                lda);
+    return MATX_OK;
+}
+
 // ---- Level 3 implementations ----
 
 static matx_status_t ref_dtrsm(matx_layout_t layout,
@@ -1250,6 +1474,72 @@ static matx_status_t ref_ztrsm(matx_layout_t layout,
     }
     const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
     cblas_ztrsm(order,
+                (enum CBLAS_SIDE) side,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                (enum CBLAS_DIAG) diag,
+                m,
+                n,
+                alpha,
+                A,
+                lda,
+                B,
+                ldb);
+    return MATX_OK;
+}
+
+static matx_status_t ref_dtrmm(matx_layout_t layout,
+                               matx_side_t side,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
+                               matx_diag_t diag,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               matx_double alpha,
+                               const matx_double* A,
+                               matx_int64_t lda,
+                               matx_double* B,
+                               matx_int64_t ldb)
+{
+    if (!A || !B) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dtrmm(order,
+                (enum CBLAS_SIDE) side,
+                (enum CBLAS_UPLO) uplo,
+                (enum CBLAS_TRANSPOSE) trans,
+                (enum CBLAS_DIAG) diag,
+                m,
+                n,
+                alpha,
+                A,
+                lda,
+                B,
+                ldb);
+    return MATX_OK;
+}
+
+static matx_status_t ref_ztrmm(matx_layout_t layout,
+                               matx_side_t side,
+                               matx_uplo_t uplo,
+                               matx_trans_t trans,
+                               matx_diag_t diag,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               const void* alpha,
+                               const void* A,
+                               matx_int64_t lda,
+                               void* B,
+                               matx_int64_t ldb)
+{
+    if (!A || !B || !alpha) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_ztrmm(order,
                 (enum CBLAS_SIDE) side,
                 (enum CBLAS_UPLO) uplo,
                 (enum CBLAS_TRANSPOSE) trans,
@@ -1393,6 +1683,76 @@ static matx_status_t ref_zher2k(matx_layout_t layout,
                  beta,
                  C,
                  ldc);
+    return MATX_OK;
+}
+
+static matx_status_t ref_dsymm(matx_layout_t layout,
+                               matx_side_t side,
+                               matx_uplo_t uplo,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               matx_double alpha,
+                               const matx_double* A,
+                               matx_int64_t lda,
+                               const matx_double* B,
+                               matx_int64_t ldb,
+                               matx_double beta,
+                               matx_double* C,
+                               matx_int64_t ldc)
+{
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_dsymm(order,
+                (enum CBLAS_SIDE) side,
+                (enum CBLAS_UPLO) uplo,
+                m,
+                n,
+                alpha,
+                A,
+                lda,
+                B,
+                ldb,
+                beta,
+                C,
+                ldc);
+    return MATX_OK;
+}
+
+static matx_status_t ref_zhemm(matx_layout_t layout,
+                               matx_side_t side,
+                               matx_uplo_t uplo,
+                               matx_int64_t m,
+                               matx_int64_t n,
+                               const void* alpha,
+                               const void* A,
+                               matx_int64_t lda,
+                               const void* B,
+                               matx_int64_t ldb,
+                               const void* beta,
+                               void* C,
+                               matx_int64_t ldc)
+{
+    if (!A || !B || !C || !alpha || !beta) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const enum CBLAS_ORDER order = (layout == MATX_COL_MAJOR) ? CblasColMajor : CblasRowMajor;
+    cblas_zhemm(order,
+                (enum CBLAS_SIDE) side,
+                (enum CBLAS_UPLO) uplo,
+                m,
+                n,
+                alpha,
+                A,
+                lda,
+                B,
+                ldb,
+                beta,
+                C,
+                ldc);
     return MATX_OK;
 }
 
@@ -1906,17 +2266,30 @@ matx_dense_backend_t matx_blas_make_reference(void)
         .inv_dense_d_i8 = &ref_inv_dense_d_i8,
         .inv_dense_z_i8 = &ref_inv_dense_z_i8,
         .expm_dense_d_i8 = &ref_expm_dense_d_i8,
+        .expm_dense_z_i8 = NULL, /* TODO: complex expm */
         .dger = &ref_dger,
         .zgeru = &ref_zgeru,
         .zgerc = &ref_zgerc,
         .dtrsv = &ref_dtrsv,
         .ztrsv = &ref_ztrsv,
+        .dtrmv = &ref_dtrmv,
+        .ztrmv = &ref_ztrmv,
+        .dsymv = &ref_dsymv,
+        .zhemv = &ref_zhemv,
+        .dsyr = &ref_dsyr,
+        .zher = &ref_zher,
+        .dsyr2 = &ref_dsyr2,
+        .zher2 = &ref_zher2,
         .dtrsm = &ref_dtrsm,
         .ztrsm = &ref_ztrsm,
+        .dtrmm = &ref_dtrmm,
+        .ztrmm = &ref_ztrmm,
         .dsyrk = &ref_dsyrk,
         .zherk = &ref_zherk,
         .dsyr2k = &ref_dsyr2k,
         .zher2k = &ref_zher2k,
+        .dsymm = &ref_dsymm,
+        .zhemm = &ref_zhemm,
         .transpose_d_i8 = &ref_transpose_d_i8,
         .transpose_z_i8 = &ref_transpose_z_i8,
         .conj_transpose_z_i8 = &ref_conj_transpose_z_i8,

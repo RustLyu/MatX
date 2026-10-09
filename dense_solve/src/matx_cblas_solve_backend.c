@@ -464,3 +464,329 @@ matx_status_t matx_cond_dense_z_i8(const matx_dense_linsolve_t* ls,
     }
     return ls->vt.cond_dense_z_i8(&ls->alloc, A, cond);
 }
+
+// ---- Multi-RHS solve (dense) ----
+
+matx_status_t matx_solve_dense_d_i8_factor_mrhs(const matx_dense_linsolve_t* ls,
+                                                 const matx_factor_dense_d_i8_t* F,
+                                                 const matx_dense_d_i8_t B,
+                                                 matx_dense_d_i8_t* X)
+{
+    if (!ls || !F || !B || !X) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.solve_dense_mrhs_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.solve_dense_mrhs_d_i8(&ls->alloc, F, B, X);
+}
+
+matx_status_t matx_solve_dense_z_i8_factor_mrhs(const matx_dense_linsolve_t* ls,
+                                                 const matx_factor_dense_z_i8_t* F,
+                                                 const matx_dense_z_i8_t B,
+                                                 matx_dense_z_i8_t* X)
+{
+    if (!ls || !F || !B || !X) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.solve_dense_mrhs_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.solve_dense_mrhs_z_i8(&ls->alloc, F, B, X);
+}
+
+// ---- Multi-RHS Cholesky solve ----
+
+matx_status_t matx_solve_chol_d_i8_factor_mrhs(const matx_dense_linsolve_t* ls,
+                                                const matx_factor_dense_d_i8_t* F,
+                                                const matx_dense_d_i8_t B,
+                                                matx_dense_d_i8_t* X)
+{
+    if (!ls || !F || !B || !X) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.potrs_mrhs_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.potrs_mrhs_d_i8(&ls->alloc, F, B, X);
+}
+
+matx_status_t matx_solve_chol_z_i8_factor_mrhs(const matx_dense_linsolve_t* ls,
+                                                const matx_factor_dense_z_i8_t* F,
+                                                const matx_dense_z_i8_t B,
+                                                matx_dense_z_i8_t* X)
+{
+    if (!ls || !F || !B || !X) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.potrs_mrhs_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.potrs_mrhs_z_i8(&ls->alloc, F, B, X);
+}
+
+// ---- LDL^T factorization ----
+
+matx_status_t matx_factor_ldl_d_i8(const matx_dense_linsolve_t* ls,
+                                    const matx_dense_d_i8_t A,
+                                    matx_uplo_t uplo,
+                                    matx_factor_dense_d_i8_t** out_F)
+{
+    if (!ls || !A || !out_F) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.sytrf_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.sytrf_d_i8(&ls->alloc, A, uplo, out_F);
+}
+
+matx_status_t matx_solve_ldl_d_i8(const matx_dense_linsolve_t* ls,
+                                   const matx_factor_dense_d_i8_t* F,
+                                   const matx_double* b,
+                                   matx_double* x)
+{
+    if (!ls || !F || !b || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.sytrs_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.sytrs_d_i8(&ls->alloc, F, b, x);
+}
+
+void matx_factor_ldl_d_i8_destroy(const matx_dense_linsolve_t* ls,
+                                   matx_factor_dense_d_i8_t* F)
+{
+    if (!ls || !F)
+        return;
+    if (ls->vt.sytrf_destroy_d)
+        ls->vt.sytrf_destroy_d(&ls->alloc, F);
+}
+
+matx_status_t matx_factor_ldl_z_i8(const matx_dense_linsolve_t* ls,
+                                    const matx_dense_z_i8_t A,
+                                    matx_uplo_t uplo,
+                                    matx_factor_dense_z_i8_t** out_F)
+{
+    if (!ls || !A || !out_F) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.sytrf_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.sytrf_z_i8(&ls->alloc, A, uplo, out_F);
+}
+
+matx_status_t matx_solve_ldl_z_i8(const matx_dense_linsolve_t* ls,
+                                   const matx_factor_dense_z_i8_t* F,
+                                   const matx_vec_z_i8_t b,
+                                   matx_vec_z_i8_t x)
+{
+    if (!ls || !F || !b || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.sytrs_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.sytrs_z_i8(&ls->alloc, F, b, x);
+}
+
+void matx_factor_ldl_z_i8_destroy(const matx_dense_linsolve_t* ls,
+                                   matx_factor_dense_z_i8_t* F)
+{
+    if (!ls || !F)
+        return;
+    if (ls->vt.sytrf_destroy_z)
+        ls->vt.sytrf_destroy_z(&ls->alloc, F);
+}
+
+// ---- QR with column pivoting ----
+
+matx_status_t matx_qrp_d_i8(const matx_dense_linsolve_t* ls,
+                             const matx_dense_d_i8_t A,
+                             matx_dense_d_i8_t* Q,
+                             matx_dense_d_i8_t* R,
+                             matx_vec_d_i8_t* jpvt)
+{
+    if (!ls || !A || !Q || !R || !jpvt) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.qrp_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.qrp_d_i8(&ls->alloc, A, Q, R, jpvt);
+}
+
+matx_status_t matx_qrp_z_i8(const matx_dense_linsolve_t* ls,
+                             const matx_dense_z_i8_t A,
+                             matx_dense_z_i8_t* Q,
+                             matx_dense_z_i8_t* R,
+                             matx_vec_d_i8_t* jpvt)
+{
+    if (!ls || !A || !Q || !R || !jpvt) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.qrp_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.qrp_z_i8(&ls->alloc, A, Q, R, jpvt);
+}
+
+// ---- Pseudo-inverse ----
+
+matx_status_t matx_pinv_dense_d_i8(const matx_dense_linsolve_t* ls,
+                                    const matx_dense_d_i8_t A,
+                                    matx_double rcond,
+                                    matx_dense_d_i8_t* out)
+{
+    if (!ls || !A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.pinv_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.pinv_d_i8(&ls->alloc, A, rcond, out);
+}
+
+matx_status_t matx_pinv_dense_z_i8(const matx_dense_linsolve_t* ls,
+                                    const matx_dense_z_i8_t A,
+                                    matx_double rcond,
+                                    matx_dense_z_i8_t* out)
+{
+    if (!ls || !A || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.pinv_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.pinv_z_i8(&ls->alloc, A, rcond, out);
+}
+
+// ---- Matrix rank ----
+
+matx_status_t matx_rank_dense_d_i8(const matx_dense_linsolve_t* ls,
+                                    const matx_dense_d_i8_t A,
+                                    matx_double tol,
+                                    matx_int64_t* rank)
+{
+    if (!ls || !A || !rank) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.rank_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.rank_d_i8(&ls->alloc, A, tol, rank);
+}
+
+matx_status_t matx_rank_dense_z_i8(const matx_dense_linsolve_t* ls,
+                                    const matx_dense_z_i8_t A,
+                                    matx_double tol,
+                                    matx_int64_t* rank)
+{
+    if (!ls || !A || !rank) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.rank_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.rank_z_i8(&ls->alloc, A, tol, rank);
+}
+
+// ---- Generalized symmetric eigenvalue ----
+
+matx_status_t matx_sygv_d_i8(const matx_dense_linsolve_t* ls,
+                              const matx_dense_d_i8_t A,
+                              const matx_dense_d_i8_t B,
+                              matx_vec_d_i8_t eigenvalues,
+                              matx_dense_d_i8_t* eigenvectors)
+{
+    if (!ls || !A || !B || !eigenvalues) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.sygv_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.sygv_d_i8(&ls->alloc, A, B, eigenvalues, eigenvectors);
+}
+
+matx_status_t matx_sygv_z_i8(const matx_dense_linsolve_t* ls,
+                              const matx_dense_z_i8_t A,
+                              const matx_dense_z_i8_t B,
+                              matx_vec_d_i8_t eigenvalues,
+                              matx_dense_z_i8_t* eigenvectors)
+{
+    if (!ls || !A || !B || !eigenvalues) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.sygv_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.sygv_z_i8(&ls->alloc, A, B, eigenvalues, eigenvectors);
+}
+
+// ---- LQ factorization ----
+
+matx_status_t matx_lq_d_i8(const matx_dense_linsolve_t* ls,
+                            const matx_dense_d_i8_t A,
+                            matx_dense_d_i8_t* L,
+                            matx_dense_d_i8_t* Q)
+{
+    if (!ls || !A || !L || !Q) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.lq_d_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.lq_d_i8(&ls->alloc, A, L, Q);
+}
+
+matx_status_t matx_lq_z_i8(const matx_dense_linsolve_t* ls,
+                            const matx_dense_z_i8_t A,
+                            matx_dense_z_i8_t* L,
+                            matx_dense_z_i8_t* Q)
+{
+    if (!ls || !A || !L || !Q) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!ls->vt.lq_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return ls->vt.lq_z_i8(&ls->alloc, A, L, Q);
+}

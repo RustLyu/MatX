@@ -91,6 +91,58 @@ typedef struct matx_dense_linsolve_vtable_t
                                 matx_vec_d_i8_t S,
                                 matx_dense_z_i8_t* U,
                                 matx_dense_z_i8_t* Vt);
+
+    // Multi-RHS dense solve
+    matx_status_t (*solve_dense_mrhs_d_i8)(const matx_alloc_t* alloc, const matx_factor_dense_d_i8_t* F,
+                                          const matx_dense_d_i8_t B, matx_dense_d_i8_t* X);
+    matx_status_t (*solve_dense_mrhs_z_i8)(const matx_alloc_t* alloc, const matx_factor_dense_z_i8_t* F,
+                                          const matx_dense_z_i8_t B, matx_dense_z_i8_t* X);
+    matx_status_t (*potrs_mrhs_d_i8)(const matx_alloc_t* alloc, const matx_factor_dense_d_i8_t* F,
+                                    const matx_dense_d_i8_t B, matx_dense_d_i8_t* X);
+    matx_status_t (*potrs_mrhs_z_i8)(const matx_alloc_t* alloc, const matx_factor_dense_z_i8_t* F,
+                                    const matx_dense_z_i8_t B, matx_dense_z_i8_t* X);
+
+    // LDL^T (symmetric indefinite) factorization
+    matx_status_t (*sytrf_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, matx_uplo_t uplo,
+                               matx_factor_dense_d_i8_t** out_F);
+    matx_status_t (*sytrs_d_i8)(const matx_alloc_t* alloc, const matx_factor_dense_d_i8_t* F,
+                               const matx_double* b, matx_double* x);
+    void (*sytrf_destroy_d)(const matx_alloc_t* alloc, matx_factor_dense_d_i8_t* F);
+    matx_status_t (*sytrf_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A, matx_uplo_t uplo,
+                               matx_factor_dense_z_i8_t** out_F);
+    matx_status_t (*sytrs_z_i8)(const matx_alloc_t* alloc, const matx_factor_dense_z_i8_t* F,
+                               const matx_vec_z_i8_t b, matx_vec_z_i8_t x);
+    void (*sytrf_destroy_z)(const matx_alloc_t* alloc, matx_factor_dense_z_i8_t* F);
+
+    // QR with column pivoting (rank-revealing)
+    matx_status_t (*qrp_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A,
+                             matx_dense_d_i8_t* Q, matx_dense_d_i8_t* R, matx_vec_d_i8_t* jpvt);
+    matx_status_t (*qrp_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A,
+                             matx_dense_z_i8_t* Q, matx_dense_z_i8_t* R, matx_vec_d_i8_t* jpvt);
+
+    // Pseudo-inverse (via SVD)
+    matx_status_t (*pinv_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, matx_double rcond,
+                              matx_dense_d_i8_t* out);
+    matx_status_t (*pinv_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A, matx_double rcond,
+                              matx_dense_z_i8_t* out);
+
+    // Matrix rank (via SVD)
+    matx_status_t (*rank_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, matx_double tol,
+                              matx_int64_t* rank);
+    matx_status_t (*rank_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A, matx_double tol,
+                              matx_int64_t* rank);
+
+    // Generalized symmetric eigenvalue (SYGV/HEGV)
+    matx_status_t (*sygv_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A, const matx_dense_d_i8_t B,
+                              matx_vec_d_i8_t eigenvalues, matx_dense_d_i8_t* eigenvectors);
+    matx_status_t (*sygv_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
+                              matx_vec_d_i8_t eigenvalues, matx_dense_z_i8_t* eigenvectors);
+
+    // LQ factorization
+    matx_status_t (*lq_d_i8)(const matx_alloc_t* alloc, const matx_dense_d_i8_t A,
+                            matx_dense_d_i8_t* L, matx_dense_d_i8_t* Q);
+    matx_status_t (*lq_z_i8)(const matx_alloc_t* alloc, const matx_dense_z_i8_t A,
+                            matx_dense_z_i8_t* L, matx_dense_z_i8_t* Q);
 } matx_dense_linsolve_vtable_t;
 
 typedef struct matx_dense_linsolve_t
@@ -336,6 +388,187 @@ MATX_DENSE_SOLVE_API matx_status_t matx_cond_dense_d_i8(const matx_dense_linsolv
 MATX_DENSE_SOLVE_API matx_status_t matx_cond_dense_z_i8(const matx_dense_linsolve_t* ls,
                                             const matx_dense_z_i8_t A,
                                             matx_double* cond);
+
+// ---- Multi-RHS solve (dense) ----
+
+/**
+ * @brief Solve dense real system with multiple RHS using pre-computed LU (DGETRS)
+ * @formula A * X = B  =>  X = A^{-1} * B  where B is m-by-nrhs
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_solve_dense_d_i8_factor_mrhs(const matx_dense_linsolve_t* ls,
+                                                       const matx_factor_dense_d_i8_t* F,
+                                                       const matx_dense_d_i8_t B,
+                                                       matx_dense_d_i8_t* X);
+
+/**
+ * @brief Solve dense complex system with multiple RHS using pre-computed LU (ZGETRS)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_solve_dense_z_i8_factor_mrhs(const matx_dense_linsolve_t* ls,
+                                                       const matx_factor_dense_z_i8_t* F,
+                                                       const matx_dense_z_i8_t B,
+                                                       matx_dense_z_i8_t* X);
+
+// ---- Multi-RHS Cholesky solve ----
+
+/**
+ * @brief Solve SPD system with multiple RHS using Cholesky (DPOTRS)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_solve_chol_d_i8_factor_mrhs(const matx_dense_linsolve_t* ls,
+                                                       const matx_factor_dense_d_i8_t* F,
+                                                       const matx_dense_d_i8_t B,
+                                                       matx_dense_d_i8_t* X);
+
+/**
+ * @brief Solve HPD system with multiple RHS using Cholesky (ZPOTRS)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_solve_chol_z_i8_factor_mrhs(const matx_dense_linsolve_t* ls,
+                                                       const matx_factor_dense_z_i8_t* F,
+                                                       const matx_dense_z_i8_t B,
+                                                       matx_dense_z_i8_t* X);
+
+// ---- LDL^T factorization ----
+
+/**
+ * @brief LDL^T factorization of a real symmetric indefinite matrix (DSYTRF)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_factor_ldl_d_i8(const matx_dense_linsolve_t* ls,
+                                           const matx_dense_d_i8_t A,
+                                           matx_uplo_t uplo,
+                                           matx_factor_dense_d_i8_t** out_F);
+
+/**
+ * @brief Solve a real symmetric indefinite system using LDL^T factorization (DSYTRS)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_solve_ldl_d_i8(const matx_dense_linsolve_t* ls,
+                                          const matx_factor_dense_d_i8_t* F,
+                                          const matx_double* b,
+                                          matx_double* x);
+
+MATX_DENSE_SOLVE_API void matx_factor_ldl_d_i8_destroy(const matx_dense_linsolve_t* ls,
+                                           matx_factor_dense_d_i8_t* F);
+
+/**
+ * @brief LDL^H factorization of a complex Hermitian indefinite matrix (ZHETRF)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_factor_ldl_z_i8(const matx_dense_linsolve_t* ls,
+                                           const matx_dense_z_i8_t A,
+                                           matx_uplo_t uplo,
+                                           matx_factor_dense_z_i8_t** out_F);
+
+/**
+ * @brief Solve a complex Hermitian indefinite system using LDL^H factorization (ZHETRS)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_solve_ldl_z_i8(const matx_dense_linsolve_t* ls,
+                                          const matx_factor_dense_z_i8_t* F,
+                                          const matx_vec_z_i8_t b,
+                                          matx_vec_z_i8_t x);
+
+MATX_DENSE_SOLVE_API void matx_factor_ldl_z_i8_destroy(const matx_dense_linsolve_t* ls,
+                                           matx_factor_dense_z_i8_t* F);
+
+// ---- QR with column pivoting ----
+
+/**
+ * @brief QR factorization with column pivoting of a real matrix (DGEQP3)
+ * @formula A * P = Q * R
+ *          jpvt must be pre-allocated (size ncols); returned with column permutations.
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_qrp_d_i8(const matx_dense_linsolve_t* ls,
+                                    const matx_dense_d_i8_t A,
+                                    matx_dense_d_i8_t* Q,
+                                    matx_dense_d_i8_t* R,
+                                    matx_vec_d_i8_t* jpvt);
+
+/**
+ * @brief QR factorization with column pivoting of a complex matrix (ZGEQP3)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_qrp_z_i8(const matx_dense_linsolve_t* ls,
+                                    const matx_dense_z_i8_t A,
+                                    matx_dense_z_i8_t* Q,
+                                    matx_dense_z_i8_t* R,
+                                    matx_vec_d_i8_t* jpvt);
+
+// ---- Pseudo-inverse ----
+
+/**
+ * @brief Moore-Penrose pseudo-inverse of a real matrix (via SVD)
+ * @formula Ainv = V * diag(1/s_i) * U^T  for s_i > rcond * max(s)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_pinv_dense_d_i8(const matx_dense_linsolve_t* ls,
+                                          const matx_dense_d_i8_t A,
+                                          matx_double rcond,
+                                          matx_dense_d_i8_t* out);
+
+/**
+ * @brief Moore-Penrose pseudo-inverse of a complex matrix (via SVD)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_pinv_dense_z_i8(const matx_dense_linsolve_t* ls,
+                                          const matx_dense_z_i8_t A,
+                                          matx_double rcond,
+                                          matx_dense_z_i8_t* out);
+
+// ---- Matrix rank ----
+
+/**
+ * @brief Numerical rank of a real matrix (via SVD)
+ * @formula rank = count(s_i > tol * max(s))
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_rank_dense_d_i8(const matx_dense_linsolve_t* ls,
+                                          const matx_dense_d_i8_t A,
+                                          matx_double tol,
+                                          matx_int64_t* rank);
+
+/**
+ * @brief Numerical rank of a complex matrix (via SVD)
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_rank_dense_z_i8(const matx_dense_linsolve_t* ls,
+                                          const matx_dense_z_i8_t A,
+                                          matx_double tol,
+                                          matx_int64_t* rank);
+
+// ---- Generalized symmetric eigenvalue ----
+
+/**
+ * @brief Generalized symmetric eigenvalue problem (DSYGV)
+ * @formula A * v = lambda * B * v
+ *          A is symmetric, B is symmetric positive-definite.
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_sygv_d_i8(const matx_dense_linsolve_t* ls,
+                                     const matx_dense_d_i8_t A,
+                                     const matx_dense_d_i8_t B,
+                                     matx_vec_d_i8_t eigenvalues,
+                                     matx_dense_d_i8_t* eigenvectors);
+
+/**
+ * @brief Generalized Hermitian eigenvalue problem (ZHEGV)
+ * @formula A * v = lambda * B * v
+ *          A is Hermitian, B is Hermitian positive-definite.
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_sygv_z_i8(const matx_dense_linsolve_t* ls,
+                                     const matx_dense_z_i8_t A,
+                                     const matx_dense_z_i8_t B,
+                                     matx_vec_d_i8_t eigenvalues,
+                                     matx_dense_z_i8_t* eigenvectors);
+
+// ---- LQ factorization ----
+
+/**
+ * @brief LQ factorization of a real matrix (DGELQF)
+ * @formula A = L * Q  where L is lower triangular, Q is orthogonal.
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_lq_d_i8(const matx_dense_linsolve_t* ls,
+                                   const matx_dense_d_i8_t A,
+                                   matx_dense_d_i8_t* L,
+                                   matx_dense_d_i8_t* Q);
+
+/**
+ * @brief LQ factorization of a complex matrix (ZGELQF)
+ * @formula A = L * Q  where L is lower triangular, Q is unitary.
+ */
+MATX_DENSE_SOLVE_API matx_status_t matx_lq_z_i8(const matx_dense_linsolve_t* ls,
+                                   const matx_dense_z_i8_t A,
+                                   matx_dense_z_i8_t* L,
+                                   matx_dense_z_i8_t* Q);
 
 #ifdef __cplusplus
 }

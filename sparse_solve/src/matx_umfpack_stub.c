@@ -484,6 +484,59 @@ static matx_status_t umf_solve_csc_z_i8(const matx_alloc_t* alloc,
 #endif
 }
 
+// ---- UMFPACK numeric-only refactorization ----
+
+static matx_status_t umf_refactor_csc_d_i8(const matx_alloc_t* alloc,
+                                            matx_coo_d_i8_t A,
+                                            matx_factor_sparse_d_i8_t* F)
+{
+    if (!A || !F || !F->reserved) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+#if !MATX_HAVE_UMFPACK
+    (void) alloc;
+    MATX_ERROR("%s: operation not supported", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+#else
+    if (A->nrows != A->ncols || A->nrows <= 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_factor_sparse_d_i8_umfpack_t* ptr = (matx_factor_sparse_d_i8_umfpack_t*) F->reserved;
+    if (!ptr->symbolic) {
+        MATX_ERROR("%s: no symbolic factorization available", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_status_t st = coo_to_csc_d_i8_value_remap(A);
+    if (st != MATX_OK) {
+        MATX_ERROR("coo_to_csc_d_i8_value_remap error:%d", st);
+        return st;
+    }
+
+    if (ptr->numeric) {
+        umfpack_dl_free_numeric(&ptr->numeric);
+        ptr->numeric = NULL;
+    }
+    ptr->Ax = A->handle_csc->values;
+
+    int status = umfpack_dl_numeric((const int64_t*) ptr->Ap,
+                                    (const int64_t*) ptr->Ai,
+                                    (const double*) ptr->Ax,
+                                    ptr->symbolic,
+                                    &ptr->numeric,
+                                    NULL,
+                                    NULL);
+    if (status != UMFPACK_OK) {
+        MATX_ERROR("umfpack_dl_numeric (refactor) failed status=%d", status);
+        return MATX_ERR_INTERNAL;
+    }
+    return MATX_OK;
+#endif
+}
+
 /**
  * @brief Create UMFPACK linear solver backend (real + complex)
  * @return Fully initialized sparse linear solver interface
@@ -497,6 +550,7 @@ matx_sparse_linsolve_t matx_linsolve_make_umfpack(matx_alloc_t alloc)
                                         .factor_csc_d_i8_destroy = &umf_factor_csc_d_i8_destroy,
                                         .factor_csc_z_i8 = &umf_factor_csc_z_i8,
                                         .solve_csc_z_i8 = &umf_solve_csc_z_i8,
-                                        .factor_csc_z_i8_destroy = &umf_factor_csc_z_i8_destroy}};
+                                        .factor_csc_z_i8_destroy = &umf_factor_csc_z_i8_destroy,
+                                        .refactor_csc_d_i8 = &umf_refactor_csc_d_i8}};
     return ls;
 }

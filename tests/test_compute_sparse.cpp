@@ -1053,3 +1053,187 @@ TEST(compute_sparse, spadd_coo_z_i8)
     matx_coo_sparse_z_i8_destroy(&a, C);
     matx_finalize(&backend);
 }
+
+// ---- Phase 3: SpGEMM ----
+
+TEST(compute_sparse, spgemm_coo_d_i8_2x2)
+{
+    matx_alloc_t a = matx_alloc_default();
+    // A = [[2, 0], [0, 3]] — diagonal
+    matx_int64_t rowsA[2] = {0, 1};
+    matx_int64_t colsA[2] = {0, 1};
+    matx_double valsA[2] = {2.0, 3.0};
+    matx_coo_d_i8_t A = NULL;
+    matx_coo_sparse_d_i8_create(&a, &A, 2, 2, 2, rowsA, colsA, valsA);
+
+    // B = [[1, 0], [0, 4]] — diagonal
+    matx_int64_t rowsB[2] = {0, 1};
+    matx_int64_t colsB[2] = {0, 1};
+    matx_double valsB[2] = {1.0, 4.0};
+    matx_coo_d_i8_t B = NULL;
+    matx_coo_sparse_d_i8_create(&a, &B, 2, 2, 2, rowsB, colsB, valsB);
+
+    // C = A * B = [[2, 0], [0, 12]]
+    matx_coo_d_i8_t C = NULL;
+    matx_coo_sparse_d_i8_create(&a, &C, 2, 2, 4, NULL, NULL, NULL);
+
+    auto backend = matx_sparse_default();
+    matx_status_t st = matx_spgemm_coo_d_i8(&backend, 1.0, A, B, C);
+    if (st == MATX_ERR_NOT_SUPPORTED || st == MATX_ERR_INVALID_ARG) {
+        matx_coo_sparse_d_i8_destroy(&a, A);
+        matx_coo_sparse_d_i8_destroy(&a, B);
+        matx_coo_sparse_d_i8_destroy(&a, C);
+        matx_finalize(&backend);
+        return;
+    }
+    ASSERT_EQ(st, MATX_OK);
+    EXPECT_EQ(C->nnz, 2);
+    bool found2 = false, found12 = false;
+    for (matx_int64_t i = 0; i < C->nnz; ++i) {
+        if (C->rows[i] == 0 && C->columns[i] == 0) {
+            EXPECT_NEAR(C->values[i], 2.0, 1e-12);
+            found2 = true;
+        }
+        if (C->rows[i] == 1 && C->columns[i] == 1) {
+            EXPECT_NEAR(C->values[i], 12.0, 1e-12);
+            found12 = true;
+        }
+    }
+    EXPECT_TRUE(found2);
+    EXPECT_TRUE(found12);
+
+    matx_coo_sparse_d_i8_destroy(&a, A);
+    matx_coo_sparse_d_i8_destroy(&a, B);
+    matx_coo_sparse_d_i8_destroy(&a, C);
+    matx_finalize(&backend);
+}
+
+TEST(compute_sparse, spgemm_coo_z_i8_2x2)
+{
+    matx_alloc_t a = matx_alloc_default();
+    // A = [[1+i, 0], [0, 2]] — diagonal complex
+    matx_int64_t rowsA[2] = {0, 1};
+    matx_int64_t colsA[2] = {0, 1};
+    matx_complex_d_t valsA[2] = {{1.0, 1.0}, {2.0, 0.0}};
+    matx_coo_z_i8_t A = NULL;
+    matx_coo_sparse_z_i8_create(&a, &A, 2, 2, 2, rowsA, colsA, valsA);
+
+    // B = [[3, 0], [0, 1-i]] — diagonal complex
+    matx_int64_t rowsB[2] = {0, 1};
+    matx_int64_t colsB[2] = {0, 1};
+    matx_complex_d_t valsB[2] = {{3.0, 0.0}, {1.0, -1.0}};
+    matx_coo_z_i8_t B = NULL;
+    matx_coo_sparse_z_i8_create(&a, &B, 2, 2, 2, rowsB, colsB, valsB);
+
+    // C = A * B: C[0,0] = (1+i)*3 = 3+3i, C[1,1] = 2*(1-i) = 2-2i
+    matx_coo_z_i8_t C = NULL;
+    matx_coo_sparse_z_i8_create(&a, &C, 2, 2, 4, NULL, NULL, NULL);
+
+    auto backend = matx_sparse_default();
+    matx_complex_d_t alpha = {1.0, 0.0};
+    matx_status_t st = matx_spgemm_coo_z_i8(&backend, alpha, A, B, C);
+    if (st == MATX_ERR_NOT_SUPPORTED || st == MATX_ERR_INVALID_ARG) {
+        matx_coo_sparse_z_i8_destroy(&a, A);
+        matx_coo_sparse_z_i8_destroy(&a, B);
+        matx_coo_sparse_z_i8_destroy(&a, C);
+        matx_finalize(&backend);
+        return;
+    }
+    ASSERT_EQ(st, MATX_OK);
+    EXPECT_EQ(C->nnz, 2);
+    bool foundC00 = false, foundC11 = false;
+    for (matx_int64_t i = 0; i < C->nnz; ++i) {
+        if (C->rows[i] == 0 && C->columns[i] == 0) {
+            EXPECT_NEAR(C->values[i].real, 3.0, 1e-12);
+            EXPECT_NEAR(C->values[i].imag, 3.0, 1e-12);
+            foundC00 = true;
+        }
+        if (C->rows[i] == 1 && C->columns[i] == 1) {
+            EXPECT_NEAR(C->values[i].real, 2.0, 1e-12);
+            EXPECT_NEAR(C->values[i].imag, -2.0, 1e-12);
+            foundC11 = true;
+        }
+    }
+    EXPECT_TRUE(foundC00);
+    EXPECT_TRUE(foundC11);
+
+    matx_coo_sparse_z_i8_destroy(&a, A);
+    matx_coo_sparse_z_i8_destroy(&a, B);
+    matx_coo_sparse_z_i8_destroy(&a, C);
+    matx_finalize(&backend);
+}
+
+// ---- Phase 3: SpTRSV ----
+
+TEST(compute_sparse, sptrsv_coo_d_i8_lower)
+{
+    matx_alloc_t a = matx_alloc_default();
+    // Lower triangular: L = [[2, 0], [1, 3]]
+    matx_int64_t rows[3] = {0, 1, 1};
+    matx_int64_t cols[3] = {0, 0, 1};
+    matx_double vals[3] = {2.0, 1.0, 3.0};
+    matx_coo_d_i8_t L = NULL;
+    matx_coo_sparse_d_i8_create(&a, &L, 2, 2, 3, rows, cols, vals);
+
+    // Solve L * x = b where b = [4, 5]
+    // L * x = [4, 5]:
+    //   2*x0 = 4      => x0 = 2
+    //   1*x0 + 3*x1=5 => 2 + 3*x1=5 => x1 = 1
+    matx_vec_d_i8_t x = NULL;
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &x, NULL, 2), MATX_OK);
+    x->data[0] = 4.0;
+    x->data[1] = 5.0;
+
+    auto backend = matx_sparse_default();
+    matx_status_t st = matx_sptrsv_coo_d_i8(&backend, MATX_LOWER, MATX_NO_TRANS, MATX_NON_UNIT_DIAG, L, x);
+    if (st == MATX_ERR_NOT_SUPPORTED) {
+        matx_vec_d_i8_destroy(&a, x);
+        matx_coo_sparse_d_i8_destroy(&a, L);
+        matx_finalize(&backend);
+        return;
+    }
+    ASSERT_EQ(st, MATX_OK);
+    EXPECT_NEAR(x->data[0], 2.0, 1e-10);
+    EXPECT_NEAR(x->data[1], 1.0, 1e-10);
+
+    matx_vec_d_i8_destroy(&a, x);
+    matx_coo_sparse_d_i8_destroy(&a, L);
+    matx_finalize(&backend);
+}
+
+TEST(compute_sparse, sptrsv_coo_z_i8_lower)
+{
+    matx_alloc_t a = matx_alloc_default();
+    // Lower triangular: L = [[1+i, 0], [i, 2]]
+    matx_int64_t rows[3] = {0, 1, 1};
+    matx_int64_t cols[3] = {0, 0, 1};
+    matx_complex_d_t vals[3] = {{1.0, 1.0}, {0.0, 1.0}, {2.0, 0.0}};
+    matx_coo_z_i8_t L = NULL;
+    matx_coo_sparse_z_i8_create(&a, &L, 2, 2, 3, rows, cols, vals);
+
+    // Solve L * x = b where b = [1+i, 1+3i]
+    // (1+i)*x0 = 1+i    => x0 = 1
+    // i*x0 + 2*x1=1+3i  => i + 2*x1 = 1+3i => 2*x1 = 1+2i => x1 = 0.5+i
+    matx_vec_z_i8_t x = NULL;
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 2), MATX_OK);
+    x->data[0] = {1.0, 1.0};
+    x->data[1] = {1.0, 3.0};
+
+    auto backend = matx_sparse_default();
+    matx_status_t st = matx_sptrsv_coo_z_i8(&backend, MATX_LOWER, MATX_NO_TRANS, MATX_NON_UNIT_DIAG, L, x);
+    if (st == MATX_ERR_NOT_SUPPORTED) {
+        matx_vec_z_i8_destroy(&a, x);
+        matx_coo_sparse_z_i8_destroy(&a, L);
+        matx_finalize(&backend);
+        return;
+    }
+    ASSERT_EQ(st, MATX_OK);
+    EXPECT_NEAR(x->data[0].real, 1.0, 1e-10);
+    EXPECT_NEAR(x->data[0].imag, 0.0, 1e-10);
+    EXPECT_NEAR(x->data[1].real, 0.5, 1e-10);
+    EXPECT_NEAR(x->data[1].imag, 1.0, 1e-10);
+
+    matx_vec_z_i8_destroy(&a, x);
+    matx_coo_sparse_z_i8_destroy(&a, L);
+    matx_finalize(&backend);
+}

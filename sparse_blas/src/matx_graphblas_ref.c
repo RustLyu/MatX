@@ -1791,6 +1791,52 @@ static matx_status_t ref_scale_cols_z_i8_grb(matx_coo_z_i8_t A, const matx_vec_z
     return MATX_OK;
 }
 
+// ---- SpGEMM → COO (reference) ----
+
+static matx_status_t ref_spgemm_d_i8_grb(matx_double alpha,
+                                          matx_coo_d_i8_t A,
+                                          matx_coo_d_i8_t B,
+                                          matx_coo_d_i8_t out)
+{
+    (void) alpha; (void) A; (void) B; (void) out;
+    MATX_ERROR("%s: SpGEMM reference not yet implemented", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+}
+
+static matx_status_t ref_spgemm_z_i8_grb(matx_complex_d_t alpha,
+                                          matx_coo_z_i8_t A,
+                                          matx_coo_z_i8_t B,
+                                          matx_coo_z_i8_t out)
+{
+    (void) alpha; (void) A; (void) B; (void) out;
+    MATX_ERROR("%s: SpGEMM complex reference not yet implemented", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+}
+
+// ---- SpTRSV (reference) ----
+
+static matx_status_t ref_sptrsv_d_i8_grb(matx_uplo_t uplo,
+                                          matx_trans_t trans,
+                                          matx_diag_t diag,
+                                          matx_coo_d_i8_t A,
+                                          matx_vec_d_i8_t x)
+{
+    (void) uplo; (void) trans; (void) diag; (void) A; (void) x;
+    MATX_ERROR("%s: SpTRSV reference not yet implemented", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+}
+
+static matx_status_t ref_sptrsv_z_i8_grb(matx_uplo_t uplo,
+                                          matx_trans_t trans,
+                                          matx_diag_t diag,
+                                          matx_coo_z_i8_t A,
+                                          matx_vec_z_i8_t x)
+{
+    (void) uplo; (void) trans; (void) diag; (void) A; (void) x;
+    MATX_ERROR("%s: SpTRSV complex reference not yet implemented", __func__);
+    return MATX_ERR_NOT_SUPPORTED;
+}
+
 static matx_bool grb_init_ok = false;
 
 static void do_grb_init(void)
@@ -1862,6 +1908,10 @@ matx_sparse_backend_t matx_sparse_make_reference_grb(void)
                                .scale_cols_d_i8 = ref_scale_cols_d_i8_grb,
                                .scale_rows_z_i8 = ref_scale_rows_z_i8_grb,
                                .scale_cols_z_i8 = ref_scale_cols_z_i8_grb,
+                               .spgemm_d_i8 = ref_spgemm_d_i8_grb,
+                               .spgemm_z_i8 = ref_spgemm_z_i8_grb,
+                               .sptrsv_d_i8 = ref_sptrsv_d_i8_grb,
+                               .sptrsv_z_i8 = ref_sptrsv_z_i8_grb,
                                }};
     return b;
 }

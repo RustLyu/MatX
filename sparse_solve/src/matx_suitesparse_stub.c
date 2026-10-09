@@ -396,6 +396,198 @@ static matx_status_t ss_solve_chol_csc_d_i8(const matx_alloc_t* alloc,
     return MATX_OK;
 }
 
+// ---- Sparse Cholesky via CHOLMOD (complex HPD) ----
+
+typedef struct matx_factor_sparse_z_i8_cholmod
+{
+    cholmod_factor* L;
+    cholmod_dense* rhs_work;
+    cholmod_dense* solution_work;
+    cholmod_dense* y_work;
+    cholmod_dense* e_work;
+    cholmod_common common;
+    matx_int64_t n;
+} matx_factor_sparse_z_i8_cholmod_t;
+
+static void ss_factor_chol_csc_z_i8_destroy(const matx_alloc_t* alloc, matx_factor_sparse_z_i8_t* F)
+{
+    if (!F || !F->reserved)
+        return;
+    matx_factor_sparse_z_i8_cholmod_t* ptr = (matx_factor_sparse_z_i8_cholmod_t*) F->reserved;
+    F->reserved = NULL;
+    if (ptr->rhs_work)
+        cholmod_l_free_dense(&ptr->rhs_work, &ptr->common);
+    if (ptr->solution_work)
+        cholmod_l_free_dense(&ptr->solution_work, &ptr->common);
+    if (ptr->y_work)
+        cholmod_l_free_dense(&ptr->y_work, &ptr->common);
+    if (ptr->e_work)
+        cholmod_l_free_dense(&ptr->e_work, &ptr->common);
+    if (ptr->L)
+        cholmod_l_free_factor(&ptr->L, &ptr->common);
+    cholmod_l_finish(&ptr->common);
+    matx_free(alloc, ptr);
+}
+
+static matx_status_t ss_factor_chol_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i8_t A,
+                                              matx_factor_sparse_z_i8_t* out_F)
+{
+    if (!A || !out_F) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols) {
+        MATX_ERROR("%s: matrix must be square", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_status_t st = coo_to_csc_z_i8(A);
+    if (st != MATX_OK) {
+        MATX_ERROR("coo_to_csc_z_i8 error:%d", st);
+        return st;
+    }
+    st = coo_to_csc_z_i8_value_remap(A);
+    if (st != MATX_OK) {
+        MATX_ERROR("coo_to_csc_z_i8_value_remap error:%d", st);
+        return st;
+    }
+
+    const matx_int64_t n = A->nrows;
+    const matx_int64_t nnz = A->handle_csc->nnz;
+
+    matx_factor_sparse_z_i8_cholmod_t* F = (matx_factor_sparse_z_i8_cholmod_t*) matx_malloc(alloc, sizeof(*F));
+    if (!F) {
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    memset(F, 0, sizeof(*F));
+    F->n = n;
+
+    cholmod_l_start(&F->common);
+
+    cholmod_sparse A_chol_struct;
+    memset(&A_chol_struct, 0, sizeof(A_chol_struct));
+    A_chol_struct.nrow   = n;
+    A_chol_struct.ncol   = n;
+    A_chol_struct.nzmax  = nnz;
+    A_chol_struct.p      = (void*) A->handle_csc->col_ptr;
+    A_chol_struct.i      = (void*) A->handle_csc->row_ind;
+    A_chol_struct.x      = (void*) A->handle_csc->values;
+    A_chol_struct.stype  = -1;             /* lower triangular */
+    A_chol_struct.itype  = CHOLMOD_LONG;
+    A_chol_struct.xtype  = CHOLMOD_COMPLEX;
+    A_chol_struct.dtype  = CHOLMOD_DOUBLE;
+    A_chol_struct.sorted = 1;
+    A_chol_struct.packed = 1;
+
+    F->L = cholmod_l_analyze(&A_chol_struct, &F->common);
+    if (!F->L) {
+        MATX_ERROR("%s: cholmod_l_analyze failed", __func__);
+        cholmod_l_finish(&F->common);
+        matx_free(alloc, F);
+        return MATX_ERR_INTERNAL;
+    }
+
+    cholmod_l_factorize(&A_chol_struct, F->L, &F->common);
+    if (F->common.status != CHOLMOD_OK) {
+        MATX_ERROR("%s: cholmod_l_factorize failed, status=%d", __func__, F->common.status);
+        ss_factor_chol_csc_z_i8_destroy(alloc, out_F);
+        out_F->reserved = NULL;
+        return MATX_ERR_INTERNAL;
+    }
+
+    out_F->reserved = F;
+    return MATX_OK;
+}
+
+static matx_status_t ss_solve_chol_csc_z_i8(const matx_alloc_t* alloc,
+                                             matx_factor_sparse_z_i8_t* F,
+                                             const matx_vec_z_i8_t b,
+                                             matx_vec_z_i8_t x)
+{
+    if (!F || !F->reserved || !b || !x) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_factor_sparse_z_i8_cholmod_t* ptr = (matx_factor_sparse_z_i8_cholmod_t*) F->reserved;
+    const matx_int64_t n = ptr->n;
+
+    if (!ptr->rhs_work) {
+        ptr->rhs_work = cholmod_l_allocate_dense(n, 1, n, CHOLMOD_COMPLEX, &ptr->common);
+        if (!ptr->rhs_work) {
+            MATX_ERROR("%s: out of memory", __func__);
+            return MATX_ERR_OUT_OF_MEMORY;
+        }
+    }
+    /* Copy strided complex input into contiguous CHOLMOD dense buffer */
+    {
+        matx_complex_d_t* dst = (matx_complex_d_t*) ptr->rhs_work->x;
+        for (matx_int64_t i = 0; i < n; ++i)
+            dst[i] = b->data[i * b->stride];
+    }
+
+    if (!cholmod_l_solve2(CHOLMOD_A,
+                          ptr->L,
+                          ptr->rhs_work,
+                          NULL,
+                          &ptr->solution_work,
+                          NULL,
+                          &ptr->y_work,
+                          &ptr->e_work,
+                          &ptr->common)
+        || !ptr->solution_work || ptr->common.status < CHOLMOD_OK) {
+        MATX_ERROR("%s: cholmod_l_solve2 failed, status=%d", __func__, ptr->common.status);
+        return MATX_ERR_INTERNAL;
+    }
+    {
+        matx_complex_d_t* src = (matx_complex_d_t*) ptr->solution_work->x;
+        for (matx_int64_t i = 0; i < n; ++i)
+            x->data[i * x->stride] = src[i];
+    }
+    return MATX_OK;
+}
+
+// ---- KLU numeric-only refactorization ----
+
+static matx_status_t ss_refactor_csc_d_i8(const matx_alloc_t* alloc,
+                                           matx_coo_d_i8_t A,
+                                           matx_factor_sparse_d_i8_t* F)
+{
+    if (!A || !F || !F->reserved) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols) {
+        MATX_ERROR("%s: matrix must be square", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_factor_sparse_d_i8_klu_t* ptr = (matx_factor_sparse_d_i8_klu_t*) F->reserved;
+    if (!ptr->S) {
+        MATX_ERROR("%s: no symbolic factorization available", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_status_t st = coo_to_csc_d_i8_value_remap(A);
+    if (st != MATX_OK) {
+        MATX_ERROR("coo_to_csc_d_i8_value_remap error:%d", st);
+        return st;
+    }
+
+    /* Free old numeric factorization, recompute with new values */
+    klu_l_free_numeric(&ptr->N, &ptr->common);
+    ptr->N = klu_l_factor(A->handle_csc->col_ptr,
+                          A->handle_csc->row_ind,
+                          A->handle_csc->values,
+                          ptr->S,
+                          &ptr->common);
+    if (!ptr->N) {
+        MATX_ERROR("klu_l_factor (refactor) error:%d", ptr->common.status);
+        return MATX_ERR_INTERNAL;
+    }
+    return MATX_OK;
+}
+
 matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(matx_alloc_t alloc)
 {
     matx_sparse_linsolve_t ls
@@ -409,7 +601,11 @@ matx_sparse_linsolve_t matx_linsolve_make_suitesparse_klu(matx_alloc_t alloc)
                   .factor_csc_z_i8_destroy = &ss_factor_csc_z_i8_destroy,
                   .factor_chol_csc_d_i8 = &ss_factor_chol_csc_d_i8,
                   .solve_chol_csc_d_i8 = &ss_solve_chol_csc_d_i8,
-                  .factor_chol_csc_d_i8_destroy = &ss_factor_chol_csc_d_i8_destroy}};
+                  .factor_chol_csc_d_i8_destroy = &ss_factor_chol_csc_d_i8_destroy,
+                  .factor_chol_csc_z_i8 = &ss_factor_chol_csc_z_i8,
+                  .solve_chol_csc_z_i8 = &ss_solve_chol_csc_z_i8,
+                  .factor_chol_csc_z_i8_destroy = &ss_factor_chol_csc_z_i8_destroy,
+                  .refactor_csc_d_i8 = &ss_refactor_csc_d_i8}};
     return ls;
 }
 

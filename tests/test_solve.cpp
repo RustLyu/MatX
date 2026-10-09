@@ -657,3 +657,114 @@ TEST(solve, gesvd_z_i8_2x2)
     matx_dense_z_i8_destroy(&a, A);
     matx_vec_d_i8_destroy(&a, S);
 }
+
+// ---- Phase 3: Complex sparse Cholesky ----
+
+TEST(solve, sparse_complex_chol_coo_factor_solve)
+{
+    matx_alloc_t a = matx_alloc_default();
+    // 2x2 HPD: [[4, 1+i], [1-i, 3]]
+    // Cholesky: L = [[2, 0], [(1-i)/2, sqrt(3-|1-i|^2/4)]]
+    matx_int64_t nnz = 4;
+    matx_int64_t rows[4] = {0, 1, 0, 1};
+    matx_int64_t cols[4] = {0, 0, 1, 1};
+    matx_complex_d_t vals[4] = {{4.0, 0.0}, {1.0, -1.0}, {1.0, 1.0}, {3.0, 0.0}};
+    matx_coo_z_i8_t coo_A = NULL;
+    matx_coo_sparse_z_i8_create(&a, &coo_A, 2, 2, nnz, rows, cols, vals);
+
+    matx_vec_z_i8_t b = NULL, x = NULL;
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &b, NULL, 2), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 2), MATX_OK);
+    // b = A * [1, 1]^T = [4+(1+i)=5+i, (1-i)+3=4-i]
+    b->data[0] = {5.0, 1.0};
+    b->data[1] = {4.0, -1.0};
+
+    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default(matx_alloc_default());
+    matx_factor_sparse_z_i8_t F;
+    F.reserved = NULL;
+    matx_status_t st = matx_factor_chol_coo_z_i8(&ls, coo_A, &F);
+    if (st == MATX_ERR_NOT_SUPPORTED) {
+        matx_vec_z_i8_destroy(&a, b);
+        matx_vec_z_i8_destroy(&a, x);
+        matx_coo_sparse_z_i8_destroy(&a, coo_A);
+        return;
+    }
+    ASSERT_EQ(st, MATX_OK);
+
+    st = matx_solve_chol_coo_z_i8_factor(&ls, &F, b, x);
+    if (st == MATX_ERR_NOT_SUPPORTED) {
+        matx_factor_chol_coo_z_i8_destroy(&ls, &F);
+        matx_vec_z_i8_destroy(&a, b);
+        matx_vec_z_i8_destroy(&a, x);
+        matx_coo_sparse_z_i8_destroy(&a, coo_A);
+        return;
+    }
+    ASSERT_EQ(st, MATX_OK);
+    EXPECT_NEAR(x->data[0].real, 1.0, 1e-8);
+    EXPECT_NEAR(x->data[0].imag, 0.0, 1e-8);
+    EXPECT_NEAR(x->data[1].real, 1.0, 1e-8);
+    EXPECT_NEAR(x->data[1].imag, 0.0, 1e-8);
+
+    matx_factor_chol_coo_z_i8_destroy(&ls, &F);
+    matx_vec_z_i8_destroy(&a, b);
+    matx_vec_z_i8_destroy(&a, x);
+    matx_coo_sparse_z_i8_destroy(&a, coo_A);
+}
+
+// ---- Phase 3: Numeric refactorization ----
+
+TEST(solve, refactor_csc_d_i8)
+{
+    matx_alloc_t a = matx_alloc_default();
+    // 3x3 diagonal: [[2, 0, 0], [0, 3, 0], [0, 0, 4]]
+    matx_int64_t rows[3] = {0, 1, 2};
+    matx_int64_t cols[3] = {0, 1, 2};
+    matx_double vals[3] = {2.0, 3.0, 4.0};
+    matx_coo_d_i8_t coo_A = NULL;
+    matx_coo_sparse_d_i8_create(&a, &coo_A, 3, 3, 3, rows, cols, vals);
+
+    double b[3] = {4.0, 9.0, 16.0};
+    double x[3] = {0.0, 0.0, 0.0};
+
+    matx_sparse_linsolve_t ls = matx_sparse_linsolve_default(matx_alloc_default());
+    matx_factor_sparse_d_i8_t F;
+    F.reserved = NULL;
+    matx_status_t st = matx_factor_csc_d_i8(&ls, coo_A, &F);
+    if (st == MATX_ERR_NOT_SUPPORTED) {
+        matx_coo_sparse_d_i8_destroy(&a, coo_A);
+        return;
+    }
+    ASSERT_EQ(st, MATX_OK);
+
+    // Solve with original values
+    st = matx_solve_csc_d_i8_factor(&ls, &F, b, x);
+    ASSERT_EQ(st, MATX_OK);
+    EXPECT_NEAR(x[0], 2.0, 1e-10);  // 4/2 = 2
+    EXPECT_NEAR(x[1], 3.0, 1e-10);  // 9/3 = 3
+    EXPECT_NEAR(x[2], 4.0, 1e-10);  // 16/4 = 4
+
+    // Update matrix values (same structure)
+    coo_A->values[0] = 4.0;  // was 2.0
+    coo_A->values[1] = 6.0;  // was 3.0
+    coo_A->values[2] = 8.0;  // was 4.0
+
+    // Refactorize
+    st = matx_refactor_csc_d_i8(&ls, coo_A, &F);
+    if (st == MATX_ERR_NOT_SUPPORTED || st == MATX_ERR_INVALID_ARG) {
+        matx_factor_csc_d_i8_destroy(&ls, &F);
+        matx_coo_sparse_d_i8_destroy(&a, coo_A);
+        return;
+    }
+    ASSERT_EQ(st, MATX_OK);
+
+    // Solve again with updated b: [4, 9, 16] / new diag
+    x[0] = x[1] = x[2] = 0.0;
+    st = matx_solve_csc_d_i8_factor(&ls, &F, b, x);
+    ASSERT_EQ(st, MATX_OK);
+    EXPECT_NEAR(x[0], 1.0, 1e-10);  // 4/4 = 1
+    EXPECT_NEAR(x[1], 1.5, 1e-10);  // 9/6 = 1.5
+    EXPECT_NEAR(x[2], 2.0, 1e-10);  // 16/8 = 2
+
+    matx_factor_csc_d_i8_destroy(&ls, &F);
+    matx_coo_sparse_d_i8_destroy(&a, coo_A);
+}

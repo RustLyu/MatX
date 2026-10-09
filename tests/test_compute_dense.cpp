@@ -902,3 +902,389 @@ TEST(compute_dense, herk_z_i8_3x2)
     matx_dense_z_i8_destroy(&a, A);
     matx_dense_z_i8_destroy(&a, C);
 }
+
+// ---- Phase 1: New BLAS operator tests ----
+
+TEST(compute_dense, trmv_d_i8_4x4)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL;
+    matx_vec_d_i8_t x = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 4, 4, NULL), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &x, NULL, 4), MATX_OK);
+    // Upper triangular: fill upper triangle only
+    for (size_t i = 0; i < 16; ++i) A->data[i] = 0.0;
+    A->data[0 + 0 * A->stride] = 2.0;  // (0,0)
+    A->data[0 + 1 * A->stride] = 1.0;  // (0,1) upper
+    A->data[1 + 1 * A->stride] = 3.0;  // (1,1)
+    A->data[0 + 2 * A->stride] = 2.0;  // (0,2) upper
+    A->data[1 + 2 * A->stride] = 4.0;  // (1,2) upper
+    A->data[2 + 2 * A->stride] = 5.0;  // (2,2)
+    A->data[0 + 3 * A->stride] = 1.0;  // (0,3) upper
+    A->data[1 + 3 * A->stride] = 2.0;  // (1,3) upper
+    A->data[2 + 3 * A->stride] = 3.0;  // (2,3) upper
+    A->data[3 + 3 * A->stride] = 4.0;  // (3,3)
+    x->data[0] = 1.0; x->data[1] = 1.0; x->data[2] = 1.0; x->data[3] = 1.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_status_t st = matx_trmv_d_i8(&blas, MATX_UPPER, MATX_NO_TRANS, MATX_NON_UNIT_DIAG, A, x);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_d_i8_destroy(&a, A); matx_vec_d_i8_destroy(&a, x); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // x = [2*1+1*1+2*1+1*1, 3*1+4*1+2*1, 5*1+3*1, 4*1] = [6, 9, 8, 4]
+    EXPECT_NEAR(x->data[0], 6.0, 1e-12);
+    EXPECT_NEAR(x->data[1], 9.0, 1e-12);
+    EXPECT_NEAR(x->data[2], 8.0, 1e-12);
+    EXPECT_NEAR(x->data[3], 4.0, 1e-12);
+
+    matx_dense_d_i8_destroy(&a, A);
+    matx_vec_d_i8_destroy(&a, x);
+}
+
+TEST(compute_dense, trmv_z_i8_4x4)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL;
+    matx_vec_z_i8_t x = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 2), MATX_OK);
+    for (size_t i = 0; i < 4; ++i) { A->data[i].real = 0.0; A->data[i].imag = 0.0; }
+    // Upper triangular complex 2x2: [[1+i, 2+0i], [0, 3-i]]
+    A->data[0 + 0 * A->stride].real = 1.0; A->data[0 + 0 * A->stride].imag = 1.0;
+    A->data[0 + 1 * A->stride].real = 2.0; A->data[0 + 1 * A->stride].imag = 0.0;
+    A->data[1 + 1 * A->stride].real = 3.0; A->data[1 + 1 * A->stride].imag = -1.0;
+    x->data[0].real = 1.0; x->data[0].imag = 0.0;
+    x->data[1].real = 0.0; x->data[1].imag = 1.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_status_t st = matx_trmv_z_i8(&blas, MATX_UPPER, MATX_NO_TRANS, MATX_NON_UNIT_DIAG, A, x);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_z_i8_destroy(&a, A); matx_vec_z_i8_destroy(&a, x); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // x[0] = (1+i)*1 + (2+0i)*(i) = 1+i + 2i = 1+3i
+    // x[1] = (3-i)*i = 3i+1 = 1+3i
+    EXPECT_NEAR(x->data[0].real, 1.0, 1e-12);
+    EXPECT_NEAR(x->data[0].imag, 3.0, 1e-12);
+    EXPECT_NEAR(x->data[1].real, 1.0, 1e-12);
+    EXPECT_NEAR(x->data[1].imag, 3.0, 1e-12);
+
+    matx_dense_z_i8_destroy(&a, A);
+    matx_vec_z_i8_destroy(&a, x);
+}
+
+TEST(compute_dense, symv_d_i8_3x3)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL;
+    matx_vec_d_i8_t x = NULL, y = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &x, NULL, 3), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &y, NULL, 3), MATX_OK);
+    for (size_t i = 0; i < 9; ++i) A->data[i] = 0.0;
+    // Symmetric: fill lower triangle, upper is implied
+    A->data[0 + 0 * A->stride] = 2.0;
+    A->data[1 + 0 * A->stride] = 1.0; A->data[1 + 1 * A->stride] = 2.0;
+    A->data[2 + 0 * A->stride] = 0.0; A->data[2 + 1 * A->stride] = 1.0; A->data[2 + 2 * A->stride] = 2.0;
+    x->data[0] = 1.0; x->data[1] = 2.0; x->data[2] = 3.0;
+    y->data[0] = y->data[1] = y->data[2] = 1.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_status_t st = matx_symv_d_i8(&blas, MATX_LOWER, 2.0, A, x, 0.5, y);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_d_i8_destroy(&a, A); matx_vec_d_i8_destroy(&a, x); matx_vec_d_i8_destroy(&a, y); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // A*x = [2*1+1*2+0*3, 1*1+2*2+1*3, 0*1+1*2+2*3] = [4, 8, 8]
+    // y = 2*[4,8,8] + 0.5*[1,1,1] = [8.5, 16.5, 16.5]
+    EXPECT_NEAR(y->data[0], 8.5, 1e-12);
+    EXPECT_NEAR(y->data[1], 16.5, 1e-12);
+    EXPECT_NEAR(y->data[2], 16.5, 1e-12);
+
+    matx_dense_d_i8_destroy(&a, A);
+    matx_vec_d_i8_destroy(&a, x);
+    matx_vec_d_i8_destroy(&a, y);
+}
+
+TEST(compute_dense, hemv_z_i8_2x2)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL;
+    matx_vec_z_i8_t x = NULL, y = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 2), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &y, NULL, 2), MATX_OK);
+    for (size_t i = 0; i < 4; ++i) { A->data[i].real = 0.0; A->data[i].imag = 0.0; }
+    // Hermitian: [[4, 1+i], [1-i, 3]]
+    A->data[0 + 0 * A->stride].real = 4.0; A->data[0 + 0 * A->stride].imag = 0.0;
+    A->data[1 + 0 * A->stride].real = 1.0; A->data[1 + 0 * A->stride].imag = -1.0;
+    A->data[1 + 1 * A->stride].real = 3.0; A->data[1 + 1 * A->stride].imag = 0.0;
+    x->data[0].real = 1.0; x->data[0].imag = 0.0;
+    x->data[1].real = 0.0; x->data[1].imag = 1.0;
+    y->data[0].real = 0.0; y->data[0].imag = 0.0;
+    y->data[1].real = 0.0; y->data[1].imag = 0.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_complex_d_t alpha = {1.0, 0.0};
+    matx_complex_d_t beta = {0.0, 0.0};
+    matx_status_t st = matx_hemv_z_i8(&blas, MATX_LOWER, alpha, A, x, beta, y);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_z_i8_destroy(&a, A); matx_vec_z_i8_destroy(&a, x); matx_vec_z_i8_destroy(&a, y); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // y[0] = A[0,0]*x[0] + A[0,1]*x[1] = 4*1 + (1+i)*i = 4 + i-1 = 3+i
+    // y[1] = A[1,0]*x[0] + A[1,1]*x[1] = (1-i)*1 + 3*i = 1-i+3i = 1+2i
+    EXPECT_NEAR(y->data[0].real, 3.0, 1e-12);
+    EXPECT_NEAR(y->data[0].imag, 1.0, 1e-12);
+    EXPECT_NEAR(y->data[1].real, 1.0, 1e-12);
+    EXPECT_NEAR(y->data[1].imag, 2.0, 1e-12);
+
+    matx_dense_z_i8_destroy(&a, A);
+    matx_vec_z_i8_destroy(&a, x);
+    matx_vec_z_i8_destroy(&a, y);
+}
+
+TEST(compute_dense, trmm_d_i8_3x3)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL, B = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+    // Upper triangular A: [[2,1,1],[0,3,2],[0,0,4]]
+    for (size_t i = 0; i < 9; ++i) A->data[i] = 0.0;
+    A->data[0 + 0 * A->stride] = 2.0; A->data[0 + 1 * A->stride] = 1.0; A->data[0 + 2 * A->stride] = 1.0;
+    A->data[1 + 1 * A->stride] = 3.0; A->data[1 + 2 * A->stride] = 2.0;
+    A->data[2 + 2 * A->stride] = 4.0;
+    // B = identity
+    for (size_t i = 0; i < 9; ++i) B->data[i] = 0.0;
+    B->data[0 + 0 * B->stride] = 1.0; B->data[1 + 1 * B->stride] = 1.0; B->data[2 + 2 * B->stride] = 1.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_status_t st = matx_trmm_d_i8(&blas, MATX_LEFT, MATX_UPPER, MATX_NO_TRANS, MATX_NON_UNIT_DIAG, 1.0, A, B);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_d_i8_destroy(&a, A); matx_dense_d_i8_destroy(&a, B); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // B = A*I = A (upper triangular)
+    EXPECT_NEAR(B->data[0 + 0 * B->stride], 2.0, 1e-12);
+    EXPECT_NEAR(B->data[0 + 1 * B->stride], 1.0, 1e-12);
+    EXPECT_NEAR(B->data[1 + 1 * B->stride], 3.0, 1e-12);
+    EXPECT_NEAR(B->data[2 + 2 * B->stride], 4.0, 1e-12);
+
+    matx_dense_d_i8_destroy(&a, A);
+    matx_dense_d_i8_destroy(&a, B);
+}
+
+TEST(compute_dense, trmm_z_i8_2x2)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL, B = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    for (size_t i = 0; i < 4; ++i) { A->data[i].real = 0.0; A->data[i].imag = 0.0; B->data[i].real = 0.0; B->data[i].imag = 0.0; }
+    // Upper triangular: [[1+i, 2], [0, 3]]
+    A->data[0 + 0 * A->stride].real = 1.0; A->data[0 + 0 * A->stride].imag = 1.0;
+    A->data[0 + 1 * A->stride].real = 2.0; A->data[0 + 1 * A->stride].imag = 0.0;
+    A->data[1 + 1 * A->stride].real = 3.0; A->data[1 + 1 * A->stride].imag = 0.0;
+    // B = I
+    B->data[0 + 0 * B->stride].real = 1.0; B->data[1 + 1 * B->stride].real = 1.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_complex_d_t alpha = {1.0, 0.0};
+    matx_status_t st = matx_trmm_z_i8(&blas, MATX_LEFT, MATX_UPPER, MATX_NO_TRANS, MATX_NON_UNIT_DIAG, alpha, A, B);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_z_i8_destroy(&a, A); matx_dense_z_i8_destroy(&a, B); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // B = A*I = A
+    EXPECT_NEAR(B->data[0 + 0 * B->stride].real, 1.0, 1e-12);
+    EXPECT_NEAR(B->data[0 + 0 * B->stride].imag, 1.0, 1e-12);
+    EXPECT_NEAR(B->data[0 + 1 * B->stride].real, 2.0, 1e-12);
+    EXPECT_NEAR(B->data[1 + 1 * B->stride].real, 3.0, 1e-12);
+
+    matx_dense_z_i8_destroy(&a, A);
+    matx_dense_z_i8_destroy(&a, B);
+}
+
+TEST(compute_dense, symm_d_i8_3x3)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL, B = NULL, C = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &C, MATX_COL_MAJOR, 3, 2, NULL), MATX_OK);
+    // Symmetric A: [[2,1,0],[1,3,1],[0,1,4]]
+    for (size_t i = 0; i < 9; ++i) A->data[i] = 0.0;
+    A->data[0 + 0 * A->stride] = 2.0;
+    A->data[1 + 0 * A->stride] = 1.0; A->data[1 + 1 * A->stride] = 3.0;
+    A->data[2 + 1 * A->stride] = 1.0; A->data[2 + 2 * A->stride] = 4.0;
+    // B: [[1,0],[0,1],[0,0]]
+    for (size_t i = 0; i < 6; ++i) B->data[i] = 0.0;
+    B->data[0 + 0 * B->stride] = 1.0; B->data[1 + 1 * B->stride] = 1.0;
+    for (size_t i = 0; i < 6; ++i) C->data[i] = 1.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_status_t st = matx_symm_d_i8(&blas, MATX_LEFT, MATX_LOWER, 2.0, A, B, 0.5, C);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_d_i8_destroy(&a, A); matx_dense_d_i8_destroy(&a, B); matx_dense_d_i8_destroy(&a, C); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // A*B[:,0] = [2,1,0]  A*B[:,1] = [1,3,1]
+    // C = 2*(A*B) + 0.5*ones
+    // C[0,0] = 2*2 + 0.5 = 4.5; C[1,0] = 2*1 + 0.5 = 2.5; C[2,0] = 2*0 + 0.5 = 0.5
+    // C[0,1] = 2*1 + 0.5 = 2.5; C[1,1] = 2*3 + 0.5 = 6.5; C[2,1] = 2*1 + 0.5 = 2.5
+    EXPECT_NEAR(C->data[0 + 0 * C->stride], 4.5, 1e-12);
+    EXPECT_NEAR(C->data[1 + 0 * C->stride], 2.5, 1e-12);
+    EXPECT_NEAR(C->data[2 + 0 * C->stride], 0.5, 1e-12);
+    EXPECT_NEAR(C->data[0 + 1 * C->stride], 2.5, 1e-12);
+    EXPECT_NEAR(C->data[1 + 1 * C->stride], 6.5, 1e-12);
+    EXPECT_NEAR(C->data[2 + 1 * C->stride], 2.5, 1e-12);
+
+    matx_dense_d_i8_destroy(&a, A);
+    matx_dense_d_i8_destroy(&a, B);
+    matx_dense_d_i8_destroy(&a, C);
+}
+
+TEST(compute_dense, hemm_z_i8_2x2)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL, B = NULL, C = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &B, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &C, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    for (size_t i = 0; i < 4; ++i) { A->data[i].real = 0.0; A->data[i].imag = 0.0; B->data[i].real = 0.0; B->data[i].imag = 0.0; C->data[i].real = 0.0; C->data[i].imag = 0.0; }
+    // Hermitian: [[4, 1+i],[1-i, 3]]
+    A->data[0 + 0 * A->stride].real = 4.0;
+    A->data[1 + 0 * A->stride].real = 1.0; A->data[1 + 0 * A->stride].imag = -1.0;
+    A->data[1 + 1 * A->stride].real = 3.0;
+    // B = I
+    B->data[0 + 0 * B->stride].real = 1.0; B->data[1 + 1 * B->stride].real = 1.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_complex_d_t alpha = {1.0, 0.0};
+    matx_complex_d_t beta = {0.0, 0.0};
+    matx_status_t st = matx_hemm_z_i8(&blas, MATX_LEFT, MATX_LOWER, alpha, A, B, beta, C);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_z_i8_destroy(&a, A); matx_dense_z_i8_destroy(&a, B); matx_dense_z_i8_destroy(&a, C); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // C = A*I = A
+    EXPECT_NEAR(C->data[0 + 0 * C->stride].real, 4.0, 1e-12);
+    EXPECT_NEAR(C->data[1 + 0 * C->stride].real, 1.0, 1e-12);
+    EXPECT_NEAR(C->data[1 + 0 * C->stride].imag, -1.0, 1e-12);
+    EXPECT_NEAR(C->data[1 + 1 * C->stride].real, 3.0, 1e-12);
+
+    matx_dense_z_i8_destroy(&a, A);
+    matx_dense_z_i8_destroy(&a, B);
+    matx_dense_z_i8_destroy(&a, C);
+}
+
+TEST(compute_dense, syr_d_i8_3x3)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL;
+    matx_vec_d_i8_t x = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &x, NULL, 3), MATX_OK);
+    // A initial: [[1,0,0],[0,1,0],[0,0,1]]
+    for (size_t i = 0; i < 9; ++i) A->data[i] = 0.0;
+    A->data[0 + 0 * A->stride] = 1.0; A->data[1 + 1 * A->stride] = 1.0; A->data[2 + 2 * A->stride] = 1.0;
+    x->data[0] = 1.0; x->data[1] = 2.0; x->data[2] = 3.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_status_t st = matx_syr_d_i8(&blas, MATX_LOWER, 2.0, x, A);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_d_i8_destroy(&a, A); matx_vec_d_i8_destroy(&a, x); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // A := 2*x*x^T + A
+    // Lower triangle only: (0,0)=2*1*1+1=3, (1,0)=2*2*1+0=4, (2,0)=2*3*1+0=6
+    // (1,1)=2*2*2+1=9, (2,1)=2*3*2+0=12, (2,2)=2*3*3+1=19
+    EXPECT_NEAR(A->data[0 + 0 * A->stride], 3.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 0 * A->stride], 4.0, 1e-12);
+    EXPECT_NEAR(A->data[2 + 0 * A->stride], 6.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 1 * A->stride], 9.0, 1e-12);
+    EXPECT_NEAR(A->data[2 + 1 * A->stride], 12.0, 1e-12);
+    EXPECT_NEAR(A->data[2 + 2 * A->stride], 19.0, 1e-12);
+
+    matx_dense_d_i8_destroy(&a, A);
+    matx_vec_d_i8_destroy(&a, x);
+}
+
+TEST(compute_dense, her_z_i8_2x2)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL;
+    matx_vec_z_i8_t x = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 2), MATX_OK);
+    // A = I
+    for (size_t i = 0; i < 4; ++i) { A->data[i].real = 0.0; A->data[i].imag = 0.0; }
+    A->data[0 + 0 * A->stride].real = 1.0; A->data[1 + 1 * A->stride].real = 1.0;
+    x->data[0].real = 1.0; x->data[0].imag = 1.0;
+    x->data[1].real = 2.0; x->data[1].imag = 0.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_status_t st = matx_her_z_i8(&blas, MATX_LOWER, 2.0, x, A);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_z_i8_destroy(&a, A); matx_vec_z_i8_destroy(&a, x); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // A := 2*x*x^H + A
+    // x*x^H: |1+i|^2=2, (1+i)*2=2+2i, (1-i)*2=2-2i, 4
+    // A(0,0) = 2*2 + 1 = 5 (real)
+    // A(1,0) = 2*(2-2i) + 0 = 4-4i
+    // A(1,1) = 2*4 + 1 = 9 (real)
+    EXPECT_NEAR(A->data[0 + 0 * A->stride].real, 5.0, 1e-12);
+    EXPECT_NEAR(A->data[0 + 0 * A->stride].imag, 0.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 0 * A->stride].real, 4.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 0 * A->stride].imag, -4.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 1 * A->stride].real, 9.0, 1e-12);
+
+    matx_dense_z_i8_destroy(&a, A);
+    matx_vec_z_i8_destroy(&a, x);
+}
+
+TEST(compute_dense, syr2_d_i8_3x3)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL;
+    matx_vec_d_i8_t x = NULL, y = NULL;
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 3, 3, NULL), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &x, NULL, 3), MATX_OK);
+    ASSERT_EQ(matx_vec_d_i8_create(&a, &y, NULL, 3), MATX_OK);
+    // A = I
+    for (size_t i = 0; i < 9; ++i) A->data[i] = 0.0;
+    A->data[0 + 0 * A->stride] = 1.0; A->data[1 + 1 * A->stride] = 1.0; A->data[2 + 2 * A->stride] = 1.0;
+    x->data[0] = 1.0; x->data[1] = 0.0; x->data[2] = 0.0;
+    y->data[0] = 0.0; y->data[1] = 1.0; y->data[2] = 0.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_status_t st = matx_syr2_d_i8(&blas, MATX_LOWER, 1.0, x, y, A);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_d_i8_destroy(&a, A); matx_vec_d_i8_destroy(&a, x); matx_vec_d_i8_destroy(&a, y); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // A := x*y^T + y*x^T + A
+    // x*y^T: only (0,1)=1 non-zero; y*x^T: only (1,0)=1 non-zero
+    // Lower only updated: (1,0)=1+0+0=1, diagonal unchanged
+    EXPECT_NEAR(A->data[0 + 0 * A->stride], 1.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 0 * A->stride], 1.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 1 * A->stride], 1.0, 1e-12);
+    EXPECT_NEAR(A->data[2 + 2 * A->stride], 1.0, 1e-12);
+
+    matx_dense_d_i8_destroy(&a, A);
+    matx_vec_d_i8_destroy(&a, x);
+    matx_vec_d_i8_destroy(&a, y);
+}
+
+TEST(compute_dense, her2_z_i8_2x2)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL;
+    matx_vec_z_i8_t x = NULL, y = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &x, NULL, 2), MATX_OK);
+    ASSERT_EQ(matx_vec_z_i8_create(&a, &y, NULL, 2), MATX_OK);
+    for (size_t i = 0; i < 4; ++i) { A->data[i].real = 0.0; A->data[i].imag = 0.0; }
+    A->data[0 + 0 * A->stride].real = 1.0; A->data[1 + 1 * A->stride].real = 1.0;
+    x->data[0].real = 1.0; x->data[0].imag = 0.0;
+    x->data[1].real = 0.0; x->data[1].imag = 0.0;
+    y->data[0].real = 0.0; y->data[0].imag = 0.0;
+    y->data[1].real = 1.0; y->data[1].imag = 0.0;
+
+    matx_dense_backend_t blas = matx_blas_default();
+    matx_complex_d_t alpha = {1.0, 0.0};
+    matx_status_t st = matx_her2_z_i8(&blas, MATX_LOWER, alpha, x, y, A);
+    if (st == MATX_ERR_NOT_SUPPORTED) { matx_dense_z_i8_destroy(&a, A); matx_vec_z_i8_destroy(&a, x); matx_vec_z_i8_destroy(&a, y); return; }
+    ASSERT_EQ(st, MATX_OK);
+    // A := x*y^H + conj(1)*y*x^H + A = x*y^H + y*x^H + A
+    // x*y^H: (0,1)=1, y*x^H: (1,0)=1
+    // Lower: A(1,0) = 1+0=1, A(1,1) unchanged
+    EXPECT_NEAR(A->data[0 + 0 * A->stride].real, 1.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 0 * A->stride].real, 1.0, 1e-12);
+    EXPECT_NEAR(A->data[1 + 1 * A->stride].real, 1.0, 1e-12);
+
+    matx_dense_z_i8_destroy(&a, A);
+    matx_vec_z_i8_destroy(&a, x);
+    matx_vec_z_i8_destroy(&a, y);
+}

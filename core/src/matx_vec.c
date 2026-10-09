@@ -378,6 +378,299 @@ matx_status_t matx_vec_z_i8_cos(const matx_alloc_t* alloc,
     return MATX_OK;
 }
 
+matx_status_t matx_vec_d_i8_tan(const matx_alloc_t* alloc,
+                                const matx_vec_d_i8_t v,
+                                matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        (*out)->data[i] = tan(v->data[i * v->stride]);
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_tan(const matx_alloc_t* alloc,
+                                const matx_vec_z_i8_t v,
+                                matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double a = v->data[i * v->stride].real;
+        matx_double b = v->data[i * v->stride].imag;
+        matx_double A = sin(a) * cosh(b);
+        matx_double B = cos(a) * sinh(b);
+        matx_double C = cos(a) * cosh(b);
+        matx_double D = -sin(a) * sinh(b);
+        matx_double den = C * C + D * D;
+        (*out)->data[i].real = (A * C + B * D) / den;
+        (*out)->data[i].imag = (B * C - A * D) / den;
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_d_i8_asin(const matx_alloc_t* alloc,
+                                 const matx_vec_d_i8_t v,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double x = v->data[i * v->stride];
+        if (x < -1.0 || x > 1.0) {
+            matx_vec_d_i8_destroy(alloc, *out);
+            *out = NULL;
+            return MATX_ERR_INVALID_ARG;
+        }
+        (*out)->data[i] = asin(x);
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_asin(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double a = v->data[i * v->stride].real;
+        matx_double b = v->data[i * v->stride].imag;
+        matx_double p = 1.0 - a * a + b * b;
+        matx_double q = -2.0 * a * b;
+        matx_double mag = sqrt(p * p + q * q);
+        matx_double re_s = sqrt((mag + p) * 0.5);
+        matx_double im_s = (q >= 0.0 ? 1.0 : -1.0) * sqrt((mag - p) * 0.5);
+        matx_double X = re_s - b;
+        matx_double Y = im_s + a;
+        (*out)->data[i].real = atan2(Y, X);
+        (*out)->data[i].imag = -0.5 * log(X * X + Y * Y);
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_d_i8_acos(const matx_alloc_t* alloc,
+                                 const matx_vec_d_i8_t v,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double x = v->data[i * v->stride];
+        if (x < -1.0 || x > 1.0) {
+            matx_vec_d_i8_destroy(alloc, *out);
+            *out = NULL;
+            return MATX_ERR_INVALID_ARG;
+        }
+        (*out)->data[i] = acos(x);
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_acos(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double a = v->data[i * v->stride].real;
+        matx_double b = v->data[i * v->stride].imag;
+        matx_double p = 1.0 - a * a + b * b;
+        matx_double q = -2.0 * a * b;
+        matx_double mag = sqrt(p * p + q * q);
+        matx_double re_s = sqrt((mag + p) * 0.5);
+        matx_double im_s = (q >= 0.0 ? 1.0 : -1.0) * sqrt((mag - p) * 0.5);
+        matx_double X = re_s - b;
+        matx_double Y = im_s + a;
+        (*out)->data[i].real = 1.5707963267948966 - atan2(Y, X);
+        (*out)->data[i].imag = 0.5 * log(X * X + Y * Y);
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_d_i8_atan(const matx_alloc_t* alloc,
+                                 const matx_vec_d_i8_t v,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        (*out)->data[i] = atan(v->data[i * v->stride]);
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_atan(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double a = v->data[i * v->stride].real;
+        matx_double b = v->data[i * v->stride].imag;
+        matx_double den = a * a + (1.0 - b) * (1.0 - b);
+        matx_double re_div = (1.0 - a * a - b * b) / den;
+        matx_double im_div = -2.0 * a / den;
+        (*out)->data[i].real = -0.5 * atan2(im_div, re_div);
+        (*out)->data[i].imag = 0.25 * log(re_div * re_div + im_div * im_div);
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_d_i8_sinh(const matx_alloc_t* alloc,
+                                 const matx_vec_d_i8_t v,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        (*out)->data[i] = sinh(v->data[i * v->stride]);
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_sinh(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double a = v->data[i * v->stride].real;
+        matx_double b = v->data[i * v->stride].imag;
+        (*out)->data[i].real = sinh(a) * cos(b);
+        (*out)->data[i].imag = cosh(a) * sin(b);
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_d_i8_cosh(const matx_alloc_t* alloc,
+                                 const matx_vec_d_i8_t v,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        (*out)->data[i] = cosh(v->data[i * v->stride]);
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_cosh(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double a = v->data[i * v->stride].real;
+        matx_double b = v->data[i * v->stride].imag;
+        (*out)->data[i].real = cosh(a) * cos(b);
+        (*out)->data[i].imag = sinh(a) * sin(b);
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_d_i8_tanh(const matx_alloc_t* alloc,
+                                 const matx_vec_d_i8_t v,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        (*out)->data[i] = tanh(v->data[i * v->stride]);
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_tanh(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double a = v->data[i * v->stride].real;
+        matx_double b = v->data[i * v->stride].imag;
+        matx_double A = sinh(a) * cos(b);
+        matx_double B = cosh(a) * sin(b);
+        matx_double C = cosh(a) * cos(b);
+        matx_double D = sinh(a) * sin(b);
+        matx_double den = C * C + D * D;
+        (*out)->data[i].real = (A * C + B * D) / den;
+        (*out)->data[i].imag = (B * C - A * D) / den;
+    }
+    return MATX_OK;
+}
+
 matx_status_t matx_vec_d_i8_abs(const matx_alloc_t* alloc,
                                 const matx_vec_d_i8_t v,
                                 matx_vec_d_i8_t* out)
@@ -721,5 +1014,308 @@ matx_status_t matx_vec_d_i8_cumsum(const matx_alloc_t* alloc,
         acc += v->data[i * v->stride];
         (*out)->data[i] = acc;
     }
+    return MATX_OK;
+}
+
+/* ---- Cumulative sum: complex ---- */
+
+matx_status_t matx_vec_z_i8_cumsum(const matx_alloc_t* alloc,
+                                   const matx_vec_z_i8_t v,
+                                   matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    matx_double acc_re = 0.0;
+    matx_double acc_im = 0.0;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        acc_re += v->data[i * v->stride].real;
+        acc_im += v->data[i * v->stride].imag;
+        (*out)->data[i].real = acc_re;
+        (*out)->data[i].imag = acc_im;
+    }
+    return MATX_OK;
+}
+
+/* ---- Element-wise min ---- */
+
+matx_status_t matx_vec_d_i8_min(const matx_alloc_t* alloc,
+                                const matx_vec_d_i8_t a,
+                                const matx_vec_d_i8_t b,
+                                matx_vec_d_i8_t* out)
+{
+    if (!alloc || !a || !b || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (a->n != b->n) {
+        MATX_ERROR("%s: dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, a->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < a->n; ++i) {
+        matx_double va = a->data[i * a->stride];
+        matx_double vb = b->data[i * b->stride];
+        (*out)->data[i] = va < vb ? va : vb;
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_min(const matx_alloc_t* alloc,
+                                const matx_vec_z_i8_t a,
+                                const matx_vec_z_i8_t b,
+                                matx_vec_z_i8_t* out)
+{
+    if (!alloc || !a || !b || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (a->n != b->n) {
+        MATX_ERROR("%s: dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, a->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < a->n; ++i) {
+        matx_double ar = a->data[i * a->stride].real;
+        matx_double ai = a->data[i * a->stride].imag;
+        matx_double br = b->data[i * b->stride].real;
+        matx_double bi = b->data[i * b->stride].imag;
+        matx_double mag_a = ar * ar + ai * ai;
+        matx_double mag_b = br * br + bi * bi;
+        if (mag_a < mag_b) {
+            (*out)->data[i].real = ar;
+            (*out)->data[i].imag = ai;
+        } else {
+            (*out)->data[i].real = br;
+            (*out)->data[i].imag = bi;
+        }
+    }
+    return MATX_OK;
+}
+
+/* ---- Element-wise max ---- */
+
+matx_status_t matx_vec_d_i8_max(const matx_alloc_t* alloc,
+                                const matx_vec_d_i8_t a,
+                                const matx_vec_d_i8_t b,
+                                matx_vec_d_i8_t* out)
+{
+    if (!alloc || !a || !b || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (a->n != b->n) {
+        MATX_ERROR("%s: dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, a->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < a->n; ++i) {
+        matx_double va = a->data[i * a->stride];
+        matx_double vb = b->data[i * b->stride];
+        (*out)->data[i] = va > vb ? va : vb;
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_max(const matx_alloc_t* alloc,
+                                const matx_vec_z_i8_t a,
+                                const matx_vec_z_i8_t b,
+                                matx_vec_z_i8_t* out)
+{
+    if (!alloc || !a || !b || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (a->n != b->n) {
+        MATX_ERROR("%s: dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, a->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < a->n; ++i) {
+        matx_double ar = a->data[i * a->stride].real;
+        matx_double ai = a->data[i * a->stride].imag;
+        matx_double br = b->data[i * b->stride].real;
+        matx_double bi = b->data[i * b->stride].imag;
+        matx_double mag_a = ar * ar + ai * ai;
+        matx_double mag_b = br * br + bi * bi;
+        if (mag_a > mag_b) {
+            (*out)->data[i].real = ar;
+            (*out)->data[i].imag = ai;
+        } else {
+            (*out)->data[i].real = br;
+            (*out)->data[i].imag = bi;
+        }
+    }
+    return MATX_OK;
+}
+
+/* ---- Element-wise clip ---- */
+
+matx_status_t matx_vec_d_i8_clip(const matx_alloc_t* alloc,
+                                 const matx_vec_d_i8_t v,
+                                 matx_double lo,
+                                 matx_double hi,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double x = v->data[i * v->stride];
+        if (x < lo) x = lo;
+        if (x > hi) x = hi;
+        (*out)->data[i] = x;
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_clip(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_complex_d_t lo,
+                                 matx_complex_d_t hi,
+                                 matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    matx_double lo_mag = lo.real * lo.real + lo.imag * lo.imag;
+    matx_double hi_mag = hi.real * hi.real + hi.imag * hi.imag;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        matx_double re = v->data[i * v->stride].real;
+        matx_double im = v->data[i * v->stride].imag;
+        matx_double mag = re * re + im * im;
+        if (mag < lo_mag) { re = lo.real; im = lo.imag; }
+        if (mag > hi_mag) { re = hi.real; im = hi.imag; }
+        (*out)->data[i].real = re;
+        (*out)->data[i].imag = im;
+    }
+    return MATX_OK;
+}
+
+/* ---- Complex conjugate ---- */
+
+matx_status_t matx_vec_z_i8_conj(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i) {
+        (*out)->data[i].real =  v->data[i * v->stride].real;
+        (*out)->data[i].imag = -v->data[i * v->stride].imag;
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_conj_inplace(matx_vec_z_i8_t v)
+{
+    if (!v || !v->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        v->data[i * v->stride].imag = -v->data[i * v->stride].imag;
+    return MATX_OK;
+}
+
+/* ---- Real / imaginary extraction ---- */
+
+matx_status_t matx_vec_z_i8_real(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        (*out)->data[i] = v->data[i * v->stride].real;
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_imag(const matx_alloc_t* alloc,
+                                 const matx_vec_z_i8_t v,
+                                 matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, v->n);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < v->n; ++i)
+        (*out)->data[i] = v->data[i * v->stride].imag;
+    return MATX_OK;
+}
+
+/* ---- linspace / logspace ---- */
+
+matx_status_t matx_vec_d_i8_linspace(const matx_alloc_t* alloc,
+                                     matx_double start,
+                                     matx_double end,
+                                     matx_int64_t n,
+                                     matx_vec_d_i8_t* out)
+{
+    if (!alloc || !out || n <= 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, n);
+    if (st != MATX_OK)
+        return st;
+    if (n == 1) {
+        (*out)->data[0] = start;
+        return MATX_OK;
+    }
+    matx_double step = (end - start) / (matx_double)(n - 1);
+    for (matx_int64_t i = 0; i < n; ++i)
+        (*out)->data[i] = start + step * (matx_double) i;
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_d_i8_logspace(const matx_alloc_t* alloc,
+                                     matx_double start,
+                                     matx_double end,
+                                     matx_int64_t n,
+                                     matx_vec_d_i8_t* out)
+{
+    if (!alloc || !out || n <= 0) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_linspace(alloc, start, end, n, out);
+    if (st != MATX_OK)
+        return st;
+    for (matx_int64_t i = 0; i < n; ++i)
+        (*out)->data[i] = pow(10.0, (*out)->data[i]);
     return MATX_OK;
 }

@@ -364,3 +364,171 @@ TEST(core_dense, set_block_layout_mismatch)
     matx_dense_d_i8_destroy(&a, A);
     matx_dense_d_i8_destroy(&a, B);
 }
+
+// ---- Phase 4: min/max/clip (dense) ----
+
+TEST(core_dense, min_max_clip_dense_d)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL, B = NULL;
+    double av[6] = {1.0, 3.0, 5.0, -2.0, 0.0, 4.0};
+    double bv[6] = {2.0, 1.0, 3.0, -1.0, 2.0, 4.0};
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 3, av), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 2, 3, bv), MATX_OK);
+
+    matx_dense_d_i8_t out = NULL;
+    ASSERT_EQ(matx_dense_d_i8_min(&a, A, B, &out), MATX_OK);
+    EXPECT_NEAR(out->data[0 + 0 * out->stride], 1.0, 1e-12);
+    EXPECT_NEAR(out->data[1 + 0 * out->stride], 1.0, 1e-12);
+    matx_dense_d_i8_destroy(&a, out);
+
+    out = NULL;
+    ASSERT_EQ(matx_dense_d_i8_max(&a, A, B, &out), MATX_OK);
+    EXPECT_NEAR(out->data[0 + 0 * out->stride], 2.0, 1e-12);
+    EXPECT_NEAR(out->data[0 + 2 * out->stride], 2.0, 1e-12);
+    matx_dense_d_i8_destroy(&a, out);
+
+    out = NULL;
+    ASSERT_EQ(matx_dense_d_i8_clip(&a, A, 0.0, 3.0, &out), MATX_OK);
+    EXPECT_NEAR(out->data[0 + 0 * out->stride], 1.0, 1e-12);
+    EXPECT_NEAR(out->data[0 + 1 * out->stride], 3.0, 1e-12);  // 5 clipped to 3
+    EXPECT_NEAR(out->data[1 + 1 * out->stride], 0.0, 1e-12);  // -2 clipped to 0
+    matx_dense_d_i8_destroy(&a, out);
+
+    matx_dense_d_i8_destroy(&a, A);
+    matx_dense_d_i8_destroy(&a, B);
+}
+
+// ---- Phase 4: Complex conjugate (dense) ----
+
+TEST(core_dense, conj_dense_z)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    A->data[0 + 0 * A->stride] = {1.0, 2.0};
+    A->data[1 + 0 * A->stride] = {-3.0, 4.0};
+    A->data[0 + 1 * A->stride] = {0.0, -5.0};
+    A->data[1 + 1 * A->stride] = {2.0, 0.0};
+
+    matx_dense_z_i8_t out = NULL;
+    ASSERT_EQ(matx_dense_z_i8_conj(&a, A, &out), MATX_OK);
+    EXPECT_NEAR(out->data[0].real, 1.0, 1e-12);
+    EXPECT_NEAR(out->data[0].imag, -2.0, 1e-12);
+    EXPECT_NEAR(out->data[1].real, -3.0, 1e-12);
+    EXPECT_NEAR(out->data[1].imag, -4.0, 1e-12);
+    matx_dense_z_i8_destroy(&a, out);
+
+    ASSERT_EQ(matx_dense_z_i8_conj_inplace(A), MATX_OK);
+    EXPECT_NEAR(A->data[0].real, 1.0, 1e-12);
+    EXPECT_NEAR(A->data[0].imag, -2.0, 1e-12);
+
+    matx_dense_z_i8_destroy(&a, A);
+}
+
+// ---- Phase 4: real/imag extraction (dense) ----
+
+TEST(core_dense, real_imag_dense_z)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_z_i8_t A = NULL;
+    ASSERT_EQ(matx_dense_z_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, NULL), MATX_OK);
+    A->data[0] = {1.5, 2.0};
+    A->data[1] = {3.0, -4.0};
+    A->data[2] = {0.0, 5.0};
+    A->data[3] = {-1.0, -2.0};
+
+    matx_dense_d_i8_t real_out = NULL;
+    ASSERT_EQ(matx_dense_z_i8_real(&a, A, &real_out), MATX_OK);
+    EXPECT_NEAR(real_out->data[0], 1.5, 1e-12);
+    EXPECT_NEAR(real_out->data[1], 3.0, 1e-12);
+    EXPECT_NEAR(real_out->data[2], 0.0, 1e-12);
+    EXPECT_NEAR(real_out->data[3], -1.0, 1e-12);
+    matx_dense_d_i8_destroy(&a, real_out);
+
+    matx_dense_d_i8_t imag_out = NULL;
+    ASSERT_EQ(matx_dense_z_i8_imag(&a, A, &imag_out), MATX_OK);
+    EXPECT_NEAR(imag_out->data[0], 2.0, 1e-12);
+    EXPECT_NEAR(imag_out->data[1], -4.0, 1e-12);
+    EXPECT_NEAR(imag_out->data[2], 5.0, 1e-12);
+    EXPECT_NEAR(imag_out->data[3], -2.0, 1e-12);
+    matx_dense_d_i8_destroy(&a, imag_out);
+
+    matx_dense_z_i8_destroy(&a, A);
+}
+
+// ---- Phase 4: cumsum dense / kron / hstack / vstack ----
+
+TEST(core_dense, cumsum_dense)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL;
+    double av[4] = {1.0, 2.0, 3.0, 4.0};
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, av), MATX_OK);
+
+    matx_dense_d_i8_t out = NULL;
+    ASSERT_EQ(matx_dense_d_i8_cumsum(&a, A, &out), MATX_OK);
+    // Per-column cumsum: col 0: [1, 1+2=3], col 1: [3, 3+4=7]
+    EXPECT_NEAR(out->data[0], 1.0, 1e-12);
+    EXPECT_NEAR(out->data[1], 3.0, 1e-12);
+    EXPECT_NEAR(out->data[2], 3.0, 1e-12);
+    EXPECT_NEAR(out->data[3], 7.0, 1e-12);
+
+    matx_dense_d_i8_destroy(&a, out);
+    matx_dense_d_i8_destroy(&a, A);
+}
+
+TEST(core_dense, kron_d_2x2)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL, B = NULL;
+    double av[4] = {1.0, 3.0, 2.0, 4.0};
+    double bv[4] = {0.0, 1.0, 1.0, 0.0};
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, av), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 2, 2, bv), MATX_OK);
+
+    matx_dense_d_i8_t out = NULL;
+    ASSERT_EQ(matx_kron_d_i8(&a, A, B, &out), MATX_OK);
+    EXPECT_EQ(out->nrows, 4);
+    EXPECT_EQ(out->ncols, 4);
+    // First block: A[0,0]*B = 1*B = B
+    EXPECT_NEAR(out->data[0 + 0 * out->stride], 0.0, 1e-12);
+    EXPECT_NEAR(out->data[1 + 0 * out->stride], 1.0, 1e-12);
+    // Last block: A[1,1]*B = 4*B
+    EXPECT_NEAR(out->data[2 + 2 * out->stride], 0.0, 1e-12);
+    EXPECT_NEAR(out->data[3 + 3 * out->stride], 0.0, 1e-12);
+
+    matx_dense_d_i8_destroy(&a, out);
+    matx_dense_d_i8_destroy(&a, B);
+    matx_dense_d_i8_destroy(&a, A);
+}
+
+TEST(core_dense, hstack_vstack_d)
+{
+    matx_alloc_t a = matx_alloc_default();
+    matx_dense_d_i8_t A = NULL, B = NULL;
+    double av[4] = {1.0, 0.0, 0.0, 1.0};
+    double bv[4] = {2.0, 2.0, 2.0, 2.0};
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &A, MATX_COL_MAJOR, 2, 2, av), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_create(&a, &B, MATX_COL_MAJOR, 2, 2, bv), MATX_OK);
+
+    matx_dense_d_i8_t out = NULL;
+    ASSERT_EQ(matx_dense_d_i8_hstack(&a, A, B, &out), MATX_OK);
+    EXPECT_EQ(out->nrows, 2);
+    EXPECT_EQ(out->ncols, 4);
+    EXPECT_NEAR(out->data[0 + 0 * out->stride], 1.0, 1e-12);
+    EXPECT_NEAR(out->data[0 + 2 * out->stride], 2.0, 1e-12);
+    EXPECT_NEAR(out->data[1 + 3 * out->stride], 2.0, 1e-12);
+    matx_dense_d_i8_destroy(&a, out);
+
+    out = NULL;
+    ASSERT_EQ(matx_dense_d_i8_vstack(&a, A, B, &out), MATX_OK);
+    EXPECT_EQ(out->nrows, 4);
+    EXPECT_EQ(out->ncols, 2);
+    EXPECT_NEAR(out->data[2 + 0 * out->stride], 2.0, 1e-12);
+    EXPECT_NEAR(out->data[3 + 1 * out->stride], 2.0, 1e-12);
+    matx_dense_d_i8_destroy(&a, out);
+
+    matx_dense_d_i8_destroy(&a, B);
+    matx_dense_d_i8_destroy(&a, A);
+}

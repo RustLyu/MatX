@@ -108,6 +108,8 @@ extern "C" {
 		// ---- Matrix exponential ----
 		matx_status_t(*expm_dense_d_i8)(matx_layout_t layout, matx_int64_t n,
 			const matx_double* A, matx_int64_t lda, matx_double* out, matx_int64_t ldout);
+		matx_status_t(*expm_dense_z_i8)(matx_layout_t layout, matx_int64_t n,
+			const void* A, matx_int64_t lda, void* out, matx_int64_t ldout);
 
 		// ---- Level 2 additions ----
 		matx_status_t(*dger)(matx_layout_t layout, matx_int64_t m, matx_int64_t n, matx_double alpha,
@@ -123,12 +125,40 @@ extern "C" {
 			matx_int64_t n, const matx_double* A, matx_int64_t lda, matx_double* x, matx_int64_t incx);
 		matx_status_t(*ztrsv)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 			matx_int64_t n, const void* A, matx_int64_t lda, void* x, matx_int64_t incx);
+		matx_status_t(*dtrmv)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+			matx_int64_t n, const matx_double* A, matx_int64_t lda, matx_double* x, matx_int64_t incx);
+		matx_status_t(*ztrmv)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+			matx_int64_t n, const void* A, matx_int64_t lda, void* x, matx_int64_t incx);
+		matx_status_t(*dsymv)(matx_layout_t layout, matx_uplo_t uplo,
+			matx_int64_t n, matx_double alpha, const matx_double* A, matx_int64_t lda,
+			const matx_double* x, matx_int64_t incx, matx_double beta, matx_double* y, matx_int64_t incy);
+		matx_status_t(*zhemv)(matx_layout_t layout, matx_uplo_t uplo,
+			matx_int64_t n, const void* alpha, const void* A, matx_int64_t lda,
+			const void* x, matx_int64_t incx, const void* beta, void* y, matx_int64_t incy);
+		matx_status_t(*dsyr)(matx_layout_t layout, matx_uplo_t uplo,
+			matx_int64_t n, matx_double alpha, const matx_double* x, matx_int64_t incx,
+			matx_double* A, matx_int64_t lda);
+		matx_status_t(*zher)(matx_layout_t layout, matx_uplo_t uplo,
+			matx_int64_t n, matx_double alpha, const void* x, matx_int64_t incx,
+			void* A, matx_int64_t lda);
+		matx_status_t(*dsyr2)(matx_layout_t layout, matx_uplo_t uplo,
+			matx_int64_t n, matx_double alpha, const matx_double* x, matx_int64_t incx,
+			const matx_double* y, matx_int64_t incy, matx_double* A, matx_int64_t lda);
+		matx_status_t(*zher2)(matx_layout_t layout, matx_uplo_t uplo,
+			matx_int64_t n, const void* alpha, const void* x, matx_int64_t incx,
+			const void* y, matx_int64_t incy, void* A, matx_int64_t lda);
 
 		// ---- Level 3 additions ----
 		matx_status_t(*dtrsm)(matx_layout_t layout, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 			matx_int64_t m, matx_int64_t n, matx_double alpha,
 			const matx_double* A, matx_int64_t lda, matx_double* B, matx_int64_t ldb);
 		matx_status_t(*ztrsm)(matx_layout_t layout, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+			matx_int64_t m, matx_int64_t n, const void* alpha,
+			const void* A, matx_int64_t lda, void* B, matx_int64_t ldb);
+		matx_status_t(*dtrmm)(matx_layout_t layout, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+			matx_int64_t m, matx_int64_t n, matx_double alpha,
+			const matx_double* A, matx_int64_t lda, matx_double* B, matx_int64_t ldb);
+		matx_status_t(*ztrmm)(matx_layout_t layout, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 			matx_int64_t m, matx_int64_t n, const void* alpha,
 			const void* A, matx_int64_t lda, void* B, matx_int64_t ldb);
 		matx_status_t(*dsyrk)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t trans,
@@ -145,6 +175,14 @@ extern "C" {
 			matx_int64_t n, matx_int64_t k, const void* alpha,
 			const void* A, matx_int64_t lda, const void* B, matx_int64_t ldb,
 			matx_double beta, void* C, matx_int64_t ldc);
+		matx_status_t(*dsymm)(matx_layout_t layout, matx_side_t side, matx_uplo_t uplo,
+			matx_int64_t m, matx_int64_t n, matx_double alpha,
+			const matx_double* A, matx_int64_t lda, const matx_double* B, matx_int64_t ldb,
+			matx_double beta, matx_double* C, matx_int64_t ldc);
+		matx_status_t(*zhemm)(matx_layout_t layout, matx_side_t side, matx_uplo_t uplo,
+			matx_int64_t m, matx_int64_t n, const void* alpha,
+			const void* A, matx_int64_t lda, const void* B, matx_int64_t ldb,
+			const void* beta, void* C, matx_int64_t ldc);
 
 		// ---- Transpose ----
 		matx_status_t(*transpose_d_i8)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
@@ -323,6 +361,72 @@ extern "C" {
 	MATX_DENSE_BLAS_API matx_status_t matx_trsv_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
 		const matx_dense_z_i8_t A, matx_vec_z_i8_t x);
 
+	/**
+		 * @brief Real triangular matrix-vector multiply (DTRMV)
+		 * @formula x := op(A) * x
+		 *          where op(A) = A, A^T, or A^H; A is n-by-n triangular
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_trmv_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+		const matx_dense_d_i8_t A, matx_vec_d_i8_t x);
+
+	/**
+		 * @brief Complex triangular matrix-vector multiply (ZTRMV)
+		 * @formula x := op(A) * x
+		 *          where op(A) = A, A^T, or A^H; A is n-by-n triangular
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_trmv_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+		const matx_dense_z_i8_t A, matx_vec_z_i8_t x);
+
+	/**
+		 * @brief Real symmetric matrix-vector multiply (DSYMV)
+		 * @formula y := alpha * A * x + beta * y
+		 *          where A is n-by-n symmetric, only upper or lower triangle is referenced
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_symv_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo,
+		matx_double alpha, const matx_dense_d_i8_t A, matx_vec_d_i8_t x,
+		matx_double beta, matx_vec_d_i8_t y);
+
+	/**
+		 * @brief Complex Hermitian matrix-vector multiply (ZHEMV)
+		 * @formula y := alpha * A * x + beta * y
+		 *          where A is n-by-n Hermitian, only upper or lower triangle is referenced
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_hemv_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo,
+		matx_complex_d_t alpha, const matx_dense_z_i8_t A, matx_vec_z_i8_t x,
+		matx_complex_d_t beta, matx_vec_z_i8_t y);
+
+	/**
+		 * @brief Real symmetric rank-1 update (DSYR)
+		 * @formula A := alpha * x * x^T + A
+		 *          A is n-by-n symmetric, only upper or lower triangle is updated; x is n-by-1
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_syr_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo,
+		matx_double alpha, const matx_vec_d_i8_t x, matx_dense_d_i8_t A);
+
+	/**
+		 * @brief Complex Hermitian rank-1 update (ZHER)
+		 * @formula A := alpha * x * x^H + A
+		 *          A is n-by-n Hermitian, only upper or lower triangle is updated; alpha is real
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_her_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo,
+		matx_double alpha, const matx_vec_z_i8_t x, matx_dense_z_i8_t A);
+
+	/**
+		 * @brief Real symmetric rank-2 update (DSYR2)
+		 * @formula A := alpha * x * y^T + alpha * y * x^T + A
+		 *          A is n-by-n symmetric, only upper or lower triangle is updated
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_syr2_d_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo,
+		matx_double alpha, const matx_vec_d_i8_t x, const matx_vec_d_i8_t y, matx_dense_d_i8_t A);
+
+	/**
+		 * @brief Complex Hermitian rank-2 update (ZHER2)
+		 * @formula A := alpha * x * y^H + conj(alpha) * y * x^H + A
+		 *          A is n-by-n Hermitian, only upper or lower triangle is updated
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_her2_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo,
+		matx_complex_d_t alpha, const matx_vec_z_i8_t x, const matx_vec_z_i8_t y, matx_dense_z_i8_t A);
+
 	// ---- Level 3: triangular solve / symmetric rank-k update ----
 
 	/**
@@ -342,6 +446,24 @@ extern "C" {
 	 */
 	MATX_DENSE_BLAS_API matx_status_t matx_trsm_z_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
         matx_complex_d_t alpha, const matx_dense_z_i8_t A, matx_dense_z_i8_t B);
+
+	/**
+		 * @brief Real triangular matrix-matrix multiply (DTRMM)
+		 * @formula B := alpha * op(A) * B  (side=L)
+		 *          or  B := alpha * B * op(A)  (side=R)
+		 *          where op(A) = A, A^T, or A^H; A is triangular
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_trmm_d_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+		matx_double alpha, const matx_dense_d_i8_t A, matx_dense_d_i8_t B);
+
+	/**
+		 * @brief Complex triangular matrix-matrix multiply (ZTRMM)
+		 * @formula B := alpha * op(A) * B  (side=L)
+		 *          or  B := alpha * B * op(A)  (side=R)
+		 *          where op(A) = A, A^T, or A^H; A is triangular
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_trmm_z_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo, matx_trans_t trans, matx_diag_t diag,
+		matx_complex_d_t alpha, const matx_dense_z_i8_t A, matx_dense_z_i8_t B);
 
 	/**
 	 * @brief Real symmetric rank-k update (DSYRK)
@@ -381,8 +503,27 @@ extern "C" {
         matx_complex_d_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
 		matx_double beta, matx_dense_z_i8_t C);
 
-	// ---- Element-wise (Hadamard product) ----
+	/**
+		 * @brief Real symmetric matrix-matrix multiply (DSYMM)
+		 * @formula C := alpha * A * B + beta * C  (side=L)
+		 *          or  C := alpha * B * A + beta * C  (side=R)
+		 *          A is m-by-m symmetric, B and C are m-by-n (side=L) or n-by-m (side=R)
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_symm_d_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo,
+		matx_double alpha, const matx_dense_d_i8_t A, const matx_dense_d_i8_t B,
+		matx_double beta, matx_dense_d_i8_t C);
 
+	/**
+		 * @brief Complex Hermitian matrix-matrix multiply (ZHEMM)
+		 * @formula C := alpha * A * B + beta * C  (side=L)
+		 *          or  C := alpha * B * A + beta * C  (side=R)
+		 *          A is m-by-m Hermitian, B and C are m-by-n (side=L) or n-by-m (side=R)
+		 */
+	MATX_DENSE_BLAS_API matx_status_t matx_hemm_z_i8(const matx_dense_backend_t* blas, matx_side_t side, matx_uplo_t uplo,
+		matx_complex_d_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
+		matx_complex_d_t beta, matx_dense_z_i8_t C);
+
+	// ---- Element-wise (Hadamard product) ----
 	/**
 	 * @brief Real element-wise matrix multiply (Hadamard product)
 	 * @formula C = A .⊙ B  (element-wise)

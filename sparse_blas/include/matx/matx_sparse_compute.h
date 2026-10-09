@@ -94,6 +94,28 @@ typedef struct matx_sparse_vtable_t
     matx_status_t (*scale_rows_z_i8)(matx_coo_z_i8_t A, const matx_vec_z_i8_t s);
     matx_status_t (*scale_cols_z_i8)(matx_coo_z_i8_t A, const matx_vec_z_i8_t s);
 
+    // ---- Sparse-sparse GEMM producing COO output ----
+    matx_status_t (*spgemm_d_i8)(matx_double alpha,
+                                  matx_coo_d_i8_t A,
+                                  matx_coo_d_i8_t B,
+                                  matx_coo_d_i8_t out);
+    matx_status_t (*spgemm_z_i8)(matx_complex_d_t alpha,
+                                  matx_coo_z_i8_t A,
+                                  matx_coo_z_i8_t B,
+                                  matx_coo_z_i8_t out);
+
+    // ---- Sparse triangular solve (SpTRSV) ----
+    matx_status_t (*sptrsv_d_i8)(matx_uplo_t uplo,
+                                  matx_trans_t trans,
+                                  matx_diag_t diag,
+                                  matx_coo_d_i8_t A,
+                                  matx_vec_d_i8_t x);
+    matx_status_t (*sptrsv_z_i8)(matx_uplo_t uplo,
+                                  matx_trans_t trans,
+                                  matx_diag_t diag,
+                                  matx_coo_z_i8_t A,
+                                  matx_vec_z_i8_t x);
+
 } matx_sparse_vtable_t;
 
 typedef struct matx_sparse_backend_t
@@ -460,6 +482,55 @@ MATX_SPARSE_BLAS_API matx_status_t matx_coo_to_dense_d_i8(matx_coo_d_i8_t A, mat
 	 * @brief Convert a complex COO matrix to dense format
 	 */
 MATX_SPARSE_BLAS_API matx_status_t matx_coo_to_dense_z_i8(matx_coo_z_i8_t A, matx_dense_z_i8_t out);
+
+// ---- Sparse-sparse GEMM producing COO output (SpGEMM) ----
+
+/**
+ * @brief Sparse-sparse multiply producing sparse COO result, real
+ * @formula C := alpha * A * B
+ *          A and B are sparse (COO), C is a new COO matrix.
+ */
+MATX_SPARSE_BLAS_API matx_status_t matx_spgemm_coo_d_i8(const matx_sparse_backend_t* backend,
+                                           matx_double alpha,
+                                           matx_coo_d_i8_t A,
+                                           matx_coo_d_i8_t B,
+                                           matx_coo_d_i8_t out);
+
+/**
+ * @brief Sparse-sparse multiply producing sparse COO result, complex
+ * @formula C := alpha * A * B
+ *          A and B are sparse (COO), C is a new COO matrix.
+ */
+MATX_SPARSE_BLAS_API matx_status_t matx_spgemm_coo_z_i8(const matx_sparse_backend_t* backend,
+                                           matx_complex_d_t alpha,
+                                           matx_coo_z_i8_t A,
+                                           matx_coo_z_i8_t B,
+                                           matx_coo_z_i8_t out);
+
+// ---- Sparse triangular solve (SpTRSV) ----
+
+/**
+ * @brief Sparse triangular solve, real
+ * @formula x := op(A)^{-1} * x  (in-place)
+ *          op(A) is triangular (upper or lower), x is a dense vector.
+ */
+MATX_SPARSE_BLAS_API matx_status_t matx_sptrsv_coo_d_i8(const matx_sparse_backend_t* backend,
+                                           matx_uplo_t uplo,
+                                           matx_trans_t trans,
+                                           matx_diag_t diag,
+                                           matx_coo_d_i8_t A,
+                                           matx_vec_d_i8_t x);
+
+/**
+ * @brief Sparse triangular solve, complex
+ * @formula x := op(A)^{-1} * x  (in-place)
+ */
+MATX_SPARSE_BLAS_API matx_status_t matx_sptrsv_coo_z_i8(const matx_sparse_backend_t* backend,
+                                           matx_uplo_t uplo,
+                                           matx_trans_t trans,
+                                           matx_diag_t diag,
+                                           matx_coo_z_i8_t A,
+                                           matx_vec_z_i8_t x);
 
 #ifdef __cplusplus
 }

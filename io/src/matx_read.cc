@@ -299,3 +299,164 @@ matx_status_t matx_read_vec_z_i8(const matx_alloc_t* alloc,
         },
         read_complex_value);
 }
+
+/* ============ CSV read ============ */
+
+namespace {
+
+static bool parse_csv_line(const std::string& line,
+                           std::vector<double>& values)
+{
+    values.clear();
+    std::string token;
+    bool in_quotes = false;
+    for (size_t i = 0; i <= line.size(); ++i) {
+        char c = (i < line.size()) ? line[i] : ',';
+        if (c == '"') {
+            in_quotes = !in_quotes;
+            continue;
+        }
+        if (!in_quotes && c == ',') {
+            if (!token.empty()) {
+                char* end = nullptr;
+                double v = std::strtod(token.c_str(), &end);
+                if (end == token.c_str()) {
+                    return false;
+                }
+                values.push_back(v);
+                token.clear();
+            } else {
+                values.push_back(0.0);
+            }
+        } else if (!in_quotes && (c == '\r' || c == '\n')) {
+            if (!token.empty()) {
+                char* end = nullptr;
+                double v = std::strtod(token.c_str(), &end);
+                if (end == token.c_str()) {
+                    return false;
+                }
+                values.push_back(v);
+            }
+            return true;
+        } else {
+            token += c;
+        }
+    }
+    if (!token.empty()) {
+        char* end = nullptr;
+        double v = std::strtod(token.c_str(), &end);
+        if (end == token.c_str()) {
+            return false;
+        }
+        values.push_back(v);
+    }
+    return true;
+}
+
+static void set_values(std::vector<matx_double>& dst,
+                       const std::vector<std::vector<double>>& src,
+                       matx_int64_t nrows, matx_int64_t ncols)
+{
+    for (matx_int64_t r = 0; r < nrows; ++r) {
+        for (matx_int64_t c = 0; c < ncols; ++c) {
+            dst[(size_t) c * (size_t) nrows + (size_t) r] = src[(size_t) r][(size_t) c];
+        }
+    }
+}
+
+static void set_values(std::vector<matx_complex_d_t>& dst,
+                       const std::vector<std::vector<double>>& src,
+                       matx_int64_t nrows, matx_int64_t ncols)
+{
+    for (matx_int64_t r = 0; r < nrows; ++r) {
+        for (matx_int64_t c = 0; c < ncols / 2; ++c) {
+            matx_complex_d_t& val = dst[(size_t) c * (size_t) nrows + (size_t) r];
+            val.real = src[(size_t) r][(size_t) c * 2];
+            val.imag = src[(size_t) r][(size_t) c * 2 + 1];
+        }
+    }
+}
+
+template <typename T, typename CreateFn>
+static matx_status_t read_csv_impl(const matx_alloc_t* alloc,
+                                   const char* file,
+                                   CreateFn create)
+{
+    if (!alloc || !alloc->malloc_fn || !alloc->free_fn || !file) {
+        return MATX_ERR_INVALID_ARG;
+    }
+    std::ifstream stream(file);
+    if (!stream.is_open()) {
+        MATX_ERROR("open file error. path:%s", file);
+        return MATX_ERR_INTERNAL;
+    }
+    try {
+        std::vector<std::vector<double>> all_rows;
+        std::string line;
+        matx_int64_t ncols = 0;
+        while (std::getline(stream, line)) {
+            if (line.empty())
+                continue;
+            std::vector<double> row_values;
+            if (!parse_csv_line(line, row_values)) {
+                MATX_ERROR("invalid CSV data. path:%s", file);
+                return MATX_ERR_INVALID_ARG;
+            }
+            if (row_values.empty())
+                continue;
+            if (ncols == 0)
+                ncols = (matx_int64_t) row_values.size();
+            else if ((matx_int64_t) row_values.size() != ncols) {
+                MATX_ERROR("inconsistent CSV column count. path:%s", file);
+                return MATX_ERR_INVALID_ARG;
+            }
+            all_rows.push_back(std::move(row_values));
+        }
+        if (all_rows.empty() || ncols == 0) {
+            MATX_ERROR("empty CSV file. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+        matx_int64_t nrows = (matx_int64_t) all_rows.size();
+        size_t count = (size_t) nrows * (size_t) ncols;
+        if (count > SIZE_MAX / sizeof(T)) {
+            MATX_ERROR("CSV data too large. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+        std::vector<T> col_major(count);
+        set_values(col_major, all_rows, nrows, ncols);
+        return create(alloc, nrows, ncols, col_major.data());
+    } catch (const std::bad_alloc&) {
+        MATX_ERROR("out of memory reading CSV. path:%s", file);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+}
+
+} // namespace
+
+matx_status_t matx_read_csv_d_i8(const matx_alloc_t* alloc,
+                                 matx_dense_d_i8_t* mtx,
+                                 const char* file)
+{
+    if (!mtx) {
+        return MATX_ERR_INVALID_ARG;
+    }
+    return read_csv_impl<matx_double>(
+        alloc, file,
+        [mtx](const matx_alloc_t* a, matx_int64_t rows, matx_int64_t cols, matx_double* data) {
+            return matx_dense_d_i8_create(a, mtx, MATX_COL_MAJOR, rows, cols, data);
+        });
+}
+
+matx_status_t matx_read_csv_z_i8(const matx_alloc_t* alloc,
+                                 matx_dense_z_i8_t* mtx,
+                                 const char* file)
+{
+    if (!mtx) {
+        return MATX_ERR_INVALID_ARG;
+    }
+    return read_csv_impl<matx_complex_d_t>(
+        alloc, file,
+        [mtx](const matx_alloc_t* a, matx_int64_t rows, matx_int64_t cols, matx_complex_d_t* data) {
+            return matx_dense_z_i8_create(a, mtx, MATX_COL_MAJOR, rows, cols, data);
+        });
+}
