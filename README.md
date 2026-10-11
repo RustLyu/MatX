@@ -2,7 +2,12 @@
 
 MatX is a modular linear algebra and numerical compute library written in **C17** (core) with **C++20** build support (tools/io/tests). It uses CMake 3.20+ and targets Windows/Linux.
 
-All third-party dependencies are fetched via CMake **FetchContent** at configure time — no submodules, no vendored code in-tree.
+Existing third-party dependencies are fetched through CMake **FetchContent** or
+found with CMake package discovery. When enabled, the iterative solver
+backends build pinned upstream releases from source: Ginkgo and hypre are CMake
+subprojects, and PETSc's upstream `configure`/`make install` process is wrapped
+by CMake `ExternalProject`. Dependency sources and build products stay below
+the selected build directory; nothing is installed system-wide by default.
 
 ## Module layout
 
@@ -14,9 +19,9 @@ All third-party dependencies are fetched via CMake **FetchContent** at configure
 - `dense_blas`: dense compute wrappers (`gemm/gemv/geadd/ger/trsv/trsm/syrk/herk/transpose/conj_transpose/norm`) with vtable backend dispatch.
 - `sparse_blas`: sparse compute wrappers (`spmv/spmm/dsp2md/transpose/conj/mat_norm/spadd`) with vtable backend dispatch.
 - `dense_solve`: dense linear factor + solve APIs (f64/c64), backed by OpenBLAS / libFLAME.
-- `sparse_solve`: sparse linear factor + solve APIs (f64/c64), backed by SuiteSparse (KLU/UMFPACK), SuperLU, and **MUMPS**.
+- `sparse_solve`: sparse direct factor + solve APIs (f64/c64), plus optional iterative APIs backed by Ginkgo, PETSc KSP, and hypre.
 - `tests`: GoogleTest-based unit tests.
-- `cmake/`: CMake module files for platform detection, options, CPU vendor auto-detection, backend validation, and per-dependency FetchContent management.
+- `cmake/`: CMake module files for platform detection, options, CPU vendor auto-detection, backend validation, and dependency discovery/fetching.
 
 ### Module Dependency Graph
 
@@ -29,7 +34,7 @@ vec_blas      → types, core, tools (+ OpenBLAS/BLIS at link)
 dense_blas    → types, core, tools (+ OpenBLAS/BLIS/libFLAME)
 sparse_blas   → types, core, tools (+ GraphBLAS, AOCL_SPARSE)
 dense_solve   → types, core, tools (+ OpenBLAS/libFLAME via CBLAS/LAPACK)
-sparse_solve  → types, tools, core (+ SuiteSparse, SuperLU, MUMPS)
+sparse_solve  → types, tools, core (+ SuiteSparse, SuperLU, MUMPS; optional Ginkgo, PETSc, hypre)
 tests         → all above + GTest + OpenMP
 ```
 
@@ -81,13 +86,21 @@ Exactly one dense BLAS provider (OpenBLAS / BLIS) is enforced at configure time.
 | Option | Default | Purpose |
 |--------|---------|---------|
 | `-DMATX_BACKEND` | `OPENBLAS` | Dense BLAS backend: `OPENBLAS` / `AMD_AOCL` / `AUTO` |
-| `-DMATX_BUILD_TESTS` | `ON` | Build GoogleTest-based unit tests |
+| `-DMATX_BUILD_TESTS` | `ON` | Build the unit test executable |
 | `-DMATX_ENABLE_SUITESPARSE` | `ON` | SuiteSparse sparse solvers (KLU, UMFPACK) |
 | `-DMATX_ENABLE_OPENBLAS` | `ON` | OpenBLAS dense + sparse BLAS |
 | `-DMATX_ENABLE_BLIS` | `OFF` | BLIS dense BLAS (AMD path) |
 | `-DMATX_ENABLE_LIBFLAME` | `OFF` | libFLAME LAPACK replacement (AMD path) |
 | `-DMATX_ENABLE_GRAPHBLAS` | `OFF` | GraphBLAS sparse operations |
 | `-DMATX_ENABLE_AOCL_SPARSE` | `OFF` | AOCL-Sparse sparse operations |
+| `-DMATX_ENABLE_GINKGO` | `OFF` | Ginkgo iterative sparse solver backend |
+| `-DMATX_ENABLE_PETSC` | `OFF` | PETSc KSP iterative sparse solver backend |
+| `-DMATX_ENABLE_HYPRE` | `OFF` | hypre iterative sparse solver backend |
+| `-DMATX_ENABLE_PETSC_HYPRE` | `OFF` | PETSc BoomerAMG preconditioner (PETSc must include hypre) |
+| `-DMATX_BUILD_GINKGO_FROM_SOURCE` | `ON` | Build Ginkgo v1.11.0 from upstream source when enabled |
+| `-DMATX_BUILD_PETSC_FROM_SOURCE` | `ON` | Build PETSc v3.26.0 from upstream source when enabled |
+| `-DMATX_BUILD_HYPRE_FROM_SOURCE` | `ON` | Build hypre v2.33.0 from upstream source when enabled |
+| `-DMATX_BUILD_ITERATIVE_BENCHMARKS` | `OFF` | Build Ginkgo/PETSc/hypre comparison benchmark |
 | `-DBUILD_SHARED_LIBS` | `OFF` | Build shared libraries instead of static |
 
 ## Build and test
@@ -108,7 +121,40 @@ cmake --build build -j$(nproc)
 ctest --test-dir build --output-on-failure
 ```
 
-**Run a single test:** use `ctest -R <filter>` or execute `./build/tests/matx_tests` directly.
+To build, install, and benchmark the three iterative backends from source:
+
+```bash
+cmake -S . -B build-iterative -DCMAKE_BUILD_TYPE=Release \
+  -DMATX_BUILD_TESTS=ON \
+  -DMATX_ENABLE_GINKGO=ON -DMATX_ENABLE_PETSC=ON -DMATX_ENABLE_HYPRE=ON \
+  -DMATX_BUILD_ITERATIVE_BENCHMARKS=ON
+cmake --build build-iterative -j$(nproc)
+cmake --install build-iterative
+MATX_TEST_FILTER=sparse_iterative ./build-iterative/tests/matx_tests
+OMP_NUM_THREADS=4 OMP_PROC_BIND=close OMP_PLACES=cores \
+  ./build-iterative/matx_sparse_iterative_benchmarks --size 100000 --repeats 3 \
+  > build-iterative/sparse-solvers-100000.csv
+```
+
+`--size` sets the exact number of unknowns on a near-square 2D grid. Each
+backend factors or prepares the same matrix once, then solves multiple
+different right-hand sides. `setup_ms` reports setup separately;
+`median_solve_ms` covers only the repeated solves after one warm-up.
+
+The default install prefix is `build-iterative/install`. Ginkgo enables its
+reference and OpenMP CPU executors; hypre builds serially with OpenMP; PETSc
+builds serially with real double precision. Pass a corresponding
+`MATX_BUILD_*_FROM_SOURCE=OFF` option to use an existing package instead.
+
+**Run a single test:** use `ctest -R <filter>` or set `MATX_TEST_FILTER` to a
+substring of the test name. For example:
+
+```sh
+MATX_TEST_FILTER=sparse_iterative ./build/tests/matx_tests
+```
+
+See [benchmarks/README.md](benchmarks/README.md#iterative-sparse-solver-comparison)
+for optional iterative backend correctness and performance runs.
 
 ## Public API snapshot
 
@@ -129,7 +175,7 @@ ctest --test-dir build --output-on-failure
 Factor + solve and one-shot solve for d_i8 / z_i8. Eigenvalue solvers (`matx_syev_*`, `matx_geev_*`), QR factorization (`matx_qr_*`), determinant (`matx_det_dense_*`), condition number (`matx_cond_dense_*`).
 
 ### Sparse solve
-Factor + solve and one-shot solve for COO/CSC pathways (LU and Cholesky). Backends: **KLU**, **UMFPACK**, **SuperLU**, **MUMPS**.
+Factor + solve and one-shot solve for COO/CSC pathways (LU and Cholesky). Direct backends: **KLU**, **UMFPACK**, **SuperLU**, **MUMPS**. Optional iterative backends and setup guidance are documented in [ITERATIVE_SOLVERS.md](sparse_solve/ITERATIVE_SOLVERS.md).
 
 ### Random
 `matx_vec_rand_uniform_*`, `matx_vec_rand_normal_*`, `matx_dense_rand_uniform_*`

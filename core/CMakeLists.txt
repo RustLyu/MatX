@@ -12,8 +12,9 @@ add_library(MatX::core ALIAS ${PROJECT_NAME})
 
 
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE
+  PUBLIC
     MatX::types
+  PRIVATE
     MatX::tools
 )
 

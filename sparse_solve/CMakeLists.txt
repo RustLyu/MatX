@@ -1,5 +1,7 @@
 ﻿project (matx_sparse_solve C)
 
+enable_language(CXX)
+
 add_library(${PROJECT_NAME}
   src/matx_solve_backend.c
   src/matx_suitesparse_stub.c
@@ -8,6 +10,10 @@ add_library(${PROJECT_NAME}
   src/matx_mumps_stub.c
   src/matx_superlu_stub.c
   src/tools.c
+  src/matx_sparse_iterative.cpp
+  src/matx_sparse_iterative_ginkgo.cpp
+  src/matx_sparse_iterative_petsc.cpp
+  src/matx_sparse_iterative_hypre.cpp
 )
 
 add_library(MatX::sparse_solve ALIAS ${PROJECT_NAME})
@@ -21,6 +27,13 @@ target_link_libraries(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   PUBLIC MatX::core
 )
+
+# SuiteSparse and MUMPS use the selected BLAS ABI. Put it before PETSc in the
+# final link order so their BLAS symbols cannot bind to PETSc's bundled LP64
+# f2cblaslapack when MatX uses an ILP64 OpenBLAS.
+if(MATX_ENABLE_OPENBLAS)
+  target_link_libraries(${PROJECT_NAME} PRIVATE OpenBLAS64::OpenBLAS)
+endif()
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -36,7 +49,31 @@ target_compile_definitions(${PROJECT_NAME}
     MATX_ENABLE_CXSPARSE=$<BOOL:${MATX_ENABLE_CXSPARSE}>
     MATX_ENABLE_SUPERLU=$<BOOL:${MATX_ENABLE_SUPERLU}>
     MATX_ENABLE_MUMPS=$<BOOL:${MATX_ENABLE_MUMPS}>
+    MATX_HAVE_GINKGO=$<BOOL:${MATX_ENABLE_GINKGO}>
+    MATX_HAVE_PETSC=$<BOOL:${MATX_ENABLE_PETSC}>
+    MATX_HAVE_HYPRE=$<BOOL:${MATX_ENABLE_HYPRE}>
+    MATX_HAVE_PETSC_HYPRE=$<BOOL:${MATX_ENABLE_PETSC_HYPRE}>
 )
+
+if(MATX_ENABLE_GINKGO)
+  target_link_libraries(${PROJECT_NAME} PRIVATE Ginkgo::ginkgo)
+endif()
+
+if(MATX_ENABLE_PETSC)
+  target_link_libraries(${PROJECT_NAME} PRIVATE MatXThirdParty::PETSc)
+  if(MATX_PETSC_BUILD_TARGET)
+    add_dependencies(${PROJECT_NAME} ${MATX_PETSC_BUILD_TARGET})
+  endif()
+endif()
+
+if(MATX_ENABLE_HYPRE)
+  target_link_libraries(${PROJECT_NAME} PRIVATE MatXThirdParty::HYPRE)
+  if(MATX_HYPRE_SEQUENTIAL_BUILD)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HYPRE_SEQUENTIAL_BUILD=1)
+  else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_CXX)
+  endif()
+endif()
 
 if(MATX_ENABLE_SUITESPARSE)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_SUITESPARSE=1)
@@ -113,7 +150,9 @@ endif()
 target_sources(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_sparse_solve.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/matx/matx_sparse_iterative.h>
     $<INSTALL_INTERFACE:include/matx/matx_sparse_solve.h>
+    $<INSTALL_INTERFACE:include/matx/matx_sparse_iterative.h>
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/

@@ -38,6 +38,24 @@ option(MATX_ENABLE_SUPERLU "Enable SuperLU sparse solver backend (auto-fetch)" O
 option(MATX_ENABLE_MUMPS "Enable MUMPS sparse solver backend if found/provided" ON)
 option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" ON)
 
+# Optional iterative sparse solver libraries. They are discovered only when
+# explicitly enabled so the existing direct-solver build does not gain a new
+# mandatory dependency.
+option(MATX_ENABLE_GINKGO "Enable the Ginkgo iterative sparse solver backend" OFF)
+option(MATX_ENABLE_PETSC "Enable the PETSc KSP iterative sparse solver backend" OFF)
+option(MATX_ENABLE_HYPRE "Enable the hypre iterative sparse solver backend" OFF)
+option(MATX_ENABLE_PETSC_HYPRE "Enable hypre BoomerAMG as a PETSc preconditioner (requires PETSc built with hypre)" OFF)
+
+# Source builds are the default for the optional iterative dependencies. Set a
+# corresponding option to OFF only when using an existing upstream install.
+option(MATX_BUILD_GINKGO_FROM_SOURCE "Build Ginkgo from its upstream source" ON)
+option(MATX_BUILD_PETSC_FROM_SOURCE "Build PETSc from its upstream source" ON)
+option(MATX_BUILD_HYPRE_FROM_SOURCE "Build hypre from its upstream source" ON)
+
+if(MATX_ENABLE_PETSC_HYPRE)
+    set(MATX_ENABLE_PETSC ON)
+endif()
+
 if(NOT MATX_ENABLE_SUITESPARSE)
     if(MATX_ENABLE_UMFPACK OR MATX_ENABLE_CXSPARSE OR MATX_ENABLE_GRAPHBLAS)
         message(STATUS "Disabling UMFPACK, CXSparse, and GraphBLAS because MATX_ENABLE_SUITESPARSE=OFF")
