@@ -18,6 +18,7 @@
 /* These crossover limits come from the bundled scale/density benchmark sweep. */
 #define MATX_SPARSE_DIRECT_SPMV_MAX_NNZ 3000000
 #define MATX_SPARSE_DIRECT_SPMM_MAX_PRODUCTS 50000000
+#define MATX_SPARSE_SPMM_COO_K_TILE 256
 #define MATX_SPARSE_DIRECT_NORM_MAX_NNZ 8192
 #define MATX_SPARSE_DIRECT_NORM1_REAL_MAX_NNZ 2048
 #define MATX_SPARSE_DIRECT_NORM_MAX_DIMENSION 65536
@@ -319,7 +320,30 @@ static matx_status_t ref_spmm_d_i8_coo(matx_double alpha,
                 C->data[index] *= beta;
         }
     }
-    if (alpha != 0.0) {
+    if (alpha != 0.0 && b_layout == MATX_COL_MAJOR
+        && C->layout == MATX_COL_MAJOR && B->ncols >= 4) {
+        /* Reuse a small COO slice while finishing one RHS column at a time. */
+        for (matx_int64_t k_begin = 0; k_begin < A->nnz;) {
+            const matx_int64_t remaining = A->nnz - k_begin;
+            const matx_int64_t k_end
+                = k_begin + (remaining < MATX_SPARSE_SPMM_COO_K_TILE
+                                 ? remaining
+                                 : MATX_SPARSE_SPMM_COO_K_TILE);
+            for (matx_int64_t col = 0; col < B->ncols; ++col) {
+                const size_t b_col_offset = (size_t) col * (size_t) b_stride;
+                const size_t c_col_offset = (size_t) col * (size_t) C->stride;
+                for (matx_int64_t k = k_begin; k < k_end; ++k) {
+                    const matx_int64_t row = A->rows[k];
+                    const matx_int64_t inner = A->columns[k];
+                    const matx_double product
+                        = A->values[k] * b_data[(size_t) inner + b_col_offset];
+                    const size_t c_index = (size_t) row + c_col_offset;
+                    C->data[c_index] += alpha == 1.0 ? product : alpha * product;
+                }
+            }
+            k_begin = k_end;
+        }
+    } else if (alpha != 0.0) {
         for (matx_int64_t k = 0; k < A->nnz; ++k) {
             const matx_int64_t row = A->rows[k];
             const matx_int64_t inner = A->columns[k];
@@ -382,7 +406,38 @@ static matx_status_t ref_spmm_z_i8_coo(matx_complex_d_t alpha,
                 C->data[index] = complex_multiply(beta, C->data[index]);
         }
     }
-    if (alpha.real != 0.0 || alpha.imag != 0.0) {
+    if ((alpha.real != 0.0 || alpha.imag != 0.0)
+        && b_layout == MATX_COL_MAJOR && C->layout == MATX_COL_MAJOR
+        && B->ncols >= 4) {
+        /* The active RHS column is contiguous while this COO tile stays hot. */
+        for (matx_int64_t k_begin = 0; k_begin < A->nnz;) {
+            const matx_int64_t remaining = A->nnz - k_begin;
+            const matx_int64_t k_end
+                = k_begin + (remaining < MATX_SPARSE_SPMM_COO_K_TILE
+                                 ? remaining
+                                 : MATX_SPARSE_SPMM_COO_K_TILE);
+            for (matx_int64_t col = 0; col < B->ncols; ++col) {
+                const size_t b_col_offset = (size_t) col * (size_t) b_stride;
+                const size_t c_col_offset = (size_t) col * (size_t) C->stride;
+                for (matx_int64_t k = k_begin; k < k_end; ++k) {
+                    const matx_int64_t row = A->rows[k];
+                    const matx_int64_t inner = A->columns[k];
+                    const matx_complex_d_t product
+                        = complex_multiply(A->values[k],
+                                           b_data[(size_t) inner + b_col_offset]);
+                    const matx_complex_d_t scaled
+                        = alpha.real == 1.0 && alpha.imag == 0.0
+                              ? product
+                              : complex_multiply(alpha, product);
+                    matx_complex_d_t* output
+                        = &C->data[(size_t) row + c_col_offset];
+                    output->real += scaled.real;
+                    output->imag += scaled.imag;
+                }
+            }
+            k_begin = k_end;
+        }
+    } else if (alpha.real != 0.0 || alpha.imag != 0.0) {
         for (matx_int64_t k = 0; k < A->nnz; ++k) {
             const matx_int64_t row = A->rows[k];
             const matx_int64_t inner = A->columns[k];
@@ -538,7 +593,8 @@ static matx_status_t ref_spmm_z_i8_grb(matx_complex_d_t alpha,
 {
 #ifdef MATX_ENABLE_GRAPHBLAS
     if (A && B && B->ncols > 0
-        && (uint64_t) A->nnz * (uint64_t) B->ncols <= MATX_SPARSE_DIRECT_SPMM_MAX_PRODUCTS) {
+        && A->nnz <= MATX_SPARSE_DIRECT_SPMV_MAX_NNZ
+        && A->nnz <= MATX_SPARSE_DIRECT_SPMM_MAX_PRODUCTS / B->ncols) {
         return ref_spmm_z_i8_coo(alpha, A, B, beta, C);
     }
 
