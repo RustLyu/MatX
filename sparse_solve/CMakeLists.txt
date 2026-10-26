@@ -36,6 +36,7 @@ target_compile_definitions(${PROJECT_NAME}
     MATX_ENABLE_CXSPARSE=$<BOOL:${MATX_ENABLE_CXSPARSE}>
     MATX_ENABLE_SUPERLU=$<BOOL:${MATX_ENABLE_SUPERLU}>
     MATX_ENABLE_MUMPS=$<BOOL:${MATX_ENABLE_MUMPS}>
+    MATX_ENABLE_AGMG=$<BOOL:${MATX_ENABLE_AGMG}>
 )
 
 if(MATX_ENABLE_SUITESPARSE)
@@ -107,6 +108,16 @@ if(MATX_ENABLE_MUMPS)
     endif()
   else()
     message(WARNING "MATX_ENABLE_MUMPS=ON but MUMPS target is unavailable; sparse_solve will build without MUMPS backend.")
+  endif()
+endif()
+
+if(MATX_ENABLE_AGMG)
+  if(TARGET AGMG::AGMG)
+    target_sources(${PROJECT_NAME} PRIVATE src/matx_agmg_stub.c)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE MATX_HAVE_AGMG=1)
+    target_link_libraries(${PROJECT_NAME} PRIVATE AGMG::AGMG)
+  else()
+    message(WARNING "MATX_ENABLE_AGMG=ON but AGMG target is unavailable; sparse_solve will build without AGMG backend.")
   endif()
 endif()
 

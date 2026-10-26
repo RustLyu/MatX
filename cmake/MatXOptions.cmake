@@ -37,6 +37,7 @@ option(MATX_ENABLE_CXSPARSE "Enable SuiteSparse CXSparse sparse solver backend i
 option(MATX_ENABLE_SUPERLU "Enable SuperLU sparse solver backend (auto-fetch)" ON)
 option(MATX_ENABLE_MUMPS "Enable MUMPS sparse solver backend if found/provided" ON)
 option(MATX_ENABLE_GRAPHBLAS "Enable GraphBlas for sparse numerical ops if found" ON)
+option(MATX_ENABLE_AGMG "Enable AGMG algebraic multigrid solver (manual download)" OFF)
 
 if(NOT MATX_ENABLE_SUITESPARSE)
     if(MATX_ENABLE_UMFPACK OR MATX_ENABLE_CXSPARSE OR MATX_ENABLE_GRAPHBLAS)

@@ -101,6 +101,9 @@ matx_sparse_linsolve_t matx_linsolve_make_umfpack(matx_alloc_t alloc);
 matx_sparse_linsolve_t matx_linsolve_make_cxsparse(matx_alloc_t alloc);
 matx_sparse_linsolve_t matx_linsolve_make_superlu(matx_alloc_t alloc);
 matx_sparse_linsolve_t matx_linsolve_make_mumps(matx_alloc_t alloc);
+#if MATX_HAVE_AGMG
+matx_sparse_linsolve_t matx_linsolve_make_agmg(matx_alloc_t alloc);
+#endif
 
 const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_t k)
 {
@@ -115,6 +118,10 @@ const char* matx_sparse_linsolve_backend_name(matx_sparse_linsolve_backend_kind_
         return "SUPERLU";
     case MATX_LINSOLVE_BACKEND_MUMPS:
         return "MUMPS";
+#if MATX_HAVE_AGMG
+    case MATX_LINSOLVE_BACKEND_AGMG:
+        return "AGMG";
+#endif
     default:
         return "UNKNOWN";
     }
@@ -131,6 +138,10 @@ matx_sparse_linsolve_t matx_sparse_linsolve_default(matx_alloc_t alloc)
     return matx_linsolve_make_superlu(alloc);
 #elif MATX_HAVE_MUMPS
     return matx_linsolve_make_mumps(alloc);
+#if MATX_HAVE_AGMG
+#elif MATX_HAVE_AGMG
+    return matx_linsolve_make_agmg(alloc);
+#endif
 #else
     return matx_linsolve_make_suitesparse_klu(alloc);
 #endif
@@ -147,6 +158,10 @@ matx_sparse_linsolve_t matx_sparse_linsolve_by_type(matx_sparse_linsolve_backend
         return matx_linsolve_make_superlu(alloc);
     case MATX_LINSOLVE_BACKEND_MUMPS:
         return matx_linsolve_make_mumps(alloc);
+#if MATX_HAVE_AGMG
+    case MATX_LINSOLVE_BACKEND_AGMG:
+        return matx_linsolve_make_agmg(alloc);
+#endif
     case MATX_LINSOLVE_BACKEND_SUITESPARSE_KLU:
     default:
         return matx_linsolve_make_suitesparse_klu(alloc);

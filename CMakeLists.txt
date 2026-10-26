@@ -34,6 +34,7 @@ include(DepAOCL)
 include(DepSuiteSparse)
 include(DepSuperLU)
 include(DepMUMPS)
+include(DepAGMG)
 
 # ---- MatX library subdirectories ----
 add_subdirectory(types)
