@@ -129,3 +129,26 @@ void matx_write_csv_z_i8(const matx_dense_z_i8_t mtx, const char* file)
         os << "\n";
     }
 }
+
+/* ---- CSV vector write ---- */
+
+void matx_write_csv_vec_d_i8(const matx_vec_d_i8_t vec, const char* file)
+{
+    if (!vec || !vec->data || !file)
+        return;
+    std::ofstream os(file, std::ios::trunc);
+    os << std::scientific << std::setprecision(15);
+    for (matx_int64_t i = 0; i < vec->n; ++i)
+        os << vec->data[i * vec->stride] << "\n";
+}
+
+void matx_write_csv_vec_z_i8(const matx_vec_z_i8_t vec, const char* file)
+{
+    if (!vec || !vec->data || !file)
+        return;
+    std::ofstream os(file, std::ios::trunc);
+    os << std::scientific << std::setprecision(15);
+    for (matx_int64_t i = 0; i < vec->n; ++i)
+        os << vec->data[i * vec->stride].real << ","
+           << vec->data[i * vec->stride].imag << "\n";
+}

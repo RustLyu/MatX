@@ -6,6 +6,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <new>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -89,11 +90,37 @@ static matx_status_t read_dense(const matx_alloc_t* alloc,
         return MATX_ERR_INTERNAL;
     }
 
-    matx_int64_t rows = 0, cols = 0, layout_value = 0;
-    if (!(stream >> rows >> cols >> layout_value)
-        || (layout_value != MATX_ROW_MAJOR && layout_value != MATX_COL_MAJOR)) {
-        MATX_ERROR("invalid dense matrix header. path:%s", file);
+    std::string first_line;
+    if (!std::getline(stream, first_line)) {
+        MATX_ERROR("empty dense matrix file. path:%s", file);
         return MATX_ERR_INVALID_ARG;
+    }
+    /* MatrixMarket files carry a "%%MatrixMarket ..." banner line; the legacy
+     * print format starts directly with "rows cols layout". */
+    const bool is_mtx = first_line.rfind("%%MatrixMarket", 0) == 0;
+
+    matx_int64_t rows = 0, cols = 0;
+    matx_layout_t layout = MATX_COL_MAJOR;
+    std::string dim_line;
+    if (is_mtx) {
+        if (!std::getline(stream, dim_line)) {
+            MATX_ERROR("invalid dense matrix header. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+        std::istringstream dims(dim_line);
+        if (!(dims >> rows >> cols) || rows <= 0 || cols <= 0) {
+            MATX_ERROR("invalid dense matrix header. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+    } else {
+        matx_int64_t layout_value = 0;
+        std::istringstream dims(first_line);
+        if (!(dims >> rows >> cols >> layout_value)
+            || (layout_value != MATX_ROW_MAJOR && layout_value != MATX_COL_MAJOR)) {
+            MATX_ERROR("invalid dense matrix header. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+        layout = static_cast<matx_layout_t>(layout_value);
     }
     size_t count = 0;
     if (!checked_dense_size(rows, cols, sizeof(T), &count)) {
@@ -107,7 +134,11 @@ static matx_status_t read_dense(const matx_alloc_t* alloc,
             MATX_ERROR("incomplete dense matrix data. path:%s", file);
             return MATX_ERR_INVALID_ARG;
         }
-        const matx_layout_t layout = static_cast<matx_layout_t>(layout_value);
+        /* MatrixMarket array format is already column-major on disk. */
+        if (is_mtx) {
+            return create(alloc, out, MATX_COL_MAJOR, rows, cols, values.data());
+        }
+        /* Legacy print format stores values in row-major order. */
         if (layout == MATX_ROW_MAJOR) {
             return create(alloc, out, layout, rows, cols, values.data());
         }
@@ -144,8 +175,27 @@ static matx_status_t read_sparse(const matx_alloc_t* alloc,
         return MATX_ERR_INTERNAL;
     }
 
+    std::string first_line;
+    if (!std::getline(stream, first_line)) {
+        MATX_ERROR("empty sparse matrix file. path:%s", file);
+        return MATX_ERR_INVALID_ARG;
+    }
+    /* MatrixMarket coordinate files use 1-based indices; the legacy print
+     * format uses 0-based indices with no banner line. */
+    const bool is_mtx = first_line.rfind("%%MatrixMarket", 0) == 0;
+
     matx_int64_t rows = 0, cols = 0, nnz = 0;
-    if (!(stream >> rows >> cols >> nnz) || rows <= 0 || cols <= 0 || nnz <= 0
+    std::string dim_line;
+    if (is_mtx) {
+        if (!std::getline(stream, dim_line)) {
+            MATX_ERROR("invalid sparse matrix header. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+    } else {
+        dim_line = first_line;
+    }
+    std::istringstream dims(dim_line);
+    if (!(dims >> rows >> cols >> nnz) || rows <= 0 || cols <= 0 || nnz <= 0
         || (uint64_t) nnz > SIZE_MAX / sizeof(matx_int64_t)
         || (uint64_t) nnz > SIZE_MAX / sizeof(T)) {
         MATX_ERROR("invalid sparse matrix header. path:%s", file);
@@ -157,11 +207,18 @@ static matx_status_t read_sparse(const matx_alloc_t* alloc,
         std::vector<matx_int64_t> col_indices((size_t) nnz);
         std::vector<T> values((size_t) nnz);
         for (size_t i = 0; i < (size_t) nnz; ++i) {
-            if (!(stream >> row_indices[i] >> col_indices[i])
+            matx_int64_t r = 0, c = 0;
+            if (!(stream >> r >> c)
                 || !reader(stream, values[i])) {
                 MATX_ERROR("incomplete sparse matrix data. path:%s", file);
                 return MATX_ERR_INVALID_ARG;
             }
+            if (is_mtx) {
+                --r;
+                --c;
+            }
+            row_indices[i] = r;
+            col_indices[i] = c;
         }
         return create(alloc, out, rows, cols, nnz, row_indices.data(),
                       col_indices.data(), values.data());
@@ -190,9 +247,34 @@ static matx_status_t read_vector(const matx_alloc_t* alloc,
         return MATX_ERR_INTERNAL;
     }
 
+    std::string first_line;
+    if (!std::getline(stream, first_line)) {
+        MATX_ERROR("empty vector file. path:%s", file);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const bool is_mtx = first_line.rfind("%%MatrixMarket", 0) == 0;
+
     matx_int64_t n = 0;
-    if (!(stream >> n) || n <= 0
-        || (uint64_t) n > SIZE_MAX / sizeof(T)) {
+    std::string dim_line;
+    if (is_mtx) {
+        if (!std::getline(stream, dim_line)) {
+            MATX_ERROR("invalid vector header. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+        std::istringstream dims(dim_line);
+        matx_int64_t cols = 0;
+        if (!(dims >> n >> cols) || n <= 0 || cols != 1) {
+            MATX_ERROR("invalid vector header. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+    } else {
+        std::istringstream dims(first_line);
+        if (!(dims >> n) || n <= 0) {
+            MATX_ERROR("invalid vector header. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+    }
+    if ((uint64_t) n > SIZE_MAX / sizeof(T)) {
         MATX_ERROR("invalid vector header. path:%s", file);
         return MATX_ERR_INVALID_ARG;
     }
@@ -368,8 +450,9 @@ static void set_values(std::vector<matx_complex_d_t>& dst,
                        const std::vector<std::vector<double>>& src,
                        matx_int64_t nrows, matx_int64_t ncols)
 {
+    /* each matrix element occupies two raw double columns (real, imag) */
     for (matx_int64_t r = 0; r < nrows; ++r) {
-        for (matx_int64_t c = 0; c < ncols / 2; ++c) {
+        for (matx_int64_t c = 0; c < ncols; ++c) {
             matx_complex_d_t& val = dst[(size_t) c * (size_t) nrows + (size_t) r];
             val.real = src[(size_t) r][(size_t) c * 2];
             val.imag = src[(size_t) r][(size_t) c * 2 + 1];
@@ -417,14 +500,22 @@ static matx_status_t read_csv_impl(const matx_alloc_t* alloc,
             return MATX_ERR_INVALID_ARG;
         }
         matx_int64_t nrows = (matx_int64_t) all_rows.size();
-        size_t count = (size_t) nrows * (size_t) ncols;
+        /* a complex element spans two raw double columns, so recover the
+         * true matrix column count before sizing the destination. */
+        const matx_int64_t cols_factor = (matx_int64_t)(sizeof(T) / sizeof(double));
+        if (ncols % cols_factor != 0) {
+            MATX_ERROR("inconsistent CSV column count. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+        const matx_int64_t matrix_cols = ncols / cols_factor;
+        size_t count = (size_t) nrows * (size_t) matrix_cols;
         if (count > SIZE_MAX / sizeof(T)) {
             MATX_ERROR("CSV data too large. path:%s", file);
             return MATX_ERR_INVALID_ARG;
         }
         std::vector<T> col_major(count);
-        set_values(col_major, all_rows, nrows, ncols);
-        return create(alloc, nrows, ncols, col_major.data());
+        set_values(col_major, all_rows, nrows, matrix_cols);
+        return create(alloc, nrows, matrix_cols, col_major.data());
     } catch (const std::bad_alloc&) {
         MATX_ERROR("out of memory reading CSV. path:%s", file);
         return MATX_ERR_OUT_OF_MEMORY;
@@ -459,4 +550,90 @@ matx_status_t matx_read_csv_z_i8(const matx_alloc_t* alloc,
         [mtx](const matx_alloc_t* a, matx_int64_t rows, matx_int64_t cols, matx_complex_d_t* data) {
             return matx_dense_z_i8_create(a, mtx, MATX_COL_MAJOR, rows, cols, data);
         });
+}
+
+/* ---- CSV vector read ---- */
+
+matx_status_t matx_read_csv_vec_d_i8(const matx_alloc_t* alloc,
+                                      matx_vec_d_i8_t* vec,
+                                      const char* file)
+{
+    if (!alloc || !alloc->malloc_fn || !alloc->free_fn || !vec || !file) {
+        return MATX_ERR_INVALID_ARG;
+    }
+    std::ifstream stream(file);
+    if (!stream.is_open()) {
+        MATX_ERROR("open file error. path:%s", file);
+        return MATX_ERR_INTERNAL;
+    }
+    try {
+        std::vector<double> values;
+        std::string line;
+        while (std::getline(stream, line)) {
+            if (line.empty())
+                continue;
+            char* end = nullptr;
+            double v = std::strtod(line.c_str(), &end);
+            if (end == line.c_str()) {
+                MATX_ERROR("invalid CSV data. path:%s", file);
+                return MATX_ERR_INVALID_ARG;
+            }
+            values.push_back(v);
+        }
+        if (values.empty()) {
+            MATX_ERROR("empty CSV file. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+        return matx_vec_d_i8_create(alloc, vec, values.data(),
+                                     (matx_int64_t) values.size());
+    } catch (const std::bad_alloc&) {
+        MATX_ERROR("out of memory reading CSV vector. path:%s", file);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+}
+
+matx_status_t matx_read_csv_vec_z_i8(const matx_alloc_t* alloc,
+                                      matx_vec_z_i8_t* vec,
+                                      const char* file)
+{
+    if (!alloc || !alloc->malloc_fn || !alloc->free_fn || !vec || !file) {
+        return MATX_ERR_INVALID_ARG;
+    }
+    std::ifstream stream(file);
+    if (!stream.is_open()) {
+        MATX_ERROR("open file error. path:%s", file);
+        return MATX_ERR_INTERNAL;
+    }
+    try {
+        std::vector<matx_complex_d_t> values;
+        std::string line;
+        while (std::getline(stream, line)) {
+            if (line.empty())
+                continue;
+            matx_complex_d_t v = {0.0, 0.0};
+            char* end = nullptr;
+            v.real = std::strtod(line.c_str(), &end);
+            if (end == line.c_str()) {
+                MATX_ERROR("invalid CSV data. path:%s", file);
+                return MATX_ERR_INVALID_ARG;
+            }
+            /* skip comma and optional whitespace */
+            while (*end == ',' || *end == ' ' || *end == '\t')
+                ++end;
+            if (*end != '\0' && *end != '\r' && *end != '\n') {
+                char* imag_end = nullptr;
+                v.imag = std::strtod(end, &imag_end);
+            }
+            values.push_back(v);
+        }
+        if (values.empty()) {
+            MATX_ERROR("empty CSV file. path:%s", file);
+            return MATX_ERR_INVALID_ARG;
+        }
+        return matx_vec_z_i8_create(alloc, vec, values.data(),
+                                     (matx_int64_t) values.size());
+    } catch (const std::bad_alloc&) {
+        MATX_ERROR("out of memory reading CSV vector. path:%s", file);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
 }

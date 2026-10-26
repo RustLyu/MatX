@@ -65,6 +65,20 @@ MATX_IO_API void matx_write_csv_d_i8(const matx_dense_d_i8_t mtx, const char* fi
  */
 MATX_IO_API void matx_write_csv_z_i8(const matx_dense_z_i8_t mtx, const char* file);
 
+/**
+ * @brief Write a real vector to a CSV file (one value per line)
+ * @param vec Real vector
+ * @param file Output file path
+ */
+MATX_IO_API void matx_write_csv_vec_d_i8(const matx_vec_d_i8_t vec, const char* file);
+
+/**
+ * @brief Write a complex vector to a CSV file (real,imag per line)
+ * @param vec Complex vector
+ * @param file Output file path
+ */
+MATX_IO_API void matx_write_csv_vec_z_i8(const matx_vec_z_i8_t vec, const char* file);
+
 #ifdef __cplusplus
 }
 #endif

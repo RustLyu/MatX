@@ -51,6 +51,28 @@ MATX_IO_API matx_status_t matx_read_csv_z_i8(const matx_alloc_t* alloc,
                                         matx_dense_z_i8_t* mtx,
                                         const char* file);
 
+/**
+ * @brief Read a real vector from a CSV file (one value per row)
+ * @param alloc Allocator
+ * @param vec Output real vector
+ * @param file Input CSV file path
+ * @return matx_status_t
+ */
+MATX_IO_API matx_status_t matx_read_csv_vec_d_i8(const matx_alloc_t* alloc,
+                                          matx_vec_d_i8_t* vec,
+                                          const char* file);
+
+/**
+ * @brief Read a complex vector from a CSV file (real,imag per row)
+ * @param alloc Allocator
+ * @param vec Output complex vector
+ * @param file Input CSV file path
+ * @return matx_status_t
+ */
+MATX_IO_API matx_status_t matx_read_csv_vec_z_i8(const matx_alloc_t* alloc,
+                                          matx_vec_z_i8_t* vec,
+                                          const char* file);
+
 #ifdef __cplusplus
 }
 #endif
