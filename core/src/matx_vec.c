@@ -1319,3 +1319,67 @@ matx_status_t matx_vec_d_i8_logspace(const matx_alloc_t* alloc,
         (*out)->data[i] = pow(10.0, (*out)->data[i]);
     return MATX_OK;
 }
+
+/* ---- Vector element-wise comparisons ---- */
+
+#define MATX_DEF_VEC_COMPARE(NAME, OP)                                       \
+matx_status_t matx_vec_d_i8_##NAME(const matx_alloc_t* alloc,                \
+                                   const matx_vec_d_i8_t a,                  \
+                                   const matx_vec_d_i8_t b,                  \
+                                   matx_vec_d_i8_t* out)                     \
+{                                                                            \
+    if (!alloc || !a || !b || !out) {                                        \
+        MATX_ERROR("%s: invalid argument", __func__);                        \
+        return MATX_ERR_INVALID_ARG;                                         \
+    }                                                                        \
+    if (a->n != b->n) {                                                      \
+        MATX_ERROR("%s: dimension mismatch", __func__);                     \
+        return MATX_ERR_INVALID_ARG;                                         \
+    }                                                                        \
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, a->n);         \
+    if (st != MATX_OK)                                                       \
+        return st;                                                           \
+    for (matx_int64_t i = 0; i < a->n; ++i)                                  \
+        (*out)->data[i] = (a->data[i * a->stride] OP                        \
+                           b->data[i * b->stride]) ? 1.0 : 0.0;             \
+    return MATX_OK;                                                          \
+}                                                                            \
+                                                                             \
+matx_status_t matx_vec_z_i8_##NAME(const matx_alloc_t* alloc,                \
+                                   const matx_vec_z_i8_t a,                  \
+                                   const matx_vec_z_i8_t b,                  \
+                                   matx_vec_d_i8_t* out)                     \
+{                                                                            \
+    if (!alloc || !a || !b || !out) {                                        \
+        MATX_ERROR("%s: invalid argument", __func__);                        \
+        return MATX_ERR_INVALID_ARG;                                         \
+    }                                                                        \
+    if (a->n != b->n) {                                                      \
+        MATX_ERROR("%s: dimension mismatch", __func__);                     \
+        return MATX_ERR_INVALID_ARG;                                         \
+    }                                                                        \
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, a->n);         \
+    if (st != MATX_OK)                                                       \
+        return st;                                                           \
+    for (matx_int64_t i = 0; i < a->n; ++i) {                                \
+        matx_double mag_a = a->data[i * a->stride].real                      \
+                          * a->data[i * a->stride].real                      \
+                          + a->data[i * a->stride].imag                      \
+                          * a->data[i * a->stride].imag;                     \
+        matx_double mag_b = b->data[i * b->stride].real                      \
+                          * b->data[i * b->stride].real                      \
+                          + b->data[i * b->stride].imag                      \
+                          * b->data[i * b->stride].imag;                     \
+        (*out)->data[i] = (mag_a OP mag_b) ? 1.0 : 0.0;                     \
+    }                                                                        \
+    return MATX_OK;                                                          \
+}
+
+MATX_DEF_VEC_COMPARE(eq, ==)
+MATX_DEF_VEC_COMPARE(ne, !=)
+MATX_DEF_VEC_COMPARE(lt, <)
+MATX_DEF_VEC_COMPARE(le, <=)
+MATX_DEF_VEC_COMPARE(gt, >)
+MATX_DEF_VEC_COMPARE(ge, >=)
+
+#undef MATX_DEF_VEC_COMPARE

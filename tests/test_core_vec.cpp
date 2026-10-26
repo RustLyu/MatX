@@ -204,6 +204,7 @@ TEST(core_vec, linspace_logspace)
     EXPECT_NEAR(out->data[3], 0.75, 1e-12);
     EXPECT_NEAR(out->data[4], 1.0, 1e-12);
     matx_vec_d_i8_destroy(&a, out);
+    out = NULL;
 
     ASSERT_EQ(matx_vec_d_i8_logspace(&a, 0.0, 2.0, 3, &out), MATX_OK);
     EXPECT_EQ(out->n, 3);

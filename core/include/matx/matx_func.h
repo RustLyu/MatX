@@ -422,7 +422,6 @@ MATX_CORE_API matx_status_t matx_dense_z_i8_get_diag(const matx_alloc_t* alloc,
 
 // ---- Submatrix block copy ----
 
-
 /**
  * @brief Extract a contiguous block from a real dense matrix (deep copy)
  * @formula out[i][j] := A[rs + i][cs + j],  i = 0,...,(re-rs)-1; j = 0,...,(ce-cs)-1
@@ -465,6 +464,196 @@ MATX_CORE_API matx_status_t matx_dense_z_i8_set_block(
     matx_dense_z_i8_t B,
     matx_int64_t dr, matx_int64_t dc);
 
+// ---- Submatrix zero-copy views ----
+
+/**
+ * @brief Create a zero-copy view into a contiguous sub-matrix of a real dense matrix
+ * @formula out[i][j] := A[rs + i][cs + j],  i = 0,...,(re-rs)-1; j = 0,...,(ce-cs)-1
+ *          The view shares A's data. A must outlive out. Caller must destroy out.
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_slice(const matx_alloc_t* alloc,
+                                               const matx_dense_d_i8_t A,
+                                               matx_int64_t rs, matx_int64_t re,
+                                               matx_int64_t cs, matx_int64_t ce,
+                                               matx_dense_d_i8_t* out);
+
+/**
+ * @brief Create a zero-copy view into a contiguous sub-matrix of a complex dense matrix
+ * @formula out[i][j] := A[rs + i][cs + j],  i = 0,...,(re-rs)-1; j = 0,...,(ce-cs)-1
+ *          The view shares A's data. A must outlive out. Caller must destroy out.
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_slice(const matx_alloc_t* alloc,
+                                               const matx_dense_z_i8_t A,
+                                               matx_int64_t rs, matx_int64_t re,
+                                               matx_int64_t cs, matx_int64_t ce,
+                                               matx_dense_z_i8_t* out);
+
+/**
+ * @brief Create a zero-copy view into a sub-vector of a real vector
+ * @formula out[i] := v[start + i],  i = 0,...,n-1
+ *          The view shares v's data. v must outlive out. Caller must destroy out.
+ */
+MATX_CORE_API matx_status_t matx_vec_d_i8_slice(const matx_alloc_t* alloc,
+                                             const matx_vec_d_i8_t v,
+                                             matx_int64_t start,
+                                             matx_int64_t n,
+                                             matx_vec_d_i8_t* out);
+
+/**
+ * @brief Create a zero-copy view into a sub-vector of a complex vector
+ * @formula out[i] := v[start + i],  i = 0,...,n-1
+ *          The view shares v's data. v must outlive out. Caller must destroy out.
+ */
+MATX_CORE_API matx_status_t matx_vec_z_i8_slice(const matx_alloc_t* alloc,
+                                             const matx_vec_z_i8_t v,
+                                             matx_int64_t start,
+                                             matx_int64_t n,
+                                             matx_vec_z_i8_t* out);
+
+// ---- Row / column extraction (deep copy) ----
+
+/**
+ * @brief Extract a row from a real dense matrix as a vector (deep copy)
+ * @formula out[j] := A[row][j],  j = 0,...,ncols-1
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_get_row(const matx_alloc_t* alloc,
+                                                 const matx_dense_d_i8_t A,
+                                                 matx_int64_t row,
+                                                 matx_vec_d_i8_t* out);
+
+/**
+ * @brief Extract a row from a complex dense matrix as a vector (deep copy)
+ * @formula out[j] := A[row][j],  j = 0,...,ncols-1
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_get_row(const matx_alloc_t* alloc,
+                                                 const matx_dense_z_i8_t A,
+                                                 matx_int64_t row,
+                                                 matx_vec_z_i8_t* out);
+
+/**
+ * @brief Extract a column from a real dense matrix as a vector (deep copy)
+ * @formula out[i] := A[i][col],  i = 0,...,nrows-1
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_get_col(const matx_alloc_t* alloc,
+                                                 const matx_dense_d_i8_t A,
+                                                 matx_int64_t col,
+                                                 matx_vec_d_i8_t* out);
+
+/**
+ * @brief Extract a column from a complex dense matrix as a vector (deep copy)
+ * @formula out[i] := A[i][col],  i = 0,...,nrows-1
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_get_col(const matx_alloc_t* alloc,
+                                                 const matx_dense_z_i8_t A,
+                                                 matx_int64_t col,
+                                                 matx_vec_z_i8_t* out);
+
+// ---- Row / column assignment (deep copy from vector) ----
+
+/**
+ * @brief Set a row of a real dense matrix from a vector
+ * @formula A[row][j] := v[j],  j = 0,...,ncols-1
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_set_row(matx_dense_d_i8_t A,
+                                                 matx_int64_t row,
+                                                 const matx_vec_d_i8_t v);
+
+/**
+ * @brief Set a row of a complex dense matrix from a vector
+ * @formula A[row][j] := v[j],  j = 0,...,ncols-1
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_set_row(matx_dense_z_i8_t A,
+                                                 matx_int64_t row,
+                                                 const matx_vec_z_i8_t v);
+
+/**
+ * @brief Set a column of a real dense matrix from a vector
+ * @formula A[i][col] := v[i],  i = 0,...,nrows-1
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_set_col(matx_dense_d_i8_t A,
+                                                 matx_int64_t col,
+                                                 const matx_vec_d_i8_t v);
+
+/**
+ * @brief Set a column of a complex dense matrix from a vector
+ * @formula A[i][col] := v[i],  i = 0,...,nrows-1
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_set_col(matx_dense_z_i8_t A,
+                                                 matx_int64_t col,
+                                                 const matx_vec_z_i8_t v);
+
+// ---- Multiple row / column extraction (deep copy) ----
+
+/**
+ * @brief Extract a range of rows from a real dense matrix (deep copy)
+ * @formula out[i][j] := A[rs + i][j],  i = 0,...,(re-rs)-1; j = 0,...,ncols-1
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_get_rows(const matx_alloc_t* alloc,
+                                                  const matx_dense_d_i8_t A,
+                                                  matx_int64_t rs, matx_int64_t re,
+                                                  matx_dense_d_i8_t* out);
+
+/**
+ * @brief Extract a range of rows from a complex dense matrix (deep copy)
+ * @formula out[i][j] := A[rs + i][j],  i = 0,...,(re-rs)-1; j = 0,...,ncols-1
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_get_rows(const matx_alloc_t* alloc,
+                                                  const matx_dense_z_i8_t A,
+                                                  matx_int64_t rs, matx_int64_t re,
+                                                  matx_dense_z_i8_t* out);
+
+/**
+ * @brief Extract a range of columns from a real dense matrix (deep copy)
+ * @formula out[i][j] := A[i][cs + j],  i = 0,...,nrows-1; j = 0,...,(ce-cs)-1
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_get_cols(const matx_alloc_t* alloc,
+                                                  const matx_dense_d_i8_t A,
+                                                  matx_int64_t cs, matx_int64_t ce,
+                                                  matx_dense_d_i8_t* out);
+
+/**
+ * @brief Extract a range of columns from a complex dense matrix (deep copy)
+ * @formula out[i][j] := A[i][cs + j],  i = 0,...,nrows-1; j = 0,...,(ce-cs)-1
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_get_cols(const matx_alloc_t* alloc,
+                                                  const matx_dense_z_i8_t A,
+                                                  matx_int64_t cs, matx_int64_t ce,
+                                                  matx_dense_z_i8_t* out);
+
+// ---- Triangular extraction (deep copy) ----
+
+/**
+ * @brief Extract the lower triangle of a real dense matrix (deep copy, k=0)
+ * @formula out[i][j] := A[i][j] if i >= j else 0
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_tril(const matx_alloc_t* alloc,
+                                              const matx_dense_d_i8_t A,
+                                              matx_dense_d_i8_t* out);
+
+/**
+ * @brief Extract the lower triangle of a complex dense matrix (deep copy, k=0)
+ * @formula out[i][j] := A[i][j] if i >= j else 0
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_tril(const matx_alloc_t* alloc,
+                                              const matx_dense_z_i8_t A,
+                                              matx_dense_z_i8_t* out);
+
+/**
+ * @brief Extract the upper triangle of a real dense matrix (deep copy, k=0)
+ * @formula out[i][j] := A[i][j] if i <= j else 0
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_triu(const matx_alloc_t* alloc,
+                                              const matx_dense_d_i8_t A,
+                                              matx_dense_d_i8_t* out);
+
+/**
+ * @brief Extract the upper triangle of a complex dense matrix (deep copy, k=0)
+ * @formula out[i][j] := A[i][j] if i <= j else 0
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_triu(const matx_alloc_t* alloc,
+                                              const matx_dense_z_i8_t A,
+                                              matx_dense_z_i8_t* out);
+
 // ---- Cumulative sum ----
 
 MATX_CORE_API matx_status_t matx_vec_d_i8_cumsum(const matx_alloc_t* alloc,
@@ -485,6 +674,65 @@ MATX_CORE_API matx_status_t matx_vec_d_i8_rand_normal(matx_vec_d_i8_t v,
                                                  matx_double mean,
                                                  matx_double stddev,
                                                  unsigned int seed);
+
+/**
+ * @brief Fill a real dense matrix with normally distributed random values
+ * @formula m[i][j] ~ N(mean, stddev^2)
+ */
+MATX_CORE_API matx_status_t matx_dense_d_i8_rand_normal(matx_dense_d_i8_t m,
+                                                    matx_double mean,
+                                                    matx_double stddev,
+                                                    unsigned int seed);
+
+/**
+ * @brief Fill a complex dense matrix with normally distributed random values
+ * @formula m[i][j].real ~ N(mean_re, stddev^2), m[i][j].imag ~ N(mean_im, stddev^2)
+ */
+MATX_CORE_API matx_status_t matx_dense_z_i8_rand_normal(matx_dense_z_i8_t m,
+                                                    matx_double mean_re,
+                                                    matx_double mean_im,
+                                                    matx_double stddev,
+                                                    unsigned int seed);
+
+// ---- Element-wise comparisons ----
+
+#define MATX_DECL_VEC_COMPARE(name) \
+    MATX_CORE_API matx_status_t matx_vec_d_i8_##name(const matx_alloc_t* alloc, \
+                                                const matx_vec_d_i8_t a, \
+                                                const matx_vec_d_i8_t b, \
+                                                matx_vec_d_i8_t* out); \
+    MATX_CORE_API matx_status_t matx_vec_z_i8_##name(const matx_alloc_t* alloc, \
+                                                const matx_vec_z_i8_t a, \
+                                                const matx_vec_z_i8_t b, \
+                                                matx_vec_d_i8_t* out)
+
+MATX_DECL_VEC_COMPARE(eq);
+MATX_DECL_VEC_COMPARE(ne);
+MATX_DECL_VEC_COMPARE(lt);
+MATX_DECL_VEC_COMPARE(le);
+MATX_DECL_VEC_COMPARE(gt);
+MATX_DECL_VEC_COMPARE(ge);
+
+#undef MATX_DECL_VEC_COMPARE
+
+#define MATX_DECL_DENSE_COMPARE(name) \
+    MATX_CORE_API matx_status_t matx_dense_d_i8_##name(const matx_alloc_t* alloc, \
+                                                  const matx_dense_d_i8_t A, \
+                                                  const matx_dense_d_i8_t B, \
+                                                  matx_dense_d_i8_t* out); \
+    MATX_CORE_API matx_status_t matx_dense_z_i8_##name(const matx_alloc_t* alloc, \
+                                                  const matx_dense_z_i8_t A, \
+                                                  const matx_dense_z_i8_t B, \
+                                                  matx_dense_d_i8_t* out)
+
+MATX_DECL_DENSE_COMPARE(eq);
+MATX_DECL_DENSE_COMPARE(ne);
+MATX_DECL_DENSE_COMPARE(lt);
+MATX_DECL_DENSE_COMPARE(le);
+MATX_DECL_DENSE_COMPARE(gt);
+MATX_DECL_DENSE_COMPARE(ge);
+
+#undef MATX_DECL_DENSE_COMPARE
 
 // ---- Element-wise min/max/clip ----
 

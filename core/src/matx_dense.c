@@ -459,6 +459,572 @@ MATX_DEF_SET_BLOCK(z_i8, matx_dense_z_i8_opaque_t, matx_complex_d_t)
 #undef MATX_DEF_GET_BLOCK
 #undef MATX_DEF_SET_BLOCK
 
+/* ---- Zero-copy submatrix views ---- */
+
+matx_status_t matx_dense_d_i8_slice(const matx_alloc_t* alloc,
+                                    const matx_dense_d_i8_t A,
+                                    matx_int64_t rs, matx_int64_t re,
+                                    matx_int64_t cs, matx_int64_t ce,
+                                    matx_dense_d_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || rs < 0 || re <= rs || cs < 0 || ce <= cs
+        || re > A->nrows || ce > A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const matx_int64_t nrows_out = re - rs;
+    const matx_int64_t ncols_out = ce - cs;
+    matx_dense_d_i8_opaque_t* view = matx_malloc(alloc, sizeof(*view));
+    if (!view) {
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    memset(view, 0, sizeof(*view));
+    view->nrows = nrows_out;
+    view->ncols = ncols_out;
+    view->stride = A->stride;
+    view->layout = A->layout;
+    view->flags = 0u;
+    view->alloc = *alloc;
+    if (A->layout == MATX_COL_MAJOR)
+        view->data = A->data + rs + cs * A->stride;
+    else
+        view->data = A->data + rs * A->stride + cs;
+    if (*out != NULL)
+        matx_dense_d_i8_destroy(alloc, *out);
+    *out = view;
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_slice(const matx_alloc_t* alloc,
+                                    const matx_dense_z_i8_t A,
+                                    matx_int64_t rs, matx_int64_t re,
+                                    matx_int64_t cs, matx_int64_t ce,
+                                    matx_dense_z_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || rs < 0 || re <= rs || cs < 0 || ce <= cs
+        || re > A->nrows || ce > A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const matx_int64_t nrows_out = re - rs;
+    const matx_int64_t ncols_out = ce - cs;
+    matx_dense_z_i8_opaque_t* view = matx_malloc(alloc, sizeof(*view));
+    if (!view) {
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    memset(view, 0, sizeof(*view));
+    view->nrows = nrows_out;
+    view->ncols = ncols_out;
+    view->stride = A->stride;
+    view->layout = A->layout;
+    view->flags = 0u;
+    view->alloc = *alloc;
+    if (A->layout == MATX_COL_MAJOR)
+        view->data = A->data + rs + cs * A->stride;
+    else
+        view->data = A->data + rs * A->stride + cs;
+    if (*out != NULL)
+        matx_dense_z_i8_destroy(alloc, *out);
+    *out = view;
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_d_i8_slice(const matx_alloc_t* alloc,
+                                  const matx_vec_d_i8_t v,
+                                  matx_int64_t start,
+                                  matx_int64_t n,
+                                  matx_vec_d_i8_t* out)
+{
+    if (!alloc || !v || !v->data || !out
+        || start < 0 || n <= 0 || start + n > v->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_vec_d_i8_opaque_t* view = matx_malloc(alloc, sizeof(*view));
+    if (!view) {
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    memset(view, 0, sizeof(*view));
+    view->n = n;
+    view->stride = v->stride;
+    view->data = v->data + start * v->stride;
+    view->flags = 0u;
+    view->alloc = *alloc;
+    if (*out != NULL)
+        matx_vec_d_i8_destroy(alloc, *out);
+    *out = view;
+    return MATX_OK;
+}
+
+matx_status_t matx_vec_z_i8_slice(const matx_alloc_t* alloc,
+                                  const matx_vec_z_i8_t v,
+                                  matx_int64_t start,
+                                  matx_int64_t n,
+                                  matx_vec_z_i8_t* out)
+{
+    if (!alloc || !v || !v->data || !out
+        || start < 0 || n <= 0 || start + n > v->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_vec_z_i8_opaque_t* view = matx_malloc(alloc, sizeof(*view));
+    if (!view) {
+        MATX_ERROR("%s: out of memory", __func__);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    memset(view, 0, sizeof(*view));
+    view->n = n;
+    view->stride = v->stride;
+    view->data = v->data + start * v->stride;
+    view->flags = 0u;
+    view->alloc = *alloc;
+    if (*out != NULL)
+        matx_vec_z_i8_destroy(alloc, *out);
+    *out = view;
+    return MATX_OK;
+}
+
+/* ---- Row / column extraction (deep copy) ---- */
+
+matx_status_t matx_dense_d_i8_get_row(const matx_alloc_t* alloc,
+                                      const matx_dense_d_i8_t A,
+                                      matx_int64_t row,
+                                      matx_vec_d_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || row < 0 || row >= A->nrows) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, A->ncols);
+    if (st != MATX_OK)
+        return st;
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            (*out)->data[j] = A->data[row + j * A->stride];
+    } else {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            (*out)->data[j] = A->data[row * A->stride + j];
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_get_row(const matx_alloc_t* alloc,
+                                      const matx_dense_z_i8_t A,
+                                      matx_int64_t row,
+                                      matx_vec_z_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || row < 0 || row >= A->nrows) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, A->ncols);
+    if (st != MATX_OK)
+        return st;
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            (*out)->data[j] = A->data[row + j * A->stride];
+    } else {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            (*out)->data[j] = A->data[row * A->stride + j];
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_d_i8_get_col(const matx_alloc_t* alloc,
+                                      const matx_dense_d_i8_t A,
+                                      matx_int64_t col,
+                                      matx_vec_d_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || col < 0 || col >= A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_d_i8_create(alloc, out, NULL, A->nrows);
+    if (st != MATX_OK)
+        return st;
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            (*out)->data[i] = A->data[i + col * A->stride];
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            (*out)->data[i] = A->data[i * A->stride + col];
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_get_col(const matx_alloc_t* alloc,
+                                      const matx_dense_z_i8_t A,
+                                      matx_int64_t col,
+                                      matx_vec_z_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || col < 0 || col >= A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_vec_z_i8_create(alloc, out, NULL, A->nrows);
+    if (st != MATX_OK)
+        return st;
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            (*out)->data[i] = A->data[i + col * A->stride];
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            (*out)->data[i] = A->data[i * A->stride + col];
+    }
+    return MATX_OK;
+}
+
+/* ---- Row / column assignment (deep copy from vector) ---- */
+
+matx_status_t matx_dense_d_i8_set_row(matx_dense_d_i8_t A,
+                                      matx_int64_t row,
+                                      const matx_vec_d_i8_t v)
+{
+    if (!A || !A->data || !v || !v->data
+        || row < 0 || row >= A->nrows
+        || v->n != A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            A->data[row + j * A->stride] = v->data[j * v->stride];
+    } else {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            A->data[row * A->stride + j] = v->data[j * v->stride];
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_set_row(matx_dense_z_i8_t A,
+                                      matx_int64_t row,
+                                      const matx_vec_z_i8_t v)
+{
+    if (!A || !A->data || !v || !v->data
+        || row < 0 || row >= A->nrows
+        || v->n != A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            A->data[row + j * A->stride] = v->data[j * v->stride];
+    } else {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            A->data[row * A->stride + j] = v->data[j * v->stride];
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_d_i8_set_col(matx_dense_d_i8_t A,
+                                      matx_int64_t col,
+                                      const matx_vec_d_i8_t v)
+{
+    if (!A || !A->data || !v || !v->data
+        || col < 0 || col >= A->ncols
+        || v->n != A->nrows) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            A->data[i + col * A->stride] = v->data[i * v->stride];
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            A->data[i * A->stride + col] = v->data[i * v->stride];
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_set_col(matx_dense_z_i8_t A,
+                                      matx_int64_t col,
+                                      const matx_vec_z_i8_t v)
+{
+    if (!A || !A->data || !v || !v->data
+        || col < 0 || col >= A->ncols
+        || v->n != A->nrows) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            A->data[i + col * A->stride] = v->data[i * v->stride];
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            A->data[i * A->stride + col] = v->data[i * v->stride];
+    }
+    return MATX_OK;
+}
+
+/* ---- Multiple row / column extraction (deep copy) ---- */
+
+matx_status_t matx_dense_d_i8_get_rows(const matx_alloc_t* alloc,
+                                       const matx_dense_d_i8_t A,
+                                       matx_int64_t rs, matx_int64_t re,
+                                       matx_dense_d_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || rs < 0 || re <= rs || re > A->nrows) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const matx_int64_t nrows_out = re - rs;
+    matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout,
+                                               nrows_out, A->ncols, NULL);
+    if (st != MATX_OK)
+        return st;
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            for (matx_int64_t i = 0; i < nrows_out; ++i) {
+                const matx_int64_t src = (rs + i) + j * A->stride;
+                const matx_int64_t dst = i + j * (*out)->stride;
+                (*out)->data[dst] = A->data[src];
+            }
+    } else {
+        for (matx_int64_t i = 0; i < nrows_out; ++i)
+            for (matx_int64_t j = 0; j < A->ncols; ++j) {
+                const matx_int64_t src = (rs + i) * A->stride + j;
+                const matx_int64_t dst = i * (*out)->stride + j;
+                (*out)->data[dst] = A->data[src];
+            }
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_get_rows(const matx_alloc_t* alloc,
+                                       const matx_dense_z_i8_t A,
+                                       matx_int64_t rs, matx_int64_t re,
+                                       matx_dense_z_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || rs < 0 || re <= rs || re > A->nrows) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const matx_int64_t nrows_out = re - rs;
+    matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout,
+                                               nrows_out, A->ncols, NULL);
+    if (st != MATX_OK)
+        return st;
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            for (matx_int64_t i = 0; i < nrows_out; ++i) {
+                const matx_int64_t src = (rs + i) + j * A->stride;
+                const matx_int64_t dst = i + j * (*out)->stride;
+                (*out)->data[dst] = A->data[src];
+            }
+    } else {
+        for (matx_int64_t i = 0; i < nrows_out; ++i)
+            for (matx_int64_t j = 0; j < A->ncols; ++j) {
+                const matx_int64_t src = (rs + i) * A->stride + j;
+                const matx_int64_t dst = i * (*out)->stride + j;
+                (*out)->data[dst] = A->data[src];
+            }
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_d_i8_get_cols(const matx_alloc_t* alloc,
+                                       const matx_dense_d_i8_t A,
+                                       matx_int64_t cs, matx_int64_t ce,
+                                       matx_dense_d_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || cs < 0 || ce <= cs || ce > A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const matx_int64_t ncols_out = ce - cs;
+    matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout,
+                                               A->nrows, ncols_out, NULL);
+    if (st != MATX_OK)
+        return st;
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < ncols_out; ++j)
+            for (matx_int64_t i = 0; i < A->nrows; ++i) {
+                const matx_int64_t src = i + (cs + j) * A->stride;
+                const matx_int64_t dst = i + j * (*out)->stride;
+                (*out)->data[dst] = A->data[src];
+            }
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            for (matx_int64_t j = 0; j < ncols_out; ++j) {
+                const matx_int64_t src = i * A->stride + cs + j;
+                const matx_int64_t dst = i * (*out)->stride + j;
+                (*out)->data[dst] = A->data[src];
+            }
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_get_cols(const matx_alloc_t* alloc,
+                                       const matx_dense_z_i8_t A,
+                                       matx_int64_t cs, matx_int64_t ce,
+                                       matx_dense_z_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out
+        || cs < 0 || ce <= cs || ce > A->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const matx_int64_t ncols_out = ce - cs;
+    matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout,
+                                               A->nrows, ncols_out, NULL);
+    if (st != MATX_OK)
+        return st;
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < ncols_out; ++j)
+            for (matx_int64_t i = 0; i < A->nrows; ++i) {
+                const matx_int64_t src = i + (cs + j) * A->stride;
+                const matx_int64_t dst = i + j * (*out)->stride;
+                (*out)->data[dst] = A->data[src];
+            }
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            for (matx_int64_t j = 0; j < ncols_out; ++j) {
+                const matx_int64_t src = i * A->stride + cs + j;
+                const matx_int64_t dst = i * (*out)->stride + j;
+                (*out)->data[dst] = A->data[src];
+            }
+    }
+    return MATX_OK;
+}
+
+/* ---- Triangular extraction (deep copy) ---- */
+
+matx_status_t matx_dense_d_i8_tril(const matx_alloc_t* alloc,
+                                   const matx_dense_d_i8_t A,
+                                   matx_dense_d_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout,
+                                               A->nrows, A->ncols, NULL);
+    if (st != MATX_OK)
+        return st;
+    matx_dense_d_i8_zeros(*out);
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            for (matx_int64_t i = j; i < A->nrows; ++i) {
+                const matx_int64_t src = i + j * A->stride;
+                const matx_int64_t dst = i + j * (*out)->stride;
+                (*out)->data[dst] = A->data[src];
+            }
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            for (matx_int64_t j = 0; j <= i && j < A->ncols; ++j) {
+                const matx_int64_t src = i * A->stride + j;
+                const matx_int64_t dst = i * (*out)->stride + j;
+                (*out)->data[dst] = A->data[src];
+            }
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_tril(const matx_alloc_t* alloc,
+                                   const matx_dense_z_i8_t A,
+                                   matx_dense_z_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout,
+                                               A->nrows, A->ncols, NULL);
+    if (st != MATX_OK)
+        return st;
+    matx_dense_z_i8_zeros(*out);
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            for (matx_int64_t i = j; i < A->nrows; ++i) {
+                const matx_int64_t src = i + j * A->stride;
+                const matx_int64_t dst = i + j * (*out)->stride;
+                (*out)->data[dst] = A->data[src];
+            }
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            for (matx_int64_t j = 0; j <= i && j < A->ncols; ++j) {
+                const matx_int64_t src = i * A->stride + j;
+                const matx_int64_t dst = i * (*out)->stride + j;
+                (*out)->data[dst] = A->data[src];
+            }
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_d_i8_triu(const matx_alloc_t* alloc,
+                                   const matx_dense_d_i8_t A,
+                                   matx_dense_d_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout,
+                                               A->nrows, A->ncols, NULL);
+    if (st != MATX_OK)
+        return st;
+    matx_dense_d_i8_zeros(*out);
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            for (matx_int64_t i = 0; i <= j && i < A->nrows; ++i) {
+                const matx_int64_t src = i + j * A->stride;
+                const matx_int64_t dst = i + j * (*out)->stride;
+                (*out)->data[dst] = A->data[src];
+            }
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            for (matx_int64_t j = i; j < A->ncols; ++j) {
+                const matx_int64_t src = i * A->stride + j;
+                const matx_int64_t dst = i * (*out)->stride + j;
+                (*out)->data[dst] = A->data[src];
+            }
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_triu(const matx_alloc_t* alloc,
+                                   const matx_dense_z_i8_t A,
+                                   matx_dense_z_i8_t* out)
+{
+    if (!alloc || !A || !A->data || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_status_t st = matx_dense_z_i8_create(alloc, out, A->layout,
+                                               A->nrows, A->ncols, NULL);
+    if (st != MATX_OK)
+        return st;
+    matx_dense_z_i8_zeros(*out);
+    if (A->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < A->ncols; ++j)
+            for (matx_int64_t i = 0; i <= j && i < A->nrows; ++i) {
+                const matx_int64_t src = i + j * A->stride;
+                const matx_int64_t dst = i + j * (*out)->stride;
+                (*out)->data[dst] = A->data[src];
+            }
+    } else {
+        for (matx_int64_t i = 0; i < A->nrows; ++i)
+            for (matx_int64_t j = i; j < A->ncols; ++j) {
+                const matx_int64_t src = i * A->stride + j;
+                const matx_int64_t dst = i * (*out)->stride + j;
+                (*out)->data[dst] = A->data[src];
+            }
+    }
+    return MATX_OK;
+}
+
 /* ---- Single-type: ones (real only) ---- */
 
 matx_status_t matx_dense_d_i8_ones(matx_dense_d_i8_t m)
@@ -1498,6 +2064,113 @@ matx_status_t matx_vec_d_i8_rand_normal(matx_vec_d_i8_t v,
     return MATX_OK;
 }
 
+matx_status_t matx_dense_d_i8_rand_normal(matx_dense_d_i8_t m,
+                                           matx_double mean,
+                                           matx_double stddev,
+                                           unsigned int seed)
+{
+    if (!m || !m->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_rand_seed(seed);
+    const matx_int64_t minor
+        = (m->layout == MATX_COL_MAJOR) ? m->nrows : m->ncols;
+    if (m->stride == minor) {
+        const matx_int64_t count = m->nrows * m->ncols;
+        for (matx_int64_t i = 0; i < count; i += 2) {
+            matx_double u1 = matx_rand_uniform_double(0.0, 1.0);
+            matx_double u2 = matx_rand_uniform_double(0.0, 1.0);
+            matx_double z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+            m->data[i] = mean + stddev * z0;
+            if (i + 1 < count) {
+                u1 = matx_rand_uniform_double(0.0, 1.0);
+                u2 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double z1 = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+                m->data[i + 1] = mean + stddev * z1;
+            }
+        }
+    } else if (m->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < m->ncols; ++j) {
+            matx_double* column = m->data + j * m->stride;
+            for (matx_int64_t i = 0; i < m->nrows; ++i) {
+                matx_double u1 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double u2 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double z = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+                column[i] = mean + stddev * z;
+            }
+        }
+    } else {
+        for (matx_int64_t i = 0; i < m->nrows; ++i) {
+            matx_double* row = m->data + i * m->stride;
+            for (matx_int64_t j = 0; j < m->ncols; ++j) {
+                matx_double u1 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double u2 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double z = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+                row[j] = mean + stddev * z;
+            }
+        }
+    }
+    return MATX_OK;
+}
+
+matx_status_t matx_dense_z_i8_rand_normal(matx_dense_z_i8_t m,
+                                          matx_double mean_re,
+                                          matx_double mean_im,
+                                          matx_double stddev,
+                                          unsigned int seed)
+{
+    if (!m || !m->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    matx_rand_seed(seed);
+    const matx_int64_t minor
+        = (m->layout == MATX_COL_MAJOR) ? m->nrows : m->ncols;
+    if (m->stride == minor) {
+        const matx_int64_t count = m->nrows * m->ncols;
+        for (matx_int64_t i = 0; i < count; ++i) {
+            matx_double u1 = matx_rand_uniform_double(0.0, 1.0);
+            matx_double u2 = matx_rand_uniform_double(0.0, 1.0);
+            matx_double z = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+            u1 = matx_rand_uniform_double(0.0, 1.0);
+            u2 = matx_rand_uniform_double(0.0, 1.0);
+            matx_double z2 = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+            m->data[i].real = mean_re + stddev * z;
+            m->data[i].imag = mean_im + stddev * z2;
+        }
+    } else if (m->layout == MATX_COL_MAJOR) {
+        for (matx_int64_t j = 0; j < m->ncols; ++j) {
+            matx_complex_d_t* column = m->data + j * m->stride;
+            for (matx_int64_t i = 0; i < m->nrows; ++i) {
+                matx_double u1 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double u2 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double z = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+                u1 = matx_rand_uniform_double(0.0, 1.0);
+                u2 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double z2 = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+                column[i].real = mean_re + stddev * z;
+                column[i].imag = mean_im + stddev * z2;
+            }
+        }
+    } else {
+        for (matx_int64_t i = 0; i < m->nrows; ++i) {
+            matx_complex_d_t* row = m->data + i * m->stride;
+            for (matx_int64_t j = 0; j < m->ncols; ++j) {
+                matx_double u1 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double u2 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double z = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+                u1 = matx_rand_uniform_double(0.0, 1.0);
+                u2 = matx_rand_uniform_double(0.0, 1.0);
+                matx_double z2 = sqrt(-2.0 * log(u1)) * cos(2.0 * 3.14159265358979323846 * u2);
+                row[j].real = mean_re + stddev * z;
+                row[j].imag = mean_im + stddev * z2;
+            }
+        }
+    }
+    return MATX_OK;
+}
+
 /* ---- Complex random number generation ---- */
 
 matx_status_t matx_vec_z_i8_rand_uniform(matx_vec_z_i8_t v,
@@ -2093,3 +2766,65 @@ matx_status_t matx_dense_z_i8_vstack(const matx_alloc_t* alloc,
     }
     return MATX_OK;
 }
+
+/* ---- Dense element-wise comparisons ---- */
+
+#define MATX_DEF_DENSE_COMPARE(NAME, OP)                                     \
+matx_status_t matx_dense_d_i8_##NAME(const matx_alloc_t* alloc,              \
+                                     const matx_dense_d_i8_t A,              \
+                                     const matx_dense_d_i8_t B,              \
+                                     matx_dense_d_i8_t* out)                 \
+{                                                                            \
+    if (!alloc || !A || !B || !out) {                                        \
+        MATX_ERROR("%s: invalid argument", __func__);                        \
+        return MATX_ERR_INVALID_ARG;                                         \
+    }                                                                        \
+    if (A->nrows != B->nrows || A->ncols != B->ncols                         \
+        || A->layout != B->layout) {                                         \
+        MATX_ERROR("%s: dimension/layout mismatch", __func__);              \
+        return MATX_ERR_INVALID_ARG;                                         \
+    }                                                                        \
+    matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout,         \
+                                               A->nrows, A->ncols, NULL);    \
+    if (st != MATX_OK)                                                       \
+        return st;                                                           \
+    MATX_DENSE_FOR_EACH_2(A, B, *out,                                        \
+        (*out)->data[oidx] = (A->data[aidx] OP B->data[bidx]) ? 1.0 : 0.0); \
+    return MATX_OK;                                                          \
+}                                                                            \
+                                                                             \
+matx_status_t matx_dense_z_i8_##NAME(const matx_alloc_t* alloc,              \
+                                     const matx_dense_z_i8_t A,              \
+                                     const matx_dense_z_i8_t B,              \
+                                     matx_dense_d_i8_t* out)                 \
+{                                                                            \
+    if (!alloc || !A || !B || !out) {                                        \
+        MATX_ERROR("%s: invalid argument", __func__);                        \
+        return MATX_ERR_INVALID_ARG;                                         \
+    }                                                                        \
+    if (A->nrows != B->nrows || A->ncols != B->ncols                         \
+        || A->layout != B->layout) {                                         \
+        MATX_ERROR("%s: dimension/layout mismatch", __func__);              \
+        return MATX_ERR_INVALID_ARG;                                         \
+    }                                                                        \
+    matx_status_t st = matx_dense_d_i8_create(alloc, out, A->layout,         \
+                                               A->nrows, A->ncols, NULL);    \
+    if (st != MATX_OK)                                                       \
+        return st;                                                           \
+    MATX_DENSE_FOR_EACH_2(A, B, *out,                                        \
+        matx_double mag_a = A->data[aidx].real * A->data[aidx].real          \
+                          + A->data[aidx].imag * A->data[aidx].imag;         \
+        matx_double mag_b = B->data[bidx].real * B->data[bidx].real          \
+                          + B->data[bidx].imag * B->data[bidx].imag;         \
+        (*out)->data[oidx] = (mag_a OP mag_b) ? 1.0 : 0.0);                 \
+    return MATX_OK;                                                          \
+}
+
+MATX_DEF_DENSE_COMPARE(eq, ==)
+MATX_DEF_DENSE_COMPARE(ne, !=)
+MATX_DEF_DENSE_COMPARE(lt, <)
+MATX_DEF_DENSE_COMPARE(le, <=)
+MATX_DEF_DENSE_COMPARE(gt, >)
+MATX_DEF_DENSE_COMPARE(ge, >=)
+
+#undef MATX_DEF_DENSE_COMPARE
