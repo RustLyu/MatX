@@ -5,6 +5,12 @@
 
 function(matx_spdlog)
     include(FetchContent)
+
+    if(EXISTS "${DEPEND_LIB_OUTPUT}/spdlog/lib/cmake/spdlog/spdlogConfig.cmake")
+        message(STATUS "spdlog already installed, skipping build")
+        return()
+    endif()
+
     FetchContent_Declare(
         spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git

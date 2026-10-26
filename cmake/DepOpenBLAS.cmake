@@ -7,6 +7,11 @@ function(matx_add_openblas)
 
     include(FetchContent)
 
+    if(EXISTS "${DEPEND_LIB_OUTPUT}/openblas/lib/cmake/OpenBLAS64/OpenBLAS64Config.cmake")
+        message(STATUS "OpenBLAS already installed, skipping build")
+        return()
+    endif()
+
     FetchContent_Declare(
         OpenBLAS
         GIT_REPOSITORY https://github.com/OpenMathLib/OpenBLAS.git
