@@ -41,8 +41,13 @@ int matx_run_all_tests()
 {
     /* sort by name so print tests always run before read tests */
     qsort(_matx_tests, _matx_test_cnt, sizeof(matx_test_entry), cmp_test_name);
+    const char* filter = std::getenv("MATX_TEST_FILTER");
+    int selected = 0;
 
     for (int i = 0; i < _matx_test_cnt; ++i) {
+        if (filter && *filter && !std::strstr(_matx_tests[i].name, filter))
+            continue;
+        ++selected;
         _matx_cur_name = _matx_tests[i].name;
         _matx_cur_fail = 0;
         printf("[ RUN      ] %s\n", _matx_cur_name);
@@ -53,10 +58,10 @@ int matx_run_all_tests()
             printf("[       OK ] %s\n", _matx_cur_name);
     }
     printf("\n%d tests, %d assertions, %d failures\n",
-           _matx_test_cnt, _matx_total, _matx_total - _matx_passed);
+           selected, _matx_total, _matx_total - _matx_passed);
     delete[] _matx_tests;
     _matx_tests = nullptr;
-    return (_matx_total - _matx_passed) ? 1 : 0;
+    return selected == 0 ? 2 : ((_matx_total - _matx_passed) ? 1 : 0);
 }
 
 int main() {

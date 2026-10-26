@@ -1,6 +1,8 @@
 ﻿#include <cmath>
+#include <complex>
 #include <filesystem>
 #include <fstream>
+#include <vector>
 #include "matx_test_harness.h"
 
 extern "C" {
@@ -8,6 +10,16 @@ extern "C" {
 #include "matx/matx_sparse_compute.h"
 #include "matx/matx_types.h"
 #include "matx/matx_types_internal.h"
+}
+
+static size_t spmm_test_offset(matx_layout_t layout,
+                               matx_int64_t stride,
+                               matx_int64_t row,
+                               matx_int64_t col)
+{
+    return layout == MATX_COL_MAJOR
+               ? (size_t) row + (size_t) col * (size_t) stride
+               : (size_t) row * (size_t) stride + (size_t) col;
 }
 
 /* 4x4 sparse CSC: full matrix for simplicity. col_ptr[0..4], row_ind[0..16], values[16] */
@@ -234,6 +246,211 @@ TEST(compute_sparse, spmm_csc_z_i8_4x4)
     matx_coo_sparse_z_i8_destroy(&a, A);
     matx_dense_z_i8_destroy(&a, B);
     matx_dense_z_i8_destroy(&a, C);
+    matx_finalize(&backend);
+}
+
+TEST(compute_sparse, spmm_coo_d_i8_multi_rhs_layouts)
+{
+    matx_int64_t rows[] = {0, 0, 1, 1, 2, 2};
+    matx_int64_t cols[] = {0, 2, 1, 3, 0, 3};
+    matx_double values[] = {1.5, -0.5, 2.0, 0.25, -1.0, 0.75};
+    constexpr matx_int64_t m = 3;
+    constexpr matx_int64_t k = 4;
+    constexpr matx_int64_t rhs = 7;
+    constexpr matx_int64_t nnz = 6;
+    const matx_layout_t layouts[] = {MATX_COL_MAJOR, MATX_ROW_MAJOR};
+    const matx_double alpha = 1.25;
+    const matx_double beta = -0.5;
+
+    matx_alloc_t alloc = matx_alloc_default();
+    matx_coo_d_i8_t A = NULL;
+    ASSERT_EQ(matx_coo_sparse_d_i8_create(&alloc, &A, m, k, nnz, rows, cols, values), MATX_OK);
+    auto backend = matx_sparse_default();
+
+    for (matx_layout_t layout : layouts) {
+        matx_dense_d_i8_t B = NULL, C = NULL;
+        ASSERT_EQ(matx_dense_d_i8_create(&alloc, &B, layout, k, rhs, NULL), MATX_OK);
+        ASSERT_EQ(matx_dense_d_i8_create(&alloc, &C, layout, m, rhs, NULL), MATX_OK);
+        std::vector<matx_double> initial_c((size_t) m * (size_t) rhs);
+        std::vector<matx_double> expected((size_t) m * (size_t) rhs);
+        for (matx_int64_t row = 0; row < k; ++row) {
+            for (matx_int64_t col = 0; col < rhs; ++col) {
+                B->data[spmm_test_offset(layout, B->stride, row, col)]
+                    = 0.5 * (double) (row + 1) - 0.125 * (double) col;
+            }
+        }
+        for (matx_int64_t row = 0; row < m; ++row) {
+            for (matx_int64_t col = 0; col < rhs; ++col) {
+                const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+                const matx_double value = 0.15 * (double) (row + 1) + 0.03 * (double) col;
+                initial_c[flat] = value;
+                C->data[spmm_test_offset(layout, C->stride, row, col)] = value;
+            }
+        }
+
+        for (matx_int64_t row = 0; row < m; ++row) {
+            for (matx_int64_t col = 0; col < rhs; ++col) {
+                matx_double sum = 0.0;
+                for (matx_int64_t entry = 0; entry < nnz; ++entry) {
+                    if (rows[entry] == row) {
+                        sum += values[entry]
+                               * B->data[spmm_test_offset(layout, B->stride, cols[entry], col)];
+                    }
+                }
+                const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+                expected[flat] = alpha * sum + beta * initial_c[flat];
+            }
+        }
+
+        ASSERT_EQ(matx_spmm_coo_d_i8(&backend, alpha, A, B, beta, C), MATX_OK);
+        for (matx_int64_t row = 0; row < m; ++row) {
+            for (matx_int64_t col = 0; col < rhs; ++col) {
+                const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+                EXPECT_NEAR(C->data[spmm_test_offset(layout, C->stride, row, col)],
+                            expected[flat], 1e-12);
+            }
+        }
+        matx_dense_d_i8_destroy(&alloc, B);
+        matx_dense_d_i8_destroy(&alloc, C);
+    }
+
+    matx_coo_sparse_d_i8_destroy(&alloc, A);
+    matx_finalize(&backend);
+}
+
+TEST(compute_sparse, spmm_coo_z_i8_multi_rhs_layouts)
+{
+    matx_int64_t rows[] = {0, 0, 1, 1, 2, 2};
+    matx_int64_t cols[] = {0, 2, 1, 3, 0, 3};
+    matx_complex_d_t values[] = {
+        {1.0, 0.5}, {-0.5, 1.25}, {2.0, -0.25}, {0.25, 0.75}, {-1.0, 0.2}, {0.75, -0.5}};
+    constexpr matx_int64_t m = 3;
+    constexpr matx_int64_t k = 4;
+    constexpr matx_int64_t rhs = 7;
+    constexpr matx_int64_t nnz = 6;
+    const matx_layout_t layouts[] = {MATX_COL_MAJOR, MATX_ROW_MAJOR};
+    const std::complex<double> alpha(0.75, -0.25);
+    const std::complex<double> beta(-0.5, 0.3);
+
+    matx_alloc_t alloc = matx_alloc_default();
+    matx_coo_z_i8_t A = NULL;
+    ASSERT_EQ(matx_coo_sparse_z_i8_create(&alloc, &A, m, k, nnz, rows, cols, values), MATX_OK);
+    auto backend = matx_sparse_default();
+
+    for (matx_layout_t layout : layouts) {
+        matx_dense_z_i8_t B = NULL, C = NULL;
+        ASSERT_EQ(matx_dense_z_i8_create(&alloc, &B, layout, k, rhs, NULL), MATX_OK);
+        ASSERT_EQ(matx_dense_z_i8_create(&alloc, &C, layout, m, rhs, NULL), MATX_OK);
+        std::vector<std::complex<double>> initial_c((size_t) m * (size_t) rhs);
+        std::vector<std::complex<double>> expected((size_t) m * (size_t) rhs);
+        for (matx_int64_t row = 0; row < k; ++row) {
+            for (matx_int64_t col = 0; col < rhs; ++col) {
+                const std::complex<double> value(0.2 * (double) (row + 1),
+                                                 -0.15 * (double) (col + 1));
+                auto& target = B->data[spmm_test_offset(layout, B->stride, row, col)];
+                target.real = value.real();
+                target.imag = value.imag();
+            }
+        }
+        for (matx_int64_t row = 0; row < m; ++row) {
+            for (matx_int64_t col = 0; col < rhs; ++col) {
+                const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+                const std::complex<double> value(0.1 * (double) (row + col + 1),
+                                                 -0.05 * (double) (2 * row + col));
+                initial_c[flat] = value;
+                auto& target = C->data[spmm_test_offset(layout, C->stride, row, col)];
+                target.real = value.real();
+                target.imag = value.imag();
+            }
+        }
+
+        for (matx_int64_t row = 0; row < m; ++row) {
+            for (matx_int64_t col = 0; col < rhs; ++col) {
+                std::complex<double> sum(0.0, 0.0);
+                for (matx_int64_t entry = 0; entry < nnz; ++entry) {
+                    if (rows[entry] == row) {
+                        const auto& a_value = values[entry];
+                        const auto& b_value
+                            = B->data[spmm_test_offset(layout, B->stride, cols[entry], col)];
+                        sum += std::complex<double>(a_value.real, a_value.imag)
+                               * std::complex<double>(b_value.real, b_value.imag);
+                    }
+                }
+                const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+                expected[flat] = alpha * sum + beta * initial_c[flat];
+            }
+        }
+
+        const matx_complex_d_t matx_alpha = {alpha.real(), alpha.imag()};
+        const matx_complex_d_t matx_beta = {beta.real(), beta.imag()};
+        ASSERT_EQ(matx_spmm_coo_z_i8(&backend, matx_alpha, A, B, matx_beta, C), MATX_OK);
+        for (matx_int64_t row = 0; row < m; ++row) {
+            for (matx_int64_t col = 0; col < rhs; ++col) {
+                const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+                const auto& actual = C->data[spmm_test_offset(layout, C->stride, row, col)];
+                EXPECT_NEAR(actual.real, expected[flat].real(), 1e-12);
+                EXPECT_NEAR(actual.imag, expected[flat].imag(), 1e-12);
+            }
+        }
+        matx_dense_z_i8_destroy(&alloc, B);
+        matx_dense_z_i8_destroy(&alloc, C);
+    }
+
+    matx_coo_sparse_z_i8_destroy(&alloc, A);
+    matx_finalize(&backend);
+}
+
+TEST(compute_sparse, spmm_coo_d_i8_column_major_alias_multi_rhs)
+{
+    matx_int64_t rows[] = {0, 1, 2, 0};
+    matx_int64_t cols[] = {0, 1, 2, 2};
+    matx_double values[] = {1.5, 2.0, -0.5, 0.25};
+    constexpr matx_int64_t n = 3;
+    constexpr matx_int64_t rhs = 7;
+    constexpr matx_int64_t nnz = 4;
+    const matx_double alpha = 1.5;
+    const matx_double beta = -0.25;
+
+    matx_alloc_t alloc = matx_alloc_default();
+    matx_coo_d_i8_t A = NULL;
+    matx_dense_d_i8_t B = NULL;
+    ASSERT_EQ(matx_coo_sparse_d_i8_create(&alloc, &A, n, n, nnz, rows, cols, values), MATX_OK);
+    ASSERT_EQ(matx_dense_d_i8_create(&alloc, &B, MATX_COL_MAJOR, n, rhs, NULL), MATX_OK);
+    std::vector<matx_double> original((size_t) n * (size_t) rhs);
+    std::vector<matx_double> expected((size_t) n * (size_t) rhs);
+    for (matx_int64_t row = 0; row < n; ++row) {
+        for (matx_int64_t col = 0; col < rhs; ++col) {
+            const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+            const matx_double value = 0.2 * (double) (row + 1) + 0.05 * (double) col;
+            original[flat] = value;
+            B->data[spmm_test_offset(MATX_COL_MAJOR, B->stride, row, col)] = value;
+        }
+    }
+    for (matx_int64_t row = 0; row < n; ++row) {
+        for (matx_int64_t col = 0; col < rhs; ++col) {
+            matx_double sum = 0.0;
+            for (matx_int64_t entry = 0; entry < nnz; ++entry) {
+                if (rows[entry] == row) {
+                    sum += values[entry]
+                           * original[(size_t) cols[entry] * (size_t) rhs + (size_t) col];
+                }
+            }
+            const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+            expected[flat] = alpha * sum + beta * original[flat];
+        }
+    }
+
+    auto backend = matx_sparse_default();
+    ASSERT_EQ(matx_spmm_coo_d_i8(&backend, alpha, A, B, beta, B), MATX_OK);
+    for (matx_int64_t row = 0; row < n; ++row) {
+        for (matx_int64_t col = 0; col < rhs; ++col) {
+            const size_t flat = (size_t) row * (size_t) rhs + (size_t) col;
+            EXPECT_NEAR(B->data[spmm_test_offset(MATX_COL_MAJOR, B->stride, row, col)],
+                        expected[flat], 1e-12);
+        }
+    }
+    matx_dense_d_i8_destroy(&alloc, B);
+    matx_coo_sparse_d_i8_destroy(&alloc, A);
     matx_finalize(&backend);
 }
 

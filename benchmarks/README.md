@@ -59,6 +59,58 @@ inverse, QR, eigen, and SVD rows check representative results.
 The run exits with an error if a measured result fails its numerical check.
 Backend and compiler details are written to stderr.
 
+## Sparse solver comparison
+
+The Ginkgo, PETSc, and hypre iterative backends are compared with MatX's direct
+SuiteSparse KLU, CHOLMOD, UMFPACK, CXSparse, SuperLU, and MUMPS paths. Disabled
+or unsupported direct backends are emitted as `skipped`. The comparison
+executable is separate from the GraphBLAS benchmark target. CMake builds each
+enabled iterative backend from its pinned upstream source, installs it below
+the build tree, then builds and runs the comparison:
+
+~~~sh
+cmake -S . -B build-iterative \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMATX_BUILD_TESTS=ON \
+  -DMATX_ENABLE_GINKGO=ON \
+  -DMATX_ENABLE_PETSC=ON \
+  -DMATX_ENABLE_HYPRE=ON \
+  -DMATX_BUILD_ITERATIVE_BENCHMARKS=ON
+cmake --build build-iterative --target matx_sparse_iterative_benchmarks matx_tests -j4
+MATX_TEST_FILTER=sparse_iterative ./build-iterative/tests/matx_tests
+for n in 1024 4096 10000 25000 50000 100000; do
+  OMP_NUM_THREADS=4 OMP_PROC_BIND=close OMP_PLACES=cores \
+    ./build-iterative/matx_sparse_iterative_benchmarks --size "$n" --repeats 3 \
+    > "build-iterative/sparse-solver-comparison-$n.csv"
+done
+~~~
+
+The comparison uses a 2D Poisson SPD matrix with CG and a nonsymmetric
+convection-diffusion matrix with GMRES. `--size` selects an exact unknown count
+on a near-square 2D grid; the listed sweep ranges from 1,024 to 100,000
+unknowns. The legacy `--side` option still selects a square grid by width.
+Each solver prepares the fixed matrix once, then solves a warm-up RHS followed
+by distinct RHS vectors generated from known solutions. The CSV reports
+`setup_ms` separately from `median_solve_ms`; compare solvers using the latter.
+It also records iteration count, true residual, relative residual, relative
+solution error, and status. Direct `setup_ms` measures factorization, including
+the backend's symbolic/numeric work; COO matrix creation occurs before timing.
+Timed RHS generation is outside the solve timer. Timed direct samples reuse
+that factor. Iterative `setup_ms` covers solver creation, matrix import, and
+the explicit preconditioner setup call; backend work deferred until the first
+solve is handled by the discarded warm-up. Timed samples reuse that solver and
+preconditioner. Direct rows cover LU and CHOLMOD
+Cholesky for the SPD matrix. Iterative rows cover CG and GMRES with Jacobi and
+backend-supported AMG/ILU. Iterative solve time includes MatX backend-vector
+handling and true-residual checking. Unsupported combinations are emitted as
+`skipped`; a setup, solve, or numerical-check failure makes the program exit
+nonzero. Pin thread counts and keep CPU/compiler settings identical when
+comparing CSV files. The example uses four OpenMP threads and three timed
+samples per case; the default problem size is 65,536 unknowns.
+
+`MATX_TEST_FILTER` accepts a substring of test names so backend tests can run
+without unrelated tests. A filter that selects no tests exits with status 2.
+
 The sparse API path uses direct COO accumulation up to 3,000,000 nonzeros for
 SpMV, and up to both 3,000,000 nonzeros and 50,000,000 nonzero/RHS products
 for SpMM; larger operations use GraphBLAS. `spmv_coo` and `spmm_coo` rows always

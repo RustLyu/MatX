@@ -49,8 +49,3 @@ install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
 )
-
-install(EXPORT MatXConfig
-  NAMESPACE MatX::
-  DESTINATION lib/cmake/MatX
-)
