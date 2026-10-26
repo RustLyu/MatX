@@ -617,6 +617,13 @@ extern "C" {
 	MATX_DENSE_BLAS_API matx_status_t matx_expm_dense_d_i8(const matx_dense_backend_t* blas,
 		const matx_dense_d_i8_t A, matx_dense_d_i8_t out);
 
+	/**
+	 * @brief Matrix exponential of a complex dense matrix
+	 * @formula out := exp(A) = sum_{k=0}^{inf} A^k / k!
+	 */
+	MATX_DENSE_BLAS_API matx_status_t matx_expm_dense_z_i8(const matx_dense_backend_t* blas,
+		const matx_dense_z_i8_t A, matx_dense_z_i8_t out);
+
 #ifdef __cplusplus
 }
 #endif

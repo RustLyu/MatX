@@ -1328,3 +1328,26 @@ matx_status_t matx_expm_dense_d_i8(const matx_dense_backend_t* blas,
     }
     return blas->vt.expm_dense_d_i8(A->layout, A->nrows, A->data, A->stride, out->data, out->stride);
 }
+
+matx_status_t matx_expm_dense_z_i8(const matx_dense_backend_t* blas,
+                                   const matx_dense_z_i8_t A,
+                                   matx_dense_z_i8_t out)
+{
+    if (!blas || !A || !out || !A->data || !out->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.expm_dense_z_i8) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    if (A->nrows != A->ncols || out->nrows != out->ncols || A->nrows != out->nrows) {
+        MATX_ERROR("%s: matrix must be square and same size", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->layout != out->layout) {
+        MATX_ERROR("%s: layout mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    return blas->vt.expm_dense_z_i8(A->layout, A->nrows, A->data, A->stride, out->data, out->stride);
+}
