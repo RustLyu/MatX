@@ -1,1 +1,21 @@
-build
+# Build directories
+build*/
+!build/
+
+# IDE
+.idea/
+.qtcreator/
+.claude/
+
+# Logs and temp output
+logs/
+*.log
+*.o
+*.obj
+
+# Test artifacts
+csv_test_*.csv
+csv_vec_test_*.csv
+*_4x4_print.txt
+write_test_*.mtx
+test_output.log
