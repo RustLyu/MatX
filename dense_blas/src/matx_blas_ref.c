@@ -47,12 +47,13 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
     }
 
     /* Small-n direct path: bypass CBLAS overhead for very small matrices. */
-    if (m <= 4 && n <= 4 && k <= 4 && trans_a == MATX_NO_TRANS
+    if (m <= 16 && n <= 16 && k <= 16 && trans_a == MATX_NO_TRANS
         && trans_b == MATX_NO_TRANS) {
         if (layout == MATX_COL_MAJOR) {
             for (matx_int64_t j = 0; j < n; ++j) {
                 for (matx_int64_t i = 0; i < m; ++i) {
                     matx_double sum = 0.0;
+                    #pragma omp simd reduction(+:sum)
                     for (matx_int64_t p = 0; p < k; ++p)
                         sum += a[i + p * lda] * b[p + j * ldb];
                     const matx_int64_t idx = i + j * ldc;
@@ -68,6 +69,7 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
             for (matx_int64_t i = 0; i < m; ++i) {
                 for (matx_int64_t j = 0; j < n; ++j) {
                     matx_double sum = 0.0;
+                    #pragma omp simd reduction(+:sum)
                     for (matx_int64_t p = 0; p < k; ++p)
                         sum += a[i * lda + p] * b[p * ldb + j];
                     const matx_int64_t idx = i * ldc + j;
@@ -126,12 +128,13 @@ static matx_status_t ref_zgemm(matx_layout_t layout,
     const matx_double beta_im  = ((const matx_complex_d_t*)beta)->imag;
 
     /* Small-n direct path: bypass CBLAS overhead for very small matrices. */
-    if (m <= 4 && n <= 4 && k <= 4 && trans_a == MATX_NO_TRANS
+    if (m <= 16 && n <= 16 && k <= 16 && trans_a == MATX_NO_TRANS
         && trans_b == MATX_NO_TRANS) {
         if (layout == MATX_COL_MAJOR) {
             for (matx_int64_t j = 0; j < n; ++j) {
                 for (matx_int64_t i = 0; i < m; ++i) {
                     matx_double sum_re = 0.0, sum_im = 0.0;
+                    #pragma omp simd reduction(+:sum_re,sum_im)
                     for (matx_int64_t p = 0; p < k; ++p) {
                         const matx_complex_d_t aik = a[i + p * lda];
                         const matx_complex_d_t bkj = b[p + j * ldb];
@@ -946,9 +949,7 @@ static matx_status_t ref_expm_dense_d_i8(matx_layout_t layout,
     }
 
     /* 4. Scale A: As = A / 2^s */
-    matx_double scale = 1.0;
-    for (matx_int64_t j = 0; j < s; ++j)
-        scale /= 2.0;
+    matx_double scale = ldexp(1.0, -(int)s);
     for (matx_int64_t j = 0; j < n; ++j)
         for (matx_int64_t i = 0; i < n; ++i)
             As[i + j * work_lda] = A[i + j * lda] * scale;
@@ -2186,6 +2187,7 @@ static matx_status_t ref_hadamard_d_i8(matx_layout_t layout,
             const matx_int64_t a_col = j * lda;
             const matx_int64_t b_col = j * ldb;
             const matx_int64_t c_col = j * ldc;
+            #pragma omp simd
             for (matx_int64_t i = 0; i < rows; ++i)
                 C[c_col + i] = A[a_col + i] * B[b_col + i];
         }
@@ -2194,6 +2196,7 @@ static matx_status_t ref_hadamard_d_i8(matx_layout_t layout,
             const matx_int64_t a_row = i * lda;
             const matx_int64_t b_row = i * ldb;
             const matx_int64_t c_row = i * ldc;
+            #pragma omp simd
             for (matx_int64_t j = 0; j < cols; ++j)
                 C[c_row + j] = A[a_row + j] * B[b_row + j];
         }
@@ -2223,6 +2226,7 @@ static matx_status_t ref_hadamard_z_i8(matx_layout_t layout,
             const matx_int64_t a_col = j * lda;
             const matx_int64_t b_col = j * ldb;
             const matx_int64_t c_col = j * ldc;
+            #pragma omp simd
             for (matx_int64_t i = 0; i < rows; ++i) {
                 c_data[c_col + i].real = a_data[a_col + i].real * b_data[b_col + i].real
                     - a_data[a_col + i].imag * b_data[b_col + i].imag;
@@ -2235,6 +2239,7 @@ static matx_status_t ref_hadamard_z_i8(matx_layout_t layout,
             const matx_int64_t a_row = i * lda;
             const matx_int64_t b_row = i * ldb;
             const matx_int64_t c_row = i * ldc;
+            #pragma omp simd
             for (matx_int64_t j = 0; j < cols; ++j) {
                 c_data[c_row + j].real = a_data[a_row + j].real * b_data[b_row + j].real
                     - a_data[a_row + j].imag * b_data[b_row + j].imag;
