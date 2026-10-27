@@ -108,6 +108,7 @@ static matx_status_t ref_sparse_norm_coo(const matx_alloc_t* alloc,
         }
         if (kind == MATX_SPARSE_NORM_FROBENIUS) {
             matx_double sum_sq = 0.0;
+            #pragma omp simd reduction(+:sum_sq)
             for (matx_int64_t k = 0; k < nnz; ++k) {
                 matx_double rv = complex_values ? complex_values[k].real : real_values[k];
                 matx_double iv = complex_values ? complex_values[k].imag : 0.0;
@@ -1927,14 +1928,138 @@ static matx_status_t ref_scale_cols_z_i8_grb(matx_coo_z_i8_t A, const matx_vec_z
 
 // ---- SpGEMM → COO (reference) ----
 
+/* Simple open-addressing hash table for SpGEMM accumulation. */
+#define SPGEMM_HASH_EMPTY (-1)
+
 static matx_status_t ref_spgemm_d_i8_grb(matx_double alpha,
                                           matx_coo_d_i8_t A,
                                           matx_coo_d_i8_t B,
                                           matx_coo_d_i8_t out)
 {
-    (void) alpha; (void) A; (void) B; (void) out;
-    MATX_ERROR("%s: SpGEMM reference not yet implemented", __func__);
-    return MATX_ERR_NOT_SUPPORTED;
+    if (!A || !B || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->ncols != B->nrows) {
+        MATX_ERROR("%s: dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (out->nrows != A->nrows || out->ncols != B->ncols) {
+        MATX_ERROR("%s: output dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_int64_t m = A->nrows;
+    matx_int64_t n = B->ncols;
+    matx_int64_t annz = A->nnz;
+    matx_int64_t bnnz = B->nnz;
+
+    if (annz == 0 || bnnz == 0 || alpha == 0.0) {
+        out->nnz = 0;
+        return MATX_OK;
+    }
+
+    /* Estimate result size and allocate hash table. */
+    matx_int64_t cap = annz + bnnz;
+    if (cap < 64) cap = 64;
+    /* Next power of two for fast mod. */
+    cap--;
+    cap |= cap >> 1; cap |= cap >> 2; cap |= cap >> 4;
+    cap |= cap >> 8; cap |= cap >> 16; cap |= cap >> 32;
+    cap++;
+
+    matx_int64_t* hrow = (matx_int64_t*)calloc((size_t)cap, sizeof(matx_int64_t));
+    matx_int64_t* hcol = (matx_int64_t*)calloc((size_t)cap, sizeof(matx_int64_t));
+    double*       hval = (double*)      calloc((size_t)cap, sizeof(double));
+    if (!hrow || !hcol || !hval) {
+        free(hrow); free(hcol); free(hval);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    /* Mark all slots as empty. */
+    for (matx_int64_t i = 0; i < cap; ++i)
+        hrow[i] = SPGEMM_HASH_EMPTY;
+
+    /* Build CSR-style row-index for B to avoid O(nnz²) linear scan:
+       for each row k, b_row_start[k..k+1) indexes b_perm to all B
+       entries with B->rows[ib] == k. */
+    matx_int64_t* b_row_cnt   = (matx_int64_t*)calloc((size_t)B->nrows, sizeof(matx_int64_t));
+    matx_int64_t* b_row_start = (matx_int64_t*)malloc(((size_t)B->nrows + 1) * sizeof(matx_int64_t));
+    if (!b_row_cnt || !b_row_start) {
+        free(hrow); free(hcol); free(hval);
+        free(b_row_cnt); free(b_row_start);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t ib = 0; ib < bnnz; ++ib)
+        b_row_cnt[B->rows[ib]]++;
+    b_row_start[0] = 0;
+    for (matx_int64_t r = 0; r < B->nrows; ++r) {
+        b_row_start[r + 1] = b_row_start[r] + b_row_cnt[r];
+        b_row_cnt[r] = 0;
+    }
+    matx_int64_t* b_perm = (matx_int64_t*)malloc((size_t)bnnz * sizeof(matx_int64_t));
+    if (!b_perm) {
+        free(hrow); free(hcol); free(hval);
+        free(b_row_cnt); free(b_row_start);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t ib = 0; ib < bnnz; ++ib) {
+        matx_int64_t r   = B->rows[ib];
+        matx_int64_t pos = b_row_start[r] + b_row_cnt[r];
+        b_perm[pos] = ib;
+        b_row_cnt[r]++;
+    }
+    free(b_row_cnt);
+
+    /* Accumulate C(i,j) += A(i,k) * B(k,j) for matching k. */
+    for (matx_int64_t ia = 0; ia < annz; ++ia) {
+        matx_int64_t k  = A->columns[ia];
+        matx_int64_t i  = A->rows[ia];
+        double       av = alpha * A->values[ia];
+
+        /* Only iterate B entries in row k (CSR row-index lookup). */
+        for (matx_int64_t p = b_row_start[k]; p < b_row_start[k + 1]; ++p) {
+            matx_int64_t ib = b_perm[p];
+            matx_int64_t j = B->columns[ib];
+            double bv = B->values[ib];
+            double prod = av * bv;
+
+            /* Insert/accumulate into hash table. */
+            matx_int64_t idx = (i * 2654435761ULL + (unsigned long long)j) & (cap - 1);
+            while (hrow[idx] != SPGEMM_HASH_EMPTY) {
+                if (hrow[idx] == i && hcol[idx] == j) {
+                    hval[idx] += prod;
+                    goto next_b;
+                }
+                idx = (idx + 1) & (cap - 1);
+            }
+            hrow[idx] = i;
+            hcol[idx] = j;
+            hval[idx] = prod;
+            next_b:;
+        }
+    }
+    free(b_row_start); free(b_perm);
+
+    /* Count non-zeros. */
+    matx_int64_t nnz_out = 0;
+    for (matx_int64_t i = 0; i < cap; ++i)
+        if (hrow[i] != SPGEMM_HASH_EMPTY && hval[i] != 0.0)
+            nnz_out++;
+
+    /* Write output. */
+    matx_int64_t pos = 0;
+    for (matx_int64_t i = 0; i < cap; ++i) {
+        if (hrow[i] != SPGEMM_HASH_EMPTY && hval[i] != 0.0) {
+            out->rows[pos]    = hrow[i];
+            out->columns[pos] = hcol[i];
+            out->values[pos]  = hval[i];
+            pos++;
+        }
+    }
+    out->nnz = nnz_out;
+
+    free(hrow); free(hcol); free(hval);
+    return MATX_OK;
 }
 
 static matx_status_t ref_spgemm_z_i8_grb(matx_complex_d_t alpha,
@@ -1942,9 +2067,131 @@ static matx_status_t ref_spgemm_z_i8_grb(matx_complex_d_t alpha,
                                           matx_coo_z_i8_t B,
                                           matx_coo_z_i8_t out)
 {
-    (void) alpha; (void) A; (void) B; (void) out;
-    MATX_ERROR("%s: SpGEMM complex reference not yet implemented", __func__);
-    return MATX_ERR_NOT_SUPPORTED;
+    if (!A || !B || !out) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->ncols != B->nrows) {
+        MATX_ERROR("%s: dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (out->nrows != A->nrows || out->ncols != B->ncols) {
+        MATX_ERROR("%s: output dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+
+    matx_int64_t m = A->nrows;
+    matx_int64_t n = B->ncols;
+    matx_int64_t annz = A->nnz;
+    matx_int64_t bnnz = B->nnz;
+
+    if (annz == 0 || bnnz == 0 ||
+        (alpha.real == 0.0 && alpha.imag == 0.0)) {
+        out->nnz = 0;
+        return MATX_OK;
+    }
+
+    matx_int64_t cap = annz + bnnz;
+    if (cap < 64) cap = 64;
+    cap--;
+    cap |= cap >> 1; cap |= cap >> 2; cap |= cap >> 4;
+    cap |= cap >> 8; cap |= cap >> 16; cap |= cap >> 32;
+    cap++;
+
+    matx_int64_t*       hrow = (matx_int64_t*)      calloc((size_t)cap, sizeof(matx_int64_t));
+    matx_int64_t*       hcol = (matx_int64_t*)      calloc((size_t)cap, sizeof(matx_int64_t));
+    matx_complex_d_t*   hval = (matx_complex_d_t*)  calloc((size_t)cap, sizeof(matx_complex_d_t));
+    if (!hrow || !hcol || !hval) {
+        free(hrow); free(hcol); free(hval);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t i = 0; i < cap; ++i)
+        hrow[i] = SPGEMM_HASH_EMPTY;
+
+    /* Build CSR-style row-index for B to avoid O(nnz²) linear scan. */
+    matx_int64_t* b_row_cnt   = (matx_int64_t*)calloc((size_t)B->nrows, sizeof(matx_int64_t));
+    matx_int64_t* b_row_start = (matx_int64_t*)malloc(((size_t)B->nrows + 1) * sizeof(matx_int64_t));
+    if (!b_row_cnt || !b_row_start) {
+        free(hrow); free(hcol); free(hval);
+        free(b_row_cnt); free(b_row_start);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t ib = 0; ib < bnnz; ++ib)
+        b_row_cnt[B->rows[ib]]++;
+    b_row_start[0] = 0;
+    for (matx_int64_t r = 0; r < B->nrows; ++r) {
+        b_row_start[r + 1] = b_row_start[r] + b_row_cnt[r];
+        b_row_cnt[r] = 0;
+    }
+    matx_int64_t* b_perm = (matx_int64_t*)malloc((size_t)bnnz * sizeof(matx_int64_t));
+    if (!b_perm) {
+        free(hrow); free(hcol); free(hval);
+        free(b_row_cnt); free(b_row_start);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t ib = 0; ib < bnnz; ++ib) {
+        matx_int64_t r   = B->rows[ib];
+        matx_int64_t pos = b_row_start[r] + b_row_cnt[r];
+        b_perm[pos] = ib;
+        b_row_cnt[r]++;
+    }
+    free(b_row_cnt);
+
+    for (matx_int64_t ia = 0; ia < annz; ++ia) {
+        matx_int64_t       k  = A->columns[ia];
+        matx_int64_t       i  = A->rows[ia];
+        matx_complex_d_t   av = A->values[ia];
+        /* av *= alpha */
+        double avr = alpha.real * av.real - alpha.imag * av.imag;
+        double avi = alpha.real * av.imag + alpha.imag * av.real;
+
+        /* Only iterate B entries in row k (CSR row-index lookup). */
+        for (matx_int64_t p = b_row_start[k]; p < b_row_start[k + 1]; ++p) {
+            matx_int64_t ib = b_perm[p];
+            matx_int64_t     j  = B->columns[ib];
+            matx_complex_d_t bv = B->values[ib];
+            /* prod = av * bv */
+            double pr = avr * bv.real - avi * bv.imag;
+            double pi = avr * bv.imag + avi * bv.real;
+
+            matx_int64_t idx = (i * 2654435761ULL + (unsigned long long)j) & (cap - 1);
+            while (hrow[idx] != SPGEMM_HASH_EMPTY) {
+                if (hrow[idx] == i && hcol[idx] == j) {
+                    hval[idx].real += pr;
+                    hval[idx].imag += pi;
+                    goto next_bz;
+                }
+                idx = (idx + 1) & (cap - 1);
+            }
+            hrow[idx] = i;
+            hcol[idx] = j;
+            hval[idx].real = pr;
+            hval[idx].imag = pi;
+            next_bz:;
+        }
+    }
+    free(b_row_start); free(b_perm);
+
+    matx_int64_t nnz_out = 0;
+    for (matx_int64_t i = 0; i < cap; ++i)
+        if (hrow[i] != SPGEMM_HASH_EMPTY &&
+            (hval[i].real != 0.0 || hval[i].imag != 0.0))
+            nnz_out++;
+
+    matx_int64_t pos = 0;
+    for (matx_int64_t i = 0; i < cap; ++i) {
+        if (hrow[i] != SPGEMM_HASH_EMPTY &&
+            (hval[i].real != 0.0 || hval[i].imag != 0.0)) {
+            out->rows[pos]    = hrow[i];
+            out->columns[pos] = hcol[i];
+            out->values[pos]  = hval[i];
+            pos++;
+        }
+    }
+    out->nnz = nnz_out;
+
+    free(hrow); free(hcol); free(hval);
+    return MATX_OK;
 }
 
 // ---- SpTRSV (reference) ----
@@ -1955,9 +2202,108 @@ static matx_status_t ref_sptrsv_d_i8_grb(matx_uplo_t uplo,
                                           matx_coo_d_i8_t A,
                                           matx_vec_d_i8_t x)
 {
-    (void) uplo; (void) trans; (void) diag; (void) A; (void) x;
-    MATX_ERROR("%s: SpTRSV reference not yet implemented", __func__);
-    return MATX_ERR_NOT_SUPPORTED;
+    if (!A || !x || !x->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->nrows != x->n) {
+        MATX_ERROR("%s: dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (trans != MATX_NO_TRANS) {
+        MATX_ERROR("%s: transposed SpTRSV not yet implemented", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    matx_int64_t n = A->nrows;
+    matx_int64_t nnz = A->nnz;
+
+    /* Build row pointers: for each row, first[i] = index of first entry. */
+    matx_int64_t* row_start = (matx_int64_t*)calloc((size_t)(n + 1), sizeof(matx_int64_t));
+    matx_int64_t* row_cnt   = (matx_int64_t*)calloc((size_t)n, sizeof(matx_int64_t));
+    if (!row_start || !row_cnt) {
+        free(row_start); free(row_cnt);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t k = 0; k < nnz; ++k)
+        row_cnt[A->rows[k]]++;
+    matx_int64_t total = 0;
+    for (matx_int64_t i = 0; i < n; ++i) {
+        row_start[i] = total;
+        total += row_cnt[i];
+        row_cnt[i] = 0; /* will reuse as write cursor */
+    }
+    row_start[n] = total;
+
+    /* Permute entries into row-major order. */
+    matx_int64_t* perm = (matx_int64_t*)malloc((size_t)nnz * sizeof(matx_int64_t));
+    if (!perm) {
+        free(row_start); free(row_cnt);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t k = 0; k < nnz; ++k) {
+        matx_int64_t r = A->rows[k];
+        matx_int64_t pos = row_start[r] + row_cnt[r];
+        perm[pos] = k;
+        row_cnt[r]++;
+    }
+
+    int is_lower = (uplo == MATX_LOWER);
+    int is_unit  = (diag == MATX_UNIT_DIAG);
+
+    if (is_lower) {
+        /* Forward substitution: i = 0 .. n-1 */
+        for (matx_int64_t i = 0; i < n; ++i) {
+            double sum = 0.0;
+            double diag_val = 1.0;
+            for (matx_int64_t p = row_start[i]; p < row_start[i + 1]; ++p) {
+                matx_int64_t k = perm[p];
+                matx_int64_t j = A->columns[k];
+                if (j < i) {
+                    sum += A->values[k] * x->data[j * x->stride];
+                } else if (j == i) {
+                    diag_val = A->values[k];
+                }
+            }
+            if (is_unit) {
+                x->data[i * x->stride] = x->data[i * x->stride] - sum;
+            } else {
+                if (diag_val == 0.0) {
+                    free(perm); free(row_start); free(row_cnt);
+                    MATX_ERROR("%s: zero diagonal at row %lld", __func__, (long long)i);
+                    return MATX_ERR_INVALID_ARG;
+                }
+                x->data[i * x->stride] = (x->data[i * x->stride] - sum) / diag_val;
+            }
+        }
+    } else {
+        /* Backward substitution: i = n-1 .. 0 */
+        for (matx_int64_t i = n - 1; i >= 0; --i) {
+            double sum = 0.0;
+            double diag_val = 1.0;
+            for (matx_int64_t p = row_start[i]; p < row_start[i + 1]; ++p) {
+                matx_int64_t k = perm[p];
+                matx_int64_t j = A->columns[k];
+                if (j > i) {
+                    sum += A->values[k] * x->data[j * x->stride];
+                } else if (j == i) {
+                    diag_val = A->values[k];
+                }
+            }
+            if (is_unit) {
+                x->data[i * x->stride] = x->data[i * x->stride] - sum;
+            } else {
+                if (diag_val == 0.0) {
+                    free(perm); free(row_start); free(row_cnt);
+                    MATX_ERROR("%s: zero diagonal at row %lld", __func__, (long long)i);
+                    return MATX_ERR_INVALID_ARG;
+                }
+                x->data[i * x->stride] = (x->data[i * x->stride] - sum) / diag_val;
+            }
+        }
+    }
+
+    free(perm); free(row_start); free(row_cnt);
+    return MATX_OK;
 }
 
 static matx_status_t ref_sptrsv_z_i8_grb(matx_uplo_t uplo,
@@ -1966,9 +2312,120 @@ static matx_status_t ref_sptrsv_z_i8_grb(matx_uplo_t uplo,
                                           matx_coo_z_i8_t A,
                                           matx_vec_z_i8_t x)
 {
-    (void) uplo; (void) trans; (void) diag; (void) A; (void) x;
-    MATX_ERROR("%s: SpTRSV complex reference not yet implemented", __func__);
-    return MATX_ERR_NOT_SUPPORTED;
+    if (!A || !x || !x->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (A->nrows != A->ncols || A->nrows != x->n) {
+        MATX_ERROR("%s: dimension mismatch", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (trans != MATX_NO_TRANS) {
+        MATX_ERROR("%s: transposed SpTRSV not yet implemented", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    matx_int64_t n = A->nrows;
+    matx_int64_t nnz = A->nnz;
+
+    matx_int64_t* row_start = (matx_int64_t*)calloc((size_t)(n + 1), sizeof(matx_int64_t));
+    matx_int64_t* row_cnt   = (matx_int64_t*)calloc((size_t)n, sizeof(matx_int64_t));
+    if (!row_start || !row_cnt) {
+        free(row_start); free(row_cnt);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t k = 0; k < nnz; ++k)
+        row_cnt[A->rows[k]]++;
+    matx_int64_t total = 0;
+    for (matx_int64_t i = 0; i < n; ++i) {
+        row_start[i] = total;
+        total += row_cnt[i];
+        row_cnt[i] = 0;
+    }
+    row_start[n] = total;
+
+    matx_int64_t* perm = (matx_int64_t*)malloc((size_t)nnz * sizeof(matx_int64_t));
+    if (!perm) {
+        free(row_start); free(row_cnt);
+        return MATX_ERR_OUT_OF_MEMORY;
+    }
+    for (matx_int64_t k = 0; k < nnz; ++k) {
+        matx_int64_t r = A->rows[k];
+        matx_int64_t pos = row_start[r] + row_cnt[r];
+        perm[pos] = k;
+        row_cnt[r]++;
+    }
+
+    int is_lower = (uplo == MATX_LOWER);
+    int is_unit  = (diag == MATX_UNIT_DIAG);
+
+    if (is_lower) {
+        for (matx_int64_t i = 0; i < n; ++i) {
+            double sum_re = 0.0, sum_im = 0.0;
+            matx_complex_d_t diag_val = {1.0, 0.0};
+            for (matx_int64_t p = row_start[i]; p < row_start[i + 1]; ++p) {
+                matx_int64_t k = perm[p];
+                matx_int64_t j = A->columns[k];
+                if (j < i) {
+                    matx_complex_d_t ak = A->values[k];
+                    matx_complex_d_t xj = x->data[j * x->stride];
+                    sum_re += ak.real * xj.real - ak.imag * xj.imag;
+                    sum_im += ak.real * xj.imag + ak.imag * xj.real;
+                } else if (j == i) {
+                    diag_val = A->values[k];
+                }
+            }
+            if (is_unit) {
+                x->data[i * x->stride].real -= sum_re;
+                x->data[i * x->stride].imag -= sum_im;
+            } else {
+                if (diag_val.real == 0.0 && diag_val.imag == 0.0) {
+                    free(perm); free(row_start); free(row_cnt);
+                    MATX_ERROR("%s: zero diagonal at row %lld", __func__, (long long)i);
+                    return MATX_ERR_INVALID_ARG;
+                }
+                double denom = diag_val.real * diag_val.real + diag_val.imag * diag_val.imag;
+                double xr = x->data[i * x->stride].real - sum_re;
+                double xi = x->data[i * x->stride].imag - sum_im;
+                x->data[i * x->stride].real = (xr * diag_val.real + xi * diag_val.imag) / denom;
+                x->data[i * x->stride].imag = (xi * diag_val.real - xr * diag_val.imag) / denom;
+            }
+        }
+    } else {
+        for (matx_int64_t i = n - 1; i >= 0; --i) {
+            double sum_re = 0.0, sum_im = 0.0;
+            matx_complex_d_t diag_val = {1.0, 0.0};
+            for (matx_int64_t p = row_start[i]; p < row_start[i + 1]; ++p) {
+                matx_int64_t k = perm[p];
+                matx_int64_t j = A->columns[k];
+                if (j > i) {
+                    matx_complex_d_t ak = A->values[k];
+                    matx_complex_d_t xj = x->data[j * x->stride];
+                    sum_re += ak.real * xj.real - ak.imag * xj.imag;
+                    sum_im += ak.real * xj.imag + ak.imag * xj.real;
+                } else if (j == i) {
+                    diag_val = A->values[k];
+                }
+            }
+            if (is_unit) {
+                x->data[i * x->stride].real -= sum_re;
+                x->data[i * x->stride].imag -= sum_im;
+            } else {
+                if (diag_val.real == 0.0 && diag_val.imag == 0.0) {
+                    free(perm); free(row_start); free(row_cnt);
+                    MATX_ERROR("%s: zero diagonal at row %lld", __func__, (long long)i);
+                    return MATX_ERR_INVALID_ARG;
+                }
+                double denom = diag_val.real * diag_val.real + diag_val.imag * diag_val.imag;
+                double xr = x->data[i * x->stride].real - sum_re;
+                double xi = x->data[i * x->stride].imag - sum_im;
+                x->data[i * x->stride].real = (xr * diag_val.real + xi * diag_val.imag) / denom;
+                x->data[i * x->stride].imag = (xi * diag_val.real - xr * diag_val.imag) / denom;
+            }
+        }
+    }
+
+    free(perm); free(row_start); free(row_cnt);
+    return MATX_OK;
 }
 
 static matx_bool grb_init_ok = false;

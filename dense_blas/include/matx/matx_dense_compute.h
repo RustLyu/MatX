@@ -183,6 +183,15 @@ extern "C" {
 			matx_int64_t m, matx_int64_t n, const void* alpha,
 			const void* A, matx_int64_t lda, const void* B, matx_int64_t ldb,
 			const void* beta, void* C, matx_int64_t ldc);
+			// ---- Triangular matrix-matrix multiply (GEMMT) ----
+			matx_status_t(*dgemmt)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t transA, matx_trans_t transB,
+				matx_int64_t n, matx_int64_t k, matx_double alpha,
+				const matx_double* A, matx_int64_t lda, const matx_double* B, matx_int64_t ldb,
+				matx_double beta, matx_double* C, matx_int64_t ldc);
+			matx_status_t(*zgemmt)(matx_layout_t layout, matx_uplo_t uplo, matx_trans_t transA, matx_trans_t transB,
+				matx_int64_t n, matx_int64_t k, const void* alpha,
+				const void* A, matx_int64_t lda, const void* B, matx_int64_t ldb,
+				const void* beta, void* C, matx_int64_t ldc);
 
 		// ---- Transpose ----
 		matx_status_t(*transpose_d_i8)(matx_layout_t layout, matx_int64_t rows, matx_int64_t cols,
@@ -502,6 +511,29 @@ extern "C" {
 	MATX_DENSE_BLAS_API matx_status_t matx_her2k_z_i8(const matx_dense_backend_t* blas, matx_uplo_t uplo, matx_trans_t trans,
         matx_complex_d_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
 		matx_double beta, matx_dense_z_i8_t C);
+
+	// ---- Triangular matrix-matrix multiply (GEMMT) ----
+
+	/**
+	 * @brief Real triangular matrix-matrix multiply (DGEMMT)
+	 * @formula C := alpha * op(A) * op(B) + beta * C
+	 *          C is n-by-n symmetric, only the specified triangle is updated.
+	 *          A is n-by-k, B is k-by-n (or transposed accordingly).
+	 */
+	MATX_DENSE_BLAS_API matx_status_t matx_gemmt_d_i8(const matx_dense_backend_t* blas,
+		matx_uplo_t uplo, matx_trans_t transA, matx_trans_t transB,
+		matx_double alpha, const matx_dense_d_i8_t A, const matx_dense_d_i8_t B,
+		matx_double beta, matx_dense_d_i8_t C);
+
+	/**
+	 * @brief Complex triangular matrix-matrix multiply (ZGEMMT)
+	 * @formula C := alpha * op(A) * op(B) + beta * C
+	 *          C is n-by-n symmetric/Hermitian, only the specified triangle is updated.
+	 */
+	MATX_DENSE_BLAS_API matx_status_t matx_gemmt_z_i8(const matx_dense_backend_t* blas,
+		matx_uplo_t uplo, matx_trans_t transA, matx_trans_t transB,
+		matx_complex_d_t alpha, const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
+		matx_complex_d_t beta, matx_dense_z_i8_t C);
 
 	/**
 		 * @brief Real symmetric matrix-matrix multiply (DSYMM)

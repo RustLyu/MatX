@@ -82,6 +82,24 @@ typedef struct matx_vec_vtable_t
     // ---- Cross product ----
     matx_status_t (*cross_d_i8)(matx_vec_d_i8_t x, matx_vec_d_i8_t y, matx_vec_d_i8_t out);
     matx_status_t (*cross_z_i8)(matx_vec_z_i8_t x, matx_vec_z_i8_t y, matx_vec_z_i8_t out);
+
+    // ---- Givens rotation ----
+    matx_status_t (*drot)(matx_int64_t n, matx_double* x, matx_int64_t incx,
+                          matx_double* y, matx_int64_t incy,
+                          matx_double c, matx_double s);
+    matx_status_t (*drotg)(matx_double* a, matx_double* b, matx_double* c, matx_double* s);
+    matx_status_t (*zrot)(matx_int64_t n, void* x, matx_int64_t incx,
+                          void* y, matx_int64_t incy,
+                          const double* c, const void* s);
+    matx_status_t (*zrotg)(void* a, void* b, double* c, void* s);
+
+    // ---- axpby (BLAS extension) ----
+    matx_status_t (*daxpby)(matx_int64_t n, matx_double alpha, const matx_double* x,
+                            matx_int64_t incx, matx_double beta, matx_double* y,
+                            matx_int64_t incy);
+    matx_status_t (*zaxpby)(matx_int64_t n, const void* alpha, const void* x,
+                            matx_int64_t incx, const void* beta, void* y,
+                            matx_int64_t incy);
 } matx_vec_vtable_t;
 
 typedef struct matx_vec_backend_t
@@ -310,6 +328,63 @@ MATX_VEC_BLAS_API matx_status_t matx_vec_cross_z_i8(const matx_vec_backend_t* bl
                                            matx_vec_z_i8_t x,
                                            matx_vec_z_i8_t y,
                                            matx_vec_z_i8_t out);
+
+/**
+ * @brief Apply Givens rotation to real vectors (DROT)
+ * @formula x[i] :=  c*x[i] + s*y[i]
+ *           y[i] := -s*x[i] + c*y[i],  i = 0,...,n-1
+ */
+MATX_VEC_BLAS_API matx_status_t matx_vec_rot_d_i8(const matx_vec_backend_t* blas,
+                                          matx_vec_d_i8_t x, matx_vec_d_i8_t y,
+                                          matx_double c, matx_double s);
+
+/**
+ * @brief Apply Givens rotation to complex vectors (ZROT)
+ * @formula x[i] :=  c*x[i] + s*y[i]
+ *           y[i] := -conj(s)*x[i] + c*y[i],  i = 0,...,n-1
+ *           c is real, s is complex
+ */
+MATX_VEC_BLAS_API matx_status_t matx_vec_rot_z_i8(const matx_vec_backend_t* blas,
+                                          matx_vec_z_i8_t x, matx_vec_z_i8_t y,
+                                          matx_double c, matx_complex_d_t s);
+
+/**
+ * @brief Generate real Givens rotation (DROTG)
+ * @brief Given (a, b), computes c, s such that:
+ *       [ c  s] [a] = [r]
+ *       [-s  c] [b]   [0]
+ *       a and b are overwritten with r and z.
+ */
+MATX_VEC_BLAS_API matx_status_t matx_vec_rotg_d_i8(const matx_vec_backend_t* blas,
+                                           matx_double* a, matx_double* b,
+                                           matx_double* c, matx_double* s);
+
+/**
+ * @brief Generate complex Givens rotation (ZROTG)
+ * @brief Given (a, b), computes real c, complex s such that:
+ *       [ c       s] [a] = [r]
+ *       [-conj(s) c] [b]   [0]
+ *       a and b are overwritten with r and z.
+ */
+MATX_VEC_BLAS_API matx_status_t matx_vec_rotg_z_i8(const matx_vec_backend_t* blas,
+                                           matx_complex_d_t* a, matx_complex_d_t* b,
+                                           matx_double* c, matx_complex_d_t* s);
+
+/**
+ * @brief Real vector scaled accumulation with two scalars (axpby)
+ * @formula y[i] := alpha * x[i] + beta * y[i],  i = 0,...,n-1
+ */
+MATX_VEC_BLAS_API matx_status_t matx_vec_axpby_d_i8(const matx_vec_backend_t* blas,
+                                            matx_double alpha, const matx_vec_d_i8_t x,
+                                            matx_double beta, matx_vec_d_i8_t y);
+
+/**
+ * @brief Complex vector scaled accumulation with two scalars (axpby)
+ * @formula y[i] := alpha * x[i] + beta * y[i],  i = 0,...,n-1
+ */
+MATX_VEC_BLAS_API matx_status_t matx_vec_axpby_z_i8(const matx_vec_backend_t* blas,
+                                            matx_complex_d_t alpha, const matx_vec_z_i8_t x,
+                                            matx_complex_d_t beta, matx_vec_z_i8_t y);
 
 #ifdef __cplusplus
 }

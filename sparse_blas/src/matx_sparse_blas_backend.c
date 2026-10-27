@@ -25,8 +25,7 @@ static matx_sparse_backend_t choose_default_backend(void)
 #if MATX_HAVE_GRAPHBLAS
     return matx_sparse_make_reference_grb();
 #else
-    matx_sparse_backend_t be = {0};
-    return be;
+    return matx_sparse_make_reference_aocl();
 #endif
 }
 

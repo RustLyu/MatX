@@ -379,3 +379,113 @@ matx_status_t matx_vec_cross_z_i8(const matx_vec_backend_t* blas,
 	}
 	return blas->vt.cross_z_i8(x, y, out);
 }
+
+// ---- Givens rotation wrappers ----
+
+matx_status_t matx_vec_rot_d_i8(const matx_vec_backend_t* blas,
+                                matx_vec_d_i8_t x, matx_vec_d_i8_t y,
+                                matx_double c, matx_double s)
+{
+    if (!blas || !x || !y || !x->data || !y->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (x->n != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.drot) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.drot(x->n, x->data, x->stride, y->data, y->stride, c, s);
+}
+
+matx_status_t matx_vec_rot_z_i8(const matx_vec_backend_t* blas,
+                                matx_vec_z_i8_t x, matx_vec_z_i8_t y,
+                                matx_double c, matx_complex_d_t s)
+{
+    if (!blas || !x || !y || !x->data || !y->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (x->n != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zrot) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.zrot(x->n, x->data, x->stride, y->data, y->stride, &c, &s);
+}
+
+matx_status_t matx_vec_rotg_d_i8(const matx_vec_backend_t* blas,
+                                 matx_double* a, matx_double* b,
+                                 matx_double* c, matx_double* s)
+{
+    if (!blas || !a || !b || !c || !s) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.drotg) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.drotg(a, b, c, s);
+}
+
+matx_status_t matx_vec_rotg_z_i8(const matx_vec_backend_t* blas,
+                                 matx_complex_d_t* a, matx_complex_d_t* b,
+                                 matx_double* c, matx_complex_d_t* s)
+{
+    if (!blas || !a || !b || !c || !s) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zrotg) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.zrotg(a, b, c, s);
+}
+
+// ---- axpby wrappers ----
+
+matx_status_t matx_vec_axpby_d_i8(const matx_vec_backend_t* blas,
+                                  matx_double alpha, const matx_vec_d_i8_t x,
+                                  matx_double beta, matx_vec_d_i8_t y)
+{
+    if (!blas || !x || !y || !x->data || !y->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (x->n != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.daxpby) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.daxpby(x->n, alpha, x->data, x->stride, beta, y->data, y->stride);
+}
+
+matx_status_t matx_vec_axpby_z_i8(const matx_vec_backend_t* blas,
+                                  matx_complex_d_t alpha, const matx_vec_z_i8_t x,
+                                  matx_complex_d_t beta, matx_vec_z_i8_t y)
+{
+    if (!blas || !x || !y || !x->data || !y->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (x->n != y->n) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zaxpby) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.zaxpby(x->n, &alpha, x->data, x->stride, &beta, y->data, y->stride);
+}

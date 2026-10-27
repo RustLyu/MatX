@@ -1015,6 +1015,58 @@ matx_status_t matx_hemm_z_i8(const matx_dense_backend_t* blas,
                           C->stride);
 }
 
+// ---- Triangular matrix-matrix multiply (GEMMT) wrappers ----
+
+matx_status_t matx_gemmt_d_i8(const matx_dense_backend_t* blas,
+                              matx_uplo_t uplo, matx_trans_t transA, matx_trans_t transB,
+                              matx_double alpha,
+                              const matx_dense_d_i8_t A, const matx_dense_d_i8_t B,
+                              matx_double beta, matx_dense_d_i8_t C)
+{
+    if (!blas || !A || !B || !C || !A->data || !B->data || !C->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (C->nrows != C->ncols || A->nrows != C->nrows || B->ncols != C->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.dgemmt) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.dgemmt(C->layout, uplo, transA, transB,
+                           C->nrows, A->ncols, alpha,
+                           A->data, A->stride,
+                           B->data, B->stride,
+                           beta, C->data, C->stride);
+}
+
+matx_status_t matx_gemmt_z_i8(const matx_dense_backend_t* blas,
+                              matx_uplo_t uplo, matx_trans_t transA, matx_trans_t transB,
+                              matx_complex_d_t alpha,
+                              const matx_dense_z_i8_t A, const matx_dense_z_i8_t B,
+                              matx_complex_d_t beta, matx_dense_z_i8_t C)
+{
+    if (!blas || !A || !B || !C || !A->data || !B->data || !C->data) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (C->nrows != C->ncols || A->nrows != C->nrows || B->ncols != C->ncols) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (!blas->vt.zgemmt) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+    return blas->vt.zgemmt(C->layout, uplo, transA, transB,
+                           C->nrows, A->ncols, &alpha,
+                           A->data, A->stride,
+                           B->data, B->stride,
+                           &beta, C->data, C->stride);
+}
+
 // ---- Transpose wrappers ----
 
 matx_status_t matx_transpose_d_i8(const matx_dense_backend_t* blas,

@@ -514,6 +514,218 @@ static matx_status_t ref_vec_cross_z_i8(matx_vec_z_i8_t x, matx_vec_z_i8_t y, ma
     return MATX_OK;
 }
 
+// ---- Givens rotation implementations ----
+
+static matx_status_t ref_drot(matx_int64_t n,
+                              matx_double* restrict x, matx_int64_t incx,
+                              matx_double* restrict y, matx_int64_t incy,
+                              matx_double c, matx_double s)
+{
+    if (!x || !y) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+#if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
+    cblas_drot(n, x, incx, y, incy, c, s);
+#else
+    for (matx_int64_t i = 0; i < n; ++i) {
+        matx_double temp = c * x[i * incx] + s * y[i * incy];
+        y[i * incy] = -s * x[i * incx] + c * y[i * incy];
+        x[i * incx] = temp;
+    }
+#endif
+    return MATX_OK;
+}
+
+static matx_status_t ref_drotg(matx_double* a, matx_double* b,
+                               matx_double* c, matx_double* s)
+{
+    if (!a || !b || !c || !s) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+#if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
+    cblas_drotg(a, b, c, s);
+#else
+    double aa = *a, bb = *b;
+    double roe = (fabs(aa) > fabs(bb)) ? aa : bb;
+    double scale = fabs(aa) + fabs(bb);
+    if (scale == 0.0) {
+        *c = 1.0;
+        *s = 0.0;
+        *a = 0.0;
+        *b = 0.0;
+    } else {
+        double a_scaled = aa / scale;
+        double b_scaled = bb / scale;
+        double r = scale * sqrt(a_scaled * a_scaled + b_scaled * b_scaled);
+        if (roe < 0.0) r = -r;
+        *c = aa / r;
+        *s = bb / r;
+        double z;
+        if (fabs(aa) > fabs(bb)) z = *s;
+        else if (fabs(*c) > 0.0) z = 1.0 / (*c);
+        else z = 1.0;
+        *a = r;
+        *b = z;
+    }
+#endif
+    return MATX_OK;
+}
+
+static matx_status_t ref_zrot(matx_int64_t n,
+                              void* x, matx_int64_t incx,
+                              void* y, matx_int64_t incy,
+                              const double* c, const void* s)
+{
+    if (!x || !y || !c || !s) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    // ZROT with complex s is not universally available in CBLAS;
+    // always use the reference impl for portability.
+    {
+    matx_complex_d_t* xd = (matx_complex_d_t*) x;
+    matx_complex_d_t* yd = (matx_complex_d_t*) y;
+    const matx_complex_d_t* sc = (const matx_complex_d_t*) s;
+    double cr = *c;
+    double sr = sc->real;
+    double si = sc->imag;
+    for (matx_int64_t i = 0; i < n; ++i) {
+        matx_complex_d_t xt = xd[i * incx];
+        // x[i] = c*x[i] + s*y[i]
+        xd[i * incx].real = cr * xt.real + sr * yd[i * incy].real - si * yd[i * incy].imag;
+        xd[i * incx].imag = cr * xt.imag + sr * yd[i * incy].imag + si * yd[i * incy].real;
+        // y[i] = -conj(s)*x[i] + c*y[i] = -(sr - i*si)*x[i] + c*y[i]
+        //        = (-sr + i*si)*x[i] + c*y[i]
+        double yr = -sr * xt.real - si * xt.imag + cr * yd[i * incy].real;
+        double yi =  si * xt.real - sr * xt.imag + cr * yd[i * incy].imag;
+        yd[i * incy].real = yr;
+        yd[i * incy].imag = yi;
+    }
+    }
+    return MATX_OK;
+}
+
+static matx_status_t ref_zrotg(void* a, void* b, double* c, void* s)
+{
+    if (!a || !b || !c || !s) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+#if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
+    cblas_zrotg(a, b, c, s);
+#else
+    matx_complex_d_t* aa = (matx_complex_d_t*) a;
+    matx_complex_d_t* bb = (matx_complex_d_t*) b;
+    matx_complex_d_t* ss = (matx_complex_d_t*) s;
+
+    double a_mag = hypot(aa->real, aa->imag);
+    if (a_mag == 0.0) {
+        *c = 0.0;
+        ss->real = 1.0;
+        ss->imag = 0.0;
+        *aa = *bb;
+        bb->real = 1.0;
+        bb->imag = 0.0;
+    } else {
+        double a_norm_real = aa->real / a_mag;
+        double a_norm_imag = aa->imag / a_mag;
+        double alpha = a_norm_real * bb->real + a_norm_imag * bb->imag;
+        double beta  = a_norm_real * bb->imag - a_norm_imag * bb->real;
+        double r_mag = hypot(a_mag, hypot(alpha, beta));
+        *c = a_mag / r_mag;
+        double s_mag = hypot(alpha, beta) / r_mag;
+        if (s_mag == 0.0) {
+            ss->real = 0.0;
+            ss->imag = 0.0;
+        } else {
+            double s_norm_real = alpha / (s_mag * r_mag);
+            double s_norm_imag = -beta / (s_mag * r_mag);
+            ss->real = s_mag * s_norm_real;
+            ss->imag = s_mag * s_norm_imag;
+        }
+        aa->real = r_mag;
+        aa->imag = 0.0;
+    }
+#endif
+    return MATX_OK;
+}
+
+// ---- axpby implementations ----
+
+static matx_status_t ref_daxpby(matx_int64_t n,
+                                matx_double alpha, const matx_double* restrict x,
+                                matx_int64_t incx,
+                                matx_double beta, matx_double* restrict y,
+                                matx_int64_t incy)
+{
+    if (!x || !y) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    // axpby: y = alpha*x + beta*y
+    // When beta==0, reduces to y = alpha*x (like scal+copy)
+    // When alpha==0, reduces to y = beta*y (like scal)
+    if (beta == 0.0) {
+        #pragma omp simd
+        for (matx_int64_t i = 0; i < n; ++i)
+            y[i * incy] = alpha * x[i * incx];
+    } else if (alpha == 0.0) {
+        #pragma omp simd
+        for (matx_int64_t i = 0; i < n; ++i)
+            y[i * incy] *= beta;
+    } else {
+        #pragma omp simd
+        for (matx_int64_t i = 0; i < n; ++i)
+            y[i * incy] = alpha * x[i * incx] + beta * y[i * incy];
+    }
+    return MATX_OK;
+}
+
+static matx_status_t ref_zaxpby(matx_int64_t n,
+                                const void* alpha, const void* x,
+                                matx_int64_t incx,
+                                const void* beta, void* y,
+                                matx_int64_t incy)
+{
+    if (!x || !y || !alpha || !beta) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    const matx_complex_d_t* a = (const matx_complex_d_t*) alpha;
+    const matx_complex_d_t* b = (const matx_complex_d_t*) beta;
+    const matx_complex_d_t* xd = (const matx_complex_d_t*) x;
+    matx_complex_d_t* yd = (matx_complex_d_t*) y;
+
+    if (b->real == 0.0 && b->imag == 0.0) {
+        #pragma omp simd
+        for (matx_int64_t i = 0; i < n; ++i) {
+            yd[i * incy].real = a->real * xd[i * incx].real - a->imag * xd[i * incx].imag;
+            yd[i * incy].imag = a->real * xd[i * incx].imag + a->imag * xd[i * incx].real;
+        }
+    } else if (a->real == 0.0 && a->imag == 0.0) {
+        #pragma omp simd
+        for (matx_int64_t i = 0; i < n; ++i) {
+            double yr = yd[i * incy].real;
+            double yi = yd[i * incy].imag;
+            yd[i * incy].real = b->real * yr - b->imag * yi;
+            yd[i * incy].imag = b->real * yi + b->imag * yr;
+        }
+    } else {
+        #pragma omp simd
+        for (matx_int64_t i = 0; i < n; ++i) {
+            double yr = yd[i * incy].real;
+            double yi = yd[i * incy].imag;
+            yd[i * incy].real = a->real * xd[i * incx].real - a->imag * xd[i * incx].imag
+                              + b->real * yr - b->imag * yi;
+            yd[i * incy].imag = a->real * xd[i * incx].imag + a->imag * xd[i * incx].real
+                              + b->real * yi + b->imag * yr;
+        }
+    }
+    return MATX_OK;
+}
+
 // ---- Vtable constructor ----
 
 matx_vec_backend_t matx_vec_blas_make_reference(void)
@@ -552,6 +764,12 @@ matx_vec_backend_t matx_vec_blas_make_reference(void)
         .norminf_z_i8 = &ref_vec_norminf_z_i8,
         .cross_d_i8 = &ref_vec_cross_d_i8,
         .cross_z_i8 = &ref_vec_cross_z_i8,
+        .drot = &ref_drot,
+        .drotg = &ref_drotg,
+        .zrot = &ref_zrot,
+        .zrotg = &ref_zrotg,
+        .daxpby = &ref_daxpby,
+        .zaxpby = &ref_zaxpby,
         }};
     return b;
 }

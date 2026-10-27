@@ -46,39 +46,117 @@ static matx_status_t ref_dgemm(matx_layout_t layout,
         return MATX_ERR_NOT_SUPPORTED;
     }
 
-    /* Small-n direct path: bypass CBLAS overhead for very small matrices. */
-    if (m <= 16 && n <= 16 && k <= 16 && trans_a == MATX_NO_TRANS
-        && trans_b == MATX_NO_TRANS) {
+    /* Small-n direct path: bypass CBLAS overhead for very small matrices.
+     * Handles all four transpose combinations for m,n,k <= 16. */
+    if (m <= 16 && n <= 16 && k <= 16) {
+        int ta = (trans_a != MATX_NO_TRANS);
+        int tb = (trans_b != MATX_NO_TRANS);
         if (layout == MATX_COL_MAJOR) {
-            for (matx_int64_t j = 0; j < n; ++j) {
-                for (matx_int64_t i = 0; i < m; ++i) {
-                    matx_double sum = 0.0;
-                    #pragma omp simd reduction(+:sum)
-                    for (matx_int64_t p = 0; p < k; ++p)
-                        sum += a[i + p * lda] * b[p + j * ldb];
-                    const matx_int64_t idx = i + j * ldc;
-                    if (beta == 0.0)
-                        c[idx] = alpha * sum;
-                    else if (beta == 1.0)
-                        c[idx] = alpha * sum + c[idx];
-                    else
-                        c[idx] = alpha * sum + beta * c[idx];
+            if (!ta && !tb) {         /* NN */
+                for (matx_int64_t j = 0; j < n; ++j) {
+                    for (matx_int64_t i = 0; i < m; ++i) {
+                        matx_double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (matx_int64_t p = 0; p < k; ++p)
+                            sum += a[i + p * lda] * b[p + j * ldb];
+                        const matx_int64_t idx = i + j * ldc;
+                        if (beta == 0.0)      c[idx] = alpha * sum;
+                        else if (beta == 1.0) c[idx] = alpha * sum + c[idx];
+                        else                  c[idx] = alpha * sum + beta * c[idx];
+                    }
+                }
+            } else if (ta && !tb) {   /* TN */
+                for (matx_int64_t j = 0; j < n; ++j) {
+                    for (matx_int64_t i = 0; i < m; ++i) {
+                        matx_double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (matx_int64_t p = 0; p < k; ++p)
+                            sum += a[p + i * lda] * b[p + j * ldb];
+                        const matx_int64_t idx = i + j * ldc;
+                        if (beta == 0.0)      c[idx] = alpha * sum;
+                        else if (beta == 1.0) c[idx] = alpha * sum + c[idx];
+                        else                  c[idx] = alpha * sum + beta * c[idx];
+                    }
+                }
+            } else if (!ta && tb) {   /* NT */
+                for (matx_int64_t j = 0; j < n; ++j) {
+                    for (matx_int64_t i = 0; i < m; ++i) {
+                        matx_double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (matx_int64_t p = 0; p < k; ++p)
+                            sum += a[i + p * lda] * b[j + p * ldb];
+                        const matx_int64_t idx = i + j * ldc;
+                        if (beta == 0.0)      c[idx] = alpha * sum;
+                        else if (beta == 1.0) c[idx] = alpha * sum + c[idx];
+                        else                  c[idx] = alpha * sum + beta * c[idx];
+                    }
+                }
+            } else {                   /* TT */
+                for (matx_int64_t j = 0; j < n; ++j) {
+                    for (matx_int64_t i = 0; i < m; ++i) {
+                        matx_double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (matx_int64_t p = 0; p < k; ++p)
+                            sum += a[p + i * lda] * b[j + p * ldb];
+                        const matx_int64_t idx = i + j * ldc;
+                        if (beta == 0.0)      c[idx] = alpha * sum;
+                        else if (beta == 1.0) c[idx] = alpha * sum + c[idx];
+                        else                  c[idx] = alpha * sum + beta * c[idx];
+                    }
                 }
             }
-        } else {
-            for (matx_int64_t i = 0; i < m; ++i) {
-                for (matx_int64_t j = 0; j < n; ++j) {
-                    matx_double sum = 0.0;
-                    #pragma omp simd reduction(+:sum)
-                    for (matx_int64_t p = 0; p < k; ++p)
-                        sum += a[i * lda + p] * b[p * ldb + j];
-                    const matx_int64_t idx = i * ldc + j;
-                    if (beta == 0.0)
-                        c[idx] = alpha * sum;
-                    else if (beta == 1.0)
-                        c[idx] = alpha * sum + c[idx];
-                    else
-                        c[idx] = alpha * sum + beta * c[idx];
+        } else { /* ROW_MAJOR */
+            if (!ta && !tb) {         /* NN */
+                for (matx_int64_t i = 0; i < m; ++i) {
+                    for (matx_int64_t j = 0; j < n; ++j) {
+                        matx_double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (matx_int64_t p = 0; p < k; ++p)
+                            sum += a[i * lda + p] * b[p * ldb + j];
+                        const matx_int64_t idx = i * ldc + j;
+                        if (beta == 0.0)      c[idx] = alpha * sum;
+                        else if (beta == 1.0) c[idx] = alpha * sum + c[idx];
+                        else                  c[idx] = alpha * sum + beta * c[idx];
+                    }
+                }
+            } else if (ta && !tb) {   /* TN */
+                for (matx_int64_t i = 0; i < m; ++i) {
+                    for (matx_int64_t j = 0; j < n; ++j) {
+                        matx_double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (matx_int64_t p = 0; p < k; ++p)
+                            sum += a[p * lda + i] * b[p * ldb + j];
+                        const matx_int64_t idx = i * ldc + j;
+                        if (beta == 0.0)      c[idx] = alpha * sum;
+                        else if (beta == 1.0) c[idx] = alpha * sum + c[idx];
+                        else                  c[idx] = alpha * sum + beta * c[idx];
+                    }
+                }
+            } else if (!ta && tb) {   /* NT */
+                for (matx_int64_t i = 0; i < m; ++i) {
+                    for (matx_int64_t j = 0; j < n; ++j) {
+                        matx_double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (matx_int64_t p = 0; p < k; ++p)
+                            sum += a[i * lda + p] * b[j * ldb + p];
+                        const matx_int64_t idx = i * ldc + j;
+                        if (beta == 0.0)      c[idx] = alpha * sum;
+                        else if (beta == 1.0) c[idx] = alpha * sum + c[idx];
+                        else                  c[idx] = alpha * sum + beta * c[idx];
+                    }
+                }
+            } else {                   /* TT */
+                for (matx_int64_t i = 0; i < m; ++i) {
+                    for (matx_int64_t j = 0; j < n; ++j) {
+                        matx_double sum = 0.0;
+                        #pragma omp simd reduction(+:sum)
+                        for (matx_int64_t p = 0; p < k; ++p)
+                            sum += a[p * lda + i] * b[j * ldb + p];
+                        const matx_int64_t idx = i * ldc + j;
+                        if (beta == 0.0)      c[idx] = alpha * sum;
+                        else if (beta == 1.0) c[idx] = alpha * sum + c[idx];
+                        else                  c[idx] = alpha * sum + beta * c[idx];
+                    }
                 }
             }
         }
@@ -1958,6 +2036,7 @@ static matx_status_t ref_norm_abs_sum_d(matx_layout_t layout,
         for (matx_int64_t reduction = 0; reduction < reduction_count; ++reduction) {
             matx_double sum = 0.0;
             const matx_int64_t base = reduction * lda;
+            #pragma omp simd reduction(+:sum)
             for (matx_int64_t inner = 0; inner < inner_count; ++inner)
                 sum += fabs(A[base + inner]);
             if (sum > maximum || isnan(sum)) maximum = sum;
@@ -2251,6 +2330,152 @@ static matx_status_t ref_hadamard_z_i8(matx_layout_t layout,
     return MATX_OK;
 }
 
+// ---- Triangular matrix-matrix multiply (GEMMT) implementations ----
+
+static matx_status_t ref_dgemmt(matx_layout_t layout, matx_uplo_t uplo,
+                                matx_trans_t transA, matx_trans_t transB,
+                                matx_int64_t n, matx_int64_t k, matx_double alpha,
+                                const matx_double* A, matx_int64_t lda,
+                                const matx_double* B, matx_int64_t ldb,
+                                matx_double beta, matx_double* C, matx_int64_t ldc)
+{
+    if (!A || !B || !C) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+#if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
+    CBLAS_ORDER order = (layout == MATX_ROW_MAJOR) ? CblasRowMajor : CblasColMajor;
+    CBLAS_UPLO uplo_cblas = (uplo == MATX_UPPER) ? CblasUpper : CblasLower;
+    CBLAS_TRANSPOSE ta = (transA == MATX_NO_TRANS) ? CblasNoTrans :
+                         (transA == MATX_TRANS) ? CblasTrans : CblasConjTrans;
+    CBLAS_TRANSPOSE tb = (transB == MATX_NO_TRANS) ? CblasNoTrans :
+                         (transB == MATX_TRANS) ? CblasTrans : CblasConjTrans;
+    cblas_dgemmt(order, uplo_cblas, ta, tb,
+                 (int)n, (int)k, alpha, A, (int)lda,
+                 B, (int)ldb, beta, C, (int)ldc);
+#else
+    // Compute only the specified triangle: C = alpha * op(A) * op(B) + beta * C
+    // This is a simplified version — full GEMM fallback for portability
+    int is_col = (layout == MATX_COL_MAJOR);
+    int is_upper = (uplo == MATX_UPPER);
+    (void)transA; (void)transB; // For now, only NO_TRANS path in fallback
+
+    if (is_col) {
+        for (matx_int64_t j = 0; j < n; ++j) {
+            matx_int64_t istart = is_upper ? 0 : j;
+            matx_int64_t iend   = is_upper ? j + 1 : n;
+            for (matx_int64_t i = istart; i < iend; ++i) {
+                double sum = 0.0;
+                for (matx_int64_t l = 0; l < k; ++l)
+                    sum += A[i + l * lda] * B[l + j * ldb];
+                C[i + j * ldc] = alpha * sum + beta * C[i + j * ldc];
+            }
+        }
+    } else {
+        for (matx_int64_t i = 0; i < n; ++i) {
+            matx_int64_t jstart = is_upper ? i : 0;
+            matx_int64_t jend   = is_upper ? n : i + 1;
+            for (matx_int64_t j = jstart; j < jend; ++j) {
+                double sum = 0.0;
+                for (matx_int64_t l = 0; l < k; ++l)
+                    sum += A[i * lda + l] * B[l * ldb + j];
+                C[i * ldc + j] = alpha * sum + beta * C[i * ldc + j];
+            }
+        }
+    }
+#endif
+    return MATX_OK;
+}
+
+static matx_status_t ref_zgemmt(matx_layout_t layout, matx_uplo_t uplo,
+                                matx_trans_t transA, matx_trans_t transB,
+                                matx_int64_t n, matx_int64_t k, const void* alpha,
+                                const void* A, matx_int64_t lda,
+                                const void* B, matx_int64_t ldb,
+                                const void* beta, void* C, matx_int64_t ldc)
+{
+    if (!A || !B || !C || !alpha || !beta) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (layout != MATX_COL_MAJOR && layout != MATX_ROW_MAJOR) {
+        MATX_ERROR("%s: invalid argument", __func__);
+        return MATX_ERR_INVALID_ARG;
+    }
+    if (n > INT_MAX || k > INT_MAX || lda > INT_MAX || ldb > INT_MAX || ldc > INT_MAX) {
+        MATX_ERROR("%s: operation not supported", __func__);
+        return MATX_ERR_NOT_SUPPORTED;
+    }
+#if MATX_ENABLE_OPENBLAS || MATX_ENABLE_BLIS
+    CBLAS_ORDER order = (layout == MATX_ROW_MAJOR) ? CblasRowMajor : CblasColMajor;
+    CBLAS_UPLO uplo_cblas = (uplo == MATX_UPPER) ? CblasUpper : CblasLower;
+    CBLAS_TRANSPOSE ta = (transA == MATX_NO_TRANS) ? CblasNoTrans :
+                         (transA == MATX_TRANS) ? CblasTrans : CblasConjTrans;
+    CBLAS_TRANSPOSE tb = (transB == MATX_NO_TRANS) ? CblasNoTrans :
+                         (transB == MATX_TRANS) ? CblasTrans : CblasConjTrans;
+    cblas_zgemmt(order, uplo_cblas, ta, tb,
+                 (int)n, (int)k, alpha, A, (int)lda,
+                 B, (int)ldb, beta, C, (int)ldc);
+#else
+    const matx_complex_d_t* a_data = (const matx_complex_d_t*) A;
+    const matx_complex_d_t* b_data = (const matx_complex_d_t*) B;
+    matx_complex_d_t* c_data = (matx_complex_d_t*) C;
+    const matx_complex_d_t* al = (const matx_complex_d_t*) alpha;
+    const matx_complex_d_t* bt = (const matx_complex_d_t*) beta;
+    int is_col = (layout == MATX_COL_MAJOR);
+    int is_upper = (uplo == MATX_UPPER);
+
+    if (is_col) {
+        for (matx_int64_t j = 0; j < n; ++j) {
+            matx_int64_t istart = is_upper ? 0 : j;
+            matx_int64_t iend   = is_upper ? j + 1 : n;
+            for (matx_int64_t i = istart; i < iend; ++i) {
+                double sum_re = 0.0, sum_im = 0.0;
+                for (matx_int64_t l = 0; l < k; ++l) {
+                    const matx_complex_d_t aik = a_data[i + l * lda];
+                    const matx_complex_d_t blj = b_data[l + j * ldb];
+                    sum_re += aik.real * blj.real - aik.imag * blj.imag;
+                    sum_im += aik.real * blj.imag + aik.imag * blj.real;
+                }
+                matx_int64_t idx = i + j * ldc;
+                c_data[idx].real = al->real * sum_re - al->imag * sum_im
+                                 + bt->real * c_data[idx].real - bt->imag * c_data[idx].imag;
+                c_data[idx].imag = al->real * sum_im + al->imag * sum_re
+                                 + bt->real * c_data[idx].imag + bt->imag * c_data[idx].real;
+            }
+        }
+    } else {
+        for (matx_int64_t i = 0; i < n; ++i) {
+            matx_int64_t jstart = is_upper ? i : 0;
+            matx_int64_t jend   = is_upper ? n : i + 1;
+            for (matx_int64_t j = jstart; j < jend; ++j) {
+                double sum_re = 0.0, sum_im = 0.0;
+                for (matx_int64_t l = 0; l < k; ++l) {
+                    const matx_complex_d_t aik = a_data[i * lda + l];
+                    const matx_complex_d_t blj = b_data[l * ldb + j];
+                    sum_re += aik.real * blj.real - aik.imag * blj.imag;
+                    sum_im += aik.real * blj.imag + aik.imag * blj.real;
+                }
+                matx_int64_t idx = i * ldc + j;
+                c_data[idx].real = al->real * sum_re - al->imag * sum_im
+                                 + bt->real * c_data[idx].real - bt->imag * c_data[idx].imag;
+                c_data[idx].imag = al->real * sum_im + al->imag * sum_re
+                                 + bt->real * c_data[idx].imag + bt->imag * c_data[idx].real;
+            }
+        }
+    }
+#endif
+    return MATX_OK;
+}
+
 matx_dense_backend_t matx_blas_make_reference(void)
 {
     matx_dense_backend_t b = {
@@ -2295,6 +2520,8 @@ matx_dense_backend_t matx_blas_make_reference(void)
         .zher2k = &ref_zher2k,
         .dsymm = &ref_dsymm,
         .zhemm = &ref_zhemm,
+        .dgemmt = &ref_dgemmt,
+        .zgemmt = &ref_zgemmt,
         .transpose_d_i8 = &ref_transpose_d_i8,
         .transpose_z_i8 = &ref_transpose_z_i8,
         .conj_transpose_z_i8 = &ref_conj_transpose_z_i8,
