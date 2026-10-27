@@ -69,11 +69,169 @@ typedef struct agmg_csr_z
     double* a;    /* values: interleaved real/imag, length 2*nnz */
 } agmg_csr_z_t;
 
+/* ── Introsort for CSR row entries ────────────────────────────────────────
+ *
+ * Sorts column indices (ja) within a CSR row while keeping associated values
+ * (a) in sync.  Uses introsort — quicksort with median-of-three pivot and
+ * heap-sort fallback — for rows longer than 32; insertion sort for shorter rows.
+ *
+ * Two overloads: one for real (single double per entry), one for complex
+ * (two interleaved doubles per entry).
+ */
+
+#define AGMG_SORT_INSERTION_LIMIT 32
+
+static void swap_real(int* ja, double* a, int i, int j)
+{
+    int    jtmp = ja[i]; ja[i] = ja[j]; ja[j] = jtmp;
+    double atmp = a[i];  a[i]  = a[j];  a[j]  = atmp;
+}
+
+static void sift_real_down(int* ja, double* a, int root, int end)
+{
+    for (;;) {
+        int child = root * 2 + 1;
+        if (child > end) return;
+        if (child + 1 <= end && ja[child] < ja[child + 1]) ++child;
+        if (ja[root] >= ja[child]) return;
+        swap_real(ja, a, root, child);
+        root = child;
+    }
+}
+
+static void heapsort_real(int* ja, double* a, int len)
+{
+    for (int start = len / 2; start > 0;) { --start; sift_real_down(ja, a, start, len - 1); }
+    for (int end = len - 1; end > 0; --end) {
+        swap_real(ja, a, 0, end);
+        sift_real_down(ja, a, 0, end - 1);
+    }
+}
+
+static int median3_real(int* ja, int a, int b, int c)
+{
+    if (ja[a] < ja[b]) return (ja[b] < ja[c]) ? b : (ja[a] < ja[c] ? c : a);
+    return (ja[a] < ja[c]) ? a : (ja[b] < ja[c] ? c : b);
+}
+
+static void introsort_real(int* ja, double* a, int len, unsigned depth_limit)
+{
+    /* quicksort phase */
+    while (len > AGMG_SORT_INSERTION_LIMIT) {
+        if (depth_limit == 0) { heapsort_real(ja, a, len); return; }
+        --depth_limit;
+
+        int pivot = median3_real(ja, 0, len / 2, len - 1);
+        int jval  = ja[pivot];
+        int left = 0, right = len - 1;
+        for (;;) {
+            while (ja[left]  < jval) ++left;
+            while (ja[right] > jval) --right;
+            if (left >= right) break;
+            swap_real(ja, a, left, right);
+            ++left; --right;
+        }
+        /* recurse on smaller partition, iterate on larger */
+        int left_len  = right + 1;
+        int right_len = len - left;
+        if (left_len < right_len) {
+            if (left_len > 1) introsort_real(ja, a, left_len, depth_limit);
+            ja += left; a += left; len = right_len;
+        } else {
+            if (right_len > 1) introsort_real(ja + left, a + left, right_len, depth_limit);
+            len = left_len;
+        }
+    }
+    /* insertion sort for short subarrays */
+    for (int i = 1; i < len; ++i) {
+        int    jv = ja[i];
+        double av = a[i];
+        int j = i - 1;
+        while (j >= 0 && ja[j] > jv) { ja[j + 1] = ja[j]; a[j + 1] = a[j]; --j; }
+        ja[j + 1] = jv; a[j + 1] = av;
+    }
+}
+
+/* ── complex (interleaved) variant ── */
+
+static void swap_z(int* ja, double* a, int i, int j)
+{
+    int    jtmp  = ja[i];      ja[i]      = ja[j];      ja[j]      = jtmp;
+    double artmp = a[2*i];     a[2*i]     = a[2*j];     a[2*j]     = artmp;
+    double aitmp = a[2*i + 1]; a[2*i + 1] = a[2*j + 1]; a[2*j + 1] = aitmp;
+}
+
+static void sift_z_down(int* ja, double* a, int root, int end)
+{
+    for (;;) {
+        int child = root * 2 + 1;
+        if (child > end) return;
+        if (child + 1 <= end && ja[child] < ja[child + 1]) ++child;
+        if (ja[root] >= ja[child]) return;
+        swap_z(ja, a, root, child);
+        root = child;
+    }
+}
+
+static void heapsort_z(int* ja, double* a, int len)
+{
+    for (int start = len / 2; start > 0;) { --start; sift_z_down(ja, a, start, len - 1); }
+    for (int end = len - 1; end > 0; --end) {
+        swap_z(ja, a, 0, end);
+        sift_z_down(ja, a, 0, end - 1);
+    }
+}
+
+static int median3_z(int* ja, int a, int b, int c)
+{
+    if (ja[a] < ja[b]) return (ja[b] < ja[c]) ? b : (ja[a] < ja[c] ? c : a);
+    return (ja[a] < ja[c]) ? a : (ja[b] < ja[c] ? c : b);
+}
+
+static void introsort_z(int* ja, double* a, int len, unsigned depth_limit)
+{
+    while (len > AGMG_SORT_INSERTION_LIMIT) {
+        if (depth_limit == 0) { heapsort_z(ja, a, len); return; }
+        --depth_limit;
+
+        int pivot = median3_z(ja, 0, len / 2, len - 1);
+        int jval  = ja[pivot];
+        int left = 0, right = len - 1;
+        for (;;) {
+            while (ja[left]  < jval) ++left;
+            while (ja[right] > jval) --right;
+            if (left >= right) break;
+            swap_z(ja, a, left, right);
+            ++left; --right;
+        }
+        int left_len  = right + 1;
+        int right_len = len - left;
+        if (left_len < right_len) {
+            if (left_len > 1) introsort_z(ja, a, left_len, depth_limit);
+            ja += left; a += 2 * left; len = right_len;
+        } else {
+            if (right_len > 1) introsort_z(ja + left, a + 2 * left, right_len, depth_limit);
+            len = left_len;
+        }
+    }
+    for (int i = 1; i < len; ++i) {
+        int    jv  = ja[i];
+        double avr = a[2*i], avi = a[2*i + 1];
+        int j = i - 1;
+        while (j >= 0 && ja[j] > jv) {
+            ja[j + 1] = ja[j]; a[2*(j+1)] = a[2*j]; a[2*(j+1)+1] = a[2*j+1]; --j;
+        }
+        ja[j + 1] = jv; a[2*(j+1)] = avr; a[2*(j+1)+1] = avi;
+    }
+}
+
 /**
  * @brief Convert a COO real matrix to CSR (int-indexed) for AGMG.
  *
  * AGMG requires 1-based (Fortran) CSR with int indices. Duplicate COO entries
- * are summed.
+ * are summed.  Uses introsort for rows with >32 entries; insertion sort
+ * otherwise.  All allocations go through matx_malloc so user-provided
+ * allocators work correctly.
  */
 #if MATX_HAVE_AGMG
 static matx_status_t coo_to_csr_d(matx_coo_d_i8_t A, agmg_csr_d_t* csr)
@@ -94,15 +252,18 @@ static matx_status_t coo_to_csr_d(matx_coo_d_i8_t A, agmg_csr_d_t* csr)
     csr->n = n;
     csr->nnz = (int) nnz64;   /* nnz ≤ INT_MAX by construction */
 
-    csr->ia = (int*) calloc((size_t) n + 1, sizeof(int));
-    csr->ja = (int*) malloc((size_t) csr->nnz * sizeof(int));
-    csr->a  = (double*) calloc((size_t) csr->nnz, sizeof(double));
+    csr->ia = (int*) matx_malloc(&A->alloc, ((size_t) n + 1) * sizeof(int));
+    csr->ja = (int*) matx_malloc(&A->alloc, (size_t) csr->nnz * sizeof(int));
+    csr->a  = (double*) matx_malloc(&A->alloc, (size_t) csr->nnz * sizeof(double));
     if (!csr->ia || !csr->ja || !csr->a) {
-        free(csr->ia); free(csr->ja); free(csr->a);
+        matx_free(&A->alloc, csr->ia); matx_free(&A->alloc, csr->ja);
+        matx_free(&A->alloc, csr->a);
         memset(csr, 0, sizeof(*csr));
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    memset(csr->ia, 0, ((size_t) n + 1) * sizeof(int));
+    memset(csr->a,  0, (size_t) csr->nnz * sizeof(double));
 
     /* Count entries per row */
     for (matx_int64_t k = 0; k < nnz64; ++k) {
@@ -114,14 +275,16 @@ static matx_status_t coo_to_csr_d(matx_coo_d_i8_t A, agmg_csr_d_t* csr)
     for (int i = 1; i <= n; ++i)
         csr->ia[i] += csr->ia[i - 1];
 
-    /* Scatter into CSR (duplicates summed by init with calloc) */
-    int* w = (int*) calloc((size_t) n, sizeof(int));  /* write cursor per row */
+    /* Scatter into CSR; duplicates summed in-init (memset above) */
+    int* w = (int*) matx_malloc(&A->alloc, (size_t) n * sizeof(int));
     if (!w) {
-        free(csr->ia); free(csr->ja); free(csr->a);
+        matx_free(&A->alloc, csr->ia); matx_free(&A->alloc, csr->ja);
+        matx_free(&A->alloc, csr->a);
         memset(csr, 0, sizeof(*csr));
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    memset(w, 0, (size_t) n * sizeof(int));
     for (matx_int64_t k = 0; k < nnz64; ++k) {
         int r = (int) A->rows[k];
         int c = (int) A->columns[k];
@@ -130,25 +293,31 @@ static matx_status_t coo_to_csr_d(matx_coo_d_i8_t A, agmg_csr_d_t* csr)
         csr->a [pos] += A->values[k];   /* sum duplicates */
         w[r]++;
     }
-    free(w);
+    matx_free(&A->alloc, w);
 
-    /* Sort column indices within each row (AGMG expects sorted CSR) */
+    /* Sort column indices within each row (AGMG expects sorted CSR).
+     * Use introsort for wide rows, insertion sort for narrow rows. */
     for (int r = 0; r < n; ++r) {
         int beg = csr->ia[r];
-        int end = csr->ia[r + 1];
-        int len = end - beg;
-        /* simple insertion sort (CSR rows are typically small) */
-        for (int i = 1; i < len; ++i) {
-            double aval = csr->a[beg + i];
-            int    jval = csr->ja[beg + i];
-            int j = i - 1;
-            while (j >= 0 && csr->ja[beg + j] > jval) {
-                csr->a [beg + j + 1] = csr->a [beg + j];
-                csr->ja[beg + j + 1] = csr->ja[beg + j];
-                --j;
+        int len = csr->ia[r + 1] - beg;
+        if (len < 2) continue;
+        if (len <= AGMG_SORT_INSERTION_LIMIT) {
+            for (int i = 1; i < len; ++i) {
+                double aval = csr->a[beg + i];
+                int    jval = csr->ja[beg + i];
+                int j = i - 1;
+                while (j >= 0 && csr->ja[beg + j] > jval) {
+                    csr->a [beg + j + 1] = csr->a [beg + j];
+                    csr->ja[beg + j + 1] = csr->ja[beg + j];
+                    --j;
+                }
+                csr->a [beg + j + 1] = aval;
+                csr->ja[beg + j + 1] = jval;
             }
-            csr->a [beg + j + 1] = aval;
-            csr->ja[beg + j + 1] = jval;
+        } else {
+            unsigned depth = 0;
+            for (int d = len; d > 1; d >>= 1) depth += 2;
+            introsort_real(csr->ja + beg, csr->a + beg, len, depth);
         }
     }
 
@@ -183,15 +352,18 @@ static matx_status_t coo_to_csr_z(matx_coo_z_i8_t A, agmg_csr_z_t* csr)
     csr->n = n;
     csr->nnz = (int) nnz64;
 
-    csr->ia = (int*)    calloc((size_t) n + 1, sizeof(int));
-    csr->ja = (int*)    malloc((size_t) csr->nnz * sizeof(int));
-    csr->a  = (double*) calloc((size_t) csr->nnz * 2, sizeof(double));
+    csr->ia = (int*)    matx_malloc(&A->alloc, ((size_t) n + 1) * sizeof(int));
+    csr->ja = (int*)    matx_malloc(&A->alloc, (size_t) csr->nnz * sizeof(int));
+    csr->a  = (double*) matx_malloc(&A->alloc, (size_t) csr->nnz * 2 * sizeof(double));
     if (!csr->ia || !csr->ja || !csr->a) {
-        free(csr->ia); free(csr->ja); free(csr->a);
+        matx_free(&A->alloc, csr->ia); matx_free(&A->alloc, csr->ja);
+        matx_free(&A->alloc, csr->a);
         memset(csr, 0, sizeof(*csr));
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    memset(csr->ia, 0, ((size_t) n + 1) * sizeof(int));
+    memset(csr->a,  0, (size_t) csr->nnz * 2 * sizeof(double));
 
     for (matx_int64_t k = 0; k < nnz64; ++k) {
         int r = (int) A->rows[k];
@@ -200,13 +372,15 @@ static matx_status_t coo_to_csr_z(matx_coo_z_i8_t A, agmg_csr_z_t* csr)
     for (int i = 1; i <= n; ++i)
         csr->ia[i] += csr->ia[i - 1];
 
-    int* w = (int*) calloc((size_t) n, sizeof(int));
+    int* w = (int*) matx_malloc(&A->alloc, (size_t) n * sizeof(int));
     if (!w) {
-        free(csr->ia); free(csr->ja); free(csr->a);
+        matx_free(&A->alloc, csr->ia); matx_free(&A->alloc, csr->ja);
+        matx_free(&A->alloc, csr->a);
         memset(csr, 0, sizeof(*csr));
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
+    memset(w, 0, (size_t) n * sizeof(int));
     for (matx_int64_t k = 0; k < nnz64; ++k) {
         int r = (int) A->rows[k];
         int c = (int) A->columns[k];
@@ -216,26 +390,32 @@ static matx_status_t coo_to_csr_z(matx_coo_z_i8_t A, agmg_csr_z_t* csr)
         csr->a [2 * pos + 1] += A->values[k].imag;
         w[r]++;
     }
-    free(w);
+    matx_free(&A->alloc, w);
 
     for (int r = 0; r < n; ++r) {
         int beg = csr->ia[r];
-        int end = csr->ia[r + 1];
-        int len = end - beg;
-        for (int i = 1; i < len; ++i) {
-            int    jval = csr->ja[beg + i];
-            double ar   = csr->a [2 * (beg + i)];
-            double ai   = csr->a [2 * (beg + i) + 1];
-            int j = i - 1;
-            while (j >= 0 && csr->ja[beg + j] > jval) {
-                csr->ja[beg + j + 1] = csr->ja[beg + j];
-                csr->a [2 * (beg + j + 1)]     = csr->a[2 * (beg + j)];
-                csr->a [2 * (beg + j + 1) + 1] = csr->a[2 * (beg + j) + 1];
-                --j;
+        int len = csr->ia[r + 1] - beg;
+        if (len < 2) continue;
+        if (len <= AGMG_SORT_INSERTION_LIMIT) {
+            for (int i = 1; i < len; ++i) {
+                int    jval = csr->ja[beg + i];
+                double ar   = csr->a [2 * (beg + i)];
+                double ai   = csr->a [2 * (beg + i) + 1];
+                int j = i - 1;
+                while (j >= 0 && csr->ja[beg + j] > jval) {
+                    csr->ja[beg + j + 1] = csr->ja[beg + j];
+                    csr->a [2 * (beg + j + 1)]     = csr->a[2 * (beg + j)];
+                    csr->a [2 * (beg + j + 1) + 1] = csr->a[2 * (beg + j) + 1];
+                    --j;
+                }
+                csr->ja[beg + j + 1] = jval;
+                csr->a [2 * (beg + j + 1)]     = ar;
+                csr->a [2 * (beg + j + 1) + 1] = ai;
             }
-            csr->ja[beg + j + 1] = jval;
-            csr->a [2 * (beg + j + 1)]     = ar;
-            csr->a [2 * (beg + j + 1) + 1] = ai;
+        } else {
+            unsigned depth = 0;
+            for (int d = len; d > 1; d >>= 1) depth += 2;
+            introsort_z(csr->ja + beg, csr->a + 2 * beg, len, depth);
         }
     }
 
@@ -246,15 +426,15 @@ static matx_status_t coo_to_csr_z(matx_coo_z_i8_t A, agmg_csr_z_t* csr)
     return MATX_OK;
 }
 
-static void agmg_csr_d_free(agmg_csr_d_t* csr)
+static void agmg_csr_d_free(const matx_alloc_t* alloc, agmg_csr_d_t* csr)
 {
-    free(csr->ia); free(csr->ja); free(csr->a);
+    matx_free(alloc, csr->ia); matx_free(alloc, csr->ja); matx_free(alloc, csr->a);
     memset(csr, 0, sizeof(*csr));
 }
 
-static void agmg_csr_z_free(agmg_csr_z_t* csr)
+static void agmg_csr_z_free(const matx_alloc_t* alloc, agmg_csr_z_t* csr)
 {
-    free(csr->ia); free(csr->ja); free(csr->a);
+    matx_free(alloc, csr->ia); matx_free(alloc, csr->ja); matx_free(alloc, csr->a);
     memset(csr, 0, sizeof(*csr));
 }
 
@@ -264,7 +444,6 @@ static matx_status_t agmg_factor_csc_d_i8(const matx_alloc_t* alloc,
                                            matx_coo_d_i8_t A,
                                            matx_factor_sparse_d_i8_t* out_F)
 {
-    (void) alloc;
     if (!A || !out_F) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
@@ -273,7 +452,7 @@ static matx_status_t agmg_factor_csc_d_i8(const matx_alloc_t* alloc,
     /* Destroy previous factorization if present */
     if (out_F->reserved) {
         agmg_csr_d_t* old = (agmg_csr_d_t*) out_F->reserved;
-        agmg_csr_d_free(old);
+        agmg_csr_d_free(alloc, old);
         matx_free(alloc, old);
         out_F->reserved = NULL;
     }
@@ -299,7 +478,6 @@ static matx_status_t agmg_solve_csc_d_i8(const matx_alloc_t* alloc,
                                           const matx_double* b,
                                           matx_double* x)
 {
-    (void) alloc;
     if (!F || !F->reserved || !b || !x) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
@@ -308,7 +486,7 @@ static matx_status_t agmg_solve_csc_d_i8(const matx_alloc_t* alloc,
     agmg_csr_d_t* csr = (agmg_csr_d_t*) F->reserved;
 
     /* Copy RHS (AGMG may modify it in-place) */
-    double* f = (double*) malloc((size_t) csr->n * sizeof(double));
+    double* f = (double*) matx_malloc(alloc, (size_t) csr->n * sizeof(double));
     if (!f) {
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
@@ -330,11 +508,11 @@ static matx_status_t agmg_solve_csc_d_i8(const matx_alloc_t* alloc,
      * so a non-converged solve is signalled by iter reaching the cap. */
     if (iter >= 100) {
         MATX_ERROR("%s: AGMG did not converge within %d iterations", __func__, iter);
-        free(f);
+        matx_free(alloc, f);
         return MATX_ERR_INTERNAL;
     }
 
-    free(f);
+    matx_free(alloc, f);
     return MATX_OK;
 }
 
@@ -343,7 +521,7 @@ static void agmg_factor_csc_d_i8_destroy(const matx_alloc_t* alloc,
 {
     if (!F || !F->reserved) return;
     agmg_csr_d_t* csr = (agmg_csr_d_t*) F->reserved;
-    agmg_csr_d_free(csr);
+    agmg_csr_d_free(alloc, csr);
     matx_free(alloc, csr);
     F->reserved = NULL;
 }
@@ -354,7 +532,6 @@ static matx_status_t agmg_factor_csc_z_i8(const matx_alloc_t* alloc,
                                            matx_coo_z_i8_t A,
                                            matx_factor_sparse_z_i8_t* out_F)
 {
-    (void) alloc;
     if (!A || !out_F) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
@@ -362,7 +539,7 @@ static matx_status_t agmg_factor_csc_z_i8(const matx_alloc_t* alloc,
 
     if (out_F->reserved) {
         agmg_csr_z_t* old = (agmg_csr_z_t*) out_F->reserved;
-        agmg_csr_z_free(old);
+        agmg_csr_z_free(alloc, old);
         matx_free(alloc, old);
         out_F->reserved = NULL;
     }
@@ -388,7 +565,6 @@ static matx_status_t agmg_solve_csc_z_i8(const matx_alloc_t* alloc,
                                           const matx_vec_z_i8_t b,
                                           matx_vec_z_i8_t x)
 {
-    (void) alloc;
     if (!F || !F->reserved || !b || !b->data || !x || !x->data) {
         MATX_ERROR("%s: invalid argument", __func__);
         return MATX_ERR_INVALID_ARG;
@@ -398,7 +574,7 @@ static matx_status_t agmg_solve_csc_z_i8(const matx_alloc_t* alloc,
 
     /* Copy RHS (AGMG may modify in-place) */
     const size_t bytes = (size_t) csr->n * sizeof(matx_complex_d_t);
-    double* f = (double*) malloc(bytes);
+    double* f = (double*) matx_malloc(alloc, bytes);
     if (!f) {
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
@@ -417,11 +593,11 @@ static matx_status_t agmg_solve_csc_z_i8(const matx_alloc_t* alloc,
 
     if (iter >= 100) {
         MATX_ERROR("%s: AGMG did not converge within %d iterations", __func__, iter);
-        free(f);
+        matx_free(alloc, f);
         return MATX_ERR_INTERNAL;
     }
 
-    free(f);
+    matx_free(alloc, f);
     return MATX_OK;
 }
 
@@ -430,7 +606,7 @@ static void agmg_factor_csc_z_i8_destroy(const matx_alloc_t* alloc,
 {
     if (!F || !F->reserved) return;
     agmg_csr_z_t* csr = (agmg_csr_z_t*) F->reserved;
-    agmg_csr_z_free(csr);
+    agmg_csr_z_free(alloc, csr);
     matx_free(alloc, csr);
     F->reserved = NULL;
 }

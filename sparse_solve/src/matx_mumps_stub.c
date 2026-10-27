@@ -96,13 +96,9 @@ static matx_status_t mumps_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d
         return MATX_ERR_INVALID_ARG;
     }
 
-    // Convert to CSC format
-    matx_status_t st = coo_to_csc_d_i8(A);
-    if (st != MATX_OK)
-        return st;
-    st = coo_to_csc_d_i8_value_remap(A);
-    if (st != MATX_OK)
-        return st;
+    /* Feed MUMPS directly from COO arrays — no intermediate CSC conversion.
+       MUMPS accepts unsorted triplets; only +1 (Fortran 1-based) is needed. */
+    const matx_int64_t nnz = A->nnz;
 
     // Allocate factor handle
     matx_factor_sparse_d_i8_mumps_t* F = (matx_factor_sparse_d_i8_mumps_t*) matx_malloc(alloc, sizeof(*F));
@@ -113,28 +109,23 @@ static matx_status_t mumps_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d
     memset(F, 0, sizeof(*F));
     out_F->reserved = F;
     F->n = A->nrows;
-    F->nnz = A->handle_csc->nnz;
+    F->nnz = nnz;
 
     // Allocate triplet format arrays for MUMPS
-    F->irn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) F->nnz);
-    F->jcn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) F->nnz);
-    F->a = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) F->nnz);
+    F->irn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) nnz);
+    F->jcn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) nnz);
+    F->a = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * (size_t) nnz);
     if (!F->irn || !F->jcn || !F->a) {
         mumps_factor_csc_d_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
-    // Convert CSC to 1-based triplet format (MUMPS requirement)
-    matx_int64_t idx = 0;
-    for (matx_int64_t col = 0; col < F->n; col++) {
-        for (matx_int64_t p = A->handle_csc->col_ptr[col]; p < A->handle_csc->col_ptr[col + 1];
-             p++) {
-            F->irn[idx] = A->handle_csc->row_ind[p] + 1; // 1-based
-            F->jcn[idx] = col + 1;
-            F->a[idx] = A->handle_csc->values[p];
-            idx++;
-        }
+    // COO → 1-based triplet (MUMPS convention): only index shift, no copy overhead
+    for (matx_int64_t k = 0; k < nnz; k++) {
+        F->irn[k] = A->rows[k] + 1;   // 1-based
+        F->jcn[k] = A->columns[k] + 1;
+        F->a[k]   = A->values[k];
     }
 
     // Initialize MUMPS for real double
@@ -275,13 +266,8 @@ static matx_status_t mumps_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z
         return MATX_ERR_INVALID_ARG;
     }
 
-    // Convert complex COO to CSC
-    matx_status_t st = coo_to_csc_z_i8(A);
-    if (st != MATX_OK)
-        return st;
-    st = coo_to_csc_z_i8_value_remap(A);
-    if (st != MATX_OK)
-        return st;
+    /* Feed MUMPS directly from COO arrays — no intermediate CSC conversion. */
+    const matx_int64_t nnz = A->nnz;
 
     // Allocate complex factor handle
     matx_factor_sparse_z_i8_mumps_t* F = (matx_factor_sparse_z_i8_mumps_t*) matx_malloc(alloc, sizeof(*F));
@@ -292,29 +278,24 @@ static matx_status_t mumps_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z
     memset(F, 0, sizeof(*F));
     out_F->reserved = F;
     F->n = A->nrows;
-    F->nnz = A->handle_csc->nnz;
+    F->nnz = nnz;
 
     // Allocate triplet arrays (complex values interleaved)
-    F->irn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) F->nnz);
-    F->jcn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) F->nnz);
-    F->a = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * 2 * (size_t) F->nnz);
+    F->irn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) nnz);
+    F->jcn = (matx_int64_t*) matx_malloc(alloc, sizeof(matx_int64_t) * (size_t) nnz);
+    F->a = (matx_double*) matx_malloc(alloc, sizeof(matx_double) * 2 * (size_t) nnz);
     if (!F->irn || !F->jcn || !F->a) {
         mumps_factor_csc_z_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
-    // Convert CSC to 1-based triplet + interleave complex values
-    matx_int64_t idx = 0;
-    for (matx_int64_t col = 0; col < F->n; col++) {
-        for (matx_int64_t p = A->handle_csc->col_ptr[col]; p < A->handle_csc->col_ptr[col + 1];
-             p++) {
-            F->irn[idx] = A->handle_csc->row_ind[p] + 1;
-            F->jcn[idx] = col + 1;
-            F->a[2 * idx] = A->handle_csc->values[p].real;
-            F->a[2 * idx + 1] = A->handle_csc->values[p].imag;
-            idx++;
-        }
+    // COO → 1-based triplet + interleave complex values
+    for (matx_int64_t k = 0; k < nnz; k++) {
+        F->irn[k]     = A->rows[k] + 1;
+        F->jcn[k]     = A->columns[k] + 1;
+        F->a[2 * k]     = A->values[k].real;
+        F->a[2 * k + 1] = A->values[k].imag;
     }
 
     // Initialize complex MUMPS
