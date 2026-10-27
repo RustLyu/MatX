@@ -28,6 +28,7 @@ typedef struct matx_factor_sparse_d_i8_slu
     int n;
     double* rhs;
     int stat_initialized;
+    int borrow_indices;
 #endif
     int place_holder;
 } matx_factor_sparse_d_i8_slu_t;
@@ -50,6 +51,7 @@ typedef struct matx_factor_sparse_z_i8_slu
     int n;
     doublecomplex* rhs;
     int stat_initialized;
+    int borrow_indices;
 #endif
     int unused;
 } matx_factor_sparse_z_i8_slu_t;
@@ -67,7 +69,16 @@ static void slu_factor_csc_d_i8_destroy(const matx_alloc_t* alloc, matx_factor_s
 #if MATX_HAVE_SUPERLU
     if (ptr->L.Store) Destroy_SuperNode_Matrix(&ptr->L);
     if (ptr->U.Store) Destroy_CompCol_Matrix(&ptr->U);
-    if (ptr->A.Store) Destroy_CompCol_Matrix(&ptr->A);
+    if (ptr->A.Store) {
+        if (ptr->borrow_indices) {
+            /* rowind/colptr alias the CSC handle — detach so SuperLU
+             * only frees the nzval copy it owns. */
+            NCformat* ncf = (NCformat*) ptr->A.Store;
+            ncf->rowind = NULL;
+            ncf->colptr = NULL;
+        }
+        Destroy_CompCol_Matrix(&ptr->A);
+    }
     if (ptr->B.Store) Destroy_Dense_Matrix(&ptr->B);
     else if (ptr->rhs) SUPERLU_FREE(ptr->rhs);
     if (ptr->stat_initialized) StatFree(&ptr->stat);
@@ -175,23 +186,38 @@ static matx_status_t slu_factor_csc_d_i8(const matx_alloc_t* alloc, matx_coo_d_i
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
-    int_t* row_ind = intMalloc((int_t) A->handle_csc->nnz);
-    int_t* col_ptr = intMalloc((int_t) (F->n + 1));
+    int borrow_indices = (sizeof(int_t) == sizeof(matx_int64_t));
+    F->borrow_indices = borrow_indices;
+
+    int_t* row_ind;
+    int_t* col_ptr;
     double* values = doubleMalloc((size_t) A->handle_csc->nnz);
-    if (!row_ind || !col_ptr || !values) {
-        if (row_ind) SUPERLU_FREE(row_ind);
-        if (col_ptr) SUPERLU_FREE(col_ptr);
+
+    if (borrow_indices) {
+        /* Type-pun CSC indices directly — avoids O(nnz+ncols) allocation + copy */
+        row_ind = (int_t*) A->handle_csc->row_ind;
+        col_ptr = (int_t*) A->handle_csc->col_ptr;
+    } else {
+        row_ind = intMalloc((int_t) A->handle_csc->nnz);
+        col_ptr = intMalloc((int_t) (F->n + 1));
+    }
+    if (!values || (!borrow_indices && (!row_ind || !col_ptr))) {
+        if (!borrow_indices) {
+            if (row_ind) SUPERLU_FREE(row_ind);
+            if (col_ptr) SUPERLU_FREE(col_ptr);
+        }
         if (values) SUPERLU_FREE(values);
         slu_factor_csc_d_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
-    for (matx_int64_t i = 0; i < A->handle_csc->nnz; ++i) {
-        row_ind[i] = (int_t) A->handle_csc->row_ind[i];
+    for (matx_int64_t i = 0; i < A->handle_csc->nnz; ++i)
         values[i] = A->handle_csc->values[i];
-    }
-    for (matx_int64_t i = 0; i <= A->ncols; ++i) {
-        col_ptr[i] = (int_t) A->handle_csc->col_ptr[i];
+    if (!borrow_indices) {
+        for (matx_int64_t i = 0; i < A->handle_csc->nnz; ++i)
+            row_ind[i] = (int_t) A->handle_csc->row_ind[i];
+        for (matx_int64_t i = 0; i <= A->ncols; ++i)
+            col_ptr[i] = (int_t) A->handle_csc->col_ptr[i];
     }
 
     /* Create SuperLU CSC matrix and dense RHS matrix */
@@ -284,7 +310,14 @@ static void slu_factor_csc_z_i8_destroy(const matx_alloc_t* alloc, matx_factor_s
     /* Release SuperLU internal matrices */
     if (ptr->L.Store) Destroy_SuperNode_Matrix(&ptr->L);
     if (ptr->U.Store) Destroy_CompCol_Matrix(&ptr->U);
-    if (ptr->A.Store) Destroy_CompCol_Matrix(&ptr->A);
+    if (ptr->A.Store) {
+        if (ptr->borrow_indices) {
+            NCformat* ncf = (NCformat*) ptr->A.Store;
+            ncf->rowind = NULL;
+            ncf->colptr = NULL;
+        }
+        Destroy_CompCol_Matrix(&ptr->A);
+    }
     if (ptr->B.Store) Destroy_Dense_Matrix(&ptr->B);
     else if (ptr->rhs) SUPERLU_FREE(ptr->rhs);
 
@@ -362,24 +395,39 @@ static matx_status_t slu_factor_csc_z_i8(const matx_alloc_t* alloc, matx_coo_z_i
         return MATX_ERR_OUT_OF_MEMORY;
     }
 
-    int_t* row_ind = intMalloc((int_t) A->handle_csc->nnz);
-    int_t* col_ptr = intMalloc((int_t) (F->n + 1));
+    int borrow_indices = (sizeof(int_t) == sizeof(matx_int64_t));
+    F->borrow_indices = borrow_indices;
+
+    int_t* row_ind;
+    int_t* col_ptr;
     doublecomplex* values = doublecomplexMalloc((size_t) A->handle_csc->nnz);
-    if (!row_ind || !col_ptr || !values) {
-        if (row_ind) SUPERLU_FREE(row_ind);
-        if (col_ptr) SUPERLU_FREE(col_ptr);
+
+    if (borrow_indices) {
+        row_ind = (int_t*) A->handle_csc->row_ind;
+        col_ptr = (int_t*) A->handle_csc->col_ptr;
+    } else {
+        row_ind = intMalloc((int_t) A->handle_csc->nnz);
+        col_ptr = intMalloc((int_t) (F->n + 1));
+    }
+    if (!values || (!borrow_indices && (!row_ind || !col_ptr))) {
+        if (!borrow_indices) {
+            if (row_ind) SUPERLU_FREE(row_ind);
+            if (col_ptr) SUPERLU_FREE(col_ptr);
+        }
         if (values) SUPERLU_FREE(values);
         slu_factor_csc_z_i8_destroy(alloc, out_F);
         MATX_ERROR("%s: out of memory", __func__);
         return MATX_ERR_OUT_OF_MEMORY;
     }
     for (matx_int64_t i = 0; i < A->handle_csc->nnz; ++i) {
-        row_ind[i] = (int_t) A->handle_csc->row_ind[i];
         values[i].r = A->handle_csc->values[i].real;
         values[i].i = A->handle_csc->values[i].imag;
     }
-    for (matx_int64_t i = 0; i <= A->ncols; ++i) {
-        col_ptr[i] = (int_t) A->handle_csc->col_ptr[i];
+    if (!borrow_indices) {
+        for (matx_int64_t i = 0; i < A->handle_csc->nnz; ++i)
+            row_ind[i] = (int_t) A->handle_csc->row_ind[i];
+        for (matx_int64_t i = 0; i <= A->ncols; ++i)
+            col_ptr[i] = (int_t) A->handle_csc->col_ptr[i];
     }
 
     /* Create SuperLU complex CSC matrix */
