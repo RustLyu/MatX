@@ -376,39 +376,37 @@ int coo_to_csr_optimized(const matx_alloc_t* alloc,
                 continue;
             }
 
-            matx_int64_t* col = csr->col_ind + start;
-            unsigned char* val = (unsigned char*)csr->val
-                                 + (size_t)start * elem_size;
+            matx_int64_t* col_src = csr->col_ind + start;
+            unsigned char* val_src = (unsigned char*)csr->val
+                                     + (size_t)start * elem_size;
+            matx_int64_t* col_dst = csr->col_ind + new_nnz;
+            unsigned char* val_dst = (unsigned char*)csr->val
+                                     + (size_t)new_nnz * elem_size;
 
             if (!is_sorted) {
-                sort_row(col, val, len, elem_size);
+                sort_row(col_src, val_src, len, elem_size);
             }
 
             matx_int64_t write = 0;
             for (matx_int64_t j = 0; j < len; ++j) {
-                if (j > 0 && col[j] == col[j - 1]) {
+                if (j > 0 && col_src[j] == col_src[j - 1]) {
                     if (elem_size == sizeof(matx_double)) {
-                        ((matx_double*)val)[write - 1]
-                            += ((matx_double*)val)[j];
+                        ((matx_double*)val_dst)[write - 1]
+                            += ((matx_double*)val_src)[j];
                     } else {
-                        matx_complex_d_t* cv
-                            = (matx_complex_d_t*) val;
-                        cv[write - 1].real += cv[j].real;
-                        cv[write - 1].imag += cv[j].imag;
+                        matx_complex_d_t* cv_dst
+                            = (matx_complex_d_t*) val_dst;
+                        matx_complex_d_t* cv_src
+                            = (matx_complex_d_t*) val_src;
+                        cv_dst[write - 1].real += cv_src[j].real;
+                        cv_dst[write - 1].imag += cv_src[j].imag;
                     }
                 } else {
-                    col[write] = col[j];
-                    memcpy(val + (size_t)write * elem_size,
-                           val + (size_t)j * elem_size, elem_size);
+                    col_dst[write] = col_src[j];
+                    memcpy(val_dst + (size_t)write * elem_size,
+                           val_src + (size_t)j * elem_size, elem_size);
                     write++;
                 }
-            }
-
-            for (matx_int64_t j = 0; j < write; ++j) {
-                csr->col_ind[new_nnz + j] = col[j];
-                memcpy((unsigned char*)csr->val
-                       + (size_t)(new_nnz + j) * elem_size,
-                       val + (size_t)j * elem_size, elem_size);
             }
 
             csr->row_ptr[i] = new_nnz;

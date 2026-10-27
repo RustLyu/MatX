@@ -79,6 +79,68 @@ static matx_status_t ref_sparse_norm_coo(const matx_alloc_t* alloc,
         return MATX_ERR_INVALID_ARG;
     }
 
+    /* ── fast path: already sorted and duplicate-free? ──
+     * Many internally-built COO matrices enter this function with their
+     * entries column-major sorted and deduplicated.  Computing the norm
+     * directly from the COO arrays avoids an O(nnz) hash-table build +
+     * O(2*nnz) full-table scan. */
+    int sorted_dedup = 1;
+    for (matx_int64_t k = 1; k < nnz; ++k) {
+        if (columns[k] < columns[k - 1]
+            || (columns[k] == columns[k - 1]
+                && rows[k] < rows[k - 1])
+            || (columns[k] == columns[k - 1]
+                && rows[k] == rows[k - 1])) {
+            sorted_dedup = 0;
+            break;
+        }
+    }
+    if (sorted_dedup) {
+        /* validate all indices once */
+        for (matx_int64_t k = 0; k < nnz; ++k) {
+            if (rows[k] < 0 || rows[k] >= nrows
+                || columns[k] < 0 || columns[k] >= ncols) {
+                return MATX_ERR_INVALID_ARG;
+            }
+            matx_double rv = complex_values ? complex_values[k].real : real_values[k];
+            matx_double iv = complex_values ? complex_values[k].imag : 0.0;
+            if (isnan(rv) || isnan(iv)) return MATX_ERR_NOT_SUPPORTED;
+        }
+        if (kind == MATX_SPARSE_NORM_FROBENIUS) {
+            matx_double sum_sq = 0.0;
+            for (matx_int64_t k = 0; k < nnz; ++k) {
+                matx_double rv = complex_values ? complex_values[k].real : real_values[k];
+                matx_double iv = complex_values ? complex_values[k].imag : 0.0;
+                sum_sq += rv * rv + iv * iv;
+            }
+            *out = sqrt(sum_sq);
+        } else {
+            const matx_int64_t count = kind == MATX_SPARSE_NORM_ONE ? ncols : nrows;
+            if ((uint64_t) count > SIZE_MAX / sizeof(matx_double))
+                return MATX_ERR_INVALID_ARG;
+            matx_double* sums = (matx_double*) matx_malloc(
+                alloc, (size_t) count * sizeof(*sums));
+            if (!sums) return MATX_ERR_OUT_OF_MEMORY;
+            memset(sums, 0, (size_t) count * sizeof(*sums));
+            for (matx_int64_t k = 0; k < nnz; ++k) {
+                matx_double rv = complex_values ? complex_values[k].real : real_values[k];
+                matx_double iv = complex_values ? complex_values[k].imag : 0.0;
+                matx_double mag = complex_values ? hypot(rv, iv) : fabs(rv);
+                const matx_int64_t idx
+                    = (kind == MATX_SPARSE_NORM_ONE) ? columns[k] : rows[k];
+                sums[idx] += mag;
+            }
+            matx_double maximum = 0.0;
+            for (matx_int64_t i = 0; i < count; ++i) {
+                if (sums[i] > maximum) maximum = sums[i];
+            }
+            *out = maximum;
+            matx_free(alloc, sums);
+        }
+        return MATX_OK;
+    }
+
+    /* ── slow path: duplicates exist → hash-table coalesce ── */
     size_t capacity = 1;
     const size_t minimum_capacity = (size_t) nnz * 2;
     while (capacity < minimum_capacity) {
@@ -198,15 +260,23 @@ static matx_status_t ref_spmv_d_i8_coo(matx_double alpha,
     }
 
     matx_double* x_copy = NULL;
+    matx_double  x_stack[1024];
     const matx_double* x_data = x->data;
     matx_int64_t x_stride = x->stride;
     if (x == y) {
-        x_copy = (matx_double*) malloc((size_t) x->n * sizeof(*x_copy));
-        if (!x_copy) return MATX_ERR_OUT_OF_MEMORY;
-        for (matx_int64_t i = 0; i < x->n; ++i)
-            x_copy[i] = x->data[i * x->stride];
-        x_data = x_copy;
-        x_stride = 1;
+        if (x->n <= 1024) {
+            for (matx_int64_t i = 0; i < x->n; ++i)
+                x_stack[i] = x->data[i * x->stride];
+            x_data = x_stack;
+            x_stride = 1;
+        } else {
+            x_copy = (matx_double*) malloc((size_t) x->n * sizeof(*x_copy));
+            if (!x_copy) return MATX_ERR_OUT_OF_MEMORY;
+            for (matx_int64_t i = 0; i < x->n; ++i)
+                x_copy[i] = x->data[i * x->stride];
+            x_data = x_copy;
+            x_stride = 1;
+        }
     }
 
     for (matx_int64_t i = 0; i < y->n; ++i) {
@@ -241,15 +311,23 @@ static matx_status_t ref_spmv_z_i8_coo(matx_complex_d_t alpha,
     }
 
     matx_complex_d_t* x_copy = NULL;
+    matx_complex_d_t  x_stack[1024];
     const matx_complex_d_t* x_data = x->data;
     matx_int64_t x_stride = x->stride;
     if (x == y) {
-        x_copy = (matx_complex_d_t*) malloc((size_t) x->n * sizeof(*x_copy));
-        if (!x_copy) return MATX_ERR_OUT_OF_MEMORY;
-        for (matx_int64_t i = 0; i < x->n; ++i)
-            x_copy[i] = x->data[i * x->stride];
-        x_data = x_copy;
-        x_stride = 1;
+        if (x->n <= 1024) {
+            for (matx_int64_t i = 0; i < x->n; ++i)
+                x_stack[i] = x->data[i * x->stride];
+            x_data = x_stack;
+            x_stride = 1;
+        } else {
+            x_copy = (matx_complex_d_t*) malloc((size_t) x->n * sizeof(*x_copy));
+            if (!x_copy) return MATX_ERR_OUT_OF_MEMORY;
+            for (matx_int64_t i = 0; i < x->n; ++i)
+                x_copy[i] = x->data[i * x->stride];
+            x_data = x_copy;
+            x_stride = 1;
+        }
     }
 
     for (matx_int64_t i = 0; i < y->n; ++i) {

@@ -17,6 +17,7 @@
 /* Direct COO crossover thresholds — same as GraphBLAS backend. */
 #define MATX_AOCL_DIRECT_SPMV_MAX_NNZ 3000000
 #define MATX_AOCL_DIRECT_SPMM_MAX_PRODUCTS 50000000
+#define MATX_AOCL_SPMM_COO_K_TILE 256
 
 /* Hash-table entry for duplicate-coordinate coalescing in spadd. */
 typedef struct {
@@ -75,6 +76,12 @@ static matx_status_t aocl_spadd_direct(const matx_alloc_t* alloc,
     memset(entries, 0, capacity * sizeof(*entries));
     const size_t mask = capacity - 1;
 
+    /* Track occupied slots to avoid full-table scan during extraction */
+    matx_int64_t* occupied = (matx_int64_t*) matx_malloc(
+        alloc, (size_t) total_nnz * sizeof(matx_int64_t));
+    if (!occupied) { matx_free(alloc, entries); return MATX_ERR_OUT_OF_MEMORY; }
+    matx_int64_t n_occupied = 0;
+
     /* Insert α·A */
     for (matx_int64_t k = 0; k < nnz_a; ++k) {
         const matx_int64_t r = rows_a[k], c = cols_a[k];
@@ -85,6 +92,7 @@ static matx_status_t aocl_spadd_direct(const matx_alloc_t* alloc,
             entries[idx].row = r;
             entries[idx].col = c;
             entries[idx].occupied = 1;
+            occupied[n_occupied++] = (matx_int64_t) idx;
         }
         if (is_complex) {
             const matx_complex_d_t* av = (const matx_complex_d_t*) vals_a;
@@ -105,6 +113,7 @@ static matx_status_t aocl_spadd_direct(const matx_alloc_t* alloc,
             entries[idx].row = r;
             entries[idx].col = c;
             entries[idx].occupied = 1;
+            occupied[n_occupied++] = (matx_int64_t) idx;
         }
         if (is_complex) {
             const matx_complex_d_t* bv = (const matx_complex_d_t*) vals_b;
@@ -115,12 +124,12 @@ static matx_status_t aocl_spadd_direct(const matx_alloc_t* alloc,
         }
     }
 
-    /* Extract to output */
+    /* Extract from occupied slots only (avoids scanning entire hash table) */
     matx_int64_t count = 0;
     if (is_complex) {
         matx_complex_d_t* ov = (matx_complex_d_t*) out_vals;
-        for (size_t i = 0; i < capacity; ++i) {
-            if (!entries[i].occupied) continue;
+        for (matx_int64_t s = 0; s < n_occupied; ++s) {
+            const size_t i = (size_t) occupied[s];
             const matx_double re = entries[i].real;
             const matx_double im = entries[i].imag;
             if (re == 0.0 && im == 0.0) continue;
@@ -132,8 +141,8 @@ static matx_status_t aocl_spadd_direct(const matx_alloc_t* alloc,
         }
     } else {
         matx_double* ov = (matx_double*) out_vals;
-        for (size_t i = 0; i < capacity; ++i) {
-            if (!entries[i].occupied) continue;
+        for (matx_int64_t s = 0; s < n_occupied; ++s) {
+            const size_t i = (size_t) occupied[s];
             const matx_double re = entries[i].real;
             if (re == 0.0) continue;
             out_rows[count] = entries[i].row;
@@ -142,6 +151,7 @@ static matx_status_t aocl_spadd_direct(const matx_alloc_t* alloc,
             ++count;
         }
     }
+    matx_free(alloc, occupied);
     matx_free(alloc, entries);
     *out_nnz = count;
     return MATX_OK;
@@ -171,13 +181,19 @@ static matx_status_t ref_spmv_z_i8_aocl(matx_complex_d_t alpha,
         const matx_complex_d_t* x_data = (const matx_complex_d_t*) x->data;
         matx_complex_d_t* y_data = (matx_complex_d_t*) y->data;
         matx_complex_d_t* x_saved = NULL;
+        matx_complex_d_t  x_stack[1024];
         /* When x and y alias (same data pointer), beta scaling would
            overwrite x before the compute loop reads it. Save a copy. */
         if (x->data == y->data) {
-            x_saved = (matx_complex_d_t*) malloc((size_t) y->n * sizeof(matx_complex_d_t));
-            if (!x_saved) return MATX_ERR_OUT_OF_MEMORY;
-            memcpy(x_saved, x->data, (size_t) y->n * sizeof(matx_complex_d_t));
-            x_data = x_saved;
+            if (y->n <= 1024) {
+                memcpy(x_stack, x->data, (size_t) y->n * sizeof(matx_complex_d_t));
+                x_data = x_stack;
+            } else {
+                x_saved = (matx_complex_d_t*) malloc((size_t) y->n * sizeof(matx_complex_d_t));
+                if (!x_saved) return MATX_ERR_OUT_OF_MEMORY;
+                memcpy(x_saved, x->data, (size_t) y->n * sizeof(matx_complex_d_t));
+                x_data = x_saved;
+            }
         }
         for (matx_int64_t i = 0; i < y->n; ++i) {
             y_data[i * y_stride].real = (beta.real != 0.0 || beta.imag != 0.0)
@@ -279,22 +295,30 @@ static matx_status_t ref_spmm_z_i8_aocl(matx_complex_d_t alpha,
             }
         }
         if (alpha.real != 0.0 || alpha.imag != 0.0) {
-            for (matx_int64_t k = 0; k < A->nnz; ++k) {
-                const matx_int64_t r = A->rows[k], col = A->columns[k];
-                const matx_double av_re = A->values[k].real, av_im = A->values[k].imag;
-                /* alpha * A_val (precomputed) */
-                const matx_double s_re = alpha.real * av_re - alpha.imag * av_im;
-                const matx_double s_im = alpha.real * av_im + alpha.imag * av_re;
+            /* COO-tiled SpMM: keep a slice of nnz entries in L1 while
+               streaming all RHS columns.  Mirrors the GraphBLAS path. */
+            for (matx_int64_t k_begin = 0; k_begin < A->nnz;) {
+                const matx_int64_t remaining = A->nnz - k_begin;
+                const matx_int64_t k_end
+                    = k_begin + (remaining < MATX_AOCL_SPMM_COO_K_TILE
+                                     ? remaining : MATX_AOCL_SPMM_COO_K_TILE);
                 for (matx_int64_t j = 0; j < B->ncols; ++j) {
-                    const size_t b_idx = (layout == MATX_COL_MAJOR)
-                        ? (size_t) col + (size_t) j * ldb : (size_t) col * ldb + (size_t) j;
-                    const size_t c_idx = (layout == MATX_COL_MAJOR)
-                        ? (size_t) r + (size_t) j * ldc : (size_t) r * ldc + (size_t) j;
-                    const matx_double bv_re = b[b_idx].real;
-                    const matx_double bv_im = b[b_idx].imag;
-                    c[c_idx].real += s_re * bv_re - s_im * bv_im;
-                    c[c_idx].imag += s_re * bv_im + s_im * bv_re;
+                    for (matx_int64_t k = k_begin; k < k_end; ++k) {
+                        const matx_int64_t r = A->rows[k], col = A->columns[k];
+                        const matx_double av_re = A->values[k].real, av_im = A->values[k].imag;
+                        const matx_double s_re = alpha.real * av_re - alpha.imag * av_im;
+                        const matx_double s_im = alpha.real * av_im + alpha.imag * av_re;
+                        const size_t b_idx = (layout == MATX_COL_MAJOR)
+                            ? (size_t) col + (size_t) j * ldb : (size_t) col * ldb + (size_t) j;
+                        const size_t c_idx = (layout == MATX_COL_MAJOR)
+                            ? (size_t) r + (size_t) j * ldc : (size_t) r * ldc + (size_t) j;
+                        const matx_double bv_re = b[b_idx].real;
+                        const matx_double bv_im = b[b_idx].imag;
+                        c[c_idx].real += s_re * bv_re - s_im * bv_im;
+                        c[c_idx].imag += s_re * bv_im + s_im * bv_re;
+                    }
                 }
+                k_begin = k_end;
             }
         }
         return MATX_OK;
@@ -355,13 +379,19 @@ static matx_status_t ref_spmv_d_i8_aocl(
         const matx_int64_t x_stride = x->stride, y_stride = y->stride;
         const matx_double* x_data = x->data;
         matx_double* x_saved = NULL;
+        matx_double  x_stack[1024];
         /* When x and y alias (same data pointer), beta scaling would
            overwrite x before the compute loop reads it. Save a copy. */
         if (x->data == y->data) {
-            x_saved = (matx_double*) malloc((size_t) y->n * sizeof(matx_double));
-            if (!x_saved) return MATX_ERR_OUT_OF_MEMORY;
-            memcpy(x_saved, x->data, (size_t) y->n * sizeof(matx_double));
-            x_data = x_saved;
+            if (y->n <= 1024) {
+                memcpy(x_stack, x->data, (size_t) y->n * sizeof(matx_double));
+                x_data = x_stack;
+            } else {
+                x_saved = (matx_double*) malloc((size_t) y->n * sizeof(matx_double));
+                if (!x_saved) return MATX_ERR_OUT_OF_MEMORY;
+                memcpy(x_saved, x->data, (size_t) y->n * sizeof(matx_double));
+                x_data = x_saved;
+            }
         }
         for (matx_int64_t i = 0; i < y->n; ++i)
             y->data[i * y_stride] = (beta != 0.0) ? beta * y->data[i * y_stride] : 0.0;
@@ -453,16 +483,25 @@ static matx_status_t ref_spmm_d_i8_aocl(matx_double alpha,
                 C->data[idx] = (beta != 0.0) ? beta * C->data[idx] : 0.0;
             }
         if (alpha != 0.0) {
-            for (matx_int64_t k = 0; k < A->nnz; ++k) {
-                const matx_int64_t r = A->rows[k], c = A->columns[k];
-                const matx_double av = alpha * A->values[k];
+            /* COO-tiled SpMM: keep a slice of nnz entries in L1 while
+               streaming all RHS columns. */
+            for (matx_int64_t k_begin = 0; k_begin < A->nnz;) {
+                const matx_int64_t remaining = A->nnz - k_begin;
+                const matx_int64_t k_end
+                    = k_begin + (remaining < MATX_AOCL_SPMM_COO_K_TILE
+                                     ? remaining : MATX_AOCL_SPMM_COO_K_TILE);
                 for (matx_int64_t j = 0; j < B->ncols; ++j) {
-                    const size_t b_idx = (layout == MATX_COL_MAJOR)
-                        ? (size_t) c + (size_t) j * ldb : (size_t) c * ldb + (size_t) j;
-                    const size_t c_idx = (layout == MATX_COL_MAJOR)
-                        ? (size_t) r + (size_t) j * ldc : (size_t) r * ldc + (size_t) j;
-                    C->data[c_idx] += av * b_data[b_idx];
+                    for (matx_int64_t k = k_begin; k < k_end; ++k) {
+                        const matx_int64_t r = A->rows[k], c = A->columns[k];
+                        const matx_double av = alpha * A->values[k];
+                        const size_t b_idx = (layout == MATX_COL_MAJOR)
+                            ? (size_t) c + (size_t) j * ldb : (size_t) c * ldb + (size_t) j;
+                        const size_t c_idx = (layout == MATX_COL_MAJOR)
+                            ? (size_t) r + (size_t) j * ldc : (size_t) r * ldc + (size_t) j;
+                        C->data[c_idx] += av * b_data[b_idx];
+                    }
                 }
+                k_begin = k_end;
             }
         }
         free(b_copy);
