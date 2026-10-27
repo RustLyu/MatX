@@ -216,14 +216,23 @@ matx_status_t solve(SolverState* state,
     }
     if (status != MATX_OK) return status;
 
+    /* ══ MatX-side residual verification ──────────────────────────────────
+     * Backends (Ginkgo, PETSc, hypre) already compute convergence residuals
+     * internally.  This second SpMV is useful for debugging but wastes a
+     * full COO SpMV in production.  Enable with:
+     *   -DMATX_ITERATIVE_VERIFY_RESIDUAL
+     */
+    matx_sparse_iterative_reason_t reason;
+    double rnorm, rel;
+#if MATX_ITERATIVE_VERIFY_RESIDUAL
     std::vector<T> residual(b.size());
     compute_residual(matrix, b, x, residual);
-    const double rnorm = stable_norm(residual);
+    rnorm = stable_norm(residual);
     const double bnorm = stable_norm(b);
-    const double rel = bnorm == 0.0 ? rnorm : rnorm / bnorm;
+    rel = bnorm == 0.0 ? rnorm : rnorm / bnorm;
     const double threshold = std::max(state->options.absolute_tolerance,
                                       state->options.relative_tolerance * bnorm);
-    matx_sparse_iterative_reason_t reason = backend_result.reason;
+    reason = backend_result.reason;
     if (rnorm <= threshold) {
         reason = MATX_ITERATIVE_REASON_CONVERGED;
     } else if (reason != MATX_ITERATIVE_REASON_BREAKDOWN) {
@@ -231,6 +240,11 @@ matx_status_t solve(SolverState* state,
             ? MATX_ITERATIVE_REASON_MAX_ITERATIONS
             : MATX_ITERATIVE_REASON_BREAKDOWN;
     }
+#else
+    reason = backend_result.reason;
+    rnorm = 0.0; /* not computed — trust backend */
+    rel = 0.0;
+#endif
     for (matx_int64_t i = 0; i < x_handle->n; ++i) {
         if constexpr (std::is_same_v<T, double>) {
             x_handle->data[i * x_handle->stride] = x[static_cast<std::size_t>(i)];

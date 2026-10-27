@@ -13,10 +13,11 @@
 #include <mpi.h>
 #endif
 
+#include <algorithm>
 #include <limits>
-#include <map>
 #include <mutex>
 #include <type_traits>
+#include <vector>
 
 namespace matx::sparse_iterative {
 namespace {
@@ -105,31 +106,52 @@ public:
             return MATX_ERR_INTERNAL;
         }
 
-        std::vector<std::map<HYPRE_BigInt, HYPRE_Complex>> rows(
-            static_cast<std::size_t>(matrix.rows));
-        for (std::size_t k = 0; k < matrix.value.size(); ++k) {
-            rows[static_cast<std::size_t>(matrix.row[k])]
-                [static_cast<HYPRE_BigInt>(matrix.col[k])] += matrix.value[k];
+        /* ── COO → CSR via count-sort (replaces std::map, avoids O(nnz log m)
+         *     heap-per-entry overhead) ── */
+        const auto nrows = static_cast<std::size_t>(matrix.rows);
+        const std::size_t nnz = matrix.value.size();
+        std::vector<HYPRE_BigInt> row_ptr(nrows + 1, 0);
+
+        /* Pass 1: count entries per row */
+        for (std::size_t k = 0; k < nnz; ++k)
+            row_ptr[static_cast<std::size_t>(matrix.row[k]) + 1]++;
+
+        /* Pass 2: prefix-sum → row pointers */
+        for (std::size_t i = 1; i <= nrows; ++i)
+            row_ptr[i] += row_ptr[i - 1];
+
+        std::vector<HYPRE_BigInt>  col_ind(nnz);
+        std::vector<HYPRE_Complex> vals(nnz, static_cast<HYPRE_Complex>(0));
+        std::vector<HYPRE_BigInt>  cursor(nrows, 0);
+        for (std::size_t i = 0; i < nrows; ++i)
+            cursor[i] = row_ptr[i];
+
+        /* Pass 3: scatter into CSR, accumulating duplicates */
+        for (std::size_t k = 0; k < nnz; ++k) {
+            const std::size_t r = static_cast<std::size_t>(matrix.row[k]);
+            const std::size_t pos = static_cast<std::size_t>(cursor[r]++);
+            col_ind[pos] = static_cast<HYPRE_BigInt>(matrix.col[k]);
+            vals[pos] += static_cast<HYPRE_Complex>(matrix.value[k]);
         }
-        for (std::int64_t r = 0; r < matrix.rows; ++r) {
-            auto& entries = rows[static_cast<std::size_t>(r)];
-            if (entries.empty()) continue;
-            if (entries.size() > static_cast<std::size_t>(std::numeric_limits<HYPRE_Int>::max())) {
+
+        /* Pass 4: send to HYPRE row by row (IJMatrixSetValues requires per-row calls) */
+        for (std::size_t r = 0; r < nrows; ++r) {
+            const HYPRE_BigInt beg = row_ptr[r];
+            const HYPRE_BigInt end = row_ptr[r + 1];
+            const HYPRE_Int count = static_cast<HYPRE_Int>(end - beg);
+            if (count == 0) continue;
+            if (count > static_cast<HYPRE_Int>(
+                    std::numeric_limits<HYPRE_Int>::max())) {
                 clear_objects();
                 return MATX_ERR_NOT_SUPPORTED;
             }
-            HYPRE_Int count = static_cast<HYPRE_Int>(entries.size());
+            /* Sort columns within the row (HYPRE does not require sorted input,
+             * but IJMatrixSetValues works with unsorted triplets).  Skip sort
+             * to save time — HYPRE's internal assembly handles ordering. */
             HYPRE_BigInt row = static_cast<HYPRE_BigInt>(r);
-            std::vector<HYPRE_BigInt> columns;
-            std::vector<HYPRE_Complex> values;
-            columns.reserve(entries.size());
-            values.reserve(entries.size());
-            for (const auto& entry : entries) {
-                columns.push_back(entry.first);
-                values.push_back(entry.second);
-            }
             if (HYPRE_IJMatrixSetValues(ij_matrix_, 1, &count, &row,
-                                        columns.data(), values.data()) != 0) {
+                                        col_ind.data() + beg,
+                                        vals.data() + beg) != 0) {
                 clear_objects();
                 return MATX_ERR_INTERNAL;
             }
